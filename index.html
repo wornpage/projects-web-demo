@@ -12,91 +12,92 @@
 </head>
 <body>
   <a class="skip-link" href="#demo-main">Skip to demo</a>
-  <div class="app-shell demo-shell">
-    <header class="page-header demo-header">
-      <div class="page-header-inner demo-header-inner">
-        <a class="demo-brand" href="./" aria-label="Projects cockpit demo home">
-          <span class="demo-brand-mark" aria-hidden="true">P</span>
-          <span>
-            <strong>Projects cockpit</strong>
-            <small>static demo</small>
-          </span>
-        </a>
-        <div class="demo-header-actions">
-          <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="true">Light mode</button>
-          <a class="btn btn-sm" href="https://github.com/topics/project-demo">project-demo</a>
-          <a class="btn btn-primary btn-lg" href="https://github.com/jared-bidlow/projects-desktop">GitHub</a>
-        </div>
-      </div>
-    </header>
-
-    <main id="demo-main" class="demo-main">
-      <section class="demo-notice" aria-label="Demo notice">
+  <div class="demo-app-shell">
+    <aside class="demo-sidebar" aria-label="Demo navigation">
+      <a class="demo-brand" href="#/home" aria-label="Projects cockpit demo home">
+        <span class="demo-brand-mark" aria-hidden="true">P</span>
+        <span>
+          <strong>Projects</strong>
+          <small>static cockpit</small>
+        </span>
+      </a>
+      <nav id="demo-nav" class="demo-nav" aria-label="Primary demo screens"></nav>
+      <div class="demo-sidebar-note">
         <strong>Demo data only.</strong>
-        This GitHub Pages build simulates the cockpit in browser state. The local app handles real packs, files, saves, and memory.
-      </section>
+        Real packs, memory, files, and saves stay in the local app.
+      </div>
+    </aside>
 
-      <section class="mobile-command-card mobile-command-brief demo-command-brief" aria-label="Projects command brief">
-        <div class="mobile-command-brief-top">
+    <div class="demo-shell">
+      <header class="page-header demo-header">
+        <div class="page-header-inner demo-header-inner">
           <div>
-            <div class="today-mobile-command-label">Command brief</div>
-            <h1 class="mobile-command-title">Projects cockpit</h1>
+            <div class="demo-kicker">Projects cockpit</div>
+            <h1 id="screen-title" class="demo-screen-title">Work list</h1>
           </div>
-          <span id="command-state" class="mobile-command-state">Review</span>
+          <div class="demo-header-actions">
+            <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="true">Light mode</button>
+            <a class="btn btn-sm" href="https://github.com/jared-bidlow/projects-web-demo">Public repo</a>
+            <a class="btn btn-primary btn-lg" href="https://github.com/jared-bidlow/projects-desktop">Source</a>
+          </div>
         </div>
-        <div class="mobile-command-lines">
-          <div class="mobile-command-line">
+      </header>
+
+      <main id="demo-main" class="demo-main">
+        <section class="demo-notice" aria-label="Demo notice">
+          <strong>Demo data only.</strong>
+          This GitHub Pages build simulates the cockpit in browser state. Buttons update sample data only.
+        </section>
+
+        <section class="demo-command-brief" aria-label="Projects command brief">
+          <div class="demo-command-top">
+            <div>
+              <span class="demo-command-label">Command brief</span>
+              <h2 id="command-title">Work list command flow</h2>
+            </div>
+            <span id="command-state" class="demo-command-state">Ready</span>
+          </div>
+          <div class="demo-command-lines">
+            <div class="demo-command-line">
+              <span>Where</span>
+              <strong id="command-where">Work list</strong>
+            </div>
+            <div class="demo-command-line">
+              <span>Blocker</span>
+              <strong id="command-blocker">Loading demo data.</strong>
+            </div>
+            <div class="demo-command-line demo-command-next">
+              <span>Button runs next</span>
+              <strong id="command-next">Review</strong>
+            </div>
+          </div>
+          <div class="demo-command-footer">
+            <span id="command-scope">Scope: sample work is loading.</span>
+            <div class="demo-command-actions">
+              <button id="primary-action" class="btn btn-primary" type="button">Review</button>
+              <button id="secondary-action" class="btn" type="button">Focus</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-content" class="demo-screen" aria-live="polite"></section>
+
+        <aside class="demo-bottom-brief" aria-label="Sticky command summary">
+          <a class="demo-bottom-item" href="#/work">
             <span>Where</span>
-            <strong id="command-where">Work list</strong>
-          </div>
-          <div class="mobile-command-line">
+            <strong id="dock-where">Work</strong>
+          </a>
+          <a class="demo-bottom-item" href="#/review">
             <span>Blocker</span>
-            <strong id="command-blocker">Loading demo data.</strong>
-          </div>
-          <div class="mobile-command-line mobile-command-line-next mobile-command-line-state">
+            <strong id="dock-blocker">Loading</strong>
+          </a>
+          <button id="dock-next" class="demo-bottom-item demo-bottom-next" type="button">
             <span>Button runs next</span>
-            <strong id="command-next">Review</strong>
-          </div>
-        </div>
-        <div id="command-scope" class="mobile-command-context">Scope: sample work is loading.</div>
-        <div class="mobile-command-actions">
-          <button id="primary-action" class="btn btn-primary" type="button">Review</button>
-          <button id="today-action" class="btn" type="button">Today</button>
-        </div>
-      </section>
-
-      <section class="demo-toolbar" aria-label="Work filters">
-        <label class="sr-only" for="demo-search">Search demo work</label>
-        <input id="demo-search" class="demo-search-input" type="search" placeholder="Search work title, Button runs next, owner, or due date" autocomplete="off">
-        <div id="status-chips" class="demo-chip-row" aria-label="Status filters"></div>
-      </section>
-
-      <section class="demo-work-shell" aria-label="Static work demo">
-        <div class="demo-section-header">
-          <div>
-            <span class="section-label">Work cards</span>
-            <strong id="visible-count">0 visible</strong>
-          </div>
-          <span id="demo-status" class="demo-status">Simulated actions only.</span>
-        </div>
-        <div id="work-list" class="demo-work-list"></div>
-      </section>
-
-      <aside class="mobile-shell-brief demo-bottom-brief" aria-label="Sticky command summary">
-        <a class="mobile-shell-brief-item" href="#demo-main">
-          <span>Where</span>
-          <strong id="dock-where">Work</strong>
-        </a>
-        <a class="mobile-shell-brief-item" href="#work-list">
-          <span>Blocker</span>
-          <strong id="dock-blocker">Loading</strong>
-        </a>
-        <button id="dock-next" class="mobile-shell-brief-item mobile-shell-brief-next" type="button">
-          <span>Button runs next</span>
-          <strong id="dock-next-label">Review</strong>
-        </button>
-      </aside>
-    </main>
+            <strong id="dock-next-label">Review</strong>
+          </button>
+        </aside>
+      </main>
+    </div>
   </div>
 </body>
 </html>

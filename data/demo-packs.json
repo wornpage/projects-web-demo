@@ -2,55 +2,91 @@
   {
     "id": "venue-hold-calendar",
     "title": "venue-hold-calendar",
+    "type": "operations",
     "status": "active",
     "blocker": "missing owner",
     "next": "Review",
-    "due": "Due 2026-06-20",
-    "owner": "unassigned"
+    "due": "2026-06-20",
+    "owner": "unassigned",
+    "purpose": "Hold venue dates and keep the review queue honest before outreach.",
+    "doneWhen": "Venue hold list reviewed and owner assigned.",
+    "sources": ["venue calendar", "agent-log"],
+    "memory": ["Need owner before this can leave review."],
+    "activity": ["Imported from sample pack list.", "Review surfaced missing owner."]
   },
   {
     "id": "sample-pack-audit",
     "title": "sample-pack-audit",
+    "type": "music",
     "status": "blocked",
     "blocker": "missing source folder",
     "next": "Unblock",
-    "due": "No due date",
-    "owner": "Mira"
+    "due": "",
+    "owner": "Mira",
+    "purpose": "Verify sample folders before the next set prep session.",
+    "doneWhen": "All source folders are named and reachable.",
+    "sources": ["sample folder", "docs"],
+    "memory": ["Keep this blocked until the source folder exists."],
+    "activity": ["Blocker recorded.", "Demo user focused this pack."]
   },
   {
     "id": "lighting-checklist",
     "title": "lighting-checklist",
+    "type": "show",
     "status": "draft",
     "blocker": "missing Button runs next",
     "next": "Set next",
-    "due": "Due 2026-06-18",
-    "owner": "Jared"
+    "due": "2026-06-18",
+    "owner": "Jared",
+    "purpose": "Prepare a small checklist for stage lighting setup.",
+    "doneWhen": "Checklist is ready for the venue handoff.",
+    "sources": ["figma", "docs"],
+    "memory": ["Button needs to say exactly what setup action runs next."],
+    "activity": ["Draft created.", "Needs next action."]
   },
   {
     "id": "release-flyer-assets",
     "title": "release-flyer-assets",
+    "type": "design",
     "status": "active",
     "blocker": "none",
     "next": "Open",
-    "due": "Due 2026-06-24",
-    "owner": "Rae"
+    "due": "2026-06-24",
+    "owner": "Rae",
+    "purpose": "Collect release flyer files and final export notes.",
+    "doneWhen": "Final flyer assets are listed and ready to share.",
+    "sources": ["figma", "docs"],
+    "memory": ["Use the dark variant for the first preview."],
+    "activity": ["Owner assigned.", "Ready to open."]
   },
   {
     "id": "recording-export",
     "title": "recording-export",
+    "type": "music",
     "status": "done",
     "blocker": "none",
     "next": "Open",
-    "due": "Done 2026-06-12",
-    "owner": "No owner"
+    "due": "2026-06-12",
+    "owner": "No owner",
+    "purpose": "Export a reference recording for later review.",
+    "doneWhen": "Recording export exists and is named.",
+    "sources": ["agent-log"],
+    "memory": ["Done item stays visible for audit context."],
+    "activity": ["Marked done.", "Kept as sample history."]
   },
   {
     "id": "warmup-set-notes",
     "title": "warmup-set-notes",
+    "type": "music",
     "status": "done",
     "blocker": "none",
     "next": "Open",
-    "due": "Done 2026-06-10",
-    "owner": "No owner"
+    "due": "2026-06-10",
+    "owner": "No owner",
+    "purpose": "Keep warmup notes attached to the set planning flow.",
+    "doneWhen": "Warmup notes are saved for reference.",
+    "sources": ["docs"],
+    "memory": ["Good example of a completed note pack."],
+    "activity": ["Saved note.", "Marked done."]
   }
 ]
