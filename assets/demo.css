@@ -11,6 +11,11 @@ body {
   overflow-x: hidden;
 }
 
+.demo-app-shell .sr-only {
+  left: 0;
+  top: 0;
+}
+
 .demo-app-shell {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--cockpit-accent) 6%, transparent) 1px, transparent 1px),
@@ -455,11 +460,27 @@ body {
 }
 
 .demo-card-title {
+  background: transparent;
+  border: 0;
   color: var(--cockpit-text);
+  cursor: pointer;
+  display: inline;
   font-family: var(--font-family-display);
   font-size: 18px;
   font-weight: 900;
   overflow-wrap: anywhere;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+
+.demo-card-title:hover,
+.demo-card-title:focus-visible {
+  color: var(--cockpit-accent);
+  outline: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
 .demo-card-meta {
@@ -535,13 +556,120 @@ body {
 
 .demo-focus-grid,
 .demo-form-grid,
-.demo-profile-grid {
+.demo-profile-grid,
+.demo-board-grid,
+.demo-calendar-grid,
+.demo-source-list,
+.demo-stat-list,
+.demo-check-list {
   display: grid;
   gap: 12px;
 }
 
 .demo-focus-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.demo-board-grid {
+  align-items: start;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.demo-board-column,
+.demo-mini-card,
+.demo-check-row,
+.demo-calendar-card {
+  background: color-mix(in srgb, var(--cockpit-surface-raised) 64%, transparent);
+  border: 1px solid var(--cockpit-border);
+  border-radius: 16px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.demo-board-head,
+.demo-check-row,
+.demo-stat-row,
+.demo-calendar-card {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.demo-board-head {
+  color: var(--cockpit-text);
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.demo-board-head span {
+  background: color-mix(in srgb, var(--cockpit-accent) 16%, var(--cockpit-surface));
+  border-radius: 999px;
+  color: var(--cockpit-text-secondary);
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
+.demo-mini-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.demo-mini-card span,
+.demo-check-row span,
+.demo-calendar-card small,
+.demo-stat-row span {
+  color: var(--cockpit-text-muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.demo-check-row > div,
+.demo-stat-row > div {
+  min-width: 0;
+}
+
+.demo-check-row strong,
+.demo-stat-row strong,
+.demo-calendar-card strong {
+  color: var(--cockpit-text);
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.demo-stat-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) minmax(0, 1fr);
+}
+
+.demo-stat-track {
+  background: color-mix(in srgb, var(--cockpit-surface-raised) 80%, var(--cockpit-bg));
+  border: 1px solid var(--cockpit-border);
+  border-radius: 999px;
+  height: 14px;
+  overflow: hidden;
+}
+
+.demo-stat-track span {
+  background: var(--cockpit-accent);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.demo-calendar-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.demo-calendar-card {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.demo-calendar-card > span {
+  color: var(--cockpit-accent);
+  font-weight: 900;
 }
 
 .demo-fact {
@@ -731,7 +859,10 @@ html:not(.dark) .demo-theme-toggle {
   .demo-grid,
   .demo-focus-grid,
   .demo-form-grid,
-  .demo-profile-grid {
+  .demo-profile-grid,
+  .demo-board-grid,
+  .demo-calendar-grid,
+  .demo-stat-row {
     grid-template-columns: 1fr;
   }
 

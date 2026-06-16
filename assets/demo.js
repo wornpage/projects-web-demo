@@ -17,9 +17,17 @@ const navItems = [
   ["home", "H", "Home"],
   ["work", "W", "Work"],
   ["today", "T", "Today"],
+  ["board", "B", "Board"],
   ["review", "R", "Review"],
   ["focus", "F", "Focus"],
+  ["next", "N", "Next"],
+  ["check", "!", "Check"],
   ["search", "S", "Search"],
+  ["stats", "%", "Stats"],
+  ["notes", "N", "Notes"],
+  ["timeline", "-", "Timeline"],
+  ["files", "#", "Files"],
+  ["calendar", "D", "Calendar"],
   ["create", "+", "Create"],
   ["memory", "M", "Memory"],
   ["settings", "...", "Settings"]
@@ -170,14 +178,38 @@ function render() {
     case "today":
       renderToday();
       break;
+    case "board":
+      renderBoard();
+      break;
     case "review":
       renderReview();
       break;
     case "focus":
       renderFocus();
       break;
+    case "next":
+      renderNext();
+      break;
+    case "check":
+      renderCheck();
+      break;
     case "search":
       renderSearch();
+      break;
+    case "stats":
+      renderStats();
+      break;
+    case "notes":
+      renderNotes();
+      break;
+    case "timeline":
+      renderTimeline();
+      break;
+    case "files":
+      renderFiles();
+      break;
+    case "calendar":
+      renderCalendar();
       break;
     case "create":
       renderCreate();
@@ -206,9 +238,17 @@ function screenTitleForRoute() {
     home: "Command cockpit",
     work: "Work list",
     today: "Today",
+    board: "Board",
     review: "Review",
     focus: "Focus",
+    next: "Next setup",
+    check: "Check",
     search: "Search",
+    stats: "Stats",
+    notes: "Notes",
+    timeline: "Timeline",
+    files: "Files",
+    calendar: "Calendar",
     create: profile.newWork,
     memory: "Memory",
     settings: "Settings",
@@ -238,9 +278,17 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     home: ["Command cockpit", "Home", `${reviewCount} sample item(s) need review`, "Review", "Ready"],
     work: ["Work list command flow", "Work list", blocker, next, selected?.status || "Ready"],
     today: ["Today command flow", "Today", "due sample work is visible", "Focus", "Today"],
-    review: ["Review command flow", "Review", `${reviewCount} sample item(s) need decisions`, "Set next", "Review"],
+    board: ["Board command flow", "Board", "sample work is grouped by status", "Focus", "Ready"],
+    review: ["Review command flow", "Review", `${reviewCount} sample item(s) need decisions`, "Choose next action", "Review"],
     focus: ["Focus command flow", selectedTitle, selected?.blocker || "none", next, "Focus"],
+    next: ["Next setup command flow", "Next setup", selected?.blocker || "choose a sample work item", selected?.next || "Choose next action", "Ready"],
+    check: ["Check command flow", "Check", `${reviewCount} sample item(s) still need decisions`, "Validate sample", "Ready"],
     search: ["Search command flow", "Search", "type title, owner, next action, or due date", "Search", "Ready"],
+    stats: ["Stats command flow", "Stats", "sample counts are calculated in browser state", "Review", "Ready"],
+    notes: ["Notes command flow", "Notes", "sample notes are browser-only", "Add note", "Ready"],
+    timeline: ["Timeline command flow", "Timeline", "sample activity is browser-only", "Open work", "Ready"],
+    files: ["Files command flow", "Files", "sample sources are references only", "Open work", "Ready"],
+    calendar: ["Calendar command flow", "Calendar", "sample due dates are visible", "Focus", "Ready"],
     create: ["Create command flow", "Create", "required fields are title and Button runs next", "Save sample", "Draft"],
     memory: ["Memory command flow", "Memory", "sample notes are browser-only", "Add note", "Ready"],
     settings: ["Settings command flow", "Settings", "copy profile changes labels only in this static demo", "Apply profile", "Ready"],
@@ -338,6 +386,26 @@ function renderToday() {
   bindListActions();
 }
 
+function renderBoard() {
+  const groups = ["draft", "active", "blocked", "done"];
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Board</span>
+          <h2>Status lanes</h2>
+        </div>
+        <button class="btn btn-primary" type="button" data-go="next">Next setup</button>
+      </div>
+      <div class="demo-board-grid">
+        ${groups.map((status) => boardColumn(status)).join("")}
+      </div>
+    </section>
+  `;
+  bindListActions();
+  bindGoButtons();
+}
+
 function renderReview() {
   const review = state.packs.filter(isReview);
   el("screen-content").innerHTML = `
@@ -350,6 +418,70 @@ function renderReview() {
         <button class="btn btn-primary" type="button" data-action="review-first">Review first</button>
       </div>
       <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.")}</div>
+    </section>
+  `;
+  bindListActions();
+}
+
+function renderNext() {
+  const pack = currentPack() || state.packs.find(isReview) || state.packs[0];
+  if (!pack) {
+    el("screen-content").innerHTML = emptyState("No sample work is available.");
+    return;
+  }
+
+  state.selectedId = pack.id;
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Next setup</span>
+          <h2>Choose what the main button runs</h2>
+        </div>
+        <span class="demo-status">${escapeHtml(pack.title)}</span>
+      </div>
+      <p>In the real app, this fills the work item's Button-runs-next field. In this static demo, it changes the sample text in browser state.</p>
+      <div class="demo-command-lines compact">
+        ${factLine("Where", pack.title)}
+        ${factLine("Blocker", pack.blocker)}
+        ${factLine("Button runs next", pack.next)}
+      </div>
+      <div class="demo-inline-form">
+        <label class="sr-only" for="next-action-choice">Choose next action</label>
+        <select id="next-action-choice" class="demo-search-input">
+          ${["Review", "Open", "Focus", "Unblock", "Start", "Done"].map((option) => `<option value="${escapeAttribute(option)}"${option === pack.next ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
+        </select>
+        <button id="apply-next-action" class="btn btn-primary" type="button">Apply to sample</button>
+      </div>
+    </section>
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Candidates</span>
+          <h2>Work that needs a clearer button</h2>
+        </div>
+      </div>
+      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No sample work needs next setup.")}</div>
+    </section>
+  `;
+  el("apply-next-action").addEventListener("click", () => applyNextChoice(pack.id));
+  bindListActions();
+}
+
+function renderCheck() {
+  const checks = sampleChecks();
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Check</span>
+          <h2>Sample readiness checks</h2>
+        </div>
+        <button class="btn btn-primary" type="button" data-action="validate-sample">Validate sample</button>
+      </div>
+      <div class="demo-check-list">
+        ${checks.map(checkRow).join("")}
+      </div>
     </section>
   `;
   bindListActions();
@@ -388,6 +520,107 @@ function renderFocus() {
   `;
   bindListActions();
   bindGoButtons();
+}
+
+function renderStats() {
+  const counts = countByFilter();
+  const total = Math.max(state.packs.length, 1);
+  el("screen-content").innerHTML = `
+    <div class="demo-grid">
+      ${metricCard("Active", counts.active ?? 0, "Sample work currently moving.")}
+      ${metricCard("Review", counts.review ?? 0, "Sample work with blockers or missing next actions.")}
+      ${metricCard("Done", counts.done ?? 0, "Sample work marked complete.")}
+    </div>
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Stats</span>
+          <h2>Browser-state counts</h2>
+        </div>
+        <span class="demo-status">${state.packs.length} sample item(s)</span>
+      </div>
+      <div class="demo-stat-list">
+        ${["active", "blocked", "draft", "done", "review"].map((key) => statBar(key, counts[key] ?? 0, total)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderNotes() {
+  const rows = state.packs.flatMap((pack) => pack.memory.map((note) => ({ pack, note })));
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Notes</span>
+          <h2>Sample notes across work</h2>
+        </div>
+        <button class="btn btn-primary" type="button" data-go="memory">Add note</button>
+      </div>
+      <div class="demo-list">
+        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyState("No sample notes exist.")}
+      </div>
+    </section>
+  `;
+  bindGoButtons();
+}
+
+function renderTimeline() {
+  const rows = state.packs.flatMap((pack) => pack.activity.map((item, index) => ({ pack, item, index })));
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Timeline</span>
+          <h2>Sample activity log</h2>
+        </div>
+      </div>
+      <div class="demo-list">
+        ${rows.map(timelineRow).join("") || emptyState("No sample activity exists.")}
+      </div>
+    </section>
+  `;
+}
+
+function renderFiles() {
+  const rows = state.packs.flatMap((pack) => pack.sources.map((source) => ({ pack, source })));
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Files</span>
+          <h2>Sample source references</h2>
+        </div>
+        <span class="demo-status">No local files are opened in the demo</span>
+      </div>
+      <div class="demo-source-list">
+        ${rows.map(sourceRow).join("") || emptyState("No sample source references exist.")}
+      </div>
+    </section>
+  `;
+  bindListActions();
+}
+
+function renderCalendar() {
+  const rows = state.packs
+    .filter((pack) => pack.due)
+    .slice()
+    .sort((left, right) => left.due.localeCompare(right.due));
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Calendar</span>
+          <h2>Sample due dates</h2>
+        </div>
+        <button class="btn" type="button" data-action="set-due-today">Set all due today</button>
+      </div>
+      <div class="demo-calendar-grid">
+        ${rows.map(calendarCard).join("") || emptyState("No sample due dates exist.")}
+      </div>
+    </section>
+  `;
+  bindListActions();
 }
 
 function renderSearch() {
@@ -557,6 +790,98 @@ function renderFilterChips() {
   `).join("");
 }
 
+function boardColumn(status) {
+  const packs = state.packs.filter((pack) => pack.status === status);
+  return `<section class="demo-board-column">
+    <div class="demo-board-head">
+      <strong>${escapeHtml(capitalize(status))}</strong>
+      <span>${packs.length}</span>
+    </div>
+    <div class="demo-list">
+      ${packs.map((pack) => `<article class="demo-mini-card">
+        <button type="button" class="demo-card-title" data-action="focus" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(pack.title)}</button>
+        <span>${escapeHtml(pack.blocker === "none" ? pack.next : pack.blocker)}</span>
+      </article>`).join("") || emptyState(`No ${status} sample work.`)}
+    </div>
+  </section>`;
+}
+
+function nextCandidateRow(pack) {
+  return `<div class="demo-row">
+    <div>
+      <strong>${escapeHtml(pack.title)}</strong>
+      <span>${escapeHtml(pack.blocker === "none" ? "Ready for a clearer next action." : pack.blocker)}</span>
+    </div>
+    <div class="demo-row-actions">
+      <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
+      <button class="btn btn-sm btn-primary" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Choose next</button>
+    </div>
+  </div>`;
+}
+
+function sampleChecks() {
+  const missingOwner = state.packs.filter((pack) => !pack.owner || pack.owner === "No owner" || pack.owner === "unassigned").length;
+  const missingNext = state.packs.filter((pack) => !pack.next || pack.next === "Choose next action").length;
+  const blocked = state.packs.filter((pack) => pack.status === "blocked").length;
+  const missingDue = state.packs.filter((pack) => !pack.due && pack.status !== "done").length;
+  return [
+    ["Owners", missingOwner, "Every moving sample item should name an owner."],
+    ["Button runs next", missingNext, "Each sample item needs a clear main button action."],
+    ["Blocked", blocked, "Blocked sample work should say what is blocking it."],
+    ["Due dates", missingDue, "Unfinished sample work can optionally carry a date."]
+  ];
+}
+
+function checkRow([label, count, note]) {
+  return `<div class="demo-check-row">
+    <div>
+      <strong>${escapeHtml(label)}</strong>
+      <span>${escapeHtml(note)}</span>
+    </div>
+    <span class="demo-state-pill">${count === 0 ? "clear" : `${count} attention`}</span>
+  </div>`;
+}
+
+function statBar(label, count, total) {
+  const percent = Math.round((count / total) * 100);
+  return `<div class="demo-stat-row">
+    <div>
+      <strong>${escapeHtml(capitalize(label))}</strong>
+      <span>${count} of ${total}</span>
+    </div>
+    <div class="demo-stat-track" aria-hidden="true"><span style="width:${percent}%"></span></div>
+  </div>`;
+}
+
+function timelineRow({ pack, item, index }) {
+  return `<div class="demo-row">
+    <div>
+      <strong>${escapeHtml(pack.title)}</strong>
+      <span>${escapeHtml(item)}</span>
+    </div>
+    <span class="demo-state-pill">${index === 0 ? "latest" : "earlier"}</span>
+  </div>`;
+}
+
+function sourceRow({ pack, source }) {
+  return `<div class="demo-row">
+    <div>
+      <strong>${escapeHtml(source)}</strong>
+      <span>${escapeHtml(pack.title)} / ${escapeHtml(pack.type)}</span>
+    </div>
+    <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
+  </div>`;
+}
+
+function calendarCard(pack) {
+  return `<article class="demo-calendar-card">
+    <span>${escapeHtml(pack.due)}</span>
+    <strong>${escapeHtml(pack.title)}</strong>
+    <small>${escapeHtml(pack.status)} / ${escapeHtml(pack.owner)}</small>
+    <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
+  </article>`;
+}
+
 function bindToolbar() {
   const search = el("demo-search");
   if (search) {
@@ -577,9 +902,10 @@ function bindToolbar() {
 
 function workCard(pack) {
   const selected = pack.id === state.selectedId ? " selected" : "";
+  const command = commandActionForPack(pack);
   return `<article class="demo-work-card${selected}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
-      <button type="button" class="demo-card-title btn-link" data-action="select">${escapeHtml(pack.title)}</button>
+      <button type="button" class="demo-card-title" data-action="select">${escapeHtml(pack.title)}</button>
       <span class="demo-state-pill">${escapeHtml(pack.status)}</span>
     </div>
     <div class="demo-command-row">
@@ -587,7 +913,7 @@ function workCard(pack) {
         <span>Button runs next</span>
         <strong>${escapeHtml(pack.next)}</strong>
       </div>
-      <button type="button" class="btn btn-primary" data-action="open">${escapeHtml(pack.next)}</button>
+      <button type="button" class="btn btn-primary" data-action="run-next">${escapeHtml(command.label)}</button>
     </div>
     <div class="demo-card-meta">
       <span>${escapeHtml(pack.blocker === "none" ? "Blocker: none" : pack.blocker)}</span>
@@ -629,7 +955,7 @@ function reviewCard(pack) {
       <span>${escapeHtml(pack.owner)}</span>
     </div>
     <div class="demo-inline-form">
-      <label class="sr-only" for="next-${escapeAttribute(pack.id)}">Set Button runs next</label>
+      <label class="sr-only" for="next-${escapeAttribute(pack.id)}">Choose next action</label>
       <input id="next-${escapeAttribute(pack.id)}" class="demo-search-input" type="text" value="${escapeAttribute(pack.next)}">
       <button class="btn btn-primary" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Set</button>
     </div>
@@ -652,6 +978,10 @@ function bindWorkCards() {
 
 function bindListActions() {
   document.querySelectorAll("[data-action]").forEach((button) => {
+    if (button.closest(".demo-work-card")) {
+      return;
+    }
+
     button.addEventListener("click", () => {
       const action = button.dataset.action;
       if (action === "set-due-today") {
@@ -663,14 +993,27 @@ function bindListActions() {
           state.selectedId = first.id;
           state.status = `${first.title} selected for review.`;
         }
+      } else if (action === "validate-sample") {
+        const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
+        state.status = attention === 0
+          ? "Sample data passed the browser-state checks."
+          : `${attention} sample check item(s) still need attention.`;
       } else if (action === "set-next") {
         const pack = findPack(button.dataset.pack);
-        const input = el(`next-${pack.id}`);
-        pack.next = input.value.trim() || "Review";
-        pack.blocker = pack.blocker === "missing Button runs next" ? "none" : pack.blocker;
-        pack.activity.unshift("Button runs next changed in browser state.");
-        state.selectedId = pack.id;
-        state.status = `${pack.title} next action updated in browser state.`;
+        if (pack) {
+          const input = el(`next-${pack.id}`);
+          state.selectedId = pack.id;
+          if (input) {
+            pack.next = input.value.trim() || "Review";
+            pack.blocker = pack.blocker === "missing Button runs next" ? "none" : pack.blocker;
+            pack.activity.unshift("Button runs next changed in browser state.");
+            state.status = `${pack.title} next action updated in browser state.`;
+          } else {
+            state.status = `${pack.title} selected for next-action setup.`;
+            go("next", pack.id);
+            return;
+          }
+        }
       } else {
         handlePackAction(button.dataset.pack, action);
         return;
@@ -678,6 +1021,22 @@ function bindListActions() {
       render();
     });
   });
+}
+
+function applyNextChoice(id) {
+  const pack = findPack(id);
+  if (!pack) return;
+
+  const choice = valueOf("next-action-choice") || "Review";
+  pack.next = choice;
+  if (pack.blocker === "missing Button runs next") {
+    pack.blocker = "none";
+  }
+
+  pack.activity.unshift(`Button runs next changed to ${choice} in browser state.`);
+  state.selectedId = pack.id;
+  state.status = `${pack.title} will now run ${choice} in the static demo.`;
+  render();
 }
 
 function bindGoButtons() {
@@ -695,6 +1054,23 @@ function handlePackAction(id, action) {
 
   if (action === "select") {
     state.status = `${pack.title} selected.`;
+  } else if (action === "run-next") {
+    handlePackAction(pack.id, commandActionForPack(pack).action);
+    return;
+  } else if (action === "review") {
+    state.status = `${pack.title} opened in the review queue.`;
+    go("review");
+    return;
+  } else if (action === "set-next") {
+    state.status = `${pack.title} opened for next-action setup.`;
+    go("next", pack.id);
+    return;
+  } else if (action === "start") {
+    pack.status = "active";
+    pack.blocker = pack.blocker === "missing setup" ? "none" : pack.blocker;
+    pack.next = pack.next === "Choose next action" ? "Open" : pack.next;
+    pack.activity.unshift("Started in browser state.");
+    state.status = `${pack.title} is active in browser state only.`;
   } else if (action === "unblock") {
     pack.status = "active";
     pack.blocker = "none";
@@ -729,6 +1105,7 @@ function handlePackAction(id, action) {
 
 function runPrimaryAction() {
   const pack = currentPack() || state.packs[0];
+  const command = commandForRoute(pack, filteredPacks().length, state.packs.filter(isReview).length);
   if (!pack) {
     state.status = "No sample work is selected.";
     render();
@@ -742,6 +1119,12 @@ function runPrimaryAction() {
   } else if (state.route === "search") {
     state.status = "Search checks browser-state sample data only.";
     render();
+  } else if (state.route === "check") {
+    const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
+    state.status = attention === 0
+      ? "Sample data passed the browser-state checks."
+      : `${attention} sample check item(s) still need attention.`;
+    render();
   } else if (state.route === "memory") {
     state.status = "Add a note from the Memory screen input.";
     render();
@@ -749,8 +1132,48 @@ function runPrimaryAction() {
     state.status = `${capitalize(state.copyProfile)} profile is active in demo state.`;
     render();
   } else {
-    handlePackAction(pack.id, pack.status === "blocked" ? "unblock" : "open");
+    handlePackAction(pack.id, commandActionForLabel(command.next).action);
   }
+}
+
+function commandActionForPack(pack) {
+  const label = (pack?.next || "Open").trim() || "Open";
+  return commandActionForLabel(label);
+}
+
+function commandActionForLabel(label) {
+  label = (label || "Open").trim() || "Open";
+  const normalized = label.toLowerCase();
+
+  if (normalized === "review") {
+    return { label, action: "review" };
+  }
+
+  if (normalized === "set next" || normalized === "set button runs next" || normalized === "choose next action") {
+    return { label, action: "set-next" };
+  }
+
+  if (normalized === "validate sample") {
+    return { label, action: "validate-sample" };
+  }
+
+  if (normalized === "focus") {
+    return { label, action: "focus" };
+  }
+
+  if (normalized === "unblock") {
+    return { label, action: "unblock" };
+  }
+
+  if (normalized === "start") {
+    return { label, action: "start" };
+  }
+
+  if (normalized === "done" || normalized === "complete") {
+    return { label, action: "done" };
+  }
+
+  return { label: label === "Open" ? "Open" : label, action: "open" };
 }
 
 function createSamplePack() {
@@ -823,7 +1246,7 @@ function findPack(id) {
 }
 
 function isReview(pack) {
-  return pack.status === "blocked" || pack.blocker !== "none" || pack.next === "Review" || pack.next === "Set next";
+  return pack.status === "blocked" || pack.blocker !== "none" || pack.next === "Review" || pack.next === "Choose next action";
 }
 
 function formatDue(pack) {
