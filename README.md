@@ -4,6 +4,9 @@ This folder contains the static public demo for Projects. It simulates the
 cockpit in browser state and is intentionally not the real `Projects.Web`
 server app.
 
+- Demo: `https://jared-bidlow.github.io/projects-web-demo/`
+- Public repo: `https://github.com/jared-bidlow/projects-web-demo`
+
 | Boundary | Demo behavior |
 |---|---|
 | Data | Uses fake sample work from `data/demo-packs.json`. |
@@ -19,5 +22,5 @@ Build the same static artifact locally:
 pwsh -NoLogo -NoProfile -File scripts/export-pages-demo.ps1 -OutputPath _site -Clean
 ```
 
-For a separate public demo repository, copy or push only the generated `_site`
+For the public demo repository, copy or push only the generated `_site`
 contents. Do not mirror the private app repo or real pack data.
