@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en" class="dark" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Static Projects cockpit demo with sample work and simulated actions.">
+  <title>Projects cockpit demo</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <script src="assets/demo.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#demo-main">Skip to demo</a>
+  <div class="app-shell demo-shell">
+    <header class="page-header demo-header">
+      <div class="page-header-inner demo-header-inner">
+        <a class="demo-brand" href="./" aria-label="Projects cockpit demo home">
+          <span class="demo-brand-mark" aria-hidden="true">P</span>
+          <span>
+            <strong>Projects cockpit</strong>
+            <small>static demo</small>
+          </span>
+        </a>
+        <div class="demo-header-actions">
+          <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="true">Light mode</button>
+          <a class="btn btn-sm" href="https://github.com/topics/project-demo">project-demo</a>
+          <a class="btn btn-primary btn-lg" href="https://github.com/jared-bidlow/projects-desktop">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="demo-main" class="demo-main">
+      <section class="demo-notice" aria-label="Demo notice">
+        <strong>Demo data only.</strong>
+        This GitHub Pages build simulates the cockpit in browser state. The local app handles real packs, files, saves, and memory.
+      </section>
+
+      <section class="mobile-command-card mobile-command-brief demo-command-brief" aria-label="Projects command brief">
+        <div class="mobile-command-brief-top">
+          <div>
+            <div class="today-mobile-command-label">Command brief</div>
+            <h1 class="mobile-command-title">Projects cockpit</h1>
+          </div>
+          <span id="command-state" class="mobile-command-state">Review</span>
+        </div>
+        <div class="mobile-command-lines">
+          <div class="mobile-command-line">
+            <span>Where</span>
+            <strong id="command-where">Work list</strong>
+          </div>
+          <div class="mobile-command-line">
+            <span>Blocker</span>
+            <strong id="command-blocker">Loading demo data.</strong>
+          </div>
+          <div class="mobile-command-line mobile-command-line-next mobile-command-line-state">
+            <span>Button runs next</span>
+            <strong id="command-next">Review</strong>
+          </div>
+        </div>
+        <div id="command-scope" class="mobile-command-context">Scope: sample work is loading.</div>
+        <div class="mobile-command-actions">
+          <button id="primary-action" class="btn btn-primary" type="button">Review</button>
+          <button id="today-action" class="btn" type="button">Today</button>
+        </div>
+      </section>
+
+      <section class="demo-toolbar" aria-label="Work filters">
+        <label class="sr-only" for="demo-search">Search demo work</label>
+        <input id="demo-search" class="demo-search-input" type="search" placeholder="Search work title, Button runs next, owner, or due date" autocomplete="off">
+        <div id="status-chips" class="demo-chip-row" aria-label="Status filters"></div>
+      </section>
+
+      <section class="demo-work-shell" aria-label="Static work demo">
+        <div class="demo-section-header">
+          <div>
+            <span class="section-label">Work cards</span>
+            <strong id="visible-count">0 visible</strong>
+          </div>
+          <span id="demo-status" class="demo-status">Simulated actions only.</span>
+        </div>
+        <div id="work-list" class="demo-work-list"></div>
+      </section>
+
+      <aside class="mobile-shell-brief demo-bottom-brief" aria-label="Sticky command summary">
+        <a class="mobile-shell-brief-item" href="#demo-main">
+          <span>Where</span>
+          <strong id="dock-where">Work</strong>
+        </a>
+        <a class="mobile-shell-brief-item" href="#work-list">
+          <span>Blocker</span>
+          <strong id="dock-blocker">Loading</strong>
+        </a>
+        <button id="dock-next" class="mobile-shell-brief-item mobile-shell-brief-next" type="button">
+          <span>Button runs next</span>
+          <strong id="dock-next-label">Review</strong>
+        </button>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>

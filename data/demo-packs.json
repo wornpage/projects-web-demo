@@ -1,0 +1,56 @@
+[
+  {
+    "id": "venue-hold-calendar",
+    "title": "venue-hold-calendar",
+    "status": "active",
+    "blocker": "missing owner",
+    "next": "Review",
+    "due": "Due 2026-06-20",
+    "owner": "unassigned"
+  },
+  {
+    "id": "sample-pack-audit",
+    "title": "sample-pack-audit",
+    "status": "blocked",
+    "blocker": "missing source folder",
+    "next": "Unblock",
+    "due": "No due date",
+    "owner": "Mira"
+  },
+  {
+    "id": "lighting-checklist",
+    "title": "lighting-checklist",
+    "status": "draft",
+    "blocker": "missing Button runs next",
+    "next": "Set next",
+    "due": "Due 2026-06-18",
+    "owner": "Jared"
+  },
+  {
+    "id": "release-flyer-assets",
+    "title": "release-flyer-assets",
+    "status": "active",
+    "blocker": "none",
+    "next": "Open",
+    "due": "Due 2026-06-24",
+    "owner": "Rae"
+  },
+  {
+    "id": "recording-export",
+    "title": "recording-export",
+    "status": "done",
+    "blocker": "none",
+    "next": "Open",
+    "due": "Done 2026-06-12",
+    "owner": "No owner"
+  },
+  {
+    "id": "warmup-set-notes",
+    "title": "warmup-set-notes",
+    "status": "done",
+    "blocker": "none",
+    "next": "Open",
+    "due": "Done 2026-06-10",
+    "owner": "No owner"
+  }
+]
