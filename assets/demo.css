@@ -474,6 +474,11 @@ body {
   text-decoration: none;
 }
 
+html.dark .demo-work-card .demo-card-title,
+html[data-theme="dark"] .demo-work-card .demo-card-title {
+  color: var(--cockpit-text);
+}
+
 .demo-card-title:hover,
 .demo-card-title:focus-visible {
   color: var(--cockpit-accent);
