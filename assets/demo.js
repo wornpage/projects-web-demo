@@ -31,30 +31,61 @@ const state = {
   triageRows: []
 };
 
-const navItems = [
-  ["home", "H", "Home"],
-  ["triage", ">", "Triage"],
-  ["work", "W", "Work"],
-  ["today", "T", "Today"],
-  ["board", "B", "Board"],
-  ["review", "R", "Review"],
-  ["focus", "F", "Focus"],
-  ["next", "N", "Next"],
-  ["check", "!", "Check"],
-  ["health", "L", "Health"],
-  ["search", "S", "Search"],
-  ["stats", "%", "Stats"],
-  ["notes", "N", "Notes"],
-  ["timeline", "-", "Timeline"],
-  ["files", "#", "Files"],
-  ["calendar", "D", "Calendar"],
-  ["create", "+", "Create"],
-  ["memory", "M", "Memory"],
-  ["lab", "A", "Lab"],
-  ["meta", "I", "Meta"],
-  ["feedback", "?", "Feedback"],
-  ["settings", "...", "Settings"]
-];
+const ROUTE_CONTRACT = Object.freeze({
+  home: { pattern: "#/home", title: "Command cockpit", commandSource: "route", navKey: "H", navLabel: "Home" },
+  triage: { pattern: "#/triage", title: "Work triage tool", commandSource: "route", navKey: ">", navLabel: "Triage" },
+  work: { pattern: "#/work/{packId}", title: "Work list", commandSource: "selected-work", acceptsPackId: true, navKey: "W", navLabel: "Work" },
+  today: { pattern: "#/today/{packId}", title: "Today", commandSource: "selected-work", acceptsPackId: true, navKey: "T", navLabel: "Today" },
+  board: { pattern: "#/board/{packId}", title: "Board", commandSource: "selected-work", acceptsPackId: true, navKey: "B", navLabel: "Board" },
+  review: { pattern: "#/review/{packId}", title: "Review", commandSource: "selected-work", acceptsPackId: true, navKey: "R", navLabel: "Review" },
+  focus: { pattern: "#/focus/{packId}", title: "Focus", commandSource: "selected-work", acceptsPackId: true, navKey: "F", navLabel: "Focus" },
+  next: { pattern: "#/next/{packId}", title: "Next setup", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "N", navLabel: "Next" },
+  check: { pattern: "#/check", title: "Check", commandSource: "route", navKey: "!", navLabel: "Check" },
+  health: { pattern: "#/health", title: "Demo health", commandSource: "route", navKey: "L", navLabel: "Health" },
+  search: { pattern: "#/search", title: "Search", commandSource: "route", navKey: "S", navLabel: "Search" },
+  stats: { pattern: "#/stats", title: "Stats", commandSource: "route", navKey: "%", navLabel: "Stats" },
+  notes: { pattern: "#/notes/{packId}", title: "Notes", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "N", navLabel: "Notes" },
+  timeline: { pattern: "#/timeline", title: "Timeline", commandSource: "route", navKey: "-", navLabel: "Timeline" },
+  files: { pattern: "#/files", title: "Files", commandSource: "route", navKey: "#", navLabel: "Files" },
+  calendar: { pattern: "#/calendar/{packId}", title: "Calendar", commandSource: "selected-work", acceptsPackId: true, navKey: "D", navLabel: "Calendar" },
+  create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
+  memory: { pattern: "#/memory/{packId}", title: "Memory", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "M", navLabel: "Memory" },
+  lab: { pattern: "#/lab/{packId}", title: "Demo Lab", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "A", navLabel: "Lab" },
+  meta: { pattern: "#/meta", title: "Meta", commandSource: "route", navKey: "I", navLabel: "Meta" },
+  feedback: { pattern: "#/feedback", title: "Feedback", commandSource: "route", navKey: "?", navLabel: "Feedback" },
+  settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "...", navLabel: "Settings" },
+  pack: { pattern: "#/pack/{packId}", title: "Pack detail", commandSource: "selected-work", acceptsPackId: true }
+});
+
+const NAV_ROUTE_IDS = Object.freeze([
+  "home",
+  "triage",
+  "work",
+  "today",
+  "board",
+  "review",
+  "focus",
+  "next",
+  "check",
+  "health",
+  "search",
+  "stats",
+  "notes",
+  "timeline",
+  "files",
+  "calendar",
+  "create",
+  "memory",
+  "lab",
+  "meta",
+  "feedback",
+  "settings"
+]);
+
+const navItems = Object.freeze(NAV_ROUTE_IDS.map((route) => {
+  const contract = ROUTE_CONTRACT[route];
+  return Object.freeze([route, contract.navKey, contract.navLabel]);
+}));
 
 const filters = [
   ["all", "All"],
@@ -225,13 +256,13 @@ function bindShellControls() {
     runPrimaryAction(event.currentTarget);
   });
 
-  document.querySelector('.demo-bottom-item[href="#/work"]')?.addEventListener("click", (event) => {
+  el("dock-where-item")?.addEventListener("click", (event) => {
     event.preventDefault();
     const pack = currentPack() || state.packs[0];
     go("work", pack?.id || "", "where");
   });
 
-  document.querySelector('.demo-bottom-item[href="#/review"]')?.addEventListener("click", (event) => {
+  el("dock-review-item")?.addEventListener("click", (event) => {
     event.preventDefault();
     const pack = currentPack() && isReview(currentPack())
       ? currentPack()
@@ -328,7 +359,7 @@ function resetState() {
 
 function renderNav() {
   el("demo-nav").innerHTML = navItems.map(([route, key, label]) => `
-    <a class="demo-nav-item" href="#/${route}" data-route="${route}">
+    <a class="demo-nav-item" href="${escapeAttribute(formatRouteHash(route))}" data-route="${route}">
       <span>${escapeHtml(key)}</span>
       <strong>${escapeHtml(label)}</strong>
     </a>
@@ -336,17 +367,11 @@ function renderNav() {
 }
 
 function routeFromHash() {
-  const hash = location.hash.replace(/^#\/?/, "");
-  const [route, id] = hash.split("/");
-  if (!route) {
-    state.route = state.route || "home";
-  } else if (isKnownRoute(route)) {
-    state.route = route;
-  } else {
-    state.route = "home";
-  }
-  if (id) {
-    state.selectedId = decodeURIComponent(id);
+  const parsedRoute = parseHashRoute(location.hash);
+  state.route = parsedRoute.route;
+
+  if (parsedRoute.packId) {
+    state.selectedId = parsedRoute.packId;
   } else if (state.route === "review") {
     state.selectedId = preferredReviewPack()?.id || state.selectedId;
   } else if (state.route === "next") {
@@ -359,7 +384,7 @@ function go(route, id = "", focusKind = "") {
     queueFocus(focusKind, id || state.selectedId);
   }
 
-  const nextHash = id ? `#/${route}/${encodeURIComponent(id)}` : `#/${route}`;
+  const nextHash = formatRouteHash(route, id);
   if (location.hash === nextHash) {
     routeFromHash();
     render();
@@ -369,8 +394,48 @@ function go(route, id = "", focusKind = "") {
   location.hash = nextHash;
 }
 
+function parseHashRoute(hash) {
+  const rawHash = (hash || "#/home").replace(/^#\/?/, "");
+  const [rawRoute, rawPackId = "", ...extraSegments] = rawHash.split("/");
+  const route = isKnownRoute(rawRoute) ? rawRoute : "home";
+  const routeContract = ROUTE_CONTRACT[route] || ROUTE_CONTRACT.home;
+  const decodedPackId = routeContract.acceptsPackId && rawPackId
+    ? decodeRoutePackId(rawPackId)
+    : { value: "", malformed: false };
+
+  return {
+    route,
+    requestedRoute: rawRoute || "home",
+    packId: decodedPackId.value,
+    fallback: Boolean(rawRoute && rawRoute !== route),
+    malformedPackId: decodedPackId.malformed,
+    unexpectedPackId: Boolean(rawPackId && !routeContract.acceptsPackId),
+    extraSegments,
+    pattern: routeContract.pattern,
+    commandSource: routeContract.commandSource
+  };
+}
+
+function formatRouteHash(route, id = "") {
+  const routeKey = isKnownRoute(route) ? route : "home";
+  const routeContract = ROUTE_CONTRACT[routeKey] || ROUTE_CONTRACT.home;
+  if (routeContract.acceptsPackId && id) {
+    return routeContract.pattern.replace("{packId}", encodeURIComponent(id));
+  }
+
+  return routeContract.pattern.replace("/{packId}", "");
+}
+
 function isKnownRoute(route) {
-  return route === "pack" || navItems.some(([id]) => id === route);
+  return Boolean(ROUTE_CONTRACT[route]);
+}
+
+function decodeRoutePackId(value) {
+  try {
+    return { value: decodeURIComponent(value), malformed: false };
+  } catch {
+    return { value: "", malformed: true };
+  }
 }
 
 function render() {
@@ -486,33 +551,11 @@ function render() {
 
 function screenTitleForRoute() {
   const profile = copyProfiles[state.copyProfile] || copyProfiles.general;
-  const titles = {
-    health: "Demo health",
-    meta: "Demo meta",
-    home: "Command cockpit",
-    triage: "Work triage tool",
-    work: "Work list",
-    today: "Today",
-    board: "Board",
-    review: "Review",
-    focus: "Focus",
-    next: "Next setup",
-    check: "Check",
-    search: "Search",
-    stats: "Stats",
-    notes: "Notes",
-    timeline: "Timeline",
-    files: "Files",
-    calendar: "Calendar",
-    create: profile.newWork,
-    memory: "Memory",
-    lab: "Demo Lab",
-    meta: "Meta",
-    feedback: "Feedback",
-    settings: "Settings",
-    pack: "Pack detail"
-  };
-  return titles[state.route] || "Work list";
+  if (state.route === "create") {
+    return profile.newWork;
+  }
+
+  return ROUTE_CONTRACT[state.route]?.title || ROUTE_CONTRACT.work.title;
 }
 
 function renderCommand(selected) {
@@ -536,43 +579,51 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     : "none";
   const reviewTarget = preferredReviewPack();
   const workListAction = commandActionForPack(null);
-
-  const routeCommands = {
-    home: ["Command cockpit", "Home", reviewSummary, "Review work", "Ready", "route-review", reviewTarget?.id || ""],
-    triage: ["Triage tool command flow", "Triage tool", triageCount > 0 ? `${triageBlockers} blocker(s) visible in ${triageCount} row(s)` : "paste work to classify", triageNext, "Tool", triageAction, ""],
-    work: ["Work list command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
-    today: ["Today command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
-    board: ["Board command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
-    review: ["Review command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
-    focus: ["Focus command flow", selectedTitle, selectedBlocker, selectedAction.label, "Focus", selectedAction.action, selectedAction.targetPackId],
-    next: ["Next setup command flow", selectedTitle, selectedBlocker, selectedAction.label, "Ready", selectedAction.action, selectedAction.targetPackId],
-    check: ["Check command flow", "Check", `${reviewCount} sample item(s) still need decisions`, "Validate sample", "Ready", "validate-sample", ""],
-    search: ["Search command flow", "Search", "type title, owner, next action, or due date", "Search", "Ready", "search-demo", ""],
-    stats: ["Stats command flow", "Stats", "sample counts are calculated in browser state", "Review work", "Ready", "route-review", reviewTarget?.id || ""],
-    notes: ["Notes command flow", "Notes", "sample notes are browser-only", "Add note", "Ready", "add-note", selected?.id || ""],
-    timeline: ["Timeline command flow", "Timeline", "sample activity is browser-only", workListAction.label, "Ready", workListAction.action, ""],
-    files: ["Files command flow", "Files", "sample sources are references only", workListAction.label, "Ready", workListAction.action, ""],
-    calendar: ["Calendar command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
-    create: ["Create command flow", "Create", "required fields are title and Button runs next", "Save sample", "Draft", "create-sample", ""],
-    memory: ["Memory command flow", selectedTitle, "sample notes are browser-only", "Add note", "Ready", "add-note", selected?.id || ""],
-    lab: ["Demo Lab command flow", selectedTitle, selectedBlocker, selectedAction.label, "Lab", selectedAction.action, selectedAction.targetPackId],
-    meta: ["Meta command flow", "Meta", "product view and diagnostics are computed locally", "Refresh", "Ready", "refresh-meta", ""],
-    feedback: ["Feedback command flow", "Feedback", `Version ${stateVersionLabel()} is active`, "Report feedback", "Ready", "report-feedback", ""],
-    health: ["Health command flow", "Health", "route, storage, data, and metadata checks are running", "Refresh", "Ready", "refresh-health", ""],
-    settings: ["Settings command flow", "Settings", "copy profile changes labels only in this static demo", "Apply profile", "Ready", "apply-profile", ""],
-    pack: ["Pack detail command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId]
+  const selectedWorkCommand = {
+    where: selectedTitle,
+    blocker: selectedBlocker,
+    next: selectedAction.label,
+    stateText: selectedState,
+    action: selectedAction.action,
+    targetPackId: selectedAction.targetPackId
+  };
+  const selectedWorkReadyCommand = {
+    ...selectedWorkCommand,
+    stateText: "Ready"
   };
 
-  const [title, where, routeBlocker, routeNext, stateText, action, targetPackId] = routeCommands[state.route] || routeCommands.work;
+  const routeCommands = {
+    home: { title: "Command cockpit", where: "Home", blocker: reviewSummary, next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" },
+    triage: { title: "Triage tool command flow", where: "Triage tool", blocker: triageCount > 0 ? `${triageBlockers} blocker(s) visible in ${triageCount} row(s)` : "paste work to classify", next: triageNext, stateText: "Tool", action: triageAction, targetPackId: "" },
+    work: { title: "Work list command flow", ...selectedWorkCommand },
+    today: { title: "Today command flow", ...selectedWorkCommand },
+    board: { title: "Board command flow", ...selectedWorkCommand },
+    review: { title: "Review command flow", ...selectedWorkCommand },
+    focus: { title: "Focus command flow", ...selectedWorkCommand, stateText: "Focus" },
+    next: { title: "Next setup command flow", ...selectedWorkReadyCommand },
+    check: { title: "Check command flow", where: "Check", blocker: `${reviewCount} sample item(s) still need decisions`, next: "Validate sample", stateText: "Ready", action: "validate-sample", targetPackId: "" },
+    search: { title: "Search command flow", where: "Search", blocker: "type title, owner, next action, or due date", next: "Search", stateText: "Ready", action: "search-demo", targetPackId: "" },
+    stats: { title: "Stats command flow", where: "Stats", blocker: "sample counts are calculated in browser state", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" },
+    notes: { title: "Notes command flow", where: "Notes", blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selected?.id || "" },
+    timeline: { title: "Timeline command flow", where: "Timeline", blocker: "sample activity is browser-only", next: workListAction.label, stateText: "Ready", action: workListAction.action, targetPackId: "" },
+    files: { title: "Files command flow", where: "Files", blocker: "sample sources are references only", next: workListAction.label, stateText: "Ready", action: workListAction.action, targetPackId: "" },
+    calendar: { title: "Calendar command flow", ...selectedWorkCommand },
+    create: { title: "Create command flow", where: "Create", blocker: "required fields are title and Button runs next", next: "Save sample", stateText: "Draft", action: "create-sample", targetPackId: "" },
+    memory: { title: "Memory command flow", where: selectedTitle, blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selected?.id || "" },
+    lab: { title: "Demo Lab command flow", ...selectedWorkCommand, stateText: "Lab" },
+    meta: { title: "Meta command flow", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
+    feedback: { title: "Feedback command flow", where: "Feedback", blocker: `Version ${stateVersionLabel()} is active`, next: "Report feedback", stateText: "Ready", action: "report-feedback", targetPackId: "" },
+    health: { title: "Health command flow", where: "Health", blocker: "route, storage, data, and metadata checks are running", next: "Refresh", stateText: "Ready", action: "refresh-health", targetPackId: "" },
+    settings: { title: "Settings command flow", where: "Settings", blocker: "copy profile changes labels only in this static demo", next: "Apply profile", stateText: "Ready", action: "apply-profile", targetPackId: "" },
+    pack: { title: "Pack detail command flow", ...selectedWorkCommand }
+  };
+
+  const routeCommand = routeCommands[state.route] || routeCommands.work;
   return {
-    title,
-    where,
-    blocker: routeBlocker,
-    next: routeNext,
-    stateText: capitalize(stateText),
+    ...routeCommand,
+    stateText: capitalize(routeCommand.stateText),
     scope: `Scope: ${visibleCount} of ${state.packs.length} sample work items visible.`,
-    action,
-    targetPackId: targetPackId || ""
+    targetPackId: routeCommand.targetPackId || ""
   };
 }
 
@@ -1158,7 +1209,7 @@ function triageQualityChecks(rows) {
 function collectTriageSnapshot(rows = normalizedTriageRows()) {
   return {
     tool: "Button Runs Next: Work Triage Tool",
-    route: "#/triage",
+    route: formatRouteHash("triage"),
     storage: "browser localStorage only",
     rows: rows.map((row) => ({
       work: row.work,
@@ -2737,6 +2788,7 @@ function syncSearchParam(key, value) {
 }
 
 function buildHealthChecks() {
+  const routeContract = routeContractStatus();
   const checks = [
     {
       label: "Demo metadata loaded",
@@ -2762,6 +2814,11 @@ function buildHealthChecks() {
       label: "Route resolved",
       status: isKnownRoute(state.route),
       detail: `Current route: ${state.route}.`
+    },
+    {
+      label: "Route contract",
+      status: routeContract.status,
+      detail: routeContract.detail
     },
     {
       label: "Pack list loaded",
@@ -2791,14 +2848,66 @@ function styleAuditSummary() {
   return `${audit.totals.cssLines} CSS LOC and ${formatBytes(audit.totals.cssBytes)} measured.`;
 }
 
+function routeContractStatus() {
+  const navRouteIds = navItems.map(([id]) => id);
+  const routeIds = Object.keys(ROUTE_CONTRACT);
+  const missingContracts = navRouteIds.filter((route) => !ROUTE_CONTRACT[route]);
+  const missingNavEntries = routeIds.filter((route) => route !== "pack" && !navRouteIds.includes(route));
+  const invalidPackPatterns = routeIds.filter((route) => {
+    const contract = ROUTE_CONTRACT[route];
+    return Boolean(contract.acceptsPackId) !== contract.pattern.includes("{packId}");
+  });
+  const parsed = parseHashRoute(location.hash);
+  const unknownPackId = Boolean(parsed.packId && state.packs.length > 0 && !findPack(parsed.packId));
+  const status = missingContracts.length === 0
+    && missingNavEntries.length === 0
+    && invalidPackPatterns.length === 0
+    && !unknownPackId
+    && !parsed.malformedPackId
+    && !parsed.unexpectedPackId
+    && parsed.extraSegments.length === 0;
+
+  if (!status) {
+    const issues = [
+      missingContracts.length ? `missing contracts: ${missingContracts.join(", ")}` : "",
+      missingNavEntries.length ? `missing nav: ${missingNavEntries.join(", ")}` : "",
+      invalidPackPatterns.length ? `invalid pack patterns: ${invalidPackPatterns.join(", ")}` : "",
+      unknownPackId ? `unknown pack id: ${parsed.packId}` : "",
+      parsed.malformedPackId ? "malformed pack id fragment" : "",
+      parsed.unexpectedPackId ? `unexpected pack id for ${parsed.route}` : "",
+      parsed.extraSegments.length ? `extra route segments: ${parsed.extraSegments.join("/")}` : ""
+    ].filter(Boolean);
+
+    return {
+      status: false,
+      routeCount: routeIds.length,
+      currentRoute: parsed.route,
+      currentPattern: parsed.pattern,
+      detail: issues.join("; ")
+    };
+  }
+
+  return {
+    status: true,
+    routeCount: routeIds.length,
+    currentRoute: parsed.route,
+    currentPattern: parsed.pattern,
+    detail: parsed.fallback
+      ? `${routeIds.length} hash route contract(s) aligned; unknown route ${parsed.requestedRoute} resolved to #/home.`
+      : `${routeIds.length} hash route contract(s) aligned; current pattern ${parsed.pattern}.`
+  };
+}
+
 function buildStyleAuditSnapshot() {
   const audit = state.styleAudit || emptyStyleAudit();
+  const routeContract = routeContractStatus();
   return {
     status: audit.status,
     generatedAt: audit.generatedAt,
     storageKey: DEMO_STORAGE_KEY,
-    routeCount: navItems.length + 1,
+    routeCount: routeContract.routeCount,
     currentRoute: state.route,
+    routeContract,
     theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
     commandSync: commandSyncStatus(),
     currentOverflow: currentOverflowStatus(),
@@ -2870,6 +2979,11 @@ function styleAuditChecks() {
       detail: DEMO_STORAGE_KEY
     },
     {
+      label: "Route contract",
+      status: audit.routeContract.status,
+      detail: audit.routeContract.detail
+    },
+    {
       label: "Command controls sync",
       status: audit.commandSync.status,
       detail: audit.commandSync.detail
@@ -2912,9 +3026,9 @@ function collectLabSnapshot(pack, action, styleAudit) {
       primaryPack: el("primary-action")?.dataset.pack || ""
     },
     focusTargets: {
-      where: pack ? `#/work/${pack.id}` : "#/work",
-      blocker: pack && isReview(pack) ? `#/review/${pack.id}` : "#/review",
-      buttonRunsNext: pack && isMissingNextAction(pack) ? `#/next/${pack.id}` : "current command action"
+      where: formatRouteHash("work", pack?.id || ""),
+      blocker: pack && isReview(pack) ? formatRouteHash("review", pack.id) : formatRouteHash("review"),
+      buttonRunsNext: pack && isMissingNextAction(pack) ? formatRouteHash("next", pack.id) : "current command action"
     },
     styleAudit: {
       status: styleAudit.status,
