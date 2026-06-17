@@ -1,5 +1,10 @@
 const DEMO_STORAGE_KEY = "projects-static-demo-state-v2";
 const THEME_STORAGE_KEY = "projects-demo-theme";
+const DEMO_METADATA_FILE = "assets/demo-metadata.json";
+const DEMO_REPO_URL = "https://github.com/jared-bidlow/projects-web-demo";
+const DEMO_ISSUE_URL = `${DEMO_REPO_URL}/issues/new`;
+const DEMO_RELEASE_NOTES_URL = `${DEMO_REPO_URL}/releases`;
+const DEMO_DEFAULT_VERSION = "v0.0.0";
 
 const state = {
   basePacks: [],
@@ -10,6 +15,8 @@ const state = {
   filter: "all",
   status: "Demo actions update browser state only.",
   copyProfile: "general",
+  scenarioId: "default",
+  metadata: null,
   memoryDraft: ""
 };
 
@@ -22,6 +29,7 @@ const navItems = [
   ["focus", "F", "Focus"],
   ["next", "N", "Next"],
   ["check", "!", "Check"],
+  ["health", "L", "Health"],
   ["search", "S", "Search"],
   ["stats", "%", "Stats"],
   ["notes", "N", "Notes"],
@@ -30,6 +38,8 @@ const navItems = [
   ["calendar", "D", "Calendar"],
   ["create", "+", "Create"],
   ["memory", "M", "Memory"],
+  ["meta", "I", "Meta"],
+  ["feedback", "?", "Feedback"],
   ["settings", "...", "Settings"]
 ];
 
@@ -49,7 +59,84 @@ const copyProfiles = {
   climate: { work: "site check", newWork: "New check", result: "Finding", sources: "Datasets and notes" }
 };
 
+const DEMO_SCENARIOS = [
+  {
+    id: "default",
+    label: "Default",
+    description: "Balanced sample flow with mixed states, review and done states.",
+    profile: "general",
+    route: "home",
+    filter: "all",
+    transform: (packs) => structuredClone(packs)
+  },
+  {
+    id: "review",
+    label: "Review-first",
+    description: "Focus this run on the review queue for validation testing.",
+    profile: "developer",
+    route: "review",
+    filter: "review",
+    transform: (packs) => packs.map((pack) => pack.status === "done"
+      ? pack
+      : {
+          ...pack,
+          blocker: pack.blocker === "none" ? "Needs review context" : pack.blocker,
+          next: "Review",
+          status: "blocked"
+        })
+  },
+  {
+    id: "healthy",
+    label: "Healthy queue",
+    description: "Normalize blockers and next actions to reduce friction in the demo.",
+    profile: "general",
+    route: "work",
+    filter: "active",
+    transform: (packs) => packs.map((pack) => pack.status === "done"
+      ? pack
+      : {
+          ...pack,
+          blocker: "none",
+          next: pack.next === "Choose next action" || !pack.next ? "Open" : pack.next,
+          status: pack.status === "draft" ? "active" : pack.status
+        })
+  },
+  {
+    id: "onboarding",
+    label: "Onboarding",
+    description: "Compact first-run sample set with clear labels and actions.",
+    profile: "climate",
+    route: "home",
+    filter: "all",
+    transform: (packs) => packs
+      .slice()
+      .sort((left, right) => left.title.localeCompare(right.title))
+      .slice(0, 5)
+      .map((pack) => ({
+        ...pack,
+        owner: pack.owner === "No owner" ? "Owner pending" : pack.owner
+      }))
+  },
+  {
+    id: "due-view",
+    label: "Due today",
+    description: "Shift active samples to today for calendar and today routes.",
+    profile: "general",
+    route: "today",
+    filter: "active",
+    transform: (packs) => packs.map((pack) => pack.status === "done"
+      ? pack
+      : {
+          ...pack,
+          due: "2026-06-16"
+        })
+  }
+];
+
+const DEMO_SCENARIO_BY_ID = Object.fromEntries(DEMO_SCENARIOS.map((scenario) => [scenario.id, scenario]));
+
 const el = (id) => document.getElementById(id);
+const launchParams = new URLSearchParams(location.search);
 
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
@@ -57,13 +144,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderNav();
 
   try {
-    const response = await fetch("data/demo-packs.json", { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`Demo data failed with ${response.status}`);
+    const [metadata, packsResponse] = await Promise.all([
+      fetch(DEMO_METADATA_FILE, { cache: "no-store" }).catch(() => null),
+      fetch("data/demo-packs.json", { cache: "no-store" })
+    ]);
+    if (!packsResponse.ok) {
+      throw new Error(`Demo data failed with ${packsResponse.status}`);
     }
 
-    state.basePacks = await response.json();
+    state.basePacks = await packsResponse.json();
+    const parsedMetadata = metadata && safeJson(await metadata.text());
+    state.metadata = buildMetadata(parsedMetadata);
     loadState();
+    applyLaunchConfiguration();
     routeFromHash();
     render();
   } catch (error) {
@@ -112,16 +205,66 @@ function loadState() {
   const saved = safeJson(localStorage.getItem(DEMO_STORAGE_KEY));
   state.packs = Array.isArray(saved?.packs) ? saved.packs : structuredClone(state.basePacks);
   state.copyProfile = saved?.copyProfile || "general";
+  state.scenarioId = saved?.scenarioId || "default";
+  state.filter = saved?.filter || "all";
+  state.query = saved?.query || "";
   state.selectedId = saved?.selectedId || state.packs[0]?.id || "";
   state.status = saved?.status || state.status;
+}
+
+function applyLaunchConfiguration() {
+  const profileParam = launchParams.get("profile");
+  if (profileParam && copyProfiles[profileParam]) {
+    state.copyProfile = profileParam;
+    state.status = `${capitalize(profileParam)} profile applied from URL.`;
+  }
+
+  const scenarioParam = launchParams.get("scenario");
+  if (scenarioParam && DEMO_SCENARIO_BY_ID[scenarioParam]) {
+    state.route = DEMO_SCENARIO_BY_ID[scenarioParam].route || state.route;
+    applyScenario(DEMO_SCENARIO_BY_ID[scenarioParam], { force: true });
+  } else if (!Array.isArray(state.packs) || state.packs.length === 0) {
+    applyScenario(DEMO_SCENARIO_BY_ID.default);
+  } else if (!DEMO_SCENARIO_BY_ID[state.scenarioId]) {
+    state.scenarioId = "default";
+  }
+
+  if (!state.metadata) {
+    state.metadata = buildMetadata(null);
+  }
+}
+
+function applyScenario(scenario, options = {}) {
+  const current = DEMO_SCENARIO_BY_ID[scenario?.id] || DEMO_SCENARIO_BY_ID.default;
+  const force = options.force ?? false;
+
+  const next = current.transform(structuredClone(state.basePacks));
+  state.packs = next;
+  state.scenarioId = current.id;
+  state.filter = current.filter || "all";
+  state.copyProfile = current.profile || state.copyProfile;
+  state.query = "";
+  state.selectedId = state.packs[0]?.id || "";
+  if (force || options.skipSave) {
+    state.status = current.statusMessage || `${current.label} scenario loaded.`;
+  }
+  if (current.route && options.applyRoute) {
+    state.route = current.route;
+  }
+  syncSearchParam("scenario", current.id);
+  saveState();
+  render();
 }
 
 function saveState() {
   localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify({
     packs: state.packs,
     copyProfile: state.copyProfile,
+    scenarioId: state.scenarioId,
     selectedId: state.selectedId,
-    status: state.status
+    status: state.status,
+    filter: state.filter,
+    query: state.query
   }));
 }
 
@@ -129,10 +272,12 @@ function resetState() {
   localStorage.removeItem(DEMO_STORAGE_KEY);
   state.packs = structuredClone(state.basePacks);
   state.copyProfile = "general";
+  state.scenarioId = "default";
   state.selectedId = state.packs[0]?.id || "";
   state.query = "";
   state.filter = "all";
   state.status = "Demo data reset. Browser state only.";
+  syncSearchParam("scenario", null);
   render();
 }
 
@@ -148,7 +293,13 @@ function renderNav() {
 function routeFromHash() {
   const hash = location.hash.replace(/^#\/?/, "");
   const [route, id] = hash.split("/");
-  state.route = route || "home";
+  if (!route) {
+    state.route = state.route || "home";
+  } else if (isKnownRoute(route)) {
+    state.route = route;
+  } else {
+    state.route = "home";
+  }
   if (id) {
     state.selectedId = decodeURIComponent(id);
   }
@@ -158,9 +309,23 @@ function go(route, id = "") {
   location.hash = id ? `#/${route}/${encodeURIComponent(id)}` : `#/${route}`;
 }
 
+function isKnownRoute(route) {
+  return navItems.some(([id]) => id === route);
+}
+
 function render() {
   if (!state.packs.find((pack) => pack.id === state.selectedId)) {
     state.selectedId = state.packs[0]?.id || "";
+  }
+
+  const versionElement = el("demo-version");
+  if (versionElement) {
+    versionElement.textContent = stateVersionLabel();
+  }
+  const changelogElement = el("demo-changelog");
+  if (changelogElement) {
+    changelogElement.href = state.metadata?.releaseNotesUrl || DEMO_RELEASE_NOTES_URL;
+    changelogElement.textContent = `Changelog (${state.metadata?.version || DEMO_DEFAULT_VERSION})`;
   }
 
   document.querySelectorAll(".demo-nav-item").forEach((item) => {
@@ -172,6 +337,9 @@ function render() {
   renderCommand(currentPack());
 
   switch (state.route) {
+    case "health":
+      renderHealth();
+      break;
     case "home":
       renderHome();
       break;
@@ -220,6 +388,12 @@ function render() {
     case "settings":
       renderSettings();
       break;
+    case "feedback":
+      renderFeedback();
+      break;
+    case "meta":
+      renderMeta();
+      break;
     case "pack":
       renderPackDetail();
       break;
@@ -235,6 +409,8 @@ function render() {
 function screenTitleForRoute() {
   const profile = copyProfiles[state.copyProfile] || copyProfiles.general;
   const titles = {
+    health: "Demo health",
+    meta: "Demo meta",
     home: "Command cockpit",
     work: "Work list",
     today: "Today",
@@ -251,6 +427,8 @@ function screenTitleForRoute() {
     calendar: "Calendar",
     create: profile.newWork,
     memory: "Memory",
+    meta: "Meta",
+    feedback: "Feedback",
     settings: "Settings",
     pack: "Pack detail"
   };
@@ -291,6 +469,9 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     calendar: ["Calendar command flow", "Calendar", "sample due dates are visible", "Focus", "Ready"],
     create: ["Create command flow", "Create", "required fields are title and Button runs next", "Save sample", "Draft"],
     memory: ["Memory command flow", "Memory", "sample notes are browser-only", "Add note", "Ready"],
+    meta: ["Meta command flow", "Meta", "product view and diagnostics are computed locally", "Refresh", "Ready"],
+    feedback: ["Feedback command flow", "Feedback", `Version ${stateVersionLabel()} is active`, "Report", "Ready"],
+    health: ["Health command flow", "Health", "route, storage, data, and metadata checks are running", "Refresh", "Ready"],
     settings: ["Settings command flow", "Settings", "copy profile changes labels only in this static demo", "Apply profile", "Ready"],
     pack: ["Pack detail command flow", selectedTitle, selected?.blocker || "none", selected?.next || "Save sample", selected?.status || "Ready"]
   };
@@ -322,6 +503,7 @@ function updateCommand(command) {
 function renderHome() {
   const reviewCount = state.packs.filter(isReview).length;
   const doneCount = state.packs.filter((pack) => pack.status === "done").length;
+  const scenario = DEMO_SCENARIO_BY_ID[state.scenarioId] || DEMO_SCENARIO_BY_ID.default;
   el("screen-content").innerHTML = `
     <div class="demo-grid">
       ${metricCard("Visible work", state.packs.length, "Sample packs in browser state.")}
@@ -340,13 +522,37 @@ function renderHome() {
       <div class="demo-quick-actions">
         ${navButton("work", "Open work list")}
         ${navButton("today", "Open today")}
+        ${navButton("meta", "Open meta")}
         ${navButton("create", "Create sample")}
         ${navButton("settings", "Change copy profile")}
+        ${navButton("feedback", "Report feedback")}
+      </div>
+      <div class="demo-meta-row" aria-label="Active scenario">
+        <span>Active scenario: <strong>${escapeHtml(scenario.label)}</strong></span>
+        <span>${escapeHtml(scenario.description)}</span>
+      </div>
+    </section>
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Scenarios</span>
+          <h2>Choose a quick start</h2>
+        </div>
+        <span class="demo-status">Scenario: ${escapeHtml(state.scenarioId)} / Profile: ${escapeHtml(state.copyProfile)}</span>
+      </div>
+      <div class="demo-scenario-grid">
+        ${DEMO_SCENARIOS.map((item) => `
+          <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}">
+            <strong>${escapeHtml(item.label)}</strong>
+            <span>${escapeHtml(item.description)}</span>
+          </button>
+        `).join("")}
       </div>
     </section>
     ${recentActivityPanel()}
   `;
   bindGoButtons();
+  bindScenarioCards();
 }
 
 function renderWork() {
@@ -749,6 +955,7 @@ function renderSettings() {
       </div>
       <p>Copy profile changes labels in this static demo. It does not change ontology, local methods, or real pack storage.</p>
       <p class="demo-status-line">${escapeHtml(state.status)}</p>
+      <h3>Profile</h3>
       <div class="demo-profile-grid">
         ${Object.entries(copyProfiles).map(([key, value]) => `
           <button type="button" class="demo-profile-card" data-profile="${escapeHtml(key)}" aria-pressed="${state.copyProfile === key}">
@@ -757,16 +964,133 @@ function renderSettings() {
           </button>
         `).join("")}
       </div>
+      <h3>Scenario presets</h3>
+      <div class="demo-scenario-grid">
+        ${DEMO_SCENARIOS.map((item) => `
+          <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}">
+            <strong>${escapeHtml(item.label)}</strong>
+            <span>${escapeHtml(item.description)}</span>
+          </button>
+        `).join("")}
+      </div>
     </section>
   `;
   document.querySelectorAll(".demo-profile-card").forEach((button) => {
     button.addEventListener("click", () => {
       state.copyProfile = button.dataset.profile;
+      syncSearchParam("profile", button.dataset.profile);
       state.status = `${capitalize(state.copyProfile)} copy profile applied in demo state.`;
       render();
     });
   });
+  bindScenarioCards();
   el("reset-demo").addEventListener("click", resetState);
+}
+
+function renderHealth() {
+  const checks = buildHealthChecks();
+  const healthy = checks.every((check) => check.status);
+  const now = new Date().toLocaleString();
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Live checks</span>
+          <h2>Demo health</h2>
+        </div>
+        <span class="demo-status">${healthy ? "Passing" : "Needs attention"}</span>
+      </div>
+      <p>Route: <strong>${escapeHtml(state.route || "home")}</strong> · Theme: <strong>${document.documentElement.classList.contains("dark") ? "dark" : "light"}</strong> · Built: <strong>${escapeHtml(state.metadata.generatedAt ? new Date(state.metadata.generatedAt).toLocaleString() : "unknown")}</strong></p>
+      <div class="demo-check-list">
+        ${checks.map(healthLine).join("")}
+      </div>
+      <p><small>Snapshot generated: ${escapeHtml(now)}</small></p>
+    </section>
+    <div class="demo-grid">
+      ${metricCard("Data", state.packs.length, "Loaded sample packs in browser state.")}
+      ${metricCard("Checks", checks.filter((check) => check.status).length, "Passing health checks.")}
+      ${metricCard("Checks total", checks.length, "All expected telemetry checks.")}
+      ${metricCard("Scenario", state.scenarioId, "Current scenario library preset.")}
+    </div>
+  `;
+}
+
+function renderFeedback() {
+  const context = collectDiagnosticContext();
+  const issueTitle = `Projects static demo issue (${stateVersionLabel()})`;
+  const issueBody = `Context:\n\n${JSON.stringify(context, null, 2)}`;
+  const issueUrl = `${DEMO_ISSUE_URL}?title=${encodeURIComponent(issueTitle)}&labels=demo%2Cfeedback&body=${encodeURIComponent(issueBody)}`;
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Feedback</span>
+          <h2>Report a demo issue</h2>
+        </div>
+        <span class="demo-status">${escapeHtml(stateVersionLabel())}</span>
+      </div>
+      <p>Attach pre-filled environment context, or copy it and paste into the issue body.</p>
+      <div class="demo-inline-form">
+        <label class="sr-only" for="feedback-context">Demo diagnostic context</label>
+        <textarea id="feedback-context" class="demo-search-input" rows="10">${escapeHtml(JSON.stringify(context, null, 2))}</textarea>
+      </div>
+      <div class="demo-card-actions">
+        <button id="copy-feedback" class="btn" type="button">Copy context</button>
+        <a class="btn btn-primary" id="open-feedback" href="${escapeAttribute(issueUrl)}" rel="noopener noreferrer" target="_blank">Open GitHub issue</a>
+      </div>
+    </section>
+  `;
+  el("copy-feedback").addEventListener("click", () => copyToClipboard(issueBody));
+  el("open-feedback").addEventListener("click", () => {
+    state.status = "Opening demo feedback issue form.";
+  });
+}
+
+function renderMeta() {
+  const counts = countByFilter();
+  const checks = buildHealthChecks();
+  const passing = checks.filter((check) => check.status).length;
+  const context = collectDiagnosticContext();
+  const now = new Date().toLocaleString();
+
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Product telemetry</span>
+          <h2>Demo meta dashboard</h2>
+        </div>
+        <span class="demo-status">${escapeHtml(context.version || stateVersionLabel())}</span>
+      </div>
+      <p>A compact product-like summary from browser-only state and runtime checks.</p>
+      <div class="demo-grid">
+        ${metricCard("Version", context.version || stateVersionLabel(), "Build label from demo metadata.")}
+        ${metricCard("Scenario", state.scenarioId, "Active demo preset.")}
+        ${metricCard("Review", counts.review, "Needs follow-up in current demo state.")}
+        ${metricCard("Health", `${passing}/${checks.length}`, "Checks passing now.")}
+      </div>
+      <div class="demo-check-list">
+        ${checks.map(healthLine).join("")}
+      </div>
+      <div class="demo-grid">
+        ${metricCard("Active packs", counts.active, "Packs ready to act on.")}
+        ${metricCard("Blocked packs", counts.blocked, "Packs requiring action or missing next step.")}
+        ${metricCard("Done packs", counts.done, "Completed sample packs.")}
+        ${metricCard("All packs", counts.all, "Total packs loaded.")}
+      </div>
+      <div class="demo-inline-form">
+        <label class="sr-only" for="meta-context">Meta context payload</label>
+        <textarea id="meta-context" class="demo-search-input" rows="8">${escapeHtml(JSON.stringify(context, null, 2))}</textarea>
+      </div>
+      <div class="demo-card-actions">
+        <button id="copy-meta-context" class="btn" type="button">Copy meta snapshot</button>
+      </div>
+      <p><small>Snapshot generated: ${escapeHtml(now)}</small></p>
+    </section>
+  `;
+  el("copy-meta-context").addEventListener("click", () => {
+    copyToClipboard(JSON.stringify(context, null, 2));
+  });
 }
 
 function workToolbar(label) {
@@ -1131,6 +1455,15 @@ function runPrimaryAction() {
   } else if (state.route === "settings") {
     state.status = `${capitalize(state.copyProfile)} profile is active in demo state.`;
     render();
+  } else if (state.route === "health") {
+    state.status = "Health checks refreshed.";
+    render();
+  } else if (state.route === "feedback") {
+    state.status = "Feedback context refreshed for this snapshot.";
+    render();
+  } else if (state.route === "meta") {
+    state.status = "Meta diagnostics recomputed for this session.";
+    render();
   } else {
     handlePackAction(pack.id, commandActionForLabel(command.next).action);
   }
@@ -1329,6 +1662,141 @@ function activityPanel(pack) {
     </div>
     <div class="demo-list">${pack.activity.map((item) => `<div class="demo-note">${escapeHtml(item)}</div>`).join("")}</div>
   </section>`;
+}
+
+function buildMetadata(rawMetadata = {}) {
+  const fallbackVersion = DEMO_DEFAULT_VERSION;
+  const releaseNotesUrl = rawMetadata?.releaseNotesUrl || DEMO_RELEASE_NOTES_URL;
+  return {
+    version: rawMetadata?.version || fallbackVersion,
+    commit: rawMetadata?.commit || "unknown",
+    generatedAt: rawMetadata?.generatedAt || rawMetadata?.generated || new Date().toISOString(),
+    releaseNotesUrl,
+    repository: rawMetadata?.repository || DEMO_REPO_URL,
+    profileApplied: rawMetadata?.profileApplied || state.copyProfile,
+    scenario: rawMetadata?.scenario || state.scenarioId
+  };
+}
+
+function stateVersionLabel() {
+  const version = state.metadata?.version || DEMO_DEFAULT_VERSION;
+  const source = state.metadata?.commit && state.metadata.commit !== "unknown"
+    ? ` (${state.metadata.commit.slice(0, 7)})`
+    : "";
+  return `${version}${source}`;
+}
+
+function bindScenarioCards() {
+  document.querySelectorAll("[data-scenario]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const scenario = DEMO_SCENARIO_BY_ID[button.dataset.scenario];
+      if (!scenario) return;
+      syncSearchParam("scenario", scenario.id);
+      applyScenario(scenario, { force: true, applyRoute: true });
+      if (scenario.route) {
+        go(scenario.route);
+      }
+    });
+  });
+}
+
+function syncSearchParam(key, value) {
+  const params = new URLSearchParams(location.search);
+  if (value == null || value === "") {
+    params.delete(key);
+  } else {
+    params.set(key, value);
+  }
+  const suffix = params.toString();
+  const next = `${location.pathname}${suffix ? `?${suffix}` : ""}${location.hash}`;
+  history.replaceState({}, "", next);
+}
+
+function buildHealthChecks() {
+  const checks = [
+    {
+      label: "Demo metadata loaded",
+      status: Boolean(state.metadata && state.metadata.version),
+      detail: state.metadata?.version ? `Version ${state.metadata.version}` : "Metadata not available."
+    },
+    {
+      label: "Theme system",
+      status: Boolean(state.metadata),
+      detail: document.documentElement.classList.contains("dark") ? "Dark mode active." : "Light mode active."
+    },
+    {
+      label: "Local storage state",
+      status: canUseLocalStorage(DEMO_STORAGE_KEY),
+      detail: "localStorage state persisted for demo actions."
+    },
+    {
+      label: "Scenario selected",
+      status: Boolean(DEMO_SCENARIO_BY_ID[state.scenarioId]),
+      detail: `Scenario ${state.scenarioId} applied.`
+    },
+    {
+      label: "Route resolved",
+      status: isKnownRoute(state.route),
+      detail: `Current route: ${state.route}.`
+    },
+    {
+      label: "Pack list loaded",
+      status: Array.isArray(state.packs) && state.packs.length > 0,
+      detail: `${state.packs.length} sample packs available.`
+    }
+  ];
+  return checks;
+}
+
+function healthLine(check) {
+  return `<div class="demo-row">
+    <div>
+      <strong>${escapeHtml(check.label)}</strong>
+      <span>${escapeHtml(check.detail)}</span>
+    </div>
+    <span class="demo-state-pill">${check.status ? "pass" : "attention"}</span>
+  </div>`;
+}
+
+function canUseLocalStorage(storageKey) {
+  try {
+    const key = `__projects_demo_health_${storageKey}`;
+    localStorage.setItem(key, "1");
+    const value = localStorage.getItem(key);
+    localStorage.removeItem(key);
+    return value === "1";
+  } catch {
+    return false;
+  }
+}
+
+function collectDiagnosticContext() {
+  return {
+    profile: state.copyProfile,
+    scenario: state.scenarioId,
+    route: state.route,
+    routeHash: location.hash,
+    search: location.search,
+    version: stateVersionLabel(),
+    theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
+    metricSource: state.metadata,
+    packCount: state.packs.length,
+    reviewCount: state.packs.filter(isReview).length,
+    timestamp: new Date().toISOString()
+  };
+}
+
+function copyToClipboard(value) {
+  navigator.clipboard?.writeText(value).then(
+    () => {
+      state.status = "Feedback context copied to clipboard.";
+      render();
+    },
+    () => {
+      state.status = "Clipboard blocked; use the text area to copy manually.";
+      render();
+    }
+  );
 }
 
 function emptyState(text) {

@@ -1,47 +1,89 @@
 # Projects GitHub Pages Demo
 
-This folder contains the static public demo for Projects. It simulates the
-cockpit in browser state and is intentionally not the real `Projects.Web`
-server app.
+This folder contains the static public demo for **Projects**. It is intentionally browser-only:
+sample work is loaded from `data/demo-packs.json`, and all actions stay in localStorage.
 
-- Demo: `https://jared-bidlow.github.io/projects-web-demo/`
-- Public repo: `https://github.com/jared-bidlow/projects-web-demo`
+## Product surface
 
-| Boundary | Demo behavior |
-|---|---|
-| Data | Uses fake sample work from `data/demo-packs.json`. |
-| Actions | Simulates changes in browser state only. |
-| Screens | Includes Home, Work, Today, Board, Review, Focus, Next, Check, Search, Stats, Notes, Timeline, Files, Calendar, Create, Memory, Settings, and Pack detail routes. |
-| Styling | The deploy workflow copies `src/Projects.Web/wwwroot/css/app.css` into the Pages artifact. |
-| Storage | Does not read or write local packs, memory, files, or activity logs. |
+The demo acts like a product landing surface for quick proofing:
 
-The demo is a hash-routed static app. Example paths:
+- Version metadata in the header (`demo-version`) is loaded from `assets/demo-metadata.json`.
+- Health and feedback routes provide product-like operational checks and feedback handoff.
+- Scenario presets emulate different starting conditions for demos and screenshots.
+- Settings lets you switch copy profile and scenario quickly.
+
+## Routes
+
+The app is hash-routed. Key screens are:
 
 | Route | Purpose |
 |---|---|
-| `#/work` | Browse and filter fake sample work. |
-| `#/board` | Scan fake work by status lane. |
-| `#/review` | Change fake Button-runs-next values and mark sample work done. |
-| `#/focus` | Show one selected item with Where / Blocker / Button runs next. |
-| `#/next` | Choose the simulated Button-runs-next action for a sample item. |
-| `#/check` | Run browser-only readiness checks against the fake data. |
-| `#/stats` | Review browser-state counts by status and review need. |
-| `#/notes` | Read fake memory notes across sample work. |
-| `#/timeline` | Read fake activity entries across sample work. |
-| `#/files` | Show fake source references without opening local files. |
-| `#/calendar` | Browse fake due dates. |
-| `#/create` | Add a browser-only sample item. |
-| `#/settings` | Switch copy profile labels in demo state. |
+| `#/home` | Cockpit overview and scenario launch pad. |
+| `#/work` | Work list browsing and action simulation. |
+| `#/today` | Today-focused items. |
+| `#/board` | Status lane board. |
+| `#/review` | Review queue and next-step tuning. |
+| `#/focus` | Single selected sample work. |
+| `#/next` | Configure a sample item’s next action. |
+| `#/check` | Browser checks against sample data and quality rules. |
+| `#/search` | Search through sample work fields. |
+| `#/stats` | Simple status and review metrics. |
+| `#/notes` | Memory-style notes from sample work. |
+| `#/timeline` | Activity history from sample state. |
+| `#/files` | Source reference list. |
+| `#/calendar` | Due date view. |
+| `#/create` | Add a sample work item. |
+| `#/memory` | Per-item memory. |
+| `#/settings` | Copy profile and scenario controls. |
+| `#/feedback` | Feedback workflow with prefilled diagnostics. |
+| `#/health` | Demo health checks and metadata summary. |
+| `#/meta` | Product-style telemetry and meta snapshot for demos. |
 
-The source-repo workflow is `.github/workflows/deploy-demo.yml`. It builds and
-uploads a review artifact. The public demo repository hosts the live GitHub
-Pages site.
+## Runtime conventions
 
-Build the same static artifact locally:
+| Area | Demo behavior |
+|---|---|
+| Data | Reads fake sample work from `data/demo-packs.json`. |
+| State | Persists temporary demo state in localStorage under `projects-static-demo-state-v2`. |
+| Actions | Browser-only mutations (no remote write-back). |
+| Theme | Supports light/dark, defaults to dark. |
+| Routes | `#/home` default when no route is provided. |
+| Metadata | Loaded from `assets/demo-metadata.json` and shown in the header. |
+
+## Build artifact
+
+The shared stylesheet and icon are copied from `src/Projects.Web`:
+
+- `src/Projects.Web/wwwroot/css/app.css`
+- `src/Projects.Web/wwwroot/favicon.png`
+
+Metadata is generated during export and written to `assets/demo-metadata.json` with:
+
+- version
+- commit
+- generated timestamp
+- repository/release links
+- scenario/profile defaults
+
+Build locally:
 
 ```powershell
 pwsh -NoLogo -NoProfile -File scripts/export-pages-demo.ps1 -OutputPath _site -Clean
 ```
 
-For the public demo repository, copy or push only the generated `_site`
-contents. Do not mirror the private app repo or real pack data.
+`-Clean` removes the destination folder first and re-creates it safely.
+
+## Public demo output
+
+The exported `_site` folder is static and includes only the browser app,
+copied public assets, sample data, and GitHub Pages marker files:
+
+- `index.html`
+- `.nojekyll`
+- `README.md`
+- `assets/app.css`
+- `assets/demo.css`
+- `assets/demo.js`
+- `assets/demo-metadata.json`
+- `assets/favicon.png`
+- `data/demo-packs.json`

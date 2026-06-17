@@ -57,9 +57,9 @@ html[data-theme="dark"] {
     --cockpit-bg: #0D1512;
     --cockpit-surface: #17211D;
     --cockpit-nav-bg: #101A16;
-    --cockpit-accent: #67C5B1;
-    --cockpit-accent-hover: #8CEAD6;
-    --cockpit-accent-text: #0D1512;
+    --cockpit-accent: #4CA48F;
+    --cockpit-accent-hover: #7DDAC3;
+    --cockpit-accent-text: #ECFFFA;
     --cockpit-accent-50: #16372F;
     --cockpit-accent-100: #16453B;
     --cockpit-accent-200: #0E443D;
@@ -2037,6 +2037,13 @@ h3,
 .focus-timer-controls {
     gap: 0.5rem;
     margin-bottom: 1rem;
+}
+
+.focus-timer-save-note {
+    margin: -0.35rem auto 1rem;
+    color: var(--cockpit-text-muted);
+    font-size: 0.86rem;
+    font-weight: 650;
 }
 
 .focus-session-detail-grid {
@@ -6014,7 +6021,7 @@ h3,
     .mobile-command-rail-cta :is(button, a, [role="button"]).btn-primary:focus-visible,
     .mobile-bottom-command :is(button, a, [role="button"]):focus-visible,
     .app-header :is(button, a, [role="button"]).btn-primary:focus-visible {
-        outline: 3px solid rgba(255, 205, 119, 0.95) !important;
+        outline: 3px solid color-mix(in srgb, var(--cockpit-accent) 72%, transparent) !important;
         outline-offset: 4px;
     }
 
@@ -13722,4 +13729,129 @@ html[data-theme="dark"] .app-shell :is(.badge, .badge-active, .badge-done, .badg
         color: var(--cockpit-accent-text) !important;
         -webkit-text-fill-color: var(--cockpit-accent-text) !important;
     }
+}
+
+/* ===== Projects demo dark-mode contrast stabilization ===== */
+html.dark .app-shell,
+html[data-theme="dark"] .app-shell,
+body.dark .app-shell,
+body[data-theme="dark"] .app-shell {
+    --projects-focus-ring: color-mix(in srgb, var(--cockpit-accent) 78%, var(--cockpit-text));
+}
+
+html.dark .app-shell :is(a, button, input, select, textarea, summary):focus-visible,
+html[data-theme="dark"] .app-shell :is(a, button, input, select, textarea, summary):focus-visible,
+body.dark .app-shell :is(a, button, input, select, textarea, summary):focus-visible,
+body[data-theme="dark"] .app-shell :is(a, button, input, select, textarea, summary):focus-visible {
+    outline: 3px solid var(--projects-focus-ring) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 1px var(--cockpit-bg) !important;
+}
+
+html.dark .app-shell :is(.home-mobile-work-card, .review-mobile-card, .today-mobile-card, .focus-mobile-card, .dashboard-kpi-card, .telemetry-command-metric, .dashboard-diagnostic-card, .dashboard-owner-alert, .stats-summary-card),
+html[data-theme="dark"] .app-shell :is(.home-mobile-work-card, .review-mobile-card, .today-mobile-card, .focus-mobile-card, .dashboard-kpi-card, .telemetry-command-metric, .dashboard-diagnostic-card, .dashboard-owner-alert, .stats-summary-card),
+body.dark .app-shell :is(.home-mobile-work-card, .review-mobile-card, .today-mobile-card, .focus-mobile-card, .dashboard-kpi-card, .telemetry-command-metric, .dashboard-diagnostic-card, .dashboard-owner-alert, .stats-summary-card),
+body[data-theme="dark"] .app-shell :is(.home-mobile-work-card, .review-mobile-card, .today-mobile-card, .focus-mobile-card, .dashboard-kpi-card, .telemetry-command-metric, .dashboard-diagnostic-card, .dashboard-owner-alert, .stats-summary-card) {
+    background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg)) !important;
+    border-color: color-mix(in srgb, var(--cockpit-border) 86%, transparent) !important;
+    color: var(--cockpit-text) !important;
+}
+
+html.dark .app-shell :is(.home-mobile-card-top, .home-mobile-card-command, .home-mobile-card-command-line, .mobile-command-line, .mobile-command-line-next.mobile-command-line-state, .home-mobile-card-command-next:not(.mobile-command-line-action), .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line),
+html[data-theme="dark"] .app-shell :is(.home-mobile-card-top, .home-mobile-card-command, .home-mobile-card-command-line, .mobile-command-line, .mobile-command-line-next.mobile-command-line-state, .home-mobile-card-command-next:not(.mobile-command-line-action), .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line),
+body.dark .app-shell :is(.home-mobile-card-top, .home-mobile-card-command, .home-mobile-card-command-line, .mobile-command-line, .mobile-command-line-next.mobile-command-line-state, .home-mobile-card-command-next:not(.mobile-command-line-action), .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line),
+body[data-theme="dark"] .app-shell :is(.home-mobile-card-top, .home-mobile-card-command, .home-mobile-card-command-line, .mobile-command-line, .mobile-command-line-next.mobile-command-line-state, .home-mobile-card-command-next:not(.mobile-command-line-action), .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) {
+    background: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg)) !important;
+    border-color: color-mix(in srgb, var(--cockpit-border) 86%, transparent) !important;
+    color: var(--cockpit-text) !important;
+    -webkit-text-fill-color: var(--cockpit-text) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+html.dark .app-shell :is(.home-mobile-card-top, .home-mobile-card-command-line, .mobile-command-line, .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) :is(a, span, strong, h3, p),
+html[data-theme="dark"] .app-shell :is(.home-mobile-card-top, .home-mobile-card-command-line, .mobile-command-line, .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) :is(a, span, strong, h3, p),
+body.dark .app-shell :is(.home-mobile-card-top, .home-mobile-card-command-line, .mobile-command-line, .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) :is(a, span, strong, h3, p),
+body[data-theme="dark"] .app-shell :is(.home-mobile-card-top, .home-mobile-card-command-line, .mobile-command-line, .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) :is(a, span, strong, h3, p) {
+    color: var(--cockpit-text) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html.dark .app-shell :is(.home-mobile-card-command-line, .mobile-command-line, .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) span,
+html[data-theme="dark"] .app-shell :is(.home-mobile-card-command-line, .mobile-command-line, .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) span,
+body.dark .app-shell :is(.home-mobile-card-command-line, .mobile-command-line, .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) span,
+body[data-theme="dark"] .app-shell :is(.home-mobile-card-command-line, .mobile-command-line, .dashboard-command-card .mobile-command-line, .telemetry-metric-command .mobile-command-line) span {
+    color: var(--cockpit-text-muted) !important;
+    -webkit-text-fill-color: var(--cockpit-text-muted) !important;
+}
+
+html.dark .page-header .theme-toggle,
+html[data-theme="dark"] .page-header .theme-toggle,
+body.dark .page-header .theme-toggle,
+body[data-theme="dark"] .page-header .theme-toggle {
+    background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg)) !important;
+    border-color: color-mix(in srgb, var(--cockpit-accent) 62%, var(--cockpit-border)) !important;
+    color: var(--cockpit-text) !important;
+    -webkit-text-fill-color: var(--cockpit-text) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--cockpit-accent) 22%, transparent) !important;
+}
+
+html.dark .app-shell,
+html[data-theme="dark"] .app-shell,
+body.dark .app-shell,
+body[data-theme="dark"] .app-shell {
+    --projects-primary-on-accent: #061B16;
+}
+
+html.dark .app-shell :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active, .mobile-command-actions .btn-primary, .home-mobile-card-actions .btn-primary, .review-mobile-card-actions .btn-primary, .mobile-shell-brief > a, .app-layout-command-status-next),
+html[data-theme="dark"] .app-shell :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active, .mobile-command-actions .btn-primary, .home-mobile-card-actions .btn-primary, .review-mobile-card-actions .btn-primary, .mobile-shell-brief > a, .app-layout-command-status-next),
+body.dark .app-shell :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active, .mobile-command-actions .btn-primary, .home-mobile-card-actions .btn-primary, .review-mobile-card-actions .btn-primary, .mobile-shell-brief > a, .app-layout-command-status-next),
+body[data-theme="dark"] .app-shell :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active, .mobile-command-actions .btn-primary, .home-mobile-card-actions .btn-primary, .review-mobile-card-actions .btn-primary, .mobile-shell-brief > a, .app-layout-command-status-next) {
+    color: var(--projects-primary-on-accent) !important;
+    -webkit-text-fill-color: var(--projects-primary-on-accent) !important;
+}
+
+html.dark .app-shell :is(.btn-primary, .mobile-shell-brief > a, .app-layout-command-status-next) :is(span, strong, svg),
+html[data-theme="dark"] .app-shell :is(.btn-primary, .mobile-shell-brief > a, .app-layout-command-status-next) :is(span, strong, svg),
+body.dark .app-shell :is(.btn-primary, .mobile-shell-brief > a, .app-layout-command-status-next) :is(span, strong, svg),
+body[data-theme="dark"] .app-shell :is(.btn-primary, .mobile-shell-brief > a, .app-layout-command-status-next) :is(span, strong, svg) {
+    color: var(--projects-primary-on-accent) !important;
+    -webkit-text-fill-color: var(--projects-primary-on-accent) !important;
+    stroke: currentColor !important;
+}
+
+html.dark,
+html[data-theme="dark"],
+body.dark,
+body[data-theme="dark"] {
+    --projects-primary-on-accent: #061B16;
+}
+
+html.dark :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active),
+html[data-theme="dark"] :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active),
+body.dark :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active),
+body[data-theme="dark"] :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active) {
+    color: var(--projects-primary-on-accent) !important;
+    -webkit-text-fill-color: var(--projects-primary-on-accent) !important;
+}
+
+html.dark :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active) :is(span, strong, svg),
+html[data-theme="dark"] :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active) :is(span, strong, svg),
+body.dark :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active) :is(span, strong, svg),
+body[data-theme="dark"] :is(.btn-primary, .btn-primary:link, .btn-primary:visited, .btn-primary:hover, .btn-primary:active) :is(span, strong, svg) {
+    color: var(--projects-primary-on-accent) !important;
+    -webkit-text-fill-color: var(--projects-primary-on-accent) !important;
+    stroke: currentColor !important;
+}
+
+html.dark body :is(.mobile-command-actions, .today-mobile-command-actions, .today-mobile-card-actions, .home-mobile-card-actions, .focus-mobile-card-actions, .review-mobile-card-actions) :is(button, a, [role="button"]).btn-primary,
+html[data-theme="dark"] body :is(.mobile-command-actions, .today-mobile-command-actions, .today-mobile-card-actions, .home-mobile-card-actions, .focus-mobile-card-actions, .review-mobile-card-actions) :is(button, a, [role="button"]).btn-primary,
+body.dark :is(.mobile-command-actions, .today-mobile-command-actions, .today-mobile-card-actions, .home-mobile-card-actions, .focus-mobile-card-actions, .review-mobile-card-actions) :is(button, a, [role="button"]).btn-primary,
+body[data-theme="dark"] :is(.mobile-command-actions, .today-mobile-command-actions, .today-mobile-card-actions, .home-mobile-card-actions, .focus-mobile-card-actions, .review-mobile-card-actions) :is(button, a, [role="button"]).btn-primary,
+html.dark body .review-mobile-next-row .review-inline-button.review-inline-button-accent,
+html[data-theme="dark"] body .review-mobile-next-row .review-inline-button.review-inline-button-accent,
+body.dark .review-mobile-next-row .review-inline-button.review-inline-button-accent,
+body[data-theme="dark"] .review-mobile-next-row .review-inline-button.review-inline-button-accent {
+    color: var(--projects-primary-on-accent) !important;
+    -webkit-text-fill-color: var(--projects-primary-on-accent) !important;
 }
