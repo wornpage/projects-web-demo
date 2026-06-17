@@ -1,4 +1,4 @@
-const DEMO_STORAGE_KEY = "projects-static-demo-state-v2";
+const DEMO_STORAGE_KEY = "projects-static-demo-state-v3";
 const THEME_STORAGE_KEY = "projects-demo-theme";
 const DEMO_METADATA_FILE = "assets/demo-metadata.json";
 const DEMO_REPO_URL = "https://github.com/jared-bidlow/projects-web-demo";
@@ -196,9 +196,9 @@ function setTheme(dark) {
 }
 
 function bindShellControls() {
-  el("primary-action").addEventListener("click", () => runPrimaryAction());
+  el("primary-action").addEventListener("click", (event) => runPrimaryAction(event.currentTarget));
   el("secondary-action").addEventListener("click", () => go("focus"));
-  el("dock-next").addEventListener("click", () => runPrimaryAction());
+  el("dock-next").addEventListener("click", (event) => runPrimaryAction(event.currentTarget));
 }
 
 function loadState() {
@@ -302,6 +302,10 @@ function routeFromHash() {
   }
   if (id) {
     state.selectedId = decodeURIComponent(id);
+  } else if (state.route === "review") {
+    state.selectedId = preferredReviewPack()?.id || state.selectedId;
+  } else if (state.route === "next") {
+    state.selectedId = preferredNextSetupPack()?.id || state.selectedId;
   }
 }
 
@@ -310,7 +314,7 @@ function go(route, id = "") {
 }
 
 function isKnownRoute(route) {
-  return navItems.some(([id]) => id === route);
+  return route === "pack" || navItems.some(([id]) => id === route);
 }
 
 function render() {
@@ -443,47 +447,50 @@ function renderCommand(selected) {
 }
 
 function commandForRoute(selected, visibleCount, reviewCount) {
-  const routeLabel = screenTitleForRoute();
   const selectedTitle = selected?.title || "No sample work selected";
-  const next = selected?.next || "Choose work";
-  const blocker = selected?.blocker && selected.blocker !== "none"
-    ? selected.blocker
-    : reviewCount > 0
-      ? `${reviewCount} sample item(s) need review`
-      : "none";
+  const selectedAction = commandActionForPack(selected);
+  const selectedBlocker = blockerTextForPack(selected);
+  const selectedState = selected?.status || "Ready";
+  const reviewSummary = reviewCount > 0
+    ? `${reviewCount} sample item(s) need review`
+    : "none";
+  const reviewTarget = preferredReviewPack();
+  const workListAction = commandActionForPack(null);
 
   const routeCommands = {
-    home: ["Command cockpit", "Home", `${reviewCount} sample item(s) need review`, "Review", "Ready"],
-    work: ["Work list command flow", "Work list", blocker, next, selected?.status || "Ready"],
-    today: ["Today command flow", "Today", "due sample work is visible", "Focus", "Today"],
-    board: ["Board command flow", "Board", "sample work is grouped by status", "Focus", "Ready"],
-    review: ["Review command flow", "Review", `${reviewCount} sample item(s) need decisions`, "Choose next action", "Review"],
-    focus: ["Focus command flow", selectedTitle, selected?.blocker || "none", next, "Focus"],
-    next: ["Next setup command flow", "Next setup", selected?.blocker || "choose a sample work item", selected?.next || "Choose next action", "Ready"],
-    check: ["Check command flow", "Check", `${reviewCount} sample item(s) still need decisions`, "Validate sample", "Ready"],
-    search: ["Search command flow", "Search", "type title, owner, next action, or due date", "Search", "Ready"],
-    stats: ["Stats command flow", "Stats", "sample counts are calculated in browser state", "Review", "Ready"],
-    notes: ["Notes command flow", "Notes", "sample notes are browser-only", "Add note", "Ready"],
-    timeline: ["Timeline command flow", "Timeline", "sample activity is browser-only", "Open work", "Ready"],
-    files: ["Files command flow", "Files", "sample sources are references only", "Open work", "Ready"],
-    calendar: ["Calendar command flow", "Calendar", "sample due dates are visible", "Focus", "Ready"],
-    create: ["Create command flow", "Create", "required fields are title and Button runs next", "Save sample", "Draft"],
-    memory: ["Memory command flow", "Memory", "sample notes are browser-only", "Add note", "Ready"],
-    meta: ["Meta command flow", "Meta", "product view and diagnostics are computed locally", "Refresh", "Ready"],
-    feedback: ["Feedback command flow", "Feedback", `Version ${stateVersionLabel()} is active`, "Report", "Ready"],
-    health: ["Health command flow", "Health", "route, storage, data, and metadata checks are running", "Refresh", "Ready"],
-    settings: ["Settings command flow", "Settings", "copy profile changes labels only in this static demo", "Apply profile", "Ready"],
-    pack: ["Pack detail command flow", selectedTitle, selected?.blocker || "none", selected?.next || "Save sample", selected?.status || "Ready"]
+    home: ["Command cockpit", "Home", reviewSummary, "Review work", "Ready", "route-review", reviewTarget?.id || ""],
+    work: ["Work list command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
+    today: ["Today command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
+    board: ["Board command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
+    review: ["Review command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
+    focus: ["Focus command flow", selectedTitle, selectedBlocker, selectedAction.label, "Focus", selectedAction.action, selectedAction.targetPackId],
+    next: ["Next setup command flow", selectedTitle, selectedBlocker, selectedAction.label, "Ready", selectedAction.action, selectedAction.targetPackId],
+    check: ["Check command flow", "Check", `${reviewCount} sample item(s) still need decisions`, "Validate sample", "Ready", "validate-sample", ""],
+    search: ["Search command flow", "Search", "type title, owner, next action, or due date", "Search", "Ready", "search-demo", ""],
+    stats: ["Stats command flow", "Stats", "sample counts are calculated in browser state", "Review work", "Ready", "route-review", reviewTarget?.id || ""],
+    notes: ["Notes command flow", "Notes", "sample notes are browser-only", "Add note", "Ready", "add-note", selected?.id || ""],
+    timeline: ["Timeline command flow", "Timeline", "sample activity is browser-only", workListAction.label, "Ready", workListAction.action, ""],
+    files: ["Files command flow", "Files", "sample sources are references only", workListAction.label, "Ready", workListAction.action, ""],
+    calendar: ["Calendar command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
+    create: ["Create command flow", "Create", "required fields are title and Button runs next", "Save sample", "Draft", "create-sample", ""],
+    memory: ["Memory command flow", selectedTitle, "sample notes are browser-only", "Add note", "Ready", "add-note", selected?.id || ""],
+    meta: ["Meta command flow", "Meta", "product view and diagnostics are computed locally", "Refresh", "Ready", "refresh-meta", ""],
+    feedback: ["Feedback command flow", "Feedback", `Version ${stateVersionLabel()} is active`, "Report feedback", "Ready", "report-feedback", ""],
+    health: ["Health command flow", "Health", "route, storage, data, and metadata checks are running", "Refresh", "Ready", "refresh-health", ""],
+    settings: ["Settings command flow", "Settings", "copy profile changes labels only in this static demo", "Apply profile", "Ready", "apply-profile", ""],
+    pack: ["Pack detail command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId]
   };
 
-  const [title, where, routeBlocker, routeNext, stateText] = routeCommands[state.route] || routeCommands.work;
+  const [title, where, routeBlocker, routeNext, stateText, action, targetPackId] = routeCommands[state.route] || routeCommands.work;
   return {
     title,
     where,
     blocker: routeBlocker,
     next: routeNext,
     stateText: capitalize(stateText),
-    scope: `Scope: ${visibleCount} of ${state.packs.length} sample work items visible.`
+    scope: `Scope: ${visibleCount} of ${state.packs.length} sample work items visible.`,
+    action,
+    targetPackId: targetPackId || ""
   };
 }
 
@@ -495,9 +502,15 @@ function updateCommand(command) {
   el("command-state").textContent = command.stateText;
   el("command-scope").textContent = command.scope;
   el("primary-action").textContent = command.next;
+  el("primary-action").dataset.action = command.action || "";
+  el("primary-action").dataset.pack = command.targetPackId || "";
+  el("primary-action").setAttribute("aria-label", `Run ${command.next}`);
   el("dock-where").textContent = command.where;
   el("dock-blocker").textContent = command.blocker;
   el("dock-next-label").textContent = command.next;
+  el("dock-next").dataset.action = command.action || "";
+  el("dock-next").dataset.pack = command.targetPackId || "";
+  el("dock-next").setAttribute("aria-label", `Run ${command.next}`);
 }
 
 function renderHome() {
@@ -516,7 +529,7 @@ function renderHome() {
           <span class="section-label">Start here</span>
           <h2>Move from brief to action</h2>
         </div>
-        <button class="btn btn-primary" type="button" data-go="review">Review ${reviewCount}</button>
+        <button class="btn btn-primary" type="button" data-go="review">Review work</button>
       </div>
       <p>The demo shows the public-safe shape of Projects: pick work, read Where / Blocker / Button runs next, then run a simulated action.</p>
       <div class="demo-quick-actions">
@@ -1301,7 +1314,7 @@ function bindWorkCards() {
 }
 
 function bindListActions() {
-  document.querySelectorAll("[data-action]").forEach((button) => {
+  el("screen-content").querySelectorAll("[data-action]").forEach((button) => {
     if (button.closest(".demo-work-card")) {
       return;
     }
@@ -1312,7 +1325,7 @@ function bindListActions() {
         state.packs.forEach((pack) => { if (pack.status !== "done") pack.due = "2026-06-16"; });
         state.status = "All unfinished sample work is due today in browser state.";
       } else if (action === "review-first") {
-        const first = state.packs.find(isReview);
+        const first = preferredReviewPack();
         if (first) {
           state.selectedId = first.id;
           state.status = `${first.title} selected for review.`;
@@ -1328,7 +1341,7 @@ function bindListActions() {
           const input = el(`next-${pack.id}`);
           state.selectedId = pack.id;
           if (input) {
-            pack.next = input.value.trim() || "Review";
+            pack.next = input.value.trim() || "Open";
             pack.blocker = pack.blocker === "missing Button runs next" ? "none" : pack.blocker;
             pack.activity.unshift("Button runs next changed in browser state.");
             state.status = `${pack.title} next action updated in browser state.`;
@@ -1351,7 +1364,7 @@ function applyNextChoice(id) {
   const pack = findPack(id);
   if (!pack) return;
 
-  const choice = valueOf("next-action-choice") || "Review";
+  const choice = valueOf("next-action-choice") || "Open";
   pack.next = choice;
   if (pack.blocker === "missing Button runs next") {
     pack.blocker = "none";
@@ -1360,7 +1373,7 @@ function applyNextChoice(id) {
   pack.activity.unshift(`Button runs next changed to ${choice} in browser state.`);
   state.selectedId = pack.id;
   state.status = `${pack.title} will now run ${choice} in the static demo.`;
-  render();
+  go("work", pack.id);
 }
 
 function bindGoButtons() {
@@ -1383,7 +1396,7 @@ function handlePackAction(id, action) {
     return;
   } else if (action === "review") {
     state.status = `${pack.title} opened in the review queue.`;
-    go("review");
+    go("review", pack.id);
     return;
   } else if (action === "set-next") {
     state.status = `${pack.title} opened for next-action setup.`;
@@ -1419,6 +1432,11 @@ function handlePackAction(id, action) {
   } else if (action === "edit") {
     go("pack", pack.id);
     return;
+  } else if (action === "open") {
+    pack.activity.unshift("Opened in browser state.");
+    state.status = `${pack.title} opened in browser state.`;
+    go("pack", pack.id);
+    return;
   } else {
     go("pack", pack.id);
     return;
@@ -1427,63 +1445,142 @@ function handlePackAction(id, action) {
   render();
 }
 
-function runPrimaryAction() {
-  const pack = currentPack() || state.packs[0];
-  const command = commandForRoute(pack, filteredPacks().length, state.packs.filter(isReview).length);
+function runPrimaryAction(control = el("primary-action")) {
+  const action = control?.dataset.action || el("primary-action").dataset.action;
+  const targetPackId = control?.dataset.pack || el("primary-action").dataset.pack;
+  if (runRouteAction(action, targetPackId)) {
+    return;
+  }
+
+  const pack = findPack(targetPackId) || currentPack();
   if (!pack) {
     state.status = "No sample work is selected.";
     render();
     return;
   }
 
-  if (state.route === "home") {
-    go("review");
-  } else if (state.route === "create") {
+  handlePackAction(pack.id, action || commandActionForPack(pack).action);
+}
+
+function runRouteAction(action, targetPackId) {
+  if (action === "route-review") {
+    const pack = findPack(targetPackId) || preferredReviewPack();
+    if (pack) {
+      state.selectedId = pack.id;
+      go("review", pack.id);
+    } else {
+      go("review");
+    }
+    return true;
+  }
+
+  if (action === "open-work-list") {
+    go("work", targetPackId || "");
+    return true;
+  }
+
+  if (action === "create-sample") {
     createSamplePack();
-  } else if (state.route === "search") {
+    return true;
+  }
+
+  if (action === "search-demo") {
     state.status = "Search checks browser-state sample data only.";
     render();
-  } else if (state.route === "check") {
+    return true;
+  }
+
+  if (action === "validate-sample") {
     const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
     state.status = attention === 0
       ? "Sample data passed the browser-state checks."
       : `${attention} sample check item(s) still need attention.`;
     render();
-  } else if (state.route === "memory") {
-    state.status = "Add a note from the Memory screen input.";
+    return true;
+  }
+
+  if (action === "add-note") {
+    const pack = findPack(targetPackId) || currentPack();
+    const input = el("memory-note");
+    if (state.route !== "memory") {
+      go("memory", pack?.id || "");
+      return true;
+    }
+    if (pack && input?.value.trim()) {
+      pack.memory.unshift(input.value.trim());
+      pack.activity.unshift("Memory note added in browser state.");
+      state.status = "Memory note added in browser state only.";
+    } else {
+      state.status = "Add a note from the Memory screen input.";
+    }
     render();
-  } else if (state.route === "settings") {
+    return true;
+  }
+
+  if (action === "apply-profile") {
     state.status = `${capitalize(state.copyProfile)} profile is active in demo state.`;
     render();
-  } else if (state.route === "health") {
+    return true;
+  }
+
+  if (action === "refresh-health") {
     state.status = "Health checks refreshed.";
     render();
-  } else if (state.route === "feedback") {
+    return true;
+  }
+
+  if (action === "report-feedback") {
+    if (state.route !== "feedback") {
+      go("feedback");
+      return true;
+    }
     state.status = "Feedback context refreshed for this snapshot.";
     render();
-  } else if (state.route === "meta") {
+    return true;
+  }
+
+  if (action === "refresh-meta") {
     state.status = "Meta diagnostics recomputed for this session.";
     render();
-  } else {
-    handlePackAction(pack.id, commandActionForLabel(command.next).action);
+    return true;
   }
+
+  return false;
 }
 
 function commandActionForPack(pack) {
-  const label = (pack?.next || "Open").trim() || "Open";
-  return commandActionForLabel(label);
+  if (!pack) {
+    return { label: "Open work list", action: "open-work-list", targetPackId: "" };
+  }
+
+  const rawLabel = (pack.next || "").trim();
+  if (isMissingNextAction(pack)) {
+    return { label: "Set Button runs next", action: "set-next", targetPackId: pack.id };
+  }
+
+  if (hasBlocker(pack)) {
+    const action = commandActionForLabel(rawLabel);
+    if (action.action === "unblock") {
+      return { label: "Unblock", action: "unblock", targetPackId: pack.id };
+    }
+
+    return { label: "Review blocker", action: "review", targetPackId: pack.id };
+  }
+
+  const action = commandActionForLabel(rawLabel || "Open");
+  return { ...action, targetPackId: pack.id };
 }
 
 function commandActionForLabel(label) {
   label = (label || "Open").trim() || "Open";
   const normalized = label.toLowerCase();
 
-  if (normalized === "review") {
-    return { label, action: "review" };
+  if (normalized === "review" || normalized === "review work" || normalized === "review blocker") {
+    return { label: normalized === "review blocker" ? "Review blocker" : "Review work", action: "review" };
   }
 
   if (normalized === "set next" || normalized === "set button runs next" || normalized === "choose next action") {
-    return { label, action: "set-next" };
+    return { label: "Set Button runs next", action: "set-next" };
   }
 
   if (normalized === "validate sample") {
@@ -1579,7 +1676,48 @@ function findPack(id) {
 }
 
 function isReview(pack) {
-  return pack.status === "blocked" || pack.blocker !== "none" || pack.next === "Review" || pack.next === "Choose next action";
+  return hasBlocker(pack) || isMissingNextAction(pack) || commandActionForLabel(pack?.next).action === "review";
+}
+
+function isMissingNextAction(pack) {
+  const label = (pack?.next || "").trim().toLowerCase();
+  return !label || label === "choose next action" || label === "set button runs next";
+}
+
+function hasBlocker(pack) {
+  return Boolean(pack && (pack.status === "blocked" || (pack.blocker && pack.blocker !== "none")));
+}
+
+function blockerTextForPack(pack) {
+  if (!pack) {
+    return "choose sample work";
+  }
+
+  if (pack.blocker && pack.blocker !== "none") {
+    return pack.blocker;
+  }
+
+  if (isMissingNextAction(pack)) {
+    return "missing Button runs next";
+  }
+
+  if (pack.status === "blocked") {
+    return "blocked";
+  }
+
+  return "none";
+}
+
+function preferredReviewPack() {
+  return state.packs.find((pack) => isReview(pack) && isMissingNextAction(pack))
+    || state.packs.find((pack) => isReview(pack) && hasBlocker(pack))
+    || state.packs.find(isReview)
+    || state.packs[0]
+    || null;
+}
+
+function preferredNextSetupPack() {
+  return state.packs.find(isMissingNextAction) || preferredReviewPack();
 }
 
 function formatDue(pack) {
