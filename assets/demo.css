@@ -451,6 +451,11 @@ html[data-theme="dark"] .demo-header-metadata {
   padding: 18px;
 }
 
+.demo-toolbar {
+  display: grid;
+  gap: 10px;
+}
+
 .demo-panel-head + .demo-search-input,
 .demo-panel-head + .demo-search-results,
 .demo-panel-head + .demo-work-list {
@@ -753,7 +758,7 @@ html[data-theme="dark"] .demo-meta-row {
   margin-bottom: 12px;
   background: var(--demo-card-banner-bg);
   border: 1px solid color-mix(in srgb, var(--cockpit-border) 68%, transparent);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 8px 12px;
   color: var(--cockpit-text);
 }
