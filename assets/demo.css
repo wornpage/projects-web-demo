@@ -668,10 +668,10 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-review-card,
 .demo-row,
 .demo-note {
-  background: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
-  border: 1px solid var(--cockpit-border);
+  background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
+  border: 1px solid color-mix(in srgb, var(--cockpit-border) 82%, transparent);
   border-radius: calc(var(--demo-panel-radius) - 2px);
-  box-shadow: var(--cockpit-shadow-sm);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--cockpit-text) 8%, transparent), var(--cockpit-shadow-sm);
   min-width: 0;
   overflow: clip;
   padding: 16px;
@@ -760,11 +760,11 @@ html[data-theme="dark"] .demo-meta-row {
   gap: 12px;
   justify-content: space-between;
   margin-bottom: 12px;
+  color: var(--cockpit-text);
   background: var(--demo-card-banner-bg);
   border: 1px solid color-mix(in srgb, var(--cockpit-border) 68%, transparent);
   border-radius: 10px;
   padding: 8px 12px;
-  color: var(--cockpit-text);
   overflow: hidden;
 }
 
@@ -814,14 +814,29 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
 
 .demo-card-meta {
   color: var(--cockpit-text-muted);
+  border-top: 1px dashed color-mix(in srgb, var(--cockpit-border) 78%, transparent);
   flex-wrap: wrap;
   font-size: 13px;
   font-weight: var(--demo-card-meta-weight);
   margin-top: 12px;
+  padding-top: 10px;
+  gap: 6px 10px;
+}
+
+.demo-card-meta span {
+  align-items: center;
+  background: color-mix(in srgb, var(--cockpit-surface) 86%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cockpit-border) 82%, transparent);
+  border-radius: 999px;
+  color: var(--cockpit-text-secondary);
+  display: inline-flex;
+  padding: 3px 8px;
 }
 
 .demo-card-actions {
+  border-top: 1px solid color-mix(in srgb, var(--cockpit-border) 78%, transparent);
   margin-top: 14px;
+  padding-top: 14px;
 }
 
 .demo-state-pill {

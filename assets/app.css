@@ -6507,6 +6507,53 @@ h3,
         content: none !important;
     }
 
+    .home-mobile-list {
+        display: grid !important;
+        gap: 10px !important;
+    }
+
+    .home-mobile-work-card {
+        border-radius: 20px !important;
+        border-left-width: 1px !important;
+        background: color-mix(in srgb, var(--cockpit-surface) 95%, transparent) !important;
+        box-shadow: 0 8px 22px color-mix(in srgb, var(--cockpit-text) 10%, transparent) !important;
+    }
+
+    .home-mobile-work-card + .home-mobile-work-card {
+        margin-top: 0 !important;
+    }
+
+    .home-mobile-card-top {
+        padding-bottom: 10px !important;
+        border-bottom: 1px dashed color-mix(in srgb, var(--cockpit-border) 84%, transparent) !important;
+        margin-bottom: 0 !important;
+    }
+
+    .home-mobile-card-meta {
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+        border-top: 1px dashed color-mix(in srgb, var(--cockpit-border) 84%, transparent) !important;
+        gap: 6px 8px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+    }
+
+    .home-mobile-card-meta span {
+        align-items: center !important;
+        border: 1px solid color-mix(in srgb, var(--cockpit-border) 82%, transparent) !important;
+        border-radius: 999px !important;
+        display: inline-flex !important;
+        padding: 3px 8px !important;
+        background: color-mix(in srgb, var(--cockpit-surface) 90%, transparent) !important;
+    }
+
+    .home-mobile-card-actions {
+        padding-top: 10px !important;
+        margin-top: 12px !important;
+        border-top: 1px solid color-mix(in srgb, var(--cockpit-border) 84%, transparent) !important;
+        flex-wrap: wrap !important;
+    }
+
     html.dark .today-mobile-card,
     html[data-theme="dark"] .today-mobile-card,
     html.dark .focus-mobile-card,
