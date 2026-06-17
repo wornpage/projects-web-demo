@@ -15,6 +15,11 @@ const STYLE_AUDIT_ASSETS = [
   { id: "demoCss", label: "Demo CSS", path: "assets/demo.css", type: "css" },
   { id: "demoJs", label: "Demo JS", path: "assets/demo.js", type: "js" }
 ];
+const DEMO_COPY_LIMITS = Object.freeze({
+  commandFlowVisible: 48,
+  commandFlowHelp: 140,
+  memoryVisible: 96
+});
 
 const state = {
   basePacks: [],
@@ -29,6 +34,7 @@ const state = {
   metadata: null,
   styleAudit: null,
   pendingFocus: null,
+  actionReceipt: null,
   lastRenderedHash: "",
   memoryDraft: "",
   triageInput: "",
@@ -252,7 +258,7 @@ function setTheme(dark) {
 
 function bindShellControls() {
   el("primary-action").addEventListener("click", (event) => {
-    queueFocus("next", event.currentTarget.dataset.pack || state.selectedId);
+    queueFocus(focusKindForAction(event.currentTarget.dataset.action), event.currentTarget.dataset.pack || state.selectedId);
     runPrimaryAction(event.currentTarget);
   });
   el("secondary-action").addEventListener("click", () => go("focus", state.selectedId, "where"));
@@ -285,6 +291,7 @@ function loadState() {
   state.query = saved?.query || "";
   state.selectedId = saved?.selectedId || state.packs[0]?.id || "";
   state.status = saved?.status || state.status;
+  state.actionReceipt = normalizeActionReceipt(saved?.actionReceipt);
   state.triageInput = typeof saved?.triageInput === "string" ? saved.triageInput : defaultTriageInput();
   state.triageRows = Array.isArray(saved?.triageRows) ? saved.triageRows : [];
 }
@@ -334,6 +341,7 @@ function applyScenario(scenario, options = {}) {
   state.copyProfile = current.profile || state.copyProfile;
   state.query = "";
   state.selectedId = state.packs[0]?.id || "";
+  state.actionReceipt = null;
   if (force || options.skipSave) {
     state.status = current.statusMessage || `${current.label} scenario loaded.`;
   }
@@ -352,6 +360,7 @@ function saveState() {
     scenarioId: state.scenarioId,
     selectedId: state.selectedId,
     status: state.status,
+    actionReceipt: state.actionReceipt,
     filter: state.filter,
     query: state.query,
     triageInput: state.triageInput,
@@ -371,6 +380,7 @@ function resetState() {
   state.triageInput = defaultTriageInput();
   state.triageRows = [];
   state.status = "Demo data reset. Browser state only.";
+  state.actionReceipt = null;
   syncSearchParam("scenario", null);
   render();
 }
@@ -628,31 +638,51 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     pack: { title: "Pack detail command flow", ...selectedWorkCommand }
   };
 
+  const selectedFlow = selected ? `Flow: ${selected.title}` : "";
+  const selectedAction = selected ? resolvePrimaryCommandForPack(selected).label : "";
+  const selectedActionFlow = selectedFlow && selectedAction ? `${selectedFlow} -> ${selectedAction}.` : "Flow: ";
+
   const routeCommandsHints = {
-    home: "Flow: review items with missing next actions, then run the highlighted action.",
-    work: "Flow: choose a work item and execute its primary action.",
-    triage: "Flow: paste work, parse it, then copy the triage snapshot.",
-    review: "Flow: this route shows items needing attention. Set next action or resolve blockers first.",
-    focus: "Flow: confirm details, then run the selected primary action.",
-    next: "Flow: set a clear main action, then return to work and execute it.",
-    check: "Flow: validate the current browser-state sample and address listed gaps.",
-    search: "Flow: search any field, then open a work card to continue.",
-    stats: "Flow: use the summary, then return to work for execution.",
-    notes: "Flow: add context notes, then run a work action from the command strip.",
-    timeline: "Flow: review sample activity, then continue with the current primary action.",
-    calendar: "Flow: spot due-date urgency, then run the work action you want next.",
-    files: "Flow: inspect references, then continue with the sample action.",
-    memory: "Flow: add memory in context, then return to action.",
-    lab: "Flow: compare selected item action against command simulation.",
-    board: "Flow: group by status, pick an item, then run its action from the command strip.",
-    pack: "Flow: review fields and then execute or mark the item done.",
-    create: "Flow: create a sample, then move into review before taking action.",
-    meta: "Flow: inspect checks and copy diagnostics for sharing.",
-    feedback: "Flow: copy context, then open the GitHub issue form.",
-    health: "Flow: verify checks are green, then return to your work route.",
-    settings: "Flow: pick a copy profile, apply it, then keep using the same command flow.",
-    settingsProfile: "Flow: pick a copy profile, apply it, then keep using the same command flow.",
-    settingsScenario: "Flow: select a scenario, then continue with the updated sample set."
+    home: "Flow: review work, then run the action.",
+    work: selectedActionFlow ? `${selectedActionFlow}` : "Flow: choose work, then run action.",
+    today: selectedActionFlow ? `${selectedActionFlow}` : "Flow: due work, then action.",
+    board: selectedActionFlow ? `${selectedActionFlow}` : "Flow: status, work, action.",
+    review: selectedActionFlow
+      ? `${selectedFlow} -> resolve blocker.`
+      : "Flow: resolve blockers first.",
+    focus: selectedActionFlow
+      ? `${selectedActionFlow}`
+      : "Flow: confirm details, then act.",
+    next: "Flow: set action, return, run.",
+    check: "Flow: validate sample, fix gaps.",
+    search: "Flow: search, open work, act.",
+    stats: "Flow: summary, then work.",
+    notes: selected
+      ? `${selectedActionFlow}`
+      : "Flow: note, then action.",
+    timeline: selected
+      ? `${selectedActionFlow}`
+      : "Flow: activity, then action.",
+    calendar: selected
+      ? `${selectedActionFlow}`
+      : "Flow: due date, then action.",
+    files: selected
+      ? `${selectedActionFlow}`
+      : "Flow: sources, then action.",
+    memory: selected
+      ? `${selectedActionFlow}`
+      : "Flow: memory, then action.",
+    lab: selected
+      ? `${selectedActionFlow}`
+      : "Flow: compare, then action.",
+    pack: selected ? `${selectedActionFlow}` : "Flow: review, then action.",
+    create: "Flow: create, review, act.",
+    meta: "Flow: inspect, copy diagnostics.",
+    feedback: "Flow: copy context, report.",
+    health: "Flow: verify, return to work.",
+    settings: "Flow: choose profile, apply.",
+    settingsProfile: "Flow: choose profile, apply.",
+    settingsScenario: "Flow: choose scenario, continue."
   };
 
   const routeCommand = routeCommands[state.route] || routeCommands.work;
@@ -666,7 +696,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
 }
 
 function selectedPackCommand(selected) {
-  const resolvedAction = resolvePrimaryCommandForSelectedPack(selected);
+  const resolvedAction = resolvePrimaryCommandForPack(selected);
   return {
     where: selected?.title || "No sample work selected",
     blocker: blockerTextForPack(selected),
@@ -677,7 +707,7 @@ function selectedPackCommand(selected) {
   };
 }
 
-function resolvePrimaryCommandForSelectedPack(selected) {
+function resolvePrimaryCommandForPack(selected) {
   if (!selected) {
     return { label: "Open work list", action: "open-work-list", targetPackId: "" };
   }
@@ -706,7 +736,10 @@ function updateCommand(command) {
   el("command-state").textContent = command.stateText;
   el("command-scope").textContent = command.scope;
   if (el("command-flow")) {
-    el("command-flow").textContent = command.flowHint || "Select a work item to see its next action.";
+    const flowHint = command.flowHint || "Select work, then run action.";
+    el("command-flow").textContent = visibleCopy(flowHint, DEMO_COPY_LIMITS.commandFlowVisible);
+    el("command-flow").title = helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp);
+    el("command-flow").setAttribute("aria-label", helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp));
   }
   el("primary-action").textContent = command.next;
   el("primary-action").dataset.action = command.action || "";
@@ -718,6 +751,7 @@ function updateCommand(command) {
   el("dock-next").dataset.action = command.action || "";
   el("dock-next").dataset.pack = command.targetPackId || "";
   el("dock-next").setAttribute("aria-label", `Run ${command.next}`);
+  updateActionReceipt();
 }
 
 function queueFocus(kind, packId = "") {
@@ -789,6 +823,24 @@ function focusSelectors(kind, packId) {
     return ["#triage-output", ".demo-triage-card", "#triage-snapshot"];
   }
 
+  if (kind === "pack-edit") {
+    return [
+      "#edit-title",
+      "#pack-edit-form",
+      "#edit-next",
+      "#edit-status",
+      ".demo-edit-panel"
+    ];
+  }
+
+  if (kind === "pack-detail") {
+    return [
+      "#pack-detail-title",
+      "#pack-edit-form",
+      ".demo-edit-panel"
+    ];
+  }
+
   return ["#primary-action"];
 }
 
@@ -816,12 +868,20 @@ function focusKindForAction(action) {
     return "triage-output";
   }
 
-  if (action === "set-next" || action === "open" || action === "focus" || action === "start" || action === "done" || action === "unblock") {
+  if (action === "set-next" || action === "focus" || action === "start" || action === "done" || action === "unblock") {
     return "next";
+  }
+
+  if (action === "open") {
+    return "pack-detail";
   }
 
   if (action === "review") {
     return "blocker";
+  }
+
+  if (action === "edit") {
+    return "pack-edit";
   }
 
   return "where";
@@ -932,7 +992,7 @@ function renderTriage() {
         <span class="demo-status">${rows.length ? "editable" : "ready"}</span>
       </div>
       <div class="demo-triage-list">
-        ${rows.length ? rows.map(triageCard).join("") : emptyState("Paste work or add a row to create a command brief.")}
+        ${rows.length ? rows.map(triageCard).join("") : emptyState("Paste work or add a row to create a command brief.", "Paste task text, then choose Parse work.")}
       </div>
     </section>
     <section class="demo-panel">
@@ -1335,7 +1395,7 @@ function renderWork() {
         </div>
         <button class="btn btn-primary" type="button" data-go="create">${escapeHtml(profile().newWork)}</button>
       </div>
-      <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyState("No sample work matches this filter.")}</div>
+      <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.")}</div>
     </section>
   `;
   bindToolbar();
@@ -1391,7 +1451,7 @@ function renderReview() {
         </div>
         <button class="btn btn-primary" type="button" data-action="review-first">Review first</button>
       </div>
-      <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.")}</div>
+      <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.")}</div>
     </section>
   `;
   bindListActions();
@@ -1400,7 +1460,7 @@ function renderReview() {
 function renderNext() {
   const pack = currentPack() || state.packs.find(isReview) || state.packs[0];
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("No sample work is available.");
+    el("screen-content").innerHTML = emptyState("No sample work is available.", "Reset demo data or choose a scenario with sample work.");
     return;
   }
 
@@ -1435,7 +1495,7 @@ function renderNext() {
           <h2>Work that needs a clearer button</h2>
         </div>
       </div>
-      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No sample work needs next setup.")}</div>
+      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No sample work needs next setup.", "Open work, add a blocker, or clear Button runs next to create a candidate.")}</div>
     </section>
   `;
   el("apply-next-action").addEventListener("click", () => applyNextChoice(pack.id));
@@ -1464,9 +1524,10 @@ function renderCheck() {
 function renderFocus() {
   const pack = currentPack() || state.packs[0];
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("No sample work is available.");
+    el("screen-content").innerHTML = emptyState("No sample work is available.", "Reset demo data or choose a scenario with sample work.");
     return;
   }
+  const focusCommand = resolvePrimaryCommandForPack(pack);
   state.selectedId = pack.id;
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-focus-panel">
@@ -1483,9 +1544,11 @@ function renderFocus() {
         ${factBlock("Button runs next", pack.next)}
         ${factBlock("Done when", pack.doneWhen)}
       </div>
+      ${relevantMemoryStrip(pack)}
       <p>${escapeHtml(pack.purpose)}</p>
       <div class="demo-card-actions">
-        <button class="btn btn-primary" type="button" data-action="open" data-pack="${escapeHtml(pack.id)}">${escapeHtml(pack.next)}</button>
+        <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeHtml(pack.id)}">${escapeHtml(focusCommand.label)}</button>
+        <button class="btn" type="button" data-action="open" data-pack="${escapeHtml(pack.id)}">Open</button>
         <button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>
         <button class="btn" type="button" data-go="pack" data-pack="${escapeHtml(pack.id)}">Edit sample</button>
       </div>
@@ -1532,7 +1595,7 @@ function renderNotes() {
         <button class="btn btn-primary" type="button" data-go="memory">Add note</button>
       </div>
       <div class="demo-list">
-        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyState("No sample notes exist.")}
+        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyState("No sample notes exist.", "Open Memory and add a note to selected work.")}
       </div>
     </section>
   `;
@@ -1550,7 +1613,7 @@ function renderTimeline() {
         </div>
       </div>
       <div class="demo-list">
-        ${rows.map(timelineRow).join("") || emptyState("No sample activity exists.")}
+        ${rows.map(timelineRow).join("") || emptyState("No sample activity exists.", "Run a sample action to add browser-state activity.")}
       </div>
     </section>
   `;
@@ -1568,7 +1631,7 @@ function renderFiles() {
         <span class="demo-status">No local files are opened in the demo</span>
       </div>
       <div class="demo-source-list">
-        ${rows.map(sourceRow).join("") || emptyState("No sample source references exist.")}
+        ${rows.map(sourceRow).join("") || emptyState("No sample source references exist.", "Choose a scenario with sample source references.")}
       </div>
     </section>
   `;
@@ -1590,7 +1653,7 @@ function renderCalendar() {
         <button class="btn" type="button" data-action="set-due-today">Set all due today</button>
       </div>
       <div class="demo-calendar-grid">
-        ${rows.map(calendarCard).join("") || emptyState("No sample due dates exist.")}
+        ${rows.map(calendarCard).join("") || emptyState("No sample due dates exist.", "Use Set all due today or edit a work due date.")}
       </div>
     </section>
   `;
@@ -1610,7 +1673,7 @@ function renderSearch() {
       </div>
       <label class="sr-only" for="screen-search">Search demo work</label>
       <input id="screen-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search title, owner, next action, source, or due date">
-      <div class="demo-work-list demo-search-results">${visible.map(workCard).join("") || emptyState("No sample work matches the search.")}</div>
+      <div class="demo-work-list demo-search-results">${visible.map(workCard).join("") || emptyState("No sample work matches the search.", "Clear search or try title, owner, due date, or next action.")}</div>
     </section>
   `;
   el("screen-search").addEventListener("input", (event) => {
@@ -1646,26 +1709,49 @@ function renderCreate() {
 function renderPackDetail() {
   const pack = currentPack();
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("Choose sample work before opening detail.");
+    el("screen-content").innerHTML = emptyState("Choose sample work before opening detail.", "Open Work or Review and choose a work card.");
     return;
   }
+  const packCommand = resolvePrimaryCommandForPack(pack);
   el("screen-content").innerHTML = `
-    <section class="demo-panel">
+    <section class="demo-panel demo-edit-panel" id="pack-edit-form" data-pack-id="${escapeAttribute(pack.id)}">
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Pack detail</span>
-          <h2>${escapeHtml(pack.title)}</h2>
+          <h2 id="pack-detail-title">${escapeHtml(pack.title)}</h2>
         </div>
         <span class="demo-status">Edits are browser-only</span>
       </div>
-      <div class="demo-form-grid">
-        ${inputField("edit-title", "Title", pack.title)}
-        ${selectField("edit-status", "Status", ["draft", "active", "blocked", "done"], pack.status)}
-        ${inputField("edit-owner", "Owner", pack.owner)}
-        ${inputField("edit-due", "Due", pack.due)}
-        ${inputField("edit-next", "Button runs next", pack.next)}
-        ${textField("edit-purpose", "Purpose", pack.purpose)}
+      <div class="demo-forward-panel" data-forward-motion="pack-detail">
+        <div class="demo-forward-head">
+          <span class="section-label">Forward path</span>
+          <strong>${escapeHtml(packCommand.label)}</strong>
+        </div>
+        <div class="demo-command-lines compact">
+          ${factLine("Where", `${pack.title} / ${pack.status}`)}
+          ${factLine("Blocker", blockerTextForPack(pack))}
+          ${factLine("Button runs next", packCommand.label)}
+        </div>
+        <div class="demo-form-grid demo-forward-fields">
+          ${selectField("edit-status", "Status", ["draft", "active", "blocked", "done"], pack.status)}
+          ${inputField("edit-blocker", "Blocker", pack.blocker)}
+          ${inputField("edit-next", "Button runs next", pack.next)}
+          ${inputField("edit-done-when", "Done when", pack.doneWhen)}
+        </div>
       </div>
+      <details class="demo-support-details" data-support-details="pack-detail">
+        <summary>
+          <span>Support fields</span>
+          <strong>Title, owner, due date, and purpose</strong>
+        </summary>
+        <div class="demo-form-grid">
+        ${inputField("edit-title", "Title", pack.title)}
+          ${inputField("edit-owner", "Owner", pack.owner)}
+          ${inputField("edit-due", "Due", pack.due)}
+          ${textField("edit-purpose", "Purpose", pack.purpose)}
+        </div>
+      </details>
+      ${relevantMemoryStrip(pack)}
       <div class="demo-card-actions">
         <button id="save-pack" class="btn btn-primary" type="button">Save sample changes</button>
         <button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>
@@ -1688,7 +1774,7 @@ function renderMemory() {
         </div>
         <span class="demo-status">Stored in browser state</span>
       </div>
-      <div class="demo-list">${pack ? pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") : emptyState("No memory available.")}</div>
+      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.")) : emptyState("No memory available.", "Choose sample work before adding memory.")}</div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
         <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a sample memory note">
@@ -1884,9 +1970,14 @@ function renderMeta() {
 
 function renderLab() {
   const pack = currentPack() || preferredReviewPack();
-  const action = commandActionForPack(pack);
+  const action = resolvePrimaryCommandForPack(pack);
   const styleAudit = buildStyleAuditSnapshot();
   const snapshot = collectLabSnapshot(pack, action, styleAudit);
+  const noPackReason = "Choose sample work before running Lab actions.";
+  const emptyLabSelectReason = "No sample work is available. Reset demo data or choose a scenario with work.";
+  const labOptions = state.packs.length
+    ? state.packs.map((item) => `<option value="${escapeAttribute(item.id)}"${item.id === pack?.id ? " selected" : ""}>${escapeHtml(item.title)} / ${escapeHtml(resolvePrimaryCommandForPack(item).label)}</option>`).join("")
+    : `<option value="" selected>No sample work available - reset demo data</option>`;
 
   if (pack && pack.id !== state.selectedId) {
     state.selectedId = pack.id;
@@ -1909,11 +2000,12 @@ function renderLab() {
       </div>
       <div class="demo-inline-form">
         <label class="sr-only" for="lab-pack-select">Choose work for demo lab</label>
-        <select id="lab-pack-select" class="demo-search-input">
-          ${state.packs.map((item) => `<option value="${escapeAttribute(item.id)}"${item.id === pack?.id ? " selected" : ""}>${escapeHtml(item.title)} / ${escapeHtml(commandActionForPack(item).label)}</option>`).join("")}
+        <select id="lab-pack-select" class="demo-search-input"${disabledReasonAttributes(state.packs.length === 0, emptyLabSelectReason)} aria-describedby="lab-pack-select-help">
+           ${labOptions}
         </select>
-        <button id="lab-run-action" class="btn btn-primary" type="button"${pack ? "" : " disabled"}>Run ${escapeHtml(action.label)}</button>
-        <button id="lab-set-next" class="btn" type="button"${pack ? "" : " disabled"}>Set next</button>
+        <p id="lab-pack-select-help" class="demo-field-help">How to fill: ${escapeHtml(state.packs.length === 0 ? "reset demo data or choose a scenario with work." : "choose sample work to preview its next action.")}</p>
+        <button id="lab-run-action" class="btn btn-primary" type="button"${disabledReasonAttributes(!pack, noPackReason)}>Run ${escapeHtml(action.label)}</button>
+        <button id="lab-set-next" class="btn" type="button"${disabledReasonAttributes(!pack, noPackReason)}>Set next</button>
       </div>
       <div class="demo-command-lines compact">
         ${factLine("Where", pack?.title || "No sample work selected")}
@@ -2000,7 +2092,7 @@ function boardColumn(status) {
       ${packs.map((pack) => `<article class="demo-mini-card">
         <button type="button" class="demo-card-title" data-action="focus" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(pack.title)}</button>
         <span>${escapeHtml(pack.blocker === "none" ? pack.next : pack.blocker)}</span>
-      </article>`).join("") || emptyState(`No ${status} sample work.`)}
+      </article>`).join("") || emptyState(`No ${status} sample work.`, "Change filters, choose another scenario, or edit work status.")}
     </div>
   </section>`;
 }
@@ -2150,7 +2242,7 @@ function bindLabControls() {
 
 function workCard(pack) {
   const selected = pack.id === state.selectedId ? " selected" : "";
-  const command = commandActionForPack(pack);
+  const command = resolvePrimaryCommandForPack(pack);
   return `<article class="demo-work-card${selected}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select">${escapeHtml(pack.title)}</button>
@@ -2255,7 +2347,7 @@ function bindListActions() {
             pack.next = input.value.trim() || "Open";
             pack.blocker = pack.blocker === "missing Button runs next" ? "none" : pack.blocker;
             pack.activity.unshift("Button runs next changed in browser state.");
-            state.status = `${pack.title} next action updated in browser state.`;
+            setActionConfirmation(pack, "set-next");
           } else {
             state.status = `${pack.title} selected for next-action setup.`;
             go("next", pack.id);
@@ -2271,6 +2363,115 @@ function bindListActions() {
   });
 }
 
+function actionLabelFromKey(action) {
+  const labels = {
+    select: "Select",
+    "run-next": "Run next",
+    review: "Review",
+    "set-next": "Set Button runs next",
+    start: "Start",
+    unblock: "Unblock",
+    block: "Block",
+    done: "Done",
+    focus: "Focus",
+    edit: "Open",
+    open: "Open"
+  };
+
+  return labels[action] || (typeof action === "string" ? capitalize(action) : "Action");
+}
+
+function setActionConfirmation(pack, action) {
+  if (!pack) return;
+
+  const next = resolvePrimaryCommandForPack(pack);
+  const actionLabel = actionLabelFromKey(action);
+  setActionReceipt(
+    pack,
+    `${actionLabel} finished for ${pack.title}. Demo state changed in this browser only.`,
+    next
+  );
+}
+
+function setSaveConfirmation(pack) {
+  if (!pack) return;
+
+  setActionReceipt(
+    pack,
+    `Saved forward path for ${pack.title}. Demo state changed in this browser only.`,
+    resolvePrimaryCommandForPack(pack)
+  );
+}
+
+function setCreateConfirmation(pack) {
+  if (!pack) return;
+
+  setActionReceipt(
+    pack,
+    `Created ${pack.title}. Demo state changed in this browser only.`,
+    resolvePrimaryCommandForPack(pack)
+  );
+}
+
+function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pack)) {
+  const receipt = {
+    summary: normalizeCopy(summary),
+    where: `${pack.title} / ${pack.status}`,
+    blocker: blockerTextForPack(pack),
+    next: next.label
+  };
+
+  state.status = receipt.summary;
+  state.actionReceipt = receipt;
+}
+
+function updateActionReceipt() {
+  const receiptElement = el("command-receipt");
+  if (!receiptElement) return;
+
+  const receipt = normalizeActionReceipt(state.actionReceipt);
+  if (!receipt) {
+    receiptElement.hidden = true;
+    receiptElement.innerHTML = "";
+    return;
+  }
+
+  receiptElement.hidden = false;
+  receiptElement.innerHTML = `
+    <div class="demo-command-receipt-head">
+      <span>Last result</span>
+      <strong>${escapeHtml(receipt.summary)}</strong>
+    </div>
+    <div class="demo-command-receipt-lines">
+      ${receiptLine("Where", receipt.where)}
+      ${receiptLine("Blocker", receipt.blocker)}
+      ${receiptLine("Button runs next", receipt.next)}
+    </div>`;
+}
+
+function receiptLine(label, value) {
+  return `<div>
+    <span>${escapeHtml(label)}</span>
+    <strong>${escapeHtml(value)}</strong>
+  </div>`;
+}
+
+function normalizeActionReceipt(receipt) {
+  if (!receipt || typeof receipt !== "object") {
+    return null;
+  }
+
+  const summary = normalizeCopy(receipt.summary);
+  const where = normalizeCopy(receipt.where);
+  const blocker = normalizeCopy(receipt.blocker);
+  const next = normalizeCopy(receipt.next);
+  if (!summary || !where || !blocker || !next) {
+    return null;
+  }
+
+  return { summary, where, blocker, next };
+}
+
 function applyNextChoice(id) {
   const pack = findPack(id);
   if (!pack) return;
@@ -2283,7 +2484,7 @@ function applyNextChoice(id) {
 
   pack.activity.unshift(`Button runs next changed to ${choice} in browser state.`);
   state.selectedId = pack.id;
-  state.status = `${pack.title} will now run ${choice} in the static demo.`;
+  setActionConfirmation(pack, "set-next");
   go("work", pack.id);
 }
 
@@ -2303,7 +2504,7 @@ function handlePackAction(id, action) {
   if (action === "select") {
     state.status = `${pack.title} selected.`;
   } else if (action === "run-next") {
-    handlePackAction(pack.id, commandActionForPack(pack).action);
+    handlePackAction(pack.id, resolvePrimaryCommandForPack(pack).action);
     return;
   } else if (action === "review") {
     state.status = `${pack.title} opened in the review queue.`;
@@ -2318,34 +2519,38 @@ function handlePackAction(id, action) {
     pack.blocker = pack.blocker === "missing setup" ? "none" : pack.blocker;
     pack.next = pack.next === "Choose next action" ? "Open" : pack.next;
     pack.activity.unshift("Started in browser state.");
-    state.status = `${pack.title} is active in browser state only.`;
+    setActionConfirmation(pack, "start");
   } else if (action === "unblock") {
     pack.status = "active";
     pack.blocker = "none";
     pack.next = "Open";
     pack.activity.unshift("Unblocked in browser state.");
-    state.status = `${pack.title} is unblocked in browser state only.`;
+    setActionConfirmation(pack, "unblock");
   } else if (action === "block") {
     pack.status = "blocked";
     pack.blocker = "blocked in demo state";
     pack.next = "Unblock";
     pack.activity.unshift("Blocked in browser state.");
-    state.status = `${pack.title} is blocked in browser state only.`;
+    setActionConfirmation(pack, "block");
   } else if (action === "done") {
     pack.status = "done";
     pack.blocker = "none";
     pack.next = "Open";
     pack.activity.unshift("Marked done in browser state.");
-    state.status = `${pack.title} is marked done in browser state only.`;
+    setActionConfirmation(pack, "done");
   } else if (action === "focus") {
+    setActionConfirmation(pack, "focus");
     go("focus", pack.id);
     return;
   } else if (action === "edit") {
+    queueFocus("pack-edit", pack.id);
+    setActionConfirmation(pack, "edit");
     go("pack", pack.id);
     return;
   } else if (action === "open") {
+    queueFocus("pack-detail", pack.id);
     pack.activity.unshift("Opened in browser state.");
-    state.status = `${pack.title} opened in browser state.`;
+    setActionConfirmation(pack, "open");
     go("pack", pack.id);
     return;
   } else {
@@ -2370,7 +2575,8 @@ function runPrimaryAction(control = el("primary-action")) {
     return;
   }
 
-  handlePackAction(pack.id, action || commandActionForPack(pack).action);
+  const resolved = resolvePrimaryCommandForPack(pack);
+  handlePackAction(pack.id, action || resolved.action);
 }
 
 function runRouteAction(action, targetPackId) {
@@ -2387,6 +2593,68 @@ function runRouteAction(action, targetPackId) {
 
   if (action === "open-work-list") {
     go("work", targetPackId || "");
+    return true;
+  }
+
+  if (action === "set-next") {
+    const selected = findPack(targetPackId) || currentPack();
+    if (state.route === "next") {
+      if (!selected) {
+        state.status = "No sample work is selected.";
+        render();
+        return true;
+      }
+      applyNextChoice(selected.id);
+      return true;
+    }
+
+    if (selected) {
+      state.selectedId = selected.id;
+      go("next", selected.id);
+      return true;
+    }
+
+    go("next");
+    return true;
+  }
+
+  if (action === "review") {
+    const selected = findPack(targetPackId) || currentPack();
+    if (!selected) {
+      const review = preferredReviewPack();
+      if (review) {
+        state.selectedId = review.id;
+        go("review", review.id);
+      } else {
+        go("review");
+      }
+      return true;
+    }
+
+    if (state.route !== "review") {
+      state.selectedId = selected.id;
+      go("review", selected.id);
+      return true;
+    }
+
+    const routeCommand = resolvePrimaryCommandForPack(selected);
+    if (routeCommand.action !== "review") {
+      return runRouteAction(routeCommand.action, routeCommand.targetPackId);
+    }
+
+    go("pack", selected.id);
+    return true;
+  }
+
+  if (action === "open" && state.route === "pack") {
+    const pack = findPack(targetPackId) || currentPack();
+    go("work", pack?.id || "");
+    return true;
+  }
+
+  if (action === "focus" && state.route === "focus") {
+    const pack = findPack(targetPackId) || currentPack();
+    go("work", pack?.id || "");
     return true;
   }
 
@@ -2494,29 +2762,6 @@ function runRouteAction(action, targetPackId) {
   return false;
 }
 
-function commandActionForPack(pack) {
-  if (!pack) {
-    return { label: "Open work list", action: "open-work-list", targetPackId: "" };
-  }
-
-  const rawLabel = (pack.next || "").trim();
-  if (isMissingNextAction(pack)) {
-    return { label: "Set Button runs next", action: "set-next", targetPackId: pack.id };
-  }
-
-  if (hasBlocker(pack)) {
-    const action = commandActionForLabel(rawLabel);
-    if (action.action === "unblock") {
-      return { label: "Unblock", action: "unblock", targetPackId: pack.id };
-    }
-
-    return { label: "Review blocker", action: "review", targetPackId: pack.id };
-  }
-
-  const action = commandActionForLabel(rawLabel || "Open");
-  return { ...action, targetPackId: pack.id };
-}
-
 function commandActionForLabel(label) {
   label = (label || "Open").trim() || "Open";
   const normalized = label.toLowerCase();
@@ -2572,7 +2817,7 @@ function createSamplePack() {
   };
   state.packs.unshift(pack);
   state.selectedId = pack.id;
-  state.status = `${pack.title} created in browser state only.`;
+  setCreateConfirmation(pack);
   go("pack", pack.id);
 }
 
@@ -2581,13 +2826,18 @@ function savePackDetail(id) {
   if (!pack) return;
   pack.title = valueOf("edit-title") || pack.title;
   pack.status = valueOf("edit-status") || pack.status;
+  pack.blocker = valueOf("edit-blocker") || pack.blocker;
   pack.owner = valueOf("edit-owner") || pack.owner;
   pack.due = valueOf("edit-due");
   pack.next = valueOf("edit-next") || pack.next;
+  pack.doneWhen = valueOf("edit-done-when") || pack.doneWhen;
   pack.purpose = valueOf("edit-purpose") || pack.purpose;
   pack.blocker = pack.status === "done" ? "none" : pack.blocker;
+  if (pack.status === "blocked" && pack.blocker === "none") {
+    pack.status = "active";
+  }
   pack.activity.unshift("Sample detail saved in browser state.");
-  state.status = `${pack.title} saved in browser state only.`;
+  setSaveConfirmation(pack);
   render();
 }
 
@@ -2705,6 +2955,22 @@ function factLine(label, value) {
   </div>`;
 }
 
+function relevantMemoryStrip(pack) {
+  const latest = pack?.memory?.find((note) => String(note || "").trim());
+  const visible = latest
+    ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
+    : "none yet";
+  const help = latest
+    ? `Relevant Memory: ${latest}`
+    : "Relevant Memory: none yet. How to fill: add a memory note from the Memory route.";
+
+  return `<div class="demo-memory-strip" data-memory-strip="selected-work" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
+    <span>Relevant Memory</span>
+    <strong>${escapeHtml(visible)}</strong>
+    ${latest ? "" : `<small>How to fill: add a memory note below or from the Memory route.</small>`}
+  </div>`;
+}
+
 function inputField(id, label, value) {
   return `<label class="demo-field" for="${escapeAttribute(id)}">
     <span>${escapeHtml(label)}</span>
@@ -2726,6 +2992,15 @@ function selectField(id, label, options, selected) {
       ${options.map((option) => `<option value="${escapeAttribute(option)}"${option === selected ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
     </select>
   </label>`;
+}
+
+function disabledReasonAttributes(disabled, reason) {
+  if (!disabled) {
+    return "";
+  }
+
+  const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
+  return ` disabled title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}" data-disabled-reason="${escapeAttribute(copy)}"`;
 }
 
 function recentActivityPanel() {
@@ -3125,7 +3400,7 @@ function collectLabSnapshot(pack, action, styleAudit) {
 }
 
 function labSmokeChecks(pack, styleAudit) {
-  const action = commandActionForPack(pack);
+  const action = resolvePrimaryCommandForPack(pack);
   const sync = commandSyncStatus();
   const overflow = currentOverflowStatus();
 
@@ -3271,13 +3546,36 @@ function copyToClipboard(value, successMessage = "Feedback context copied to cli
   );
 }
 
-function emptyState(text) {
-  return `<div class="demo-empty">${escapeHtml(text)}</div>`;
+function emptyState(text, help = "Use the nearby controls or reset demo data.") {
+  return `<div class="demo-empty">
+    <strong>${escapeHtml(text)}</strong>
+    <span><b>How to fill:</b> ${escapeHtml(help)}</span>
+  </div>`;
 }
 
 function valueOf(id) {
   const input = el(id);
   return input ? input.value.trim() : "";
+}
+
+function visibleCopy(value, limit) {
+  const normalized = normalizeCopy(value);
+  if (normalized.length <= limit) {
+    return normalized;
+  }
+
+  const hardLimit = Math.max(4, limit);
+  const boundary = normalized.lastIndexOf(" ", hardLimit - 4);
+  const sliceAt = boundary >= Math.floor(hardLimit * 0.55) ? boundary : hardLimit - 3;
+  return `${normalized.slice(0, sliceAt).trimEnd()}...`;
+}
+
+function helpCopy(value, limit) {
+  return visibleCopy(value, limit);
+}
+
+function normalizeCopy(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
 }
 
 function safeJson(value) {
