@@ -1298,7 +1298,7 @@ html[data-theme="dark"] .demo-state-pill {
   border: 1px solid var(--cockpit-border);
   border-radius: 14px;
   display: block;
-  margin-top: 12px;
+  margin-top: 18px;
   padding: 0;
 }
 
