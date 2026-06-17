@@ -471,8 +471,18 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-panel-head + .demo-search-input,
 .demo-panel-head + .demo-search-results,
-.demo-panel-head + .demo-work-list {
-  margin-top: 14px;
+.demo-panel-head + .demo-work-list,
+.demo-panel-head + .demo-inline-form,
+.demo-panel-head + .demo-form-grid,
+.demo-panel-head + .demo-profile-grid,
+.demo-panel-head + .demo-check-list,
+.demo-panel-head + .demo-grid,
+.demo-panel-head + .demo-toolbar,
+.demo-panel-head + .demo-list,
+.demo-panel-head + .demo-triage-layout,
+.demo-panel-head + .demo-quick-actions,
+.demo-panel-head + .demo-board-grid {
+  margin-top: 12px;
 }
 
 .demo-panel-head + label {
