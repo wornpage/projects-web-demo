@@ -6,6 +6,12 @@ const DEMO_ISSUE_URL = `${DEMO_REPO_URL}/issues/new`;
 const DEMO_RELEASE_NOTES_URL = `${DEMO_REPO_URL}/releases`;
 const DEMO_DEFAULT_VERSION = "v0.0.0";
 
+const STYLE_AUDIT_ASSETS = [
+  { id: "productCss", label: "Product CSS", path: "assets/app.css", type: "css" },
+  { id: "demoCss", label: "Demo CSS", path: "assets/demo.css", type: "css" },
+  { id: "demoJs", label: "Demo JS", path: "assets/demo.js", type: "js" }
+];
+
 const state = {
   basePacks: [],
   packs: [],
@@ -17,6 +23,7 @@ const state = {
   copyProfile: "general",
   scenarioId: "default",
   metadata: null,
+  styleAudit: null,
   memoryDraft: ""
 };
 
@@ -144,9 +151,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderNav();
 
   try {
-    const [metadata, packsResponse] = await Promise.all([
+    const [metadata, packsResponse, styleAudit] = await Promise.all([
       fetch(DEMO_METADATA_FILE, { cache: "no-store" }).catch(() => null),
-      fetch("data/demo-packs.json", { cache: "no-store" })
+      fetch("data/demo-packs.json", { cache: "no-store" }),
+      collectStyleAudit()
     ]);
     if (!packsResponse.ok) {
       throw new Error(`Demo data failed with ${packsResponse.status}`);
@@ -155,6 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     state.basePacks = await packsResponse.json();
     const parsedMetadata = metadata && safeJson(await metadata.text());
     state.metadata = buildMetadata(parsedMetadata);
+    state.styleAudit = styleAudit;
     loadState();
     applyLaunchConfiguration();
     routeFromHash();
@@ -1064,6 +1073,7 @@ function renderMeta() {
   const checks = buildHealthChecks();
   const passing = checks.filter((check) => check.status).length;
   const context = collectDiagnosticContext();
+  const styleAudit = buildStyleAuditSnapshot();
   const now = new Date().toLocaleString();
 
   el("screen-content").innerHTML = `
@@ -1085,6 +1095,22 @@ function renderMeta() {
       <div class="demo-check-list">
         ${checks.map(healthLine).join("")}
       </div>
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Style audit</span>
+          <h2>Shipped asset budget</h2>
+        </div>
+        <span class="demo-status">${escapeHtml(styleAudit.status)}</span>
+      </div>
+      <div class="demo-grid">
+        ${metricCard("Demo CSS", styleAuditMetric("demoCss", "lines"), styleAuditDetail("demoCss"))}
+        ${metricCard("Product CSS", styleAuditMetric("productCss", "lines"), styleAuditDetail("productCss"))}
+        ${metricCard("CSS total", formatBytes(styleAudit.totals.cssBytes), `${styleAudit.totals.cssLines} CSS LOC shipped.`)}
+        ${metricCard("Routes", styleAudit.routeCount, `${navItems.length} nav routes plus pack detail.`)}
+      </div>
+      <div class="demo-check-list">
+        ${styleAuditChecks().map(healthLine).join("")}
+      </div>
       <div class="demo-grid">
         ${metricCard("Active packs", counts.active, "Packs ready to act on.")}
         ${metricCard("Blocked packs", counts.blocked, "Packs requiring action or missing next step.")}
@@ -1097,12 +1123,16 @@ function renderMeta() {
       </div>
       <div class="demo-card-actions">
         <button id="copy-meta-context" class="btn" type="button">Copy meta snapshot</button>
+        <button id="copy-style-audit" class="btn" type="button">Copy style audit</button>
       </div>
       <p><small>Snapshot generated: ${escapeHtml(now)}</small></p>
     </section>
   `;
   el("copy-meta-context").addEventListener("click", () => {
-    copyToClipboard(JSON.stringify(context, null, 2));
+    copyToClipboard(JSON.stringify(context, null, 2), "Meta snapshot copied to clipboard.");
+  });
+  el("copy-style-audit").addEventListener("click", () => {
+    copyToClipboard(JSON.stringify(styleAudit, null, 2), "Style audit copied to clipboard.");
   });
 }
 
@@ -1540,8 +1570,7 @@ function runRouteAction(action, targetPackId) {
   }
 
   if (action === "refresh-meta") {
-    state.status = "Meta diagnostics recomputed for this session.";
-    render();
+    refreshMetaDiagnostics();
     return true;
   }
 
@@ -1802,6 +1831,66 @@ function activityPanel(pack) {
   </section>`;
 }
 
+async function collectStyleAudit() {
+  const assets = await Promise.all(STYLE_AUDIT_ASSETS.map(readAuditAsset));
+  const cssAssets = assets.filter((asset) => asset.type === "css");
+  const jsAssets = assets.filter((asset) => asset.type === "js");
+  const ok = assets.every((asset) => asset.status);
+
+  return {
+    status: ok ? "ready" : "partial",
+    generatedAt: new Date().toISOString(),
+    assets,
+    totals: {
+      cssBytes: sumBy(cssAssets, "bytes"),
+      cssLines: sumBy(cssAssets, "lines"),
+      jsBytes: sumBy(jsAssets, "bytes"),
+      jsLines: sumBy(jsAssets, "lines"),
+      bytes: sumBy(assets, "bytes"),
+      lines: sumBy(assets, "lines")
+    }
+  };
+}
+
+async function readAuditAsset(asset) {
+  try {
+    const response = await fetch(asset.path, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`.trim());
+    }
+
+    const text = await response.text();
+    return {
+      ...asset,
+      status: true,
+      bytes: new Blob([text]).size,
+      lines: countTextLines(text),
+      selectors: asset.type === "css" ? countCssSelectors(text) : 0
+    };
+  } catch (error) {
+    return {
+      ...asset,
+      status: false,
+      bytes: 0,
+      lines: 0,
+      selectors: 0,
+      error: error.message || "asset fetch failed"
+    };
+  }
+}
+
+function refreshMetaDiagnostics() {
+  state.status = "Meta diagnostics refreshing.";
+  render();
+  collectStyleAudit().then((styleAudit) => {
+    state.styleAudit = styleAudit;
+    state.status = "Meta diagnostics recomputed for this session.";
+    if (state.route === "meta") {
+      render();
+    }
+  });
+}
+
 function buildMetadata(rawMetadata = {}) {
   const fallbackVersion = DEMO_DEFAULT_VERSION;
   const releaseNotesUrl = rawMetadata?.releaseNotesUrl || DEMO_RELEASE_NOTES_URL;
@@ -1881,9 +1970,177 @@ function buildHealthChecks() {
       label: "Pack list loaded",
       status: Array.isArray(state.packs) && state.packs.length > 0,
       detail: `${state.packs.length} sample packs available.`
+    },
+    {
+      label: "Style audit assets",
+      status: state.styleAudit?.status === "ready",
+      detail: styleAuditSummary()
     }
   ];
   return checks;
+}
+
+function styleAuditSummary() {
+  const audit = state.styleAudit;
+  if (!audit) {
+    return "Asset budget is still loading.";
+  }
+
+  const failed = audit.assets.filter((asset) => !asset.status);
+  if (failed.length > 0) {
+    return `${failed.length} style audit asset(s) could not be measured.`;
+  }
+
+  return `${audit.totals.cssLines} CSS LOC and ${formatBytes(audit.totals.cssBytes)} measured.`;
+}
+
+function buildStyleAuditSnapshot() {
+  const audit = state.styleAudit || emptyStyleAudit();
+  return {
+    status: audit.status,
+    generatedAt: audit.generatedAt,
+    storageKey: DEMO_STORAGE_KEY,
+    routeCount: navItems.length + 1,
+    currentRoute: state.route,
+    theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
+    commandSync: commandSyncStatus(),
+    currentOverflow: currentOverflowStatus(),
+    metadata: {
+      version: state.metadata?.version || DEMO_DEFAULT_VERSION,
+      commit: state.metadata?.commit || "unknown",
+      generatedAt: state.metadata?.generatedAt || ""
+    },
+    assets: audit.assets.map((asset) => ({
+      id: asset.id,
+      label: asset.label,
+      path: asset.path,
+      type: asset.type,
+      status: asset.status,
+      lines: asset.lines,
+      bytes: asset.bytes,
+      selectors: asset.selectors,
+      error: asset.error || ""
+    })),
+    totals: audit.totals
+  };
+}
+
+function emptyStyleAudit() {
+  return {
+    status: "loading",
+    generatedAt: "",
+    assets: STYLE_AUDIT_ASSETS.map((asset) => ({
+      ...asset,
+      status: false,
+      lines: 0,
+      bytes: 0,
+      selectors: 0
+    })),
+    totals: {
+      cssBytes: 0,
+      cssLines: 0,
+      jsBytes: 0,
+      jsLines: 0,
+      bytes: 0,
+      lines: 0
+    }
+  };
+}
+
+function styleAuditChecks() {
+  const audit = buildStyleAuditSnapshot();
+  const cssAssets = audit.assets.filter((asset) => asset.type === "css");
+  const jsAsset = audit.assets.find((asset) => asset.id === "demoJs");
+
+  return [
+    ...cssAssets.map((asset) => ({
+      label: `${asset.label} measured`,
+      status: asset.status,
+      detail: asset.status
+        ? `${asset.lines} LOC, ${formatBytes(asset.bytes)}, ${asset.selectors} selector block(s).`
+        : asset.error || "Could not measure asset."
+    })),
+    {
+      label: "Demo JS measured",
+      status: Boolean(jsAsset?.status),
+      detail: jsAsset?.status
+        ? `${jsAsset.lines} LOC, ${formatBytes(jsAsset.bytes)}.`
+        : jsAsset?.error || "Could not measure demo script."
+    },
+    {
+      label: "State key reset",
+      status: DEMO_STORAGE_KEY.endsWith("-v3"),
+      detail: DEMO_STORAGE_KEY
+    },
+    {
+      label: "Command controls sync",
+      status: audit.commandSync.status,
+      detail: audit.commandSync.detail
+    },
+    {
+      label: "Current route overflow",
+      status: audit.currentOverflow.status,
+      detail: audit.currentOverflow.detail
+    },
+    {
+      label: "Export metadata",
+      status: Boolean(state.metadata?.generatedAt),
+      detail: state.metadata?.generatedAt
+        ? `Generated ${new Date(state.metadata.generatedAt).toLocaleString()}.`
+        : "Generated timestamp not available."
+    }
+  ];
+}
+
+function styleAuditMetric(assetId, field) {
+  const asset = (state.styleAudit || emptyStyleAudit()).assets.find((item) => item.id === assetId);
+  if (!asset?.status) {
+    return "n/a";
+  }
+
+  return asset[field] ?? "n/a";
+}
+
+function styleAuditDetail(assetId) {
+  const asset = (state.styleAudit || emptyStyleAudit()).assets.find((item) => item.id === assetId);
+  if (!asset?.status) {
+    return asset?.error || "Asset not measured yet.";
+  }
+
+  return `${formatBytes(asset.bytes)} / ${asset.selectors || 0} selector block(s).`;
+}
+
+function commandSyncStatus() {
+  const primary = el("primary-action");
+  const dock = el("dock-next");
+  const dockLabel = el("dock-next-label");
+  const primaryLabel = primary?.textContent.trim() || "";
+  const bottomLabel = dockLabel?.textContent.trim() || "";
+  const labelsMatch = primaryLabel === bottomLabel;
+  const actionMatches = (primary?.dataset.action || "") === (dock?.dataset.action || "");
+  const packMatches = (primary?.dataset.pack || "") === (dock?.dataset.pack || "");
+  const status = Boolean(primary && dock && labelsMatch && actionMatches && packMatches);
+
+  return {
+    status,
+    detail: status
+      ? `${primaryLabel} is wired to the same action in header and dock.`
+      : "Header and dock action wiring do not match."
+  };
+}
+
+function currentOverflowStatus() {
+  const width = document.documentElement.clientWidth;
+  const scrollWidth = Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth || 0);
+  const overflow = Math.max(0, scrollWidth - width);
+
+  return {
+    status: overflow <= 1,
+    overflow,
+    detail: overflow <= 1
+      ? "No current horizontal overflow."
+      : `${overflow}px horizontal overflow on this route.`
+  };
 }
 
 function healthLine(check) {
@@ -1918,16 +2175,17 @@ function collectDiagnosticContext() {
     version: stateVersionLabel(),
     theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
     metricSource: state.metadata,
+    styleAudit: buildStyleAuditSnapshot(),
     packCount: state.packs.length,
     reviewCount: state.packs.filter(isReview).length,
     timestamp: new Date().toISOString()
   };
 }
 
-function copyToClipboard(value) {
+function copyToClipboard(value, successMessage = "Feedback context copied to clipboard.") {
   navigator.clipboard?.writeText(value).then(
     () => {
-      state.status = "Feedback context copied to clipboard.";
+      state.status = successMessage;
       render();
     },
     () => {
@@ -1952,6 +2210,34 @@ function safeJson(value) {
   } catch {
     return null;
   }
+}
+
+function countTextLines(text) {
+  const normalized = String(text || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  if (!normalized) {
+    return 0;
+  }
+
+  return normalized.endsWith("\n")
+    ? normalized.slice(0, -1).split("\n").length
+    : normalized.split("\n").length;
+}
+
+function countCssSelectors(text) {
+  return (String(text || "").match(/\{/g) || []).length;
+}
+
+function sumBy(items, field) {
+  return items.reduce((sum, item) => sum + (Number(item[field]) || 0), 0);
+}
+
+function formatBytes(bytes) {
+  const value = Number(bytes) || 0;
+  if (value < 1024) {
+    return `${value} B`;
+  }
+
+  return `${(value / 1024).toFixed(value >= 1024 * 100 ? 0 : 1)} KB`;
 }
 
 function slugify(value) {
