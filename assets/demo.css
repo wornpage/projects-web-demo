@@ -39,9 +39,13 @@ body {
   --demo-panel-radius: 20px;
   --demo-shell-font-size: 15px;
   --demo-shell-line-height: 1.45;
-  --demo-card-title-weight: 760;
-  --demo-card-meta-weight: 650;
-  --demo-meta-font-weight: 640;
+  --demo-card-title-weight: 740;
+  --demo-card-meta-weight: 620;
+  --demo-meta-font-weight: 620;
+  --demo-card-bg: color-mix(in srgb, var(--cockpit-surface) 96%, var(--cockpit-bg));
+  --demo-card-border: color-mix(in srgb, var(--cockpit-border) 82%, transparent);
+  --demo-card-accent-edge: color-mix(in srgb, var(--cockpit-accent) 38%, transparent);
+  --demo-card-head-bg: color-mix(in srgb, var(--cockpit-surface) 86%, var(--demo-card-bg));
   --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 84%, var(--cockpit-bg));
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 68%, var(--cockpit-text));
   --demo-command-accent: color-mix(in srgb, var(--cockpit-accent-50) 68%, var(--cockpit-surface));
@@ -55,6 +59,10 @@ body {
 
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
+  --demo-card-bg: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
+  --demo-card-border: color-mix(in srgb, var(--cockpit-border) 78%, transparent);
+  --demo-card-accent-edge: color-mix(in srgb, var(--cockpit-accent-100) 54%, transparent);
+  --demo-card-head-bg: color-mix(in srgb, var(--cockpit-accent-100) 14%, var(--demo-card-bg));
   --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
   --demo-command-accent: color-mix(in srgb, var(--cockpit-accent) 30%, var(--cockpit-accent-text));
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 78%, var(--cockpit-text));
@@ -207,6 +215,7 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-header-inner {
   max-width: 1180px;
   min-width: 0;
+  gap: 12px;
 }
 
 .demo-screen-title {
@@ -405,7 +414,7 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-command-line strong {
   color: var(--cockpit-text);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 760;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -456,10 +465,28 @@ html[data-theme="dark"] .demo-header-metadata {
   gap: 10px;
 }
 
+.demo-panel-head {
+  margin-bottom: 4px;
+}
+
 .demo-panel-head + .demo-search-input,
 .demo-panel-head + .demo-search-results,
 .demo-panel-head + .demo-work-list {
-  margin-top: 12px;
+  margin-top: 14px;
+}
+
+.demo-panel-head + label {
+  display: block;
+  margin-top: 10px;
+}
+
+.demo-panel-head + .sr-only + .demo-search-input,
+.demo-panel-head + .demo-search-input {
+  margin-top: 14px;
+}
+
+.demo-panel-head + label + .demo-search-input {
+  margin-top: 10px;
 }
 
 .demo-search-input + .demo-search-results,
@@ -593,7 +620,7 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-status {
   color: var(--cockpit-accent);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-align: right;
 }
@@ -668,10 +695,13 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-review-card,
 .demo-row,
 .demo-note {
-  background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
-  border: 1px solid color-mix(in srgb, var(--cockpit-border) 82%, transparent);
+  background: var(--demo-card-bg);
+  border: 1px solid var(--demo-card-border);
   border-radius: calc(var(--demo-panel-radius) - 2px);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--cockpit-text) 8%, transparent), var(--cockpit-shadow-sm);
+  box-shadow:
+    inset 4px 0 0 var(--demo-card-accent-edge),
+    0 1px 0 color-mix(in srgb, var(--cockpit-text) 8%, transparent),
+    var(--cockpit-shadow-sm);
   min-width: 0;
   overflow: clip;
   padding: 16px;
@@ -681,7 +711,10 @@ html[data-theme="dark"] .demo-meta-row {
 
 .demo-work-card.selected {
   border-color: var(--cockpit-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent) 22%, transparent), var(--cockpit-shadow-lg);
+  box-shadow:
+    inset 4px 0 0 var(--cockpit-accent),
+    0 0 0 2px color-mix(in srgb, var(--cockpit-accent) 22%, transparent),
+    var(--cockpit-shadow-lg);
   transform: translateY(-1px);
 }
 
@@ -761,16 +794,16 @@ html[data-theme="dark"] .demo-meta-row {
   justify-content: space-between;
   margin-bottom: 12px;
   color: var(--cockpit-text);
-  background: var(--demo-card-banner-bg);
-  border: 1px solid color-mix(in srgb, var(--cockpit-border) 68%, transparent);
-  border-radius: 10px;
+  background: var(--demo-card-head-bg);
+  border: 1px solid color-mix(in srgb, var(--cockpit-border) 58%, transparent);
+  border-radius: 8px;
   padding: 8px 12px;
   overflow: hidden;
 }
 
 html.dark .demo-card-head,
 html[data-theme="dark"] .demo-card-head {
-  background: var(--demo-card-banner-bg);
+  background: var(--demo-card-head-bg);
   border-color: color-mix(in srgb, var(--cockpit-border) 88%, transparent);
   color: var(--cockpit-text);
 }
@@ -782,7 +815,7 @@ html[data-theme="dark"] .demo-card-head {
   cursor: pointer;
   display: block;
   font-family: var(--font-family-display);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: var(--demo-card-title-weight);
   line-height: 1.18;
   min-width: 0;
