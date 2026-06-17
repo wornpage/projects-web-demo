@@ -1,4 +1,8 @@
-const DEMO_STORAGE_KEY = "projects-static-demo-state-v4";
+const DEMO_STORAGE_KEY = "projects-static-demo-state-v5";
+const LEGACY_DEMO_STORAGE_KEYS = [
+  "projects-static-demo-state-v3",
+  "projects-static-demo-state-v4"
+];
 const THEME_STORAGE_KEY = "projects-demo-theme";
 const DEMO_METADATA_FILE = "assets/demo-metadata.json";
 const DEMO_REPO_URL = "https://github.com/jared-bidlow/projects-web-demo";
@@ -188,6 +192,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   initTheme();
+  purgeLegacyDemoState();
   bindShellControls();
   renderNav();
 
@@ -284,6 +289,18 @@ function loadState() {
   state.triageRows = Array.isArray(saved?.triageRows) ? saved.triageRows : [];
 }
 
+function purgeLegacyDemoState() {
+  for (const key of LEGACY_DEMO_STORAGE_KEYS) {
+    try {
+      if (key !== DEMO_STORAGE_KEY && localStorage.getItem(key) !== null) {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      // LocalStorage access can be restricted in some embedded contexts.
+    }
+  }
+}
+
 function applyLaunchConfiguration() {
   const profileParam = launchParams.get("profile");
   if (profileParam && copyProfiles[profileParam]) {
@@ -344,6 +361,7 @@ function saveState() {
 
 function resetState() {
   localStorage.removeItem(DEMO_STORAGE_KEY);
+  purgeLegacyDemoState();
   state.packs = structuredClone(state.basePacks);
   state.copyProfile = "general";
   state.scenarioId = "default";
@@ -566,10 +584,6 @@ function renderCommand(selected) {
 }
 
 function commandForRoute(selected, visibleCount, reviewCount) {
-  const selectedTitle = selected?.title || "No sample work selected";
-  const selectedAction = commandActionForPack(selected);
-  const selectedBlocker = blockerTextForPack(selected);
-  const selectedState = selected?.status || "Ready";
   const triageCount = state.triageRows.length;
   const triageBlockers = state.triageRows.filter((row) => row.blocker && row.blocker !== "none").length;
   const triageAction = triageCount > 0 ? "copy-triage" : "parse-triage";
@@ -578,15 +592,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     ? `${reviewCount} sample item(s) need review`
     : "none";
   const reviewTarget = preferredReviewPack();
-  const workListAction = commandActionForPack(null);
-  const selectedWorkCommand = {
-    where: selectedTitle,
-    blocker: selectedBlocker,
-    next: selectedAction.label,
-    stateText: selectedState,
-    action: selectedAction.action,
-    targetPackId: selectedAction.targetPackId
-  };
+  const selectedWorkCommand = selectedPackCommand(selected);
   const selectedWorkReadyCommand = {
     ...selectedWorkCommand,
     stateText: "Ready"
@@ -604,12 +610,12 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     check: { title: "Check command flow", where: "Check", blocker: `${reviewCount} sample item(s) still need decisions`, next: "Validate sample", stateText: "Ready", action: "validate-sample", targetPackId: "" },
     search: { title: "Search command flow", where: "Search", blocker: "type title, owner, next action, or due date", next: "Search", stateText: "Ready", action: "search-demo", targetPackId: "" },
     stats: { title: "Stats command flow", where: "Stats", blocker: "sample counts are calculated in browser state", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" },
-    notes: { title: "Notes command flow", where: "Notes", blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selected?.id || "" },
-    timeline: { title: "Timeline command flow", where: "Timeline", blocker: "sample activity is browser-only", next: workListAction.label, stateText: "Ready", action: workListAction.action, targetPackId: "" },
-    files: { title: "Files command flow", where: "Files", blocker: "sample sources are references only", next: workListAction.label, stateText: "Ready", action: workListAction.action, targetPackId: "" },
+    notes: { title: "Notes command flow", where: "Notes", blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
+    timeline: { title: "Timeline command flow", where: "Timeline", blocker: "sample activity is browser-only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
+    files: { title: "Files command flow", where: "Files", blocker: "sample sources are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     calendar: { title: "Calendar command flow", ...selectedWorkCommand },
     create: { title: "Create command flow", where: "Create", blocker: "required fields are title and Button runs next", next: "Save sample", stateText: "Draft", action: "create-sample", targetPackId: "" },
-    memory: { title: "Memory command flow", where: selectedTitle, blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selected?.id || "" },
+    memory: { title: "Memory command flow", where: selectedWorkCommand.where, blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
     lab: { title: "Demo Lab command flow", ...selectedWorkCommand, stateText: "Lab" },
     meta: { title: "Meta command flow", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
     feedback: { title: "Feedback command flow", where: "Feedback", blocker: `Version ${stateVersionLabel()} is active`, next: "Report feedback", stateText: "Ready", action: "report-feedback", targetPackId: "" },
@@ -625,6 +631,39 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     scope: `Scope: ${visibleCount} of ${state.packs.length} sample work items visible.`,
     targetPackId: routeCommand.targetPackId || ""
   };
+}
+
+function selectedPackCommand(selected) {
+  const resolvedAction = resolvePrimaryCommandForSelectedPack(selected);
+  return {
+    where: selected?.title || "No sample work selected",
+    blocker: blockerTextForPack(selected),
+    next: resolvedAction.label,
+    stateText: selected?.status || "Ready",
+    action: resolvedAction.action,
+    targetPackId: resolvedAction.targetPackId
+  };
+}
+
+function resolvePrimaryCommandForSelectedPack(selected) {
+  if (!selected) {
+    return { label: "Open work list", action: "open-work-list", targetPackId: "" };
+  }
+
+  if (isMissingNextAction(selected)) {
+    return { label: "Set Button runs next", action: "set-next", targetPackId: selected.id };
+  }
+
+  const action = commandActionForLabel(selected.next || "Open");
+  if (hasBlocker(selected)) {
+    if (action.action === "unblock") {
+      return { label: "Unblock", action: "unblock", targetPackId: selected.id };
+    }
+
+    return { label: "Review blocker", action: "review", targetPackId: selected.id };
+  }
+
+  return { ...action, targetPackId: selected.id };
 }
 
 function updateCommand(command) {
@@ -2975,7 +3014,7 @@ function styleAuditChecks() {
     },
     {
       label: "State key reset",
-      status: DEMO_STORAGE_KEY.endsWith("-v4"),
+      status: DEMO_STORAGE_KEY.endsWith("-v5"),
       detail: DEMO_STORAGE_KEY
     },
     {

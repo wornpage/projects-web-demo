@@ -44,6 +44,11 @@ body {
   --demo-meta-font-weight: 640;
   --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 84%, var(--cockpit-bg));
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 68%, var(--cockpit-text));
+  --demo-command-accent: color-mix(in srgb, var(--cockpit-accent-50) 68%, var(--cockpit-surface));
+  --demo-command-line-accent: color-mix(in srgb, var(--cockpit-accent) 22%, transparent);
+  --demo-command-line-border: color-mix(in srgb, var(--cockpit-accent) 30%, var(--cockpit-border));
+  --demo-command-bg: color-mix(in srgb, var(--cockpit-surface) 82%, transparent);
+  --demo-meta-bg: color-mix(in srgb, var(--cockpit-surface) 94%, transparent);
   font-size: calc(var(--demo-shell-font-size) * var(--demo-font-scale));
   line-height: var(--demo-shell-line-height);
 }
@@ -51,8 +56,13 @@ body {
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
   --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
+  --demo-command-accent: color-mix(in srgb, var(--cockpit-accent) 30%, var(--cockpit-accent-text));
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 78%, var(--cockpit-text));
   --demo-primary-on-accent: #061B16;
+  --demo-command-line-accent: color-mix(in srgb, var(--cockpit-accent-text) 65%, transparent);
+  --demo-command-line-border: color-mix(in srgb, var(--cockpit-accent-text) 28%, var(--cockpit-border));
+  --demo-command-bg: color-mix(in srgb, var(--cockpit-surface) 88%, transparent);
+  --demo-meta-bg: color-mix(in srgb, var(--cockpit-surface) 98%, transparent);
 }
 
 .demo-sidebar {
@@ -339,8 +349,8 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-command-state {
-  background: color-mix(in srgb, var(--cockpit-accent-50) 78%, var(--cockpit-surface));
-  border: 1px solid color-mix(in srgb, var(--cockpit-accent) 30%, var(--cockpit-border));
+  background: var(--demo-command-accent);
+  border: 1px solid var(--demo-command-line-border);
   border-radius: 999px;
   color: var(--cockpit-text);
   flex: 0 0 auto;
@@ -360,8 +370,8 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-command-line {
   align-items: center;
-  background: color-mix(in srgb, var(--cockpit-surface, var(--cockpit-bg)) 70%, transparent);
-  border: 1px solid var(--cockpit-border);
+  background: var(--demo-command-bg);
+  border: 1px solid var(--demo-command-line-border);
   border-radius: 16px;
   display: grid;
   gap: 12px;
@@ -373,7 +383,7 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-command-line::before {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--cockpit-accent) 40%, transparent), color-mix(in srgb, var(--cockpit-accent-200) 24%, transparent));
+  background: linear-gradient(180deg, var(--demo-command-line-accent), color-mix(in srgb, var(--demo-command-line-accent) 68%, transparent));
   border-radius: 999px;
   bottom: 10px;
   content: "";
@@ -402,8 +412,8 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-command-next {
-  background: color-mix(in srgb, var(--cockpit-accent) 18%, var(--cockpit-surface));
-  border-color: color-mix(in srgb, var(--cockpit-accent) 48%, var(--cockpit-border));
+  background: color-mix(in srgb, var(--cockpit-accent) 24%, var(--cockpit-surface));
+  border-color: color-mix(in srgb, var(--cockpit-accent) 44%, var(--cockpit-border));
 }
 
 .demo-command-footer {
@@ -484,10 +494,31 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-search-input:focus,
 .demo-field input:focus,
 .demo-field textarea:focus,
-.demo-field select:focus {
+.demo-field select:focus,
+.demo-search-input:focus-visible,
+.demo-field input:focus-visible,
+.demo-field textarea:focus-visible,
+.demo-field select:focus-visible {
   border-color: var(--cockpit-accent);
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent) 24%, transparent);
+}
+
+.demo-search-input:focus,
+.demo-field input:focus,
+.demo-field textarea:focus,
+.demo-field select:focus {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--cockpit-accent) 24%, transparent);
+}
+
+.demo-chip:focus-visible,
+.demo-profile-card:focus-visible,
+.demo-nav-item:focus-visible,
+.demo-chip-row .demo-profile-card:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
 }
 
 .demo-chip-row {
@@ -576,7 +607,7 @@ html[data-theme="dark"] .demo-status-line {
 
 .demo-meta-row {
   align-items: center;
-  background: color-mix(in srgb, var(--cockpit-surface) 88%, var(--cockpit-bg));
+  background: var(--demo-meta-bg);
   border: 1px solid var(--cockpit-border);
   border-radius: 12px;
   color: var(--cockpit-text-secondary);
@@ -590,8 +621,8 @@ html[data-theme="dark"] .demo-status-line {
 
 html.dark .demo-meta-row,
 html[data-theme="dark"] .demo-meta-row {
-  background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
-  border-color: color-mix(in srgb, var(--cockpit-border) 84%, transparent);
+  background: var(--demo-meta-bg);
+  border-color: color-mix(in srgb, var(--cockpit-border) 72%, transparent);
   color: var(--cockpit-text-secondary);
 }
 
@@ -705,12 +736,15 @@ html[data-theme="dark"] .demo-meta-row {
 }
 
 .demo-card-head {
+  align-items: center;
+  gap: 12px;
   justify-content: space-between;
   margin-bottom: 12px;
   background: var(--demo-card-banner-bg);
   border: 1px solid color-mix(in srgb, var(--cockpit-border) 68%, transparent);
   border-radius: 14px;
   padding: 8px 12px;
+  color: var(--cockpit-text);
 }
 
 html.dark .demo-card-head,
@@ -725,12 +759,14 @@ html[data-theme="dark"] .demo-card-head {
   border: 0;
   color: var(--cockpit-text);
   cursor: pointer;
-  display: inline;
+  display: block;
   font-family: var(--font-family-display);
   font-size: 18px;
   font-weight: var(--demo-card-title-weight);
   line-height: 1.18;
+  min-width: 0;
   overflow-wrap: anywhere;
+  text-wrap: balance;
   padding: 0;
   text-align: left;
   text-decoration: none;
@@ -784,12 +820,12 @@ html.dark .demo-state-pill,
 html[data-theme="dark"] .demo-state-pill {
   background: color-mix(in srgb, var(--cockpit-accent) 36%, var(--cockpit-surface));
   border-color: color-mix(in srgb, var(--cockpit-accent) 55%, var(--cockpit-border));
-  color: var(--cockpit-text);
+  color: var(--cockpit-accent-text);
 }
 
 .demo-command-row {
   align-items: center;
-  border: 1px solid var(--cockpit-border);
+  border: 1px solid var(--demo-command-line-border);
   border-radius: 14px;
   display: grid;
   gap: 10px;
@@ -797,10 +833,11 @@ html[data-theme="dark"] .demo-state-pill {
   overflow: clip;
   padding: 12px;
   position: relative;
+  min-height: 0;
 }
 
 .demo-command-row::before {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--cockpit-accent) 34%, transparent), color-mix(in srgb, var(--cockpit-accent-100) 26%, transparent));
+  background: linear-gradient(180deg, var(--demo-command-line-accent), color-mix(in srgb, var(--demo-command-line-accent) 72%, transparent));
   border-radius: 999px;
   bottom: 9px;
   content: "";
@@ -818,6 +855,7 @@ html[data-theme="dark"] .demo-state-pill {
   font-weight: 760;
   margin-top: 4px;
   overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .demo-empty {
@@ -1146,19 +1184,20 @@ html:not(.dark) .demo-theme-toggle {
 
 html.dark .demo-theme-toggle,
 html[data-theme="dark"] .demo-theme-toggle {
-  background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
-  border-color: color-mix(in srgb, var(--cockpit-accent) 62%, var(--cockpit-border));
-  color: var(--cockpit-text);
-  -webkit-text-fill-color: var(--cockpit-text);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cockpit-accent) 26%, transparent);
+  background: color-mix(in srgb, var(--cockpit-accent) 16%, var(--cockpit-surface));
+  border-color: color-mix(in srgb, var(--cockpit-accent) 76%, var(--cockpit-border));
+  color: var(--cockpit-accent-text);
+  -webkit-text-fill-color: var(--cockpit-accent-text);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent-text) 32%, transparent);
 }
 
 html.dark .demo-theme-toggle:hover,
 html.dark .demo-theme-toggle:focus-visible,
 html[data-theme="dark"] .demo-theme-toggle:hover,
 html[data-theme="dark"] .demo-theme-toggle:focus-visible {
-  border-color: var(--cockpit-accent);
-  background: color-mix(in srgb, var(--cockpit-accent-50) 54%, var(--cockpit-surface));
+  border-color: var(--cockpit-accent-hover);
+  background: color-mix(in srgb, var(--cockpit-accent-50) 60%, var(--cockpit-surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent-text) 38%, transparent);
 }
 
 html.dark .demo-app-shell :is(.btn-primary, .demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"], .demo-bottom-next strong),
@@ -1178,15 +1217,29 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 .demo-shell .btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 16px color-mix(in srgb, var(--cockpit-accent) 20%, transparent);
+  filter: brightness(1.02);
 }
 
 .demo-shell .btn:active {
   transform: translateY(0);
+  filter: brightness(0.99);
 }
 
 .demo-shell .btn:focus-visible {
   outline: 3px solid var(--demo-focus-ring) !important;
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent) 24%, transparent) !important;
+}
+
+.demo-shell .btn-primary:focus-visible {
+  background: var(--cockpit-accent-hover);
+}
+
+.demo-shell .btn,
+.demo-shell a.btn,
+.demo-shell button.btn {
+  max-width: 100%;
+  min-height: 38px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1251,8 +1304,9 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 
   .demo-bottom-brief {
     left: 50%;
+    max-width: calc(100% - 16px);
     transform: translateX(-50%);
-    width: calc(100vw - 24px);
+    width: min(100% - 16px, calc(100vw - 24px));
   }
 }
 
@@ -1276,6 +1330,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 
   .demo-main {
     padding-inline: 12px;
+    padding-bottom: calc(118px + env(safe-area-inset-bottom));
   }
 
   .demo-header-metadata {
@@ -1304,7 +1359,11 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   .demo-bottom-brief {
     bottom: 10px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    width: calc(100vw - 16px);
+    max-width: calc(100% - 10px);
+    left: 5px;
+    right: 5px;
+    transform: none;
+    width: auto;
   }
 }
 
@@ -1538,11 +1597,11 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
     bottom: calc(8px + env(safe-area-inset-bottom));
     gap: 4px;
     left: 8px;
-    max-width: none;
+    max-width: calc(100% - 16px);
     padding: 4px;
     right: 8px;
+    width: calc(100% - 16px);
     transform: none;
-    width: auto;
   }
 
   .demo-bottom-item {
@@ -1571,6 +1630,49 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 }
 
 @media (max-width: 380px) {
+  .demo-header-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-header-actions {
+    grid-row: 3;
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+
+  .demo-bottom-item {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 390px) {
+  .demo-main {
+    padding-inline: 8px;
+  }
+
+  .demo-bottom-brief {
+    left: 4px;
+    right: 4px;
+    width: calc(100% - 8px);
+    max-width: calc(100% - 8px);
+    padding: 4px;
+    gap: 3px;
+  }
+
+  .demo-bottom-item strong {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 420px) {
+  .demo-screen-title {
+    font-size: 18px;
+  }
+
+  .demo-card-title {
+    font-size: 15px;
+  }
+
   .demo-header-actions {
     grid-template-columns: 1fr;
   }
