@@ -25,11 +25,15 @@ const state = {
   metadata: null,
   styleAudit: null,
   pendingFocus: null,
-  memoryDraft: ""
+  lastRenderedHash: "",
+  memoryDraft: "",
+  triageInput: "",
+  triageRows: []
 };
 
 const navItems = [
   ["home", "H", "Home"],
+  ["triage", ">", "Triage"],
   ["work", "W", "Work"],
   ["today", "T", "Today"],
   ["board", "B", "Board"],
@@ -148,6 +152,10 @@ const el = (id) => document.getElementById(id);
 const launchParams = new URLSearchParams(location.search);
 
 document.addEventListener("DOMContentLoaded", async () => {
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+
   initTheme();
   bindShellControls();
   renderNav();
@@ -241,6 +249,8 @@ function loadState() {
   state.query = saved?.query || "";
   state.selectedId = saved?.selectedId || state.packs[0]?.id || "";
   state.status = saved?.status || state.status;
+  state.triageInput = typeof saved?.triageInput === "string" ? saved.triageInput : defaultTriageInput();
+  state.triageRows = Array.isArray(saved?.triageRows) ? saved.triageRows : [];
 }
 
 function applyLaunchConfiguration() {
@@ -295,7 +305,9 @@ function saveState() {
     selectedId: state.selectedId,
     status: state.status,
     filter: state.filter,
-    query: state.query
+    query: state.query,
+    triageInput: state.triageInput,
+    triageRows: state.triageRows
   }));
 }
 
@@ -307,6 +319,8 @@ function resetState() {
   state.selectedId = state.packs[0]?.id || "";
   state.query = "";
   state.filter = "all";
+  state.triageInput = defaultTriageInput();
+  state.triageRows = [];
   state.status = "Demo data reset. Browser state only.";
   syncSearchParam("scenario", null);
   render();
@@ -360,6 +374,10 @@ function isKnownRoute(route) {
 }
 
 function render() {
+  const previousHash = state.lastRenderedHash;
+  const currentHash = location.hash || `#/${state.route}`;
+  const shouldResetScroll = Boolean(previousHash !== currentHash && !state.pendingFocus);
+
   if (!state.packs.find((pack) => pack.id === state.selectedId)) {
     state.selectedId = state.packs[0]?.id || "";
   }
@@ -388,6 +406,9 @@ function render() {
       break;
     case "home":
       renderHome();
+      break;
+    case "triage":
+      renderTriage();
       break;
     case "today":
       renderToday();
@@ -452,7 +473,14 @@ function render() {
       break;
   }
 
+  if (shouldResetScroll) {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }
+
   applyPendingFocus();
+  state.lastRenderedHash = currentHash;
   saveState();
 }
 
@@ -462,6 +490,7 @@ function screenTitleForRoute() {
     health: "Demo health",
     meta: "Demo meta",
     home: "Command cockpit",
+    triage: "Work triage tool",
     work: "Work list",
     today: "Today",
     board: "Board",
@@ -498,6 +527,10 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   const selectedAction = commandActionForPack(selected);
   const selectedBlocker = blockerTextForPack(selected);
   const selectedState = selected?.status || "Ready";
+  const triageCount = state.triageRows.length;
+  const triageBlockers = state.triageRows.filter((row) => row.blocker && row.blocker !== "none").length;
+  const triageAction = triageCount > 0 ? "copy-triage" : "parse-triage";
+  const triageNext = triageCount > 0 ? "Copy snapshot" : "Parse work";
   const reviewSummary = reviewCount > 0
     ? `${reviewCount} sample item(s) need review`
     : "none";
@@ -506,6 +539,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
 
   const routeCommands = {
     home: ["Command cockpit", "Home", reviewSummary, "Review work", "Ready", "route-review", reviewTarget?.id || ""],
+    triage: ["Triage tool command flow", "Triage tool", triageCount > 0 ? `${triageBlockers} blocker(s) visible in ${triageCount} row(s)` : "paste work to classify", triageNext, "Tool", triageAction, ""],
     work: ["Work list command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
     today: ["Today command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
     board: ["Board command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
@@ -622,6 +656,14 @@ function focusSelectors(kind, packId) {
     ];
   }
 
+  if (kind === "triage-input") {
+    return ["#triage-input"];
+  }
+
+  if (kind === "triage-output") {
+    return ["#triage-output", ".demo-triage-card", "#triage-snapshot"];
+  }
+
   return ["#primary-action"];
 }
 
@@ -645,6 +687,10 @@ function isFocusable(target) {
 }
 
 function focusKindForAction(action) {
+  if (action === "parse-triage" || action === "copy-triage") {
+    return "triage-output";
+  }
+
   if (action === "set-next" || action === "open" || action === "focus" || action === "start" || action === "done" || action === "unblock") {
     return "next";
   }
@@ -677,6 +723,7 @@ function renderHome() {
       <p>The demo shows the public-safe shape of Projects: pick work, read Where / Blocker / Button runs next, then run a simulated action.</p>
       <div class="demo-quick-actions">
         ${navButton("work", "Open work list")}
+        ${navButton("triage", "Open triage tool")}
         ${navButton("today", "Open today")}
         ${navButton("lab", "Open lab")}
         ${navButton("meta", "Open meta")}
@@ -710,6 +757,445 @@ function renderHome() {
   `;
   bindGoButtons();
   bindScenarioCards();
+}
+
+function renderTriage() {
+  const rows = normalizedTriageRows();
+  const blockerCount = rows.filter((row) => row.blocker && row.blocker !== "none").length;
+  const clearNextCount = rows.filter((row) => row.next && !isPlaceholderNext(row.next)).length;
+  const snapshot = collectTriageSnapshot(rows);
+
+  el("screen-content").innerHTML = `
+    <div class="demo-grid">
+      ${metricCard("Rows", rows.length, "Work items shaped from pasted text.")}
+      ${metricCard("Blockers", blockerCount, "Rows that need review before action.")}
+      ${metricCard("Clear next", clearNextCount, "Rows with a concrete Button runs next.")}
+    </div>
+    <section class="demo-panel demo-triage-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Button Runs Next</span>
+          <h2>Work triage tool</h2>
+        </div>
+        <span class="demo-status">browser-local</span>
+      </div>
+      <div class="demo-triage-layout">
+        <div class="demo-triage-input">
+          <label class="demo-field demo-field-wide" for="triage-input">
+            <span>Messy work</span>
+            <textarea id="triage-input" rows="10">${escapeHtml(state.triageInput || defaultTriageInput())}</textarea>
+          </label>
+          <div class="demo-card-actions">
+            <button id="parse-triage" class="btn btn-primary" type="button">Parse work</button>
+            <button id="add-triage-row" class="btn" type="button">Add row</button>
+            <button id="reset-triage" class="btn" type="button">Reset tool</button>
+          </div>
+        </div>
+        <div class="demo-command-lines compact">
+          ${factLine("Where", "Work triage tool")}
+          ${factLine("Blocker", rows.length ? `${blockerCount} blocker(s) to review` : "paste work to classify")}
+          ${factLine("Button runs next", rows.length ? "Copy snapshot" : "Parse work")}
+        </div>
+      </div>
+    </section>
+    <section id="triage-output" class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Triage rows</span>
+          <h2>${rows.length ? `${rows.length} work item(s)` : "No rows yet"}</h2>
+        </div>
+        <span class="demo-status">${rows.length ? "editable" : "ready"}</span>
+      </div>
+      <div class="demo-triage-list">
+        ${rows.length ? rows.map(triageCard).join("") : emptyState("Paste work or add a row to create a command brief.")}
+      </div>
+    </section>
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Readiness</span>
+          <h2>Employer-friendly proof points</h2>
+        </div>
+        <span class="demo-status">local only</span>
+      </div>
+      <div class="demo-check-list">
+        ${triageQualityChecks(rows).map(healthLine).join("")}
+      </div>
+    </section>
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Snapshot</span>
+          <h2>Copy handoff</h2>
+        </div>
+        <span class="demo-status">${snapshot.rows.length} row(s)</span>
+      </div>
+      <div class="demo-inline-form">
+        <label class="sr-only" for="triage-snapshot">Triage snapshot markdown</label>
+        <textarea id="triage-snapshot" class="demo-search-input" rows="8" readonly>${escapeHtml(triageMarkdown(rows))}</textarea>
+      </div>
+      <div class="demo-card-actions">
+        <button id="copy-triage-markdown" class="btn btn-primary" type="button">Copy Markdown</button>
+        <button id="copy-triage-json" class="btn" type="button">Copy JSON</button>
+        <button class="btn" type="button" data-go="work">Open work list</button>
+      </div>
+    </section>
+  `;
+
+  bindTriageControls();
+  bindGoButtons();
+}
+
+function defaultTriageInput() {
+  return [
+    "Finalize mobile demo polish - blocked by unclear bottom bar focus - evidence: mobile smoke in dark mode",
+    "Write README employer story - needs concrete tool positioning",
+    "Ship GitHub Pages update - run static export and live smoke",
+    "Review issue backlog - choose next action for stale tasks"
+  ].join("\n");
+}
+
+function normalizedTriageRows() {
+  const rows = Array.isArray(state.triageRows)
+    ? state.triageRows.map(normalizeTriageRow).filter((row) => row.work || row.blocker || row.next)
+    : [];
+  state.triageRows = rows;
+  return rows;
+}
+
+function normalizeTriageRow(row = {}) {
+  const work = String(row.work || row.title || "").trim();
+  const blocker = String(row.blocker || "none").trim() || "none";
+  const next = String(row.next || "Start").trim() || "Start";
+  return {
+    id: String(row.id || `triage-${Date.now()}-${Math.random().toString(16).slice(2)}`),
+    work,
+    where: String(row.where || inferWhere(work)).trim() || "Inbox",
+    blocker,
+    next,
+    evidence: String(row.evidence || inferEvidence(work, next)).trim(),
+    doneWhen: String(row.doneWhen || inferDoneWhen(work, blocker, next)).trim()
+  };
+}
+
+function parseTriageText(text) {
+  return String(text || "")
+    .split(/\r?\n/)
+    .map(cleanTriageLine)
+    .filter(Boolean)
+    .map((line, index) => inferTriageRow(line, index));
+}
+
+function cleanTriageLine(line) {
+  return String(line || "")
+    .trim()
+    .replace(/^[-*•]\s+/, "")
+    .replace(/^\d+[.)]\s+/, "")
+    .replace(/^\[[ xX-]\]\s+/, "")
+    .trim();
+}
+
+function inferTriageRow(line, index) {
+  const work = inferWorkTitle(line);
+  const blocker = inferBlocker(line);
+  const next = inferNextAction(line, blocker);
+  return {
+    id: `triage-${Date.now()}-${index}`,
+    work,
+    where: inferWhere(line),
+    blocker,
+    next,
+    evidence: inferEvidence(line, next),
+    doneWhen: inferDoneWhen(line, blocker, next)
+  };
+}
+
+function inferWorkTitle(line) {
+  const beforeSeparator = String(line || "").split(/\s[-–—]\s|:\s|;\s/)[0]?.trim();
+  return beforeSeparator || String(line || "").trim() || "Untitled work";
+}
+
+function inferWhere(line) {
+  const value = String(line || "");
+  const bracket = value.match(/\[([^\]]+)\]/);
+  if (bracket?.[1]) {
+    return bracket[1].trim();
+  }
+
+  if (/github|issue|pr\b|pull request|repo/i.test(value)) return "GitHub";
+  if (/demo|pages|route|mobile|css|style|visual/i.test(value)) return "Demo";
+  if (/readme|doc|docs|copy|positioning/i.test(value)) return "Docs";
+  if (/test|smoke|build|export|deploy|release/i.test(value)) return "Verification";
+  return "Inbox";
+}
+
+function inferBlocker(line) {
+  const value = String(line || "");
+  const explicit = value.match(/\b(?:blocked by|blocker:|blocked:)\s*([^.;\n]+)/i);
+  if (explicit?.[1]) {
+    return explicit[1].trim();
+  }
+
+  const needs = value.match(/\b(?:needs?|missing|waiting for|depends on|requires?)\s+([^.;\n]+)/i);
+  if (needs?.[1]) {
+    return needs[0].trim();
+  }
+
+  if (/\?|decide|choose|unclear|unknown|stale/i.test(value)) return "decision needed";
+  if (/fail|broken|bug|error|overflow|contrast|blank/i.test(value)) return "failure to investigate";
+  if (/blocked|stuck|can't|cannot/i.test(value)) return "blocked";
+  return "none";
+}
+
+function inferNextAction(line, blocker) {
+  const value = String(line || "").toLowerCase();
+  if (blocker && blocker !== "none") {
+    return /unblock/.test(value) ? "Unblock" : "Review blocker";
+  }
+
+  if (/ship|deploy|publish|release|push/.test(value)) return "Ship";
+  if (/test|smoke|verify|check|validate/.test(value)) return "Test";
+  if (/write|draft|readme|docs|copy/.test(value)) return "Draft";
+  if (/review|triage|audit/.test(value)) return "Review";
+  if (/fix|bug|broken|error/.test(value)) return "Fix";
+  if (/call|email|message/.test(value)) return "Contact";
+  if (/open|start|begin/.test(value)) return "Start";
+  return "Start";
+}
+
+function inferEvidence(line, next) {
+  const value = String(line || "");
+  if (/test|smoke|verify|check|validate/i.test(value) || next === "Test") return "Passing check output";
+  if (/ship|deploy|publish|release|push/i.test(value) || next === "Ship") return "Published link or commit";
+  if (/readme|doc|docs|copy/i.test(value) || next === "Draft") return "Reviewed text or doc diff";
+  if (/demo|mobile|visual|css|style/i.test(value)) return "Before/after screenshot";
+  if (/github|issue|pr|repo/i.test(value)) return "Issue, PR, or commit link";
+  return "Visible result or handoff note";
+}
+
+function inferDoneWhen(line, blocker, next) {
+  if (blocker && blocker !== "none") {
+    return "Blocker is named, reviewed, and the next action is safe to run.";
+  }
+
+  if (next === "Ship") return "Published artifact is live and checked.";
+  if (next === "Test") return "Relevant check passes with current output.";
+  if (next === "Draft") return "Draft is ready for review or handoff.";
+  return "Next action has a visible result.";
+}
+
+function triageCard(row) {
+  const status = row.blocker && row.blocker !== "none" ? "blocked" : "ready";
+  return `<article class="demo-triage-card" data-triage-id="${escapeAttribute(row.id)}">
+    <div class="demo-card-head">
+      <label class="demo-field demo-triage-title" for="triage-work-${escapeAttribute(row.id)}">
+        <span>Work</span>
+        <input id="triage-work-${escapeAttribute(row.id)}" data-triage-field="work" type="text" value="${escapeAttribute(row.work)}">
+      </label>
+      <span class="demo-state-pill">${escapeHtml(status)}</span>
+    </div>
+    <div class="demo-triage-fields">
+      ${triageTextInput(row, "where", "Where")}
+      ${triageSelectInput(row, "next", "Button runs next")}
+      ${triageTextInput(row, "blocker", "Blocker")}
+      ${triageTextInput(row, "evidence", "Evidence needed")}
+      ${triageTextInput(row, "doneWhen", "Done when", true)}
+    </div>
+    <div class="demo-card-actions">
+      <button class="btn btn-sm" type="button" data-triage-remove="${escapeAttribute(row.id)}">Remove</button>
+    </div>
+  </article>`;
+}
+
+function triageTextInput(row, field, label, wide = false) {
+  const id = `triage-${field}-${row.id}`;
+  return `<label class="demo-field${wide ? " demo-field-wide" : ""}" for="${escapeAttribute(id)}">
+    <span>${escapeHtml(label)}</span>
+    <input id="${escapeAttribute(id)}" data-triage-field="${escapeAttribute(field)}" type="text" value="${escapeAttribute(row[field] || "")}">
+  </label>`;
+}
+
+function triageSelectInput(row, field, label) {
+  const id = `triage-${field}-${row.id}`;
+  const options = ["Review blocker", "Start", "Open", "Focus", "Draft", "Fix", "Test", "Ship", "Contact", "Unblock", "Done"];
+  return `<label class="demo-field" for="${escapeAttribute(id)}">
+    <span>${escapeHtml(label)}</span>
+    <select id="${escapeAttribute(id)}" data-triage-field="${escapeAttribute(field)}">
+      ${options.map((option) => `<option value="${escapeAttribute(option)}"${option === row[field] ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
+    </select>
+  </label>`;
+}
+
+function bindTriageControls() {
+  const input = el("triage-input");
+  input?.addEventListener("input", () => {
+    state.triageInput = input.value;
+    saveState();
+  });
+
+  el("parse-triage")?.addEventListener("click", () => {
+    state.triageInput = input?.value || "";
+    state.triageRows = parseTriageText(state.triageInput);
+    state.status = `${state.triageRows.length} work item(s) parsed in browser state.`;
+    queueFocus("triage-output");
+    render();
+  });
+
+  el("add-triage-row")?.addEventListener("click", () => {
+    syncTriageRowsFromDom();
+    state.triageRows.push(normalizeTriageRow({
+      work: "Untitled work",
+      where: "Inbox",
+      blocker: "none",
+      next: "Start",
+      evidence: "Visible result or handoff note",
+      doneWhen: "Next action has a visible result."
+    }));
+    state.status = "Blank triage row added in browser state.";
+    queueFocus("triage-output");
+    render();
+  });
+
+  el("reset-triage")?.addEventListener("click", () => {
+    state.triageInput = defaultTriageInput();
+    state.triageRows = [];
+    state.status = "Triage tool reset in browser state.";
+    queueFocus("triage-input");
+    render();
+  });
+
+  el("copy-triage-markdown")?.addEventListener("click", () => {
+    syncTriageRowsFromDom();
+    copyToClipboard(triageMarkdown(state.triageRows), "Triage Markdown copied to clipboard.");
+  });
+
+  el("copy-triage-json")?.addEventListener("click", () => {
+    syncTriageRowsFromDom();
+    copyToClipboard(JSON.stringify(collectTriageSnapshot(state.triageRows), null, 2), "Triage JSON copied to clipboard.");
+  });
+
+  el("screen-content").querySelectorAll("[data-triage-field]").forEach((control) => {
+    control.addEventListener("input", () => {
+      syncTriageRowsFromDom();
+      updateTriageSnapshotPreview();
+      saveState();
+    });
+    control.addEventListener("change", () => {
+      syncTriageRowsFromDom();
+      updateTriageSnapshotPreview();
+      saveState();
+    });
+  });
+
+  el("screen-content").querySelectorAll("[data-triage-remove]").forEach((button) => {
+    button.addEventListener("click", () => {
+      syncTriageRowsFromDom();
+      state.triageRows = state.triageRows.filter((row) => row.id !== button.dataset.triageRemove);
+      state.status = "Triage row removed in browser state.";
+      render();
+    });
+  });
+}
+
+function syncTriageRowsFromDom() {
+  const rows = Array.from(document.querySelectorAll(".demo-triage-card")).map((card) => {
+    const row = { id: card.dataset.triageId };
+    card.querySelectorAll("[data-triage-field]").forEach((control) => {
+      row[control.dataset.triageField] = control.value.trim();
+    });
+    return normalizeTriageRow(row);
+  });
+  state.triageRows = rows;
+  const input = el("triage-input");
+  if (input) {
+    state.triageInput = input.value;
+  }
+  return rows;
+}
+
+function updateTriageSnapshotPreview() {
+  const snapshot = el("triage-snapshot");
+  if (snapshot) {
+    snapshot.value = triageMarkdown(state.triageRows);
+  }
+}
+
+function triageQualityChecks(rows) {
+  const missingWork = rows.filter((row) => !row.work).length;
+  const missingNext = rows.filter((row) => !row.next || isPlaceholderNext(row.next)).length;
+  const missingEvidence = rows.filter((row) => !row.evidence).length;
+  const blockerRows = rows.filter((row) => row.blocker && row.blocker !== "none").length;
+
+  return [
+    {
+      label: "Rows are local",
+      status: true,
+      detail: "No backend, issue tracker, or local files are touched."
+    },
+    {
+      label: "Work named",
+      status: rows.length > 0 && missingWork === 0,
+      detail: rows.length === 0 ? "No triage rows yet." : `${missingWork} row(s) missing work title.`
+    },
+    {
+      label: "Button runs next",
+      status: rows.length > 0 && missingNext === 0,
+      detail: rows.length === 0 ? "Parse work to generate actions." : `${missingNext} row(s) still need a clear action.`
+    },
+    {
+      label: "Blockers surfaced",
+      status: rows.length > 0,
+      detail: `${blockerRows} row(s) name a blocker for review.`
+    },
+    {
+      label: "Evidence ready",
+      status: rows.length > 0 && missingEvidence === 0,
+      detail: rows.length === 0 ? "No evidence fields yet." : `${missingEvidence} row(s) missing evidence.`
+    }
+  ];
+}
+
+function collectTriageSnapshot(rows = normalizedTriageRows()) {
+  return {
+    tool: "Button Runs Next: Work Triage Tool",
+    route: "#/triage",
+    storage: "browser localStorage only",
+    rows: rows.map((row) => ({
+      work: row.work,
+      where: row.where,
+      blocker: row.blocker,
+      buttonRunsNext: row.next,
+      evidenceNeeded: row.evidence,
+      doneWhen: row.doneWhen
+    })),
+    generatedAt: new Date().toISOString()
+  };
+}
+
+function triageMarkdown(rows = normalizedTriageRows()) {
+  if (!rows.length) {
+    return "# Button Runs Next Triage\n\nNo work rows yet.";
+  }
+
+  const header = [
+    "# Button Runs Next Triage",
+    "",
+    "| Work | Where | Blocker | Button runs next | Evidence needed | Done when |",
+    "|---|---|---|---|---|---|"
+  ];
+  const body = rows.map((row) => [
+    row.work,
+    row.where,
+    row.blocker,
+    row.next,
+    row.evidence,
+    row.doneWhen
+  ].map(markdownCell).join(" | "));
+  return [...header, ...body.map((line) => `| ${line} |`), "", `_Generated locally from the Projects static demo._`].join("\n");
+}
+
+function markdownCell(value) {
+  return String(value || "none").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
 }
 
 function renderWork() {
@@ -1779,6 +2265,42 @@ function runRouteAction(action, targetPackId) {
     return true;
   }
 
+  if (action === "parse-triage") {
+    if (state.route !== "triage") {
+      go("triage");
+      return true;
+    }
+
+    const input = el("triage-input");
+    state.triageInput = input?.value || state.triageInput || "";
+    state.triageRows = parseTriageText(state.triageInput);
+    state.status = `${state.triageRows.length} work item(s) parsed in browser state.`;
+    queueFocus("triage-output");
+    render();
+    return true;
+  }
+
+  if (action === "copy-triage") {
+    if (state.route !== "triage") {
+      go("triage");
+      return true;
+    }
+
+    syncTriageRowsFromDom();
+    if (!state.triageRows.length && state.triageInput.trim()) {
+      state.triageRows = parseTriageText(state.triageInput);
+    }
+
+    if (!state.triageRows.length) {
+      state.status = "No triage rows are ready to copy.";
+      render();
+      return true;
+    }
+
+    copyToClipboard(triageMarkdown(state.triageRows), "Triage Markdown copied to clipboard.");
+    return true;
+  }
+
   if (action === "create-sample") {
     createSamplePack();
     return true;
@@ -1980,7 +2502,12 @@ function isReview(pack) {
 
 function isMissingNextAction(pack) {
   const label = (pack?.next || "").trim().toLowerCase();
-  return !label || label === "choose next action" || label === "set button runs next";
+  return isPlaceholderNext(label);
+}
+
+function isPlaceholderNext(label) {
+  const value = String(label || "").trim().toLowerCase();
+  return !value || value === "choose next action" || value === "set button runs next" || value === "set next";
 }
 
 function hasBlocker(pack) {

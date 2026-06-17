@@ -61,6 +61,8 @@ html[data-theme="dark"] .demo-app-shell {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  max-width: 100%;
+  min-width: 0;
   min-height: 100vh;
   padding: 22px 16px;
   position: sticky;
@@ -110,6 +112,7 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-nav {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 .demo-nav-item {
@@ -985,6 +988,47 @@ html[data-theme="dark"] .demo-state-pill {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.demo-triage-layout {
+  align-items: start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  margin-top: 14px;
+}
+
+.demo-triage-input {
+  min-width: 0;
+}
+
+.demo-triage-list {
+  display: grid;
+  gap: 12px;
+}
+
+.demo-triage-card {
+  background: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
+  border: 1px solid var(--cockpit-border);
+  border-radius: calc(var(--demo-panel-radius) - 2px);
+  box-shadow: var(--cockpit-shadow-sm);
+  min-width: 0;
+  padding: 14px;
+}
+
+.demo-triage-card .demo-card-head {
+  margin-bottom: 12px;
+}
+
+.demo-triage-title {
+  flex: 1 1 280px;
+  margin: 0;
+}
+
+.demo-triage-fields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .demo-field-wide {
   grid-column: 1 / -1;
 }
@@ -1151,18 +1195,42 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 @media (max-width: 980px) {
   .demo-app-shell {
     grid-template-columns: 1fr;
+    max-width: 100%;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   .demo-sidebar {
     border-bottom: 1px solid var(--cockpit-border);
     border-right: 0;
+    max-width: 100%;
+    min-width: 0;
     min-height: 0;
+    overflow: hidden;
     position: static;
+    width: 100%;
+  }
+
+  .demo-shell,
+  .demo-header,
+  .demo-header-inner,
+  .demo-main {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .demo-header-inner,
+  .demo-main {
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .demo-nav {
     display: flex;
     gap: 8px;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     padding-bottom: 4px;
   }
@@ -1216,6 +1284,8 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   .demo-scenario-grid,
   .demo-board-grid,
   .demo-calendar-grid,
+  .demo-triage-layout,
+  .demo-triage-fields,
   .demo-stat-row {
     grid-template-columns: 1fr;
   }
@@ -1408,6 +1478,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 
   .demo-work-card,
   .demo-review-card,
+  .demo-triage-card,
   .demo-row,
   .demo-note {
     border-radius: 13px;

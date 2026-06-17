@@ -3,6 +3,21 @@
 This folder contains the static public demo for **Projects**. It is intentionally browser-only:
 sample work is loaded from `data/demo-packs.json`, and all actions stay in localStorage.
 
+## Runtime decision
+
+The public demo is not `Projects.Web`, not Razor Server, and not Blazor
+WebAssembly at runtime. GitHub Pages serves static HTML, CSS, JavaScript, sample
+data, metadata, and assets only.
+
+The source-side direction is:
+
+`Razor app/product shell -> export-pages script -> static GitHub Pages demo`
+
+Razor and C# may feed future export tooling, but the exported Pages artifact
+stays browser-local and JS-driven unless browser-side .NET logic becomes worth
+the extra WASM weight. See
+[`../architecture/github-pages-demo-runtime.md`](../architecture/github-pages-demo-runtime.md).
+
 ## Product surface
 
 The demo acts like a product landing surface for quick proofing:
@@ -19,6 +34,7 @@ The app is hash-routed. Key screens are:
 | Route | Purpose |
 |---|---|
 | `#/home` | Cockpit overview and scenario launch pad. |
+| `#/triage` | Browser-local work triage tool for pasted tasks. |
 | `#/work` | Work list browsing and action simulation. |
 | `#/today` | Today-focused items. |
 | `#/board` | Status lane board. |
@@ -38,14 +54,16 @@ The app is hash-routed. Key screens are:
 | `#/feedback` | Feedback workflow with prefilled diagnostics. |
 | `#/health` | Demo health checks and metadata summary. |
 | `#/meta` | Product-style telemetry and meta snapshot for demos. |
+| `#/lab` | Demo command-flow simulator and copyable snapshot. |
 
 ## Runtime conventions
 
 | Area | Demo behavior |
 |---|---|
 | Data | Reads fake sample work from `data/demo-packs.json`. |
-| State | Persists temporary demo state in localStorage under `projects-static-demo-state-v2`. |
+| State | Persists temporary demo state in localStorage under `projects-static-demo-state-v3`. |
 | Actions | Browser-only mutations (no remote write-back). |
+| Triage | Converts pasted task text into editable `Where`, `Blocker`, `Button runs next`, evidence, and done-when rows. |
 | Theme | Supports light/dark, defaults to dark. |
 | Routes | `#/home` default when no route is provided. |
 | Metadata | Loaded from `assets/demo-metadata.json` and shown in the header. |
