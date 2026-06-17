@@ -563,6 +563,12 @@ html[data-theme="dark"] .demo-status-line {
   color: var(--cockpit-text);
 }
 
+.demo-focus-pulse {
+  animation: demo-focus-pulse 1.8s ease;
+  border-color: var(--cockpit-accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cockpit-accent) 28%, transparent), var(--cockpit-shadow-lg) !important;
+}
+
 .demo-meta-row {
   align-items: center;
   background: color-mix(in srgb, var(--cockpit-surface) 88%, var(--cockpit-bg));
@@ -661,6 +667,26 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-scenario-card:focus-visible {
   transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--cockpit-accent) 42%, var(--cockpit-border));
+}
+
+@keyframes demo-focus-pulse {
+  0% {
+    transform: translateY(0);
+  }
+
+  28% {
+    transform: translateY(-2px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-focus-pulse {
+    animation: none;
+  }
 }
 
 .demo-card-head,

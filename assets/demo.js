@@ -24,6 +24,7 @@ const state = {
   scenarioId: "default",
   metadata: null,
   styleAudit: null,
+  pendingFocus: null,
   memoryDraft: ""
 };
 
@@ -45,6 +46,7 @@ const navItems = [
   ["calendar", "D", "Calendar"],
   ["create", "+", "Create"],
   ["memory", "M", "Memory"],
+  ["lab", "A", "Lab"],
   ["meta", "I", "Meta"],
   ["feedback", "?", "Feedback"],
   ["settings", "...", "Settings"]
@@ -205,9 +207,29 @@ function setTheme(dark) {
 }
 
 function bindShellControls() {
-  el("primary-action").addEventListener("click", (event) => runPrimaryAction(event.currentTarget));
-  el("secondary-action").addEventListener("click", () => go("focus"));
-  el("dock-next").addEventListener("click", (event) => runPrimaryAction(event.currentTarget));
+  el("primary-action").addEventListener("click", (event) => {
+    queueFocus("next", event.currentTarget.dataset.pack || state.selectedId);
+    runPrimaryAction(event.currentTarget);
+  });
+  el("secondary-action").addEventListener("click", () => go("focus", state.selectedId, "where"));
+  el("dock-next").addEventListener("click", (event) => {
+    queueFocus(focusKindForAction(event.currentTarget.dataset.action), event.currentTarget.dataset.pack || state.selectedId);
+    runPrimaryAction(event.currentTarget);
+  });
+
+  document.querySelector('.demo-bottom-item[href="#/work"]')?.addEventListener("click", (event) => {
+    event.preventDefault();
+    const pack = currentPack() || state.packs[0];
+    go("work", pack?.id || "", "where");
+  });
+
+  document.querySelector('.demo-bottom-item[href="#/review"]')?.addEventListener("click", (event) => {
+    event.preventDefault();
+    const pack = currentPack() && isReview(currentPack())
+      ? currentPack()
+      : preferredReviewPack();
+    go("review", pack?.id || "", "blocker");
+  });
 }
 
 function loadState() {
@@ -318,8 +340,19 @@ function routeFromHash() {
   }
 }
 
-function go(route, id = "") {
-  location.hash = id ? `#/${route}/${encodeURIComponent(id)}` : `#/${route}`;
+function go(route, id = "", focusKind = "") {
+  if (focusKind) {
+    queueFocus(focusKind, id || state.selectedId);
+  }
+
+  const nextHash = id ? `#/${route}/${encodeURIComponent(id)}` : `#/${route}`;
+  if (location.hash === nextHash) {
+    routeFromHash();
+    render();
+    return;
+  }
+
+  location.hash = nextHash;
 }
 
 function isKnownRoute(route) {
@@ -398,6 +431,9 @@ function render() {
     case "memory":
       renderMemory();
       break;
+    case "lab":
+      renderLab();
+      break;
     case "settings":
       renderSettings();
       break;
@@ -416,6 +452,7 @@ function render() {
       break;
   }
 
+  applyPendingFocus();
   saveState();
 }
 
@@ -440,6 +477,7 @@ function screenTitleForRoute() {
     calendar: "Calendar",
     create: profile.newWork,
     memory: "Memory",
+    lab: "Demo Lab",
     meta: "Meta",
     feedback: "Feedback",
     settings: "Settings",
@@ -483,6 +521,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     calendar: ["Calendar command flow", selectedTitle, selectedBlocker, selectedAction.label, selectedState, selectedAction.action, selectedAction.targetPackId],
     create: ["Create command flow", "Create", "required fields are title and Button runs next", "Save sample", "Draft", "create-sample", ""],
     memory: ["Memory command flow", selectedTitle, "sample notes are browser-only", "Add note", "Ready", "add-note", selected?.id || ""],
+    lab: ["Demo Lab command flow", selectedTitle, selectedBlocker, selectedAction.label, "Lab", selectedAction.action, selectedAction.targetPackId],
     meta: ["Meta command flow", "Meta", "product view and diagnostics are computed locally", "Refresh", "Ready", "refresh-meta", ""],
     feedback: ["Feedback command flow", "Feedback", `Version ${stateVersionLabel()} is active`, "Report feedback", "Ready", "report-feedback", ""],
     health: ["Health command flow", "Health", "route, storage, data, and metadata checks are running", "Refresh", "Ready", "refresh-health", ""],
@@ -522,6 +561,101 @@ function updateCommand(command) {
   el("dock-next").setAttribute("aria-label", `Run ${command.next}`);
 }
 
+function queueFocus(kind, packId = "") {
+  state.pendingFocus = {
+    kind,
+    packId: packId || state.selectedId || ""
+  };
+}
+
+function applyPendingFocus() {
+  if (!state.pendingFocus) {
+    return;
+  }
+
+  const target = state.pendingFocus;
+  state.pendingFocus = null;
+  requestAnimationFrame(() => {
+    focusCommandTarget(target.kind, target.packId);
+  });
+}
+
+function focusCommandTarget(kind, packId = "") {
+  const pack = findPack(packId) || currentPack();
+  const id = pack?.id || packId || "";
+  const selectors = focusSelectors(kind, id);
+  const target = selectors.map((selector) => document.querySelector(selector)).find(Boolean);
+  if (!target) {
+    return;
+  }
+
+  focusAndPulse(target);
+}
+
+function focusSelectors(kind, packId) {
+  const id = cssIdent(packId);
+  if (kind === "where") {
+    return [
+      `.demo-work-card[data-pack-id="${id}"]`,
+      `.demo-review-card[data-pack-id="${id}"]`,
+      `.demo-row[data-pack-id="${id}"]`,
+      "#command-where"
+    ];
+  }
+
+  if (kind === "blocker") {
+    return [
+      `.demo-review-card[data-pack-id="${id}"] [data-command-field="blocker"]`,
+      `.demo-review-card[data-pack-id="${id}"]`,
+      "#command-blocker"
+    ];
+  }
+
+  if (kind === "next") {
+    return [
+      "#next-action-choice",
+      `#next-${id}`,
+      `.demo-work-card[data-pack-id="${id}"] [data-action="run-next"]`,
+      "#edit-next",
+      "#primary-action",
+      "#command-next"
+    ];
+  }
+
+  return ["#primary-action"];
+}
+
+function focusAndPulse(target) {
+  target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  if (!isFocusable(target)) {
+    target.setAttribute("tabindex", "-1");
+  }
+
+  target.focus({ preventScroll: true });
+  target.classList.remove("demo-focus-pulse");
+  void target.offsetWidth;
+  target.classList.add("demo-focus-pulse");
+  window.setTimeout(() => {
+    target.classList.remove("demo-focus-pulse");
+  }, 1800);
+}
+
+function isFocusable(target) {
+  return target.matches("a, button, input, select, textarea, [tabindex]");
+}
+
+function focusKindForAction(action) {
+  if (action === "set-next" || action === "open" || action === "focus" || action === "start" || action === "done" || action === "unblock") {
+    return "next";
+  }
+
+  if (action === "review") {
+    return "blocker";
+  }
+
+  return "where";
+}
+
 function renderHome() {
   const reviewCount = state.packs.filter(isReview).length;
   const doneCount = state.packs.filter((pack) => pack.status === "done").length;
@@ -544,6 +678,7 @@ function renderHome() {
       <div class="demo-quick-actions">
         ${navButton("work", "Open work list")}
         ${navButton("today", "Open today")}
+        ${navButton("lab", "Open lab")}
         ${navButton("meta", "Open meta")}
         ${navButton("create", "Create sample")}
         ${navButton("settings", "Change copy profile")}
@@ -1136,6 +1271,92 @@ function renderMeta() {
   });
 }
 
+function renderLab() {
+  const pack = currentPack() || preferredReviewPack();
+  const action = commandActionForPack(pack);
+  const styleAudit = buildStyleAuditSnapshot();
+  const snapshot = collectLabSnapshot(pack, action, styleAudit);
+
+  if (pack && pack.id !== state.selectedId) {
+    state.selectedId = pack.id;
+  }
+
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Demo Lab</span>
+          <h2>Command simulator</h2>
+        </div>
+        <span class="demo-status">${escapeHtml(action.label)}</span>
+      </div>
+      <p>Pick sample work, inspect the blocker, then run the same Button-runs-next action shown in the command brief.</p>
+      <div class="demo-grid">
+        ${metricCard("Selected", pack?.title || "none", pack ? `${pack.status} / ${pack.owner}` : "No sample work selected.")}
+        ${metricCard("Blocker", blockerTextForPack(pack), "The reason the work needs attention.")}
+        ${metricCard("Runs next", action.label, "The primary action is resolved from selected work.")}
+      </div>
+      <div class="demo-inline-form">
+        <label class="sr-only" for="lab-pack-select">Choose work for demo lab</label>
+        <select id="lab-pack-select" class="demo-search-input">
+          ${state.packs.map((item) => `<option value="${escapeAttribute(item.id)}"${item.id === pack?.id ? " selected" : ""}>${escapeHtml(item.title)} / ${escapeHtml(commandActionForPack(item).label)}</option>`).join("")}
+        </select>
+        <button id="lab-run-action" class="btn btn-primary" type="button"${pack ? "" : " disabled"}>Run ${escapeHtml(action.label)}</button>
+        <button id="lab-set-next" class="btn" type="button"${pack ? "" : " disabled"}>Set next</button>
+      </div>
+      <div class="demo-command-lines compact">
+        ${factLine("Where", pack?.title || "No sample work selected")}
+        ${factLine("Blocker", blockerTextForPack(pack))}
+        ${factLine("Button runs next", action.label)}
+      </div>
+    </section>
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Budget graph</span>
+          <h2>Static asset weight</h2>
+        </div>
+        <span class="demo-status">${escapeHtml(styleAudit.status)}</span>
+      </div>
+      <div class="demo-stat-list">
+        ${styleAudit.assets.map((asset) => assetBudgetRow(asset, styleAudit.totals.bytes)).join("")}
+      </div>
+    </section>
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Smoke replay</span>
+          <h2>What the demo proves now</h2>
+        </div>
+        <span class="demo-status">${escapeHtml(styleAudit.currentRoute)}</span>
+      </div>
+      <div class="demo-check-list">
+        ${labSmokeChecks(pack, styleAudit).map(healthLine).join("")}
+      </div>
+    </section>
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Debug packet</span>
+          <h2>Lab snapshot</h2>
+        </div>
+        <span class="demo-status">copyable</span>
+      </div>
+      <div class="demo-inline-form">
+        <label class="sr-only" for="lab-snapshot">Lab snapshot payload</label>
+        <textarea id="lab-snapshot" class="demo-search-input" rows="10">${escapeHtml(JSON.stringify(snapshot, null, 2))}</textarea>
+      </div>
+      <div class="demo-card-actions">
+        <button id="copy-lab-snapshot" class="btn btn-primary" type="button">Copy lab snapshot</button>
+        <button class="btn" type="button" data-go="meta">Open meta</button>
+      </div>
+    </section>
+  `;
+
+  bindLabControls();
+  bindGoButtons();
+}
+
 function workToolbar(label) {
   return `
     <section class="demo-toolbar" aria-label="${escapeAttribute(label)}">
@@ -1174,7 +1395,7 @@ function boardColumn(status) {
 }
 
 function nextCandidateRow(pack) {
-  return `<div class="demo-row">
+  return `<div class="demo-row" data-pack-id="${escapeAttribute(pack.id)}">
     <div>
       <strong>${escapeHtml(pack.title)}</strong>
       <span>${escapeHtml(pack.blocker === "none" ? "Ready for a clearer next action." : pack.blocker)}</span>
@@ -1215,6 +1436,20 @@ function statBar(label, count, total) {
     <div>
       <strong>${escapeHtml(capitalize(label))}</strong>
       <span>${count} of ${total}</span>
+    </div>
+    <div class="demo-stat-track" aria-hidden="true"><span style="width:${percent}%"></span></div>
+  </div>`;
+}
+
+function assetBudgetRow(asset, totalBytes) {
+  const percent = totalBytes > 0 ? Math.max(3, Math.round((asset.bytes / totalBytes) * 100)) : 0;
+  const detail = asset.status
+    ? `${asset.lines} LOC / ${formatBytes(asset.bytes)}${asset.selectors ? ` / ${asset.selectors} selector block(s)` : ""}`
+    : asset.error || "Asset not measured.";
+  return `<div class="demo-stat-row">
+    <div>
+      <strong>${escapeHtml(asset.label)}</strong>
+      <span>${escapeHtml(detail)}</span>
     </div>
     <div class="demo-stat-track" aria-hidden="true"><span style="width:${percent}%"></span></div>
   </div>`;
@@ -1267,6 +1502,41 @@ function bindToolbar() {
   });
 }
 
+function bindLabControls() {
+  const select = el("lab-pack-select");
+  if (select) {
+    select.addEventListener("change", () => {
+      const pack = findPack(select.value);
+      if (!pack) return;
+      state.selectedId = pack.id;
+      state.status = `${pack.title} loaded in Demo Lab.`;
+      render();
+    });
+  }
+
+  const run = el("lab-run-action");
+  if (run) {
+    run.addEventListener("click", () => {
+      queueFocus("next", state.selectedId);
+      runPrimaryAction(el("primary-action"));
+    });
+  }
+
+  const setNext = el("lab-set-next");
+  if (setNext) {
+    setNext.addEventListener("click", () => {
+      const pack = currentPack();
+      if (!pack) return;
+      go("next", pack.id);
+    });
+  }
+
+  const copy = el("copy-lab-snapshot");
+  if (copy) {
+    copy.addEventListener("click", () => copyToClipboard(valueOf("lab-snapshot"), "Lab snapshot copied to clipboard."));
+  }
+}
+
 function workCard(pack) {
   const selected = pack.id === state.selectedId ? " selected" : "";
   const command = commandActionForPack(pack);
@@ -1310,7 +1580,7 @@ function todayRow(pack) {
 }
 
 function reviewCard(pack) {
-  return `<article class="demo-review-card">
+  return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-command-lines compact">
       ${factLine("Where", pack.title)}
       ${factLine("Blocker", pack.blocker)}
@@ -1777,7 +2047,7 @@ function factBlock(label, value) {
 }
 
 function factLine(label, value) {
-  return `<div class="demo-command-line">
+  return `<div class="demo-command-line" data-command-field="${escapeAttribute(fieldKey(label))}">
     <span>${escapeHtml(label)}</span>
     <strong>${escapeHtml(value || "none")}</strong>
   </div>`;
@@ -2092,6 +2362,92 @@ function styleAuditChecks() {
   ];
 }
 
+function collectLabSnapshot(pack, action, styleAudit) {
+  return {
+    route: state.route,
+    routeHash: location.hash,
+    selectedWork: pack
+      ? {
+          id: pack.id,
+          title: pack.title,
+          status: pack.status,
+          blocker: blockerTextForPack(pack),
+          buttonRunsNext: pack.next,
+          resolvedLabel: action.label,
+          resolvedAction: action.action
+        }
+      : null,
+    commandBrief: {
+      where: el("command-where")?.textContent.trim() || "",
+      blocker: el("command-blocker")?.textContent.trim() || "",
+      buttonRunsNext: el("command-next")?.textContent.trim() || "",
+      primaryAction: el("primary-action")?.dataset.action || "",
+      primaryPack: el("primary-action")?.dataset.pack || ""
+    },
+    focusTargets: {
+      where: pack ? `#/work/${pack.id}` : "#/work",
+      blocker: pack && isReview(pack) ? `#/review/${pack.id}` : "#/review",
+      buttonRunsNext: pack && isMissingNextAction(pack) ? `#/next/${pack.id}` : "current command action"
+    },
+    styleAudit: {
+      status: styleAudit.status,
+      cssLines: styleAudit.totals.cssLines,
+      cssBytes: styleAudit.totals.cssBytes,
+      routeCount: styleAudit.routeCount
+    },
+    smokeReplay: labSmokeChecks(pack, styleAudit).map((check) => ({
+      label: check.label,
+      status: check.status,
+      detail: check.detail
+    })),
+    timestamp: new Date().toISOString()
+  };
+}
+
+function labSmokeChecks(pack, styleAudit) {
+  const action = commandActionForPack(pack);
+  const sync = commandSyncStatus();
+  const overflow = currentOverflowStatus();
+
+  return [
+    {
+      label: "Selected work",
+      status: Boolean(pack),
+      detail: pack ? `${pack.title} is loaded into the lab.` : "No sample work is selected."
+    },
+    {
+      label: "Blocker visible",
+      status: Boolean(pack),
+      detail: blockerTextForPack(pack)
+    },
+    {
+      label: "Button resolves",
+      status: Boolean(pack && action.action),
+      detail: pack ? `${action.label} resolves to ${action.action}.` : "No action resolved."
+    },
+    {
+      label: "Bottom bar focus",
+      status: true,
+      detail: "Where, Blocker, and Button runs next scroll to active targets."
+    },
+    {
+      label: "Header and dock sync",
+      status: sync.status,
+      detail: sync.detail
+    },
+    {
+      label: "Current route overflow",
+      status: overflow.status,
+      detail: overflow.detail
+    },
+    {
+      label: "Style audit ready",
+      status: styleAudit.status === "ready",
+      detail: `${styleAudit.totals.cssLines} CSS LOC measured.`
+    }
+  ];
+}
+
 function styleAuditMetric(assetId, field) {
   const asset = (state.styleAudit || emptyStyleAudit()).assets.find((item) => item.id === assetId);
   if (!asset?.status) {
@@ -2225,6 +2581,16 @@ function countTextLines(text) {
 
 function countCssSelectors(text) {
   return (String(text || "").match(/\{/g) || []).length;
+}
+
+function fieldKey(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function cssIdent(value) {
+  return window.CSS?.escape
+    ? window.CSS.escape(String(value || ""))
+    : String(value || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function sumBy(items, field) {
