@@ -1,10 +1,10 @@
-const DEMO_STORAGE_KEY = "projects-static-demo-state-v3";
+const DEMO_STORAGE_KEY = "projects-static-demo-state-v4";
 const THEME_STORAGE_KEY = "projects-demo-theme";
 const DEMO_METADATA_FILE = "assets/demo-metadata.json";
 const DEMO_REPO_URL = "https://github.com/jared-bidlow/projects-web-demo";
 const DEMO_ISSUE_URL = `${DEMO_REPO_URL}/issues/new`;
 const DEMO_RELEASE_NOTES_URL = `${DEMO_REPO_URL}/releases`;
-const DEMO_DEFAULT_VERSION = "v0.0.0";
+const DEMO_DEFAULT_VERSION = "working";
 
 const STYLE_AUDIT_ASSETS = [
   { id: "productCss", label: "Product CSS", path: "assets/app.css", type: "css" },
@@ -2975,7 +2975,7 @@ function styleAuditChecks() {
     },
     {
       label: "State key reset",
-      status: DEMO_STORAGE_KEY.endsWith("-v3"),
+      status: DEMO_STORAGE_KEY.endsWith("-v4"),
       detail: DEMO_STORAGE_KEY
     },
     {

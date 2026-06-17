@@ -89,7 +89,7 @@ hash path segments, and ids supplied to routes that do not accept ids.
 | Area | Demo behavior |
 |---|---|
 | Data | Reads fake sample work from `data/demo-packs.json`. |
-| State | Persists temporary demo state in localStorage under `projects-static-demo-state-v3`. |
+| State | Persists temporary demo state in localStorage under `projects-static-demo-state-v4`. |
 | Actions | Browser-only mutations (no remote write-back). |
 | Triage | Converts pasted task text into editable `Where`, `Blocker`, `Button runs next`, evidence, and done-when rows. |
 | Theme | Supports light/dark, defaults to dark. |
