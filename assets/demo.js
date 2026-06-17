@@ -776,6 +776,10 @@ function applyPendingFocus() {
 function focusCommandTarget(kind, packId = "") {
   const pack = findPack(packId) || currentPack();
   const id = pack?.id || packId || "";
+  if (kind === "support-owner") {
+    document.querySelector('[data-support-details="pack-detail"]')?.setAttribute("open", "");
+  }
+
   const selectors = focusSelectors(kind, id);
   const target = selectors.map((selector) => document.querySelector(selector)).find(Boolean);
   if (!target) {
@@ -830,6 +834,22 @@ function focusSelectors(kind, packId) {
       "#edit-next",
       "#edit-status",
       ".demo-edit-panel"
+    ];
+  }
+
+  if (kind === "pack-blocker") {
+    return [
+      "#edit-blocker",
+      "#pack-edit-form",
+      "#command-blocker"
+    ];
+  }
+
+  if (kind === "support-owner") {
+    return [
+      "#edit-owner",
+      '[data-support-details="pack-detail"]',
+      "#pack-edit-form"
     ];
   }
 
@@ -1429,7 +1449,7 @@ function renderBoard() {
           <span class="section-label">Board</span>
           <h2>Status lanes</h2>
         </div>
-        <button class="btn btn-primary" type="button" data-go="next">Next setup</button>
+        <button class="btn btn-primary" type="button" data-go="next">Set Button runs next</button>
       </div>
       <div class="demo-board-grid">
         ${groups.map((status) => boardColumn(status)).join("")}
@@ -1442,6 +1462,11 @@ function renderBoard() {
 
 function renderReview() {
   const review = state.packs.filter(isReview);
+  const selected = currentPack();
+  const firstReview = selected && review.some((pack) => pack.id === selected.id) ? selected : review[0] || null;
+  const reviewCommand = firstReview ? resolvePrimaryCommandForPack(firstReview) : null;
+  const reviewButtonLabel = reviewCommand?.label || "Review work";
+  const reviewButtonReason = "Where: Review. Blocker: no sample work needs review. Button runs next: create or edit work.";
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1449,7 +1474,7 @@ function renderReview() {
           <span class="section-label">Needs decision</span>
           <h2>${review.length} review item(s)</h2>
         </div>
-        <button class="btn btn-primary" type="button" data-action="review-first">Review first</button>
+        <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(firstReview?.id || "")}"${disabledReasonAttributes(!firstReview, reviewButtonReason)}>${escapeHtml(reviewButtonLabel)}</button>
       </div>
       <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.")}</div>
     </section>
@@ -1485,7 +1510,7 @@ function renderNext() {
         <select id="next-action-choice" class="demo-search-input">
           ${["Review", "Open", "Focus", "Unblock", "Start", "Done"].map((option) => `<option value="${escapeAttribute(option)}"${option === pack.next ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
         </select>
-        <button id="apply-next-action" class="btn btn-primary" type="button">Apply to sample</button>
+        <button id="apply-next-action" class="btn btn-primary" type="button">Save Button runs next</button>
       </div>
     </section>
     <section class="demo-panel">
@@ -1684,6 +1709,8 @@ function renderSearch() {
 }
 
 function renderCreate() {
+  const defaults = defaultCreateValues();
+  const createState = createSaveState(defaults);
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1694,16 +1721,18 @@ function renderCreate() {
         <span class="demo-status">Browser state only</span>
       </div>
       <div class="demo-form-grid">
-        ${inputField("new-title", "Title", "New sample work")}
-        ${inputField("new-owner", "Owner", "unassigned")}
-        ${inputField("new-next", "Button runs next", "Review")}
-        ${inputField("new-due", "Due", "2026-06-30")}
-        ${textField("new-purpose", "Why it matters", "Describe why this sample work matters.")}
+        ${inputField("new-title", "Title", defaults.title)}
+        ${inputField("new-owner", "Owner", defaults.owner)}
+        ${inputField("new-next", "Button runs next", defaults.next)}
+        ${inputField("new-due", "Due", defaults.due)}
+        ${textField("new-purpose", "Why it matters", defaults.purpose)}
       </div>
-      <button id="create-sample" class="btn btn-primary" type="button">Save sample</button>
+      <p id="create-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(createState.help)}</p>
+      <button id="create-sample" class="btn btn-primary" type="button" aria-describedby="create-save-help"${disabledReasonAttributes(!createState.canSave, createState.help)}>Save sample</button>
     </section>
   `;
   el("create-sample").addEventListener("click", createSamplePack);
+  bindCreateValidation();
 }
 
 function renderPackDetail() {
@@ -2105,7 +2134,7 @@ function nextCandidateRow(pack) {
     </div>
     <div class="demo-row-actions">
       <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
-      <button class="btn btn-sm btn-primary" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Choose next</button>
+      <button class="btn btn-sm btn-primary" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Set Button runs next</button>
     </div>
   </div>`;
 }
@@ -2261,7 +2290,7 @@ function workCard(pack) {
       <span>${escapeHtml(pack.owner)}</span>
     </div>
     <div class="demo-card-actions">
-      <button type="button" class="btn btn-sm btn-primary" data-action="open">Open</button>
+      <button type="button" class="btn btn-sm" data-action="open">Open</button>
       <button type="button" class="btn btn-sm" data-action="focus">Focus</button>
       <button type="button" class="btn btn-sm" data-action="block">Block</button>
       <button type="button" class="btn btn-sm" data-action="done">Done</button>
@@ -2270,24 +2299,30 @@ function workCard(pack) {
 }
 
 function todayRow(pack) {
+  const command = resolvePrimaryCommandForPack(pack);
   return `<div class="demo-row">
     <div>
       <strong>${escapeHtml(pack.title)}</strong>
       <span>${escapeHtml(formatDue(pack))} / ${escapeHtml(pack.owner)}</span>
     </div>
     <div class="demo-row-actions">
+      <button class="btn btn-sm btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(command.label)}</button>
       <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
-      <button class="btn btn-sm btn-primary" type="button" data-action="done" data-pack="${escapeAttribute(pack.id)}">Done</button>
     </div>
   </div>`;
 }
 
 function reviewCard(pack) {
+  const command = resolvePrimaryCommandForPack(pack);
+  const doneAction = command.action === "done"
+    ? `<button class="btn" type="button" data-action="done" data-pack="${escapeAttribute(pack.id)}">Done</button>`
+    : "";
+
   return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-command-lines compact">
       ${factLine("Where", pack.title)}
-      ${factLine("Blocker", pack.blocker)}
-      ${factLine("Button runs next", pack.next)}
+      ${factLine("Blocker", blockerTextForPack(pack))}
+      ${factLine("Button runs next", command.label)}
     </div>
     <div class="demo-card-meta">
       <span>${escapeHtml(pack.status)}</span>
@@ -2297,12 +2332,13 @@ function reviewCard(pack) {
     <div class="demo-inline-form">
       <label class="sr-only" for="next-${escapeAttribute(pack.id)}">Choose next action</label>
       <input id="next-${escapeAttribute(pack.id)}" class="demo-search-input" type="text" value="${escapeAttribute(pack.next)}">
-      <button class="btn btn-primary" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Set</button>
+      <button class="btn" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Save Button runs next</button>
     </div>
     <div class="demo-card-actions">
-      <button class="btn btn-primary" type="button" data-action="done" data-pack="${escapeAttribute(pack.id)}">Done</button>
+      <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(command.label)}</button>
       <button class="btn" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
       <button class="btn" type="button" data-action="edit" data-pack="${escapeAttribute(pack.id)}">Edit</button>
+      ${doneAction}
     </div>
   </article>`;
 }
@@ -2327,12 +2363,6 @@ function bindListActions() {
       if (action === "set-due-today") {
         state.packs.forEach((pack) => { if (pack.status !== "done") pack.due = "2026-06-16"; });
         state.status = "All unfinished sample work is due today in browser state.";
-      } else if (action === "review-first") {
-        const first = preferredReviewPack();
-        if (first) {
-          state.selectedId = first.id;
-          state.status = `${first.title} selected for review.`;
-        }
       } else if (action === "validate-sample") {
         const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
         state.status = attention === 0
@@ -2504,7 +2534,7 @@ function handlePackAction(id, action) {
   if (action === "select") {
     state.status = `${pack.title} selected.`;
   } else if (action === "run-next") {
-    handlePackAction(pack.id, resolvePrimaryCommandForPack(pack).action);
+    runResolvedPackAction(pack);
     return;
   } else if (action === "review") {
     state.status = `${pack.title} opened in the review queue.`;
@@ -2564,6 +2594,11 @@ function handlePackAction(id, action) {
 function runPrimaryAction(control = el("primary-action")) {
   const action = control?.dataset.action || el("primary-action").dataset.action;
   const targetPackId = control?.dataset.pack || el("primary-action").dataset.pack;
+  if (action === "run-next") {
+    runResolvedPackAction(findPack(targetPackId) || currentPack());
+    return;
+  }
+
   if (runRouteAction(action, targetPackId)) {
     return;
   }
@@ -2577,6 +2612,21 @@ function runPrimaryAction(control = el("primary-action")) {
 
   const resolved = resolvePrimaryCommandForPack(pack);
   handlePackAction(pack.id, action || resolved.action);
+}
+
+function runResolvedPackAction(pack) {
+  if (!pack) {
+    state.status = "No sample work is selected.";
+    render();
+    return;
+  }
+
+  const resolved = resolvePrimaryCommandForPack(pack);
+  if (runRouteAction(resolved.action, resolved.targetPackId)) {
+    return;
+  }
+
+  handlePackAction(pack.id, resolved.action);
 }
 
 function runRouteAction(action, targetPackId) {
@@ -2628,6 +2678,14 @@ function runRouteAction(action, targetPackId) {
       } else {
         go("review");
       }
+      return true;
+    }
+
+    if (state.route === "pack") {
+      state.selectedId = selected.id;
+      queueFocus(reviewFocusKindForPack(selected), selected.id);
+      state.status = `${selected.title} blocker fields are ready to edit.`;
+      render();
       return true;
     }
 
@@ -2762,6 +2820,19 @@ function runRouteAction(action, targetPackId) {
   return false;
 }
 
+function reviewFocusKindForPack(pack) {
+  const blocker = blockerTextForPack(pack).toLowerCase();
+  if (blocker.includes("owner")) {
+    return "support-owner";
+  }
+
+  if (blocker.includes("button runs next")) {
+    return "next";
+  }
+
+  return "pack-blocker";
+}
+
 function commandActionForLabel(label) {
   label = (label || "Open").trim() || "Open";
   const normalized = label.toLowerCase();
@@ -2797,10 +2868,96 @@ function commandActionForLabel(label) {
   return { label: label === "Open" ? "Open" : label, action: "open" };
 }
 
+function defaultCreateValues() {
+  return {
+    title: "New sample work",
+    owner: "Sample owner",
+    next: "Open",
+    due: "2026-06-30",
+    purpose: "Describe why this sample work matters."
+  };
+}
+
+function createFormValues() {
+  return {
+    title: valueOf("new-title"),
+    owner: valueOf("new-owner"),
+    next: valueOf("new-next"),
+    due: valueOf("new-due"),
+    purpose: valueOf("new-purpose")
+  };
+}
+
+function createSaveState(values) {
+  const workflow = initialWorkflowForCreatedPack(values.title, values.owner, values.next);
+  const canSave = workflow.blocker === "none";
+  const next = canSave ? "Save sample" : createActionForBlocker(workflow.blocker);
+
+  return {
+    ...workflow,
+    canSave,
+    help: `Where: Create. Blocker: ${workflow.blocker}. Button runs next: ${next}.`
+  };
+}
+
+function createActionForBlocker(blocker) {
+  if (blocker === "missing title") {
+    return "fill title";
+  }
+
+  if (blocker === "missing owner") {
+    return "fill owner";
+  }
+
+  if (blocker === "missing Button runs next") {
+    return "fill Button runs next";
+  }
+
+  return "Save sample";
+}
+
+function bindCreateValidation() {
+  ["new-title", "new-owner", "new-next"].forEach((id) => {
+    el(id)?.addEventListener("input", syncCreateValidation);
+  });
+  syncCreateValidation();
+}
+
+function syncCreateValidation() {
+  const button = el("create-sample");
+  const help = el("create-save-help");
+  if (!button || !help) {
+    return;
+  }
+
+  const stateForSave = createSaveState(createFormValues());
+  help.textContent = stateForSave.help;
+  button.disabled = !stateForSave.canSave;
+  if (stateForSave.canSave) {
+    button.removeAttribute("title");
+    button.setAttribute("aria-label", "Save sample");
+    delete button.dataset.disabledReason;
+    return;
+  }
+
+  const copy = helpCopy(stateForSave.help, DEMO_COPY_LIMITS.commandFlowHelp);
+  button.title = copy;
+  button.setAttribute("aria-label", copy);
+  button.dataset.disabledReason = copy;
+}
+
 function createSamplePack() {
-  const title = valueOf("new-title") || "new-sample-work";
-  const owner = valueOf("new-owner") || "unassigned";
-  const next = valueOf("new-next") || "Review";
+  const values = createFormValues();
+  const stateForSave = createSaveState(values);
+  if (!stateForSave.canSave) {
+    state.status = stateForSave.help;
+    syncCreateValidation();
+    return;
+  }
+
+  const title = values.title;
+  const owner = values.owner;
+  const next = values.next;
   const workflow = initialWorkflowForCreatedPack(title, owner, next);
   const id = uniquePackId(slugify(title));
   const pack = {
@@ -2810,9 +2967,9 @@ function createSamplePack() {
     status: workflow.status,
     blocker: workflow.blocker,
     next,
-    due: valueOf("new-due"),
+    due: values.due,
     owner,
-    purpose: valueOf("new-purpose") || "Sample work created in the static demo.",
+    purpose: values.purpose || "Sample work created in the static demo.",
     doneWhen: "Sample result is described.",
     sources: ["browser-state"],
     memory: ["Created in the static demo. Nothing was saved to local files."],
