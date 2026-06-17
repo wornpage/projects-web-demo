@@ -628,12 +628,40 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     pack: { title: "Pack detail command flow", ...selectedWorkCommand }
   };
 
+  const routeCommandsHints = {
+    home: "Flow: review items with missing next actions, then run the highlighted action.",
+    work: "Flow: choose a work item and execute its primary action.",
+    triage: "Flow: paste work, parse it, then copy the triage snapshot.",
+    review: "Flow: this route shows items needing attention. Set next action or resolve blockers first.",
+    focus: "Flow: confirm details, then run the selected primary action.",
+    next: "Flow: set a clear main action, then return to work and execute it.",
+    check: "Flow: validate the current browser-state sample and address listed gaps.",
+    search: "Flow: search any field, then open a work card to continue.",
+    stats: "Flow: use the summary, then return to work for execution.",
+    notes: "Flow: add context notes, then run a work action from the command strip.",
+    timeline: "Flow: review sample activity, then continue with the current primary action.",
+    calendar: "Flow: spot due-date urgency, then run the work action you want next.",
+    files: "Flow: inspect references, then continue with the sample action.",
+    memory: "Flow: add memory in context, then return to action.",
+    lab: "Flow: compare selected item action against command simulation.",
+    board: "Flow: group by status, pick an item, then run its action from the command strip.",
+    pack: "Flow: review fields and then execute or mark the item done.",
+    create: "Flow: create a sample, then move into review before taking action.",
+    meta: "Flow: inspect checks and copy diagnostics for sharing.",
+    feedback: "Flow: copy context, then open the GitHub issue form.",
+    health: "Flow: verify checks are green, then return to your work route.",
+    settings: "Flow: pick a copy profile, apply it, then keep using the same command flow.",
+    settingsProfile: "Flow: pick a copy profile, apply it, then keep using the same command flow.",
+    settingsScenario: "Flow: select a scenario, then continue with the updated sample set."
+  };
+
   const routeCommand = routeCommands[state.route] || routeCommands.work;
   return {
     ...routeCommand,
     stateText: capitalize(routeCommand.stateText),
     scope: `Scope: ${visibleCount} of ${state.packs.length} sample work items visible.`,
-    targetPackId: routeCommand.targetPackId || ""
+    targetPackId: routeCommand.targetPackId || "",
+    flowHint: routeCommandsHints[state.route] || routeCommandsHints.work
   };
 }
 
@@ -677,6 +705,9 @@ function updateCommand(command) {
   el("command-next").textContent = command.next;
   el("command-state").textContent = command.stateText;
   el("command-scope").textContent = command.scope;
+  if (el("command-flow")) {
+    el("command-flow").textContent = command.flowHint || "Select a work item to see its next action.";
+  }
   el("primary-action").textContent = command.next;
   el("primary-action").dataset.action = command.action || "";
   el("primary-action").dataset.pack = command.targetPackId || "";

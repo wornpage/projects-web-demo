@@ -432,6 +432,15 @@ html[data-theme="dark"] .demo-header-metadata {
   font-weight: 680;
 }
 
+.demo-command-flow {
+  color: var(--cockpit-text-secondary);
+  flex: 1 1 220px;
+  font-size: 12px;
+  line-height: 1.3;
+  margin: 0;
+  min-width: 0;
+}
+
 .demo-command-actions,
 .demo-card-actions,
 .demo-quick-actions,
