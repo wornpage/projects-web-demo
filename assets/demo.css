@@ -507,6 +507,10 @@ html[data-theme="dark"] .demo-header-metadata {
   transition: border-color var(--demo-motion-duration) ease, background-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
 }
 
+.demo-panel .demo-search-input {
+  margin-top: 10px;
+}
+
 .demo-search-input:focus,
 .demo-field input:focus,
 .demo-field textarea:focus,
@@ -758,9 +762,10 @@ html[data-theme="dark"] .demo-meta-row {
   margin-bottom: 12px;
   background: var(--demo-card-banner-bg);
   border: 1px solid color-mix(in srgb, var(--cockpit-border) 68%, transparent);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 8px 12px;
   color: var(--cockpit-text);
+  overflow: hidden;
 }
 
 html.dark .demo-card-head,
@@ -836,7 +841,7 @@ html.dark .demo-state-pill,
 html[data-theme="dark"] .demo-state-pill {
   background: color-mix(in srgb, var(--cockpit-accent) 36%, var(--cockpit-surface));
   border-color: color-mix(in srgb, var(--cockpit-accent) 55%, var(--cockpit-border));
-  color: var(--cockpit-accent-text);
+  color: var(--cockpit-text);
 }
 
 .demo-command-row {
@@ -1201,9 +1206,9 @@ html:not(.dark) .demo-theme-toggle {
 html.dark .demo-theme-toggle,
 html[data-theme="dark"] .demo-theme-toggle {
   background: color-mix(in srgb, var(--cockpit-accent) 16%, var(--cockpit-surface));
-  border-color: color-mix(in srgb, var(--cockpit-accent) 76%, var(--cockpit-border));
-  color: var(--cockpit-accent-text);
-  -webkit-text-fill-color: var(--cockpit-accent-text);
+  border-color: color-mix(in srgb, var(--cockpit-accent) 80%, var(--cockpit-border));
+  color: var(--cockpit-text);
+  -webkit-text-fill-color: var(--cockpit-text);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent-text) 32%, transparent);
 }
 
@@ -1211,8 +1216,10 @@ html.dark .demo-theme-toggle:hover,
 html.dark .demo-theme-toggle:focus-visible,
 html[data-theme="dark"] .demo-theme-toggle:hover,
 html[data-theme="dark"] .demo-theme-toggle:focus-visible {
-  border-color: var(--cockpit-accent-hover);
-  background: color-mix(in srgb, var(--cockpit-accent-50) 60%, var(--cockpit-surface));
+  border-color: var(--cockpit-text);
+  background: color-mix(in srgb, var(--cockpit-accent) 28%, var(--cockpit-surface));
+  color: var(--cockpit-text);
+  -webkit-text-fill-color: var(--cockpit-text);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent-text) 38%, transparent);
 }
 
