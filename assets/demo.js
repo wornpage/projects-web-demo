@@ -469,6 +469,10 @@ function render() {
   if (versionElement) {
     versionElement.textContent = stateVersionLabel();
   }
+  const stateSchemaElement = el("demo-state-schema");
+  if (stateSchemaElement) {
+    stateSchemaElement.textContent = storageStateLabel();
+  }
   const changelogElement = el("demo-changelog");
   if (changelogElement) {
     changelogElement.href = state.metadata?.releaseNotesUrl || DEMO_RELEASE_NOTES_URL;
@@ -2798,6 +2802,11 @@ function stateVersionLabel() {
     ? ` (${state.metadata.commit.slice(0, 7)})`
     : "";
   return `${version}${source}`;
+}
+
+function storageStateLabel() {
+  const match = /-v(\d+)$/u.exec(DEMO_STORAGE_KEY);
+  return match ? `v${match[1]}` : "v?";
 }
 
 function bindScenarioCards() {
