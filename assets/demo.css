@@ -451,6 +451,17 @@ html[data-theme="dark"] .demo-header-metadata {
   padding: 18px;
 }
 
+.demo-panel-head + .demo-search-input,
+.demo-panel-head + .demo-search-results,
+.demo-panel-head + .demo-work-list {
+  margin-top: 12px;
+}
+
+.demo-search-input + .demo-search-results,
+.demo-search-input + .demo-work-list {
+  margin-top: 10px;
+}
+
 .demo-metric span {
   color: var(--cockpit-text-muted);
   font-size: 12px;
