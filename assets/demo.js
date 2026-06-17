@@ -628,7 +628,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     timeline: { title: "Timeline command flow", where: "Timeline", blocker: "sample activity is browser-only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     files: { title: "Files command flow", where: "Files", blocker: "sample sources are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     calendar: { title: "Calendar command flow", ...selectedWorkCommand },
-    create: { title: "Create command flow", where: "Create", blocker: "required fields are title and Button runs next", next: "Save sample", stateText: "Draft", action: "create-sample", targetPackId: "" },
+    create: { title: "Create command flow", where: "Create", blocker: "required fields are title, owner, and Button runs next", next: "Save sample", stateText: "Draft", action: "create-sample", targetPackId: "" },
     memory: { title: "Memory command flow", where: selectedWorkCommand.where, blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
     lab: { title: "Demo Lab command flow", ...selectedWorkCommand, stateText: "Lab" },
     meta: { title: "Meta command flow", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
@@ -2799,16 +2799,19 @@ function commandActionForLabel(label) {
 
 function createSamplePack() {
   const title = valueOf("new-title") || "new-sample-work";
-  const id = slugify(title);
+  const owner = valueOf("new-owner") || "unassigned";
+  const next = valueOf("new-next") || "Review";
+  const workflow = initialWorkflowForCreatedPack(title, owner, next);
+  const id = uniquePackId(slugify(title));
   const pack = {
     id,
     title,
     type: state.copyProfile,
-    status: "draft",
-    blocker: "missing setup",
-    next: valueOf("new-next") || "Review",
+    status: workflow.status,
+    blocker: workflow.blocker,
+    next,
     due: valueOf("new-due"),
-    owner: valueOf("new-owner") || "unassigned",
+    owner,
     purpose: valueOf("new-purpose") || "Sample work created in the static demo.",
     doneWhen: "Sample result is described.",
     sources: ["browser-state"],
@@ -2819,6 +2822,35 @@ function createSamplePack() {
   state.selectedId = pack.id;
   setCreateConfirmation(pack);
   go("pack", pack.id);
+}
+
+function initialWorkflowForCreatedPack(title, owner, next) {
+  if (!normalizeCopy(title)) {
+    return { status: "draft", blocker: "missing title" };
+  }
+
+  if (isPlaceholderNext(next)) {
+    return { status: "draft", blocker: "missing Button runs next" };
+  }
+
+  const normalizedOwner = normalizeCopy(owner).toLowerCase();
+  if (!normalizedOwner || normalizedOwner === "unassigned" || normalizedOwner === "no owner") {
+    return { status: "draft", blocker: "missing owner" };
+  }
+
+  return { status: "active", blocker: "none" };
+}
+
+function uniquePackId(baseId) {
+  const root = baseId || "new-sample-work";
+  let id = root;
+  let suffix = 2;
+  while (findPack(id)) {
+    id = `${root}-${suffix}`;
+    suffix += 1;
+  }
+
+  return id;
 }
 
 function savePackDetail(id) {
