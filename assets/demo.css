@@ -1294,9 +1294,11 @@ html[data-theme="dark"] .demo-state-pill {
 }
 
 .demo-support-details {
+  background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
   border: 1px solid var(--cockpit-border);
   border-radius: 14px;
   display: block;
+  margin-top: 12px;
   padding: 0;
 }
 

@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-17T22:58:05.1724974Z",
-  "commit": "0cfa6fe37",
-  "releaseNotesUrl": "https://github.com/jared-bidlow/projects-web-demo/releases",
-  "repository": "https://github.com/jared-bidlow/projects-web-demo",
-  "profileApplied": "general",
   "scenario": "default",
-  "version": "v3.3.3"
+  "releaseNotesUrl": "https://github.com/jared-bidlow/projects-web-demo/releases",
+  "version": "v3.3.3",
+  "repository": "https://github.com/jared-bidlow/projects-web-demo",
+  "generatedAt": "2026-06-17T23:06:06.9081605Z",
+  "profileApplied": "general",
+  "commit": "cfd7428b6"
 }
