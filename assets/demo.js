@@ -2329,17 +2329,23 @@ function reviewCard(pack) {
       <span>${escapeHtml(formatDue(pack))}</span>
       <span>${escapeHtml(pack.owner)}</span>
     </div>
-    <div class="demo-inline-form">
-      <label class="sr-only" for="next-${escapeAttribute(pack.id)}">Choose next action</label>
-      <input id="next-${escapeAttribute(pack.id)}" class="demo-search-input" type="text" value="${escapeAttribute(pack.next)}">
-      <button class="btn" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Save Button runs next</button>
-    </div>
     <div class="demo-card-actions">
       <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(command.label)}</button>
       <button class="btn" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
       <button class="btn" type="button" data-action="edit" data-pack="${escapeAttribute(pack.id)}">Edit</button>
       ${doneAction}
     </div>
+    <details class="demo-card-support">
+      <summary>
+        <span>Support setup</span>
+        <strong>Button runs next</strong>
+      </summary>
+      <div class="demo-inline-form">
+        <label class="sr-only" for="next-${escapeAttribute(pack.id)}">Button runs next</label>
+        <input id="next-${escapeAttribute(pack.id)}" class="demo-search-input" type="text" value="${escapeAttribute(pack.next)}">
+        <button class="btn" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Save Button runs next</button>
+      </div>
+    </details>
   </article>`;
 }
 

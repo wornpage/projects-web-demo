@@ -23,8 +23,16 @@ body {
 }
 
 .demo-app-shell .sr-only {
-  left: 0;
-  top: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 .demo-app-shell {
@@ -1012,6 +1020,44 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   border-top: 1px solid color-mix(in srgb, var(--cockpit-border) 78%, transparent);
   margin-top: 14px;
   padding-top: 14px;
+}
+
+.demo-card-support {
+  border-top: 1px dashed color-mix(in srgb, var(--cockpit-border) 70%, transparent);
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+.demo-card-support summary {
+  align-items: center;
+  color: var(--cockpit-text-secondary);
+  cursor: pointer;
+  display: flex;
+  font-size: 12px;
+  font-weight: var(--font-label-weight);
+  gap: 8px;
+  justify-content: space-between;
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.demo-card-support summary::-webkit-details-marker {
+  display: none;
+}
+
+.demo-card-support summary::after {
+  content: "+";
+  color: var(--cockpit-accent);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.demo-card-support[open] summary::after {
+  content: "-";
+}
+
+.demo-card-support .demo-inline-form {
+  margin-top: 10px;
 }
 
 .demo-state-pill {
