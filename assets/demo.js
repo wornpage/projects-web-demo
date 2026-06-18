@@ -19,7 +19,9 @@ const STYLE_AUDIT_ASSETS = [
 const DEMO_COPY_LIMITS = Object.freeze({
   commandFlowVisible: 48,
   commandFlowHelp: 140,
-  memoryVisible: 96
+  memoryVisible: 96,
+  receiptVisible: 96,
+  receiptHelp: 180
 });
 
 const state = {
@@ -2578,8 +2580,10 @@ function setMemoryConfirmation(pack, result) {
 }
 
 function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pack)) {
+  const fullSummary = helpCopy(summary, DEMO_COPY_LIMITS.receiptHelp);
   const receipt = {
-    summary: normalizeCopy(summary),
+    summary: fullSummary,
+    visibleSummary: visibleCopy(fullSummary, DEMO_COPY_LIMITS.receiptVisible),
     where: `${pack.title} / ${pack.status}`,
     blocker: blockerTextForPack(pack),
     next: next.label,
@@ -2602,10 +2606,12 @@ function updateActionReceipt() {
   }
 
   receiptElement.hidden = false;
+  const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
+  const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
   receiptElement.innerHTML = `
-    <div class="demo-command-receipt-head">
+    <div class="demo-command-receipt-head" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
       <span>Last result</span>
-      <strong>${escapeHtml(receipt.summary)}</strong>
+      <strong>${escapeHtml(visibleSummary)}</strong>
     </div>
     <div class="demo-command-receipt-lines">
       ${receiptLine("Where", receipt.where)}
@@ -2628,6 +2634,7 @@ function normalizeActionReceipt(receipt) {
   }
 
   const summary = normalizeCopy(receipt.summary);
+  const visibleSummary = normalizeCopy(receipt.visibleSummary);
   const where = normalizeCopy(receipt.where);
   const blocker = normalizeCopy(receipt.blocker);
   const next = normalizeCopy(receipt.next);
@@ -2636,7 +2643,14 @@ function normalizeActionReceipt(receipt) {
     return null;
   }
 
-  return { summary, where, blocker, next, proof };
+  return {
+    summary,
+    visibleSummary: visibleSummary || visibleCopy(summary, DEMO_COPY_LIMITS.receiptVisible),
+    where,
+    blocker,
+    next,
+    proof
+  };
 }
 
 function proofTargetForPack(pack) {
