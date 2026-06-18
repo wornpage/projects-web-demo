@@ -2556,10 +2556,11 @@ function setNextConfirmation(pack, result) {
 function setCreateConfirmation(pack) {
   if (!pack) return;
 
+  const next = resolvePrimaryCommandForPack(pack);
   setActionReceipt(
     pack,
-    `Created ${pack.title}. Demo state changed in this browser only.`,
-    resolvePrimaryCommandForPack(pack)
+    `Created ${pack.title}. Where: ${pack.status}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`,
+    next
   );
 }
 
