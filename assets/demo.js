@@ -2164,7 +2164,7 @@ function nextCandidateRow(pack) {
       <span>${escapeHtml(pack.blocker === "none" ? "Ready for a clearer next action." : pack.blocker)}</span>
     </div>
     <div class="demo-row-actions">
-      <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
+      ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
       <button class="btn btn-sm" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Set Button runs next</button>
     </div>
   </div>`;
@@ -2234,7 +2234,7 @@ function sourceRow({ pack, source }) {
       <strong>${escapeHtml(source)}</strong>
       <span>${escapeHtml(pack.title)} / ${escapeHtml(pack.type)}</span>
     </div>
-    <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
+    ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
   </div>`;
 }
 
@@ -2243,7 +2243,7 @@ function calendarCard(pack) {
     <span>${escapeHtml(pack.due)}</span>
     <strong>${escapeHtml(pack.title)}</strong>
     <small>${escapeHtml(pack.status)} / ${escapeHtml(pack.owner)}</small>
-    <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
+    ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
   </article>`;
 }
 
@@ -2320,12 +2320,18 @@ function workCard(pack) {
       <span>${escapeHtml(formatDue(pack))}</span>
       <span>${escapeHtml(pack.owner)}</span>
     </div>
-    <div class="demo-card-actions">
-      <button type="button" class="btn btn-sm" data-action="open">Open</button>
-      <button type="button" class="btn btn-sm" data-action="focus">Focus</button>
-      <button type="button" class="btn btn-sm" data-action="block">Block</button>
-      <button type="button" class="btn btn-sm" data-action="done">Done</button>
-    </div>
+    <details class="demo-card-support" data-support-actions="work-card">
+      <summary>
+        <span>Support actions</span>
+        <strong>Open, focus, block, finish</strong>
+      </summary>
+      <div class="demo-card-actions">
+        ${supportActionButton("open", "Open", pack, "btn btn-sm")}
+        ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
+        ${supportActionButton("block", "Block", pack, "btn btn-sm")}
+        ${supportActionButton("done", "Done", pack, "btn btn-sm")}
+      </div>
+    </details>
   </article>`;
 }
 
@@ -2338,7 +2344,7 @@ function todayRow(pack) {
     </div>
     <div class="demo-row-actions">
       <button class="btn btn-sm btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(command.label)}</button>
-      <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
+      ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
     </div>
   </div>`;
 }
@@ -2346,7 +2352,7 @@ function todayRow(pack) {
 function reviewCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const doneAction = command.action === "done"
-    ? `<button class="btn" type="button" data-action="done" data-pack="${escapeAttribute(pack.id)}">Done</button>`
+    ? supportActionButton("done", "Done", pack)
     : "";
 
   return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
@@ -2362,8 +2368,8 @@ function reviewCard(pack) {
     </div>
     <div class="demo-card-actions">
       <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(command.label)}</button>
-      <button class="btn" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
-      <button class="btn" type="button" data-action="edit" data-pack="${escapeAttribute(pack.id)}">Edit</button>
+      ${supportActionButton("focus", "Focus", pack)}
+      ${supportActionButton("edit", "Edit", pack)}
       ${doneAction}
     </div>
     <details class="demo-card-support">
@@ -2378,6 +2384,24 @@ function reviewCard(pack) {
       </div>
     </details>
   </article>`;
+}
+
+function supportActionButton(action, label, pack, className = "btn") {
+  const reason = supportActionReason(action, pack);
+  const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<button class="${escapeAttribute(className)}" type="button" data-action="${escapeAttribute(action)}" data-pack="${escapeAttribute(pack.id)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
+}
+
+function supportActionReason(action, pack) {
+  const where = pack?.title || "selected work";
+  const reasons = {
+    open: `Open the work path for ${where} without running the main button.`,
+    focus: `Show ${where} in the Focus view without changing status.`,
+    block: `Mark ${where} blocked in browser state.`,
+    done: `Finish ${where} in browser state.`,
+    edit: `Open the work path fields for ${where}.`
+  };
+  return reasons[action] || `Run ${actionLabelFromKey(action)} for ${where}.`;
 }
 
 function bindWorkCards() {
