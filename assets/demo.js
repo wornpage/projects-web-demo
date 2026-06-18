@@ -1799,6 +1799,7 @@ function renderPackDetail() {
   const doneAction = packCommand.action === "done"
     ? `<button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>`
     : "";
+  const saveState = packDetailSaveState(pack);
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-edit-panel" id="pack-edit-form" data-pack-id="${escapeAttribute(pack.id)}">
       <div class="demo-panel-head">
@@ -1840,13 +1841,15 @@ function renderPackDetail() {
       </details>
       ${relevantMemoryStrip(pack)}
       <div class="demo-card-actions">
-        <button id="save-pack" class="btn btn-primary" type="button">Save forward path</button>
+        <button id="save-pack" class="btn btn-primary" type="button" aria-describedby="pack-save-help"${disabledReasonAttributes(!saveState.canSave, saveState.help)}>Save forward path</button>
         ${doneAction}
       </div>
+      <p id="pack-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(saveState.help)}</p>
     </section>
     ${activityPanel(pack)}
   `;
   el("save-pack").addEventListener("click", () => savePackDetail(pack.id));
+  bindPackDetailValidation(pack);
   bindListActions();
 }
 
@@ -3240,6 +3243,60 @@ function syncMemoryValidation(pack) {
   button.dataset.disabledReason = copy;
 }
 
+function packDetailSaveState(pack) {
+  if (!pack) {
+    return {
+      canSave: false,
+      help: "Where: Forward path. Blocker: no sample work is selected. Button runs next: choose work before saving."
+    };
+  }
+
+  const changed = packForwardPathFormSignature(pack) !== packForwardPathSignature(pack);
+  if (!changed) {
+    return {
+      canSave: false,
+      help: "Where: Forward path. Blocker: no changes to save. Button runs next: edit a field first."
+    };
+  }
+
+  return {
+    canSave: true,
+    help: `Where: Forward path. Blocker: none. Button runs next: save forward path for ${pack.title}.`
+  };
+}
+
+function bindPackDetailValidation(pack) {
+  ["edit-title", "edit-status", "edit-blocker", "edit-owner", "edit-due", "edit-next", "edit-done-when", "edit-purpose"].forEach((id) => {
+    const input = el(id);
+    input?.addEventListener("input", () => syncPackDetailValidation(pack));
+    input?.addEventListener("change", () => syncPackDetailValidation(pack));
+  });
+  syncPackDetailValidation(pack);
+}
+
+function syncPackDetailValidation(pack) {
+  const button = el("save-pack");
+  const help = el("pack-save-help");
+  if (!button || !help) {
+    return;
+  }
+
+  const stateForSave = packDetailSaveState(pack);
+  help.textContent = stateForSave.help;
+  button.disabled = !stateForSave.canSave;
+  if (stateForSave.canSave) {
+    button.removeAttribute("title");
+    button.setAttribute("aria-label", "Save forward path");
+    delete button.dataset.disabledReason;
+    return;
+  }
+
+  const copy = helpCopy(stateForSave.help, DEMO_COPY_LIMITS.commandFlowHelp);
+  button.title = copy;
+  button.setAttribute("aria-label", copy);
+  button.dataset.disabledReason = copy;
+}
+
 function createSamplePack() {
   const values = createFormValues();
   const stateForSave = createSaveState(values);
@@ -3308,6 +3365,12 @@ function savePackDetail(id) {
   const pack = findPack(id);
   if (!pack) return;
   const before = packForwardPathSignature(pack);
+  const stateForSave = packDetailSaveState(pack);
+  if (!stateForSave.canSave) {
+    state.status = stateForSave.help;
+    render();
+    return;
+  }
   pack.title = valueOf("edit-title") || pack.title;
   pack.status = valueOf("edit-status") || pack.status;
   pack.blocker = valueOf("edit-blocker") || pack.blocker;
@@ -3338,6 +3401,24 @@ function packForwardPathSignature(pack) {
     next: pack.next || "",
     doneWhen: pack.doneWhen || "",
     purpose: pack.purpose || ""
+  });
+}
+
+function packForwardPathFormSignature(pack) {
+  const fieldValue = (id, fallback = "") => {
+    const input = el(id);
+    return input ? valueOf(id) : (fallback || "");
+  };
+
+  return JSON.stringify({
+    title: fieldValue("edit-title", pack.title) || pack.title || "",
+    status: fieldValue("edit-status", pack.status) || pack.status || "",
+    blocker: fieldValue("edit-blocker", pack.blocker) || pack.blocker || "",
+    owner: fieldValue("edit-owner", pack.owner) || pack.owner || "",
+    due: fieldValue("edit-due", pack.due),
+    next: fieldValue("edit-next", pack.next) || pack.next || "",
+    doneWhen: fieldValue("edit-done-when", pack.doneWhen) || pack.doneWhen || "",
+    purpose: fieldValue("edit-purpose", pack.purpose) || pack.purpose || ""
   });
 }
 
