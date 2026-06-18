@@ -760,6 +760,8 @@ function updateCommand(command) {
   el("primary-action").dataset.pack = command.targetPackId || "";
   el("primary-action").setAttribute("aria-label", commandRunLabel(command));
   el("primary-action").title = commandRunLabel(command);
+  el("secondary-action").setAttribute("aria-label", secondaryRunLabel(command));
+  el("secondary-action").title = secondaryRunLabel(command);
   el("dock-where").textContent = command.where;
   el("dock-blocker").textContent = command.blocker;
   el("dock-next-label").textContent = command.next;
@@ -773,6 +775,13 @@ function updateCommand(command) {
 function commandRunLabel(command) {
   return helpCopy(
     `Where: ${command.where}. Blocker: ${command.blocker}. Button runs next: ${command.next}.`,
+    DEMO_COPY_LIMITS.commandFlowHelp
+  );
+}
+
+function secondaryRunLabel(command) {
+  return helpCopy(
+    `Focus selected work. Where: ${command.where}. Blocker: ${command.blocker}.`,
     DEMO_COPY_LIMITS.commandFlowHelp
   );
 }
