@@ -1859,8 +1859,8 @@ function renderMemory() {
 
     const value = el("memory-note").value.trim();
     pack.memory.unshift(value);
-    pack.activity.unshift("Memory note added in browser state.");
-    state.status = "Memory note added in browser state only.";
+    addPackActivity(pack, "Memory note added.");
+    state.status = "Memory note added.";
     render();
   });
 }
@@ -2446,7 +2446,7 @@ function bindListActions() {
           if (input) {
             pack.next = input.value.trim() || "Open";
             pack.blocker = pack.blocker === "missing Button runs next" ? "none" : pack.blocker;
-            pack.activity.unshift("Button runs next changed in browser state.");
+            addPackActivity(pack, "Button runs next changed.");
             setActionConfirmation(pack, "set-next");
           } else {
             state.status = `${pack.title} selected for next-action setup.`;
@@ -2582,6 +2582,21 @@ function proofTargetForPack(pack) {
   return normalizeCopy(pack?.doneWhen) || "No proof target set.";
 }
 
+function addPackActivity(pack, message) {
+  const copy = normalizeCopy(message);
+  if (!pack || !copy) {
+    return false;
+  }
+
+  pack.activity = Array.isArray(pack.activity) ? pack.activity : [];
+  if (pack.activity[0] === copy) {
+    return false;
+  }
+
+  pack.activity.unshift(copy);
+  return true;
+}
+
 function applyNextChoice(id) {
   const pack = findPack(id);
   if (!pack) return;
@@ -2592,7 +2607,7 @@ function applyNextChoice(id) {
     pack.blocker = "none";
   }
 
-  pack.activity.unshift(`Button runs next changed to ${choice} in browser state.`);
+  addPackActivity(pack, `Button runs next changed to ${choice}.`);
   state.selectedId = pack.id;
   setActionConfirmation(pack, "set-next");
   go("work", pack.id);
@@ -2628,25 +2643,25 @@ function handlePackAction(id, action) {
     pack.status = "active";
     pack.blocker = pack.blocker === "missing setup" ? "none" : pack.blocker;
     pack.next = pack.next === "Choose next action" ? "Open" : pack.next;
-    pack.activity.unshift("Started in browser state.");
+    addPackActivity(pack, "Started.");
     setActionConfirmation(pack, "start");
   } else if (action === "unblock") {
     pack.status = "active";
     pack.blocker = "none";
     pack.next = "Open";
-    pack.activity.unshift("Unblocked in browser state.");
+    addPackActivity(pack, "Unblocked.");
     setActionConfirmation(pack, "unblock");
   } else if (action === "block") {
     pack.status = "blocked";
     pack.blocker = "blocked in demo state";
     pack.next = "Unblock";
-    pack.activity.unshift("Blocked in browser state.");
+    addPackActivity(pack, "Blocked.");
     setActionConfirmation(pack, "block");
   } else if (action === "done") {
     pack.status = "done";
     pack.blocker = "none";
     pack.next = "Open";
-    pack.activity.unshift("Marked done in browser state.");
+    addPackActivity(pack, "Marked done.");
     setActionConfirmation(pack, "done");
   } else if (action === "focus") {
     setActionConfirmation(pack, "focus");
@@ -2659,7 +2674,7 @@ function handlePackAction(id, action) {
     return;
   } else if (action === "open") {
     queueFocus("pack-detail", pack.id);
-    pack.activity.unshift("Opened in browser state.");
+    addPackActivity(pack, "Opened.");
     setActionConfirmation(pack, "open");
     go("pack", pack.id);
     return;
@@ -2861,8 +2876,8 @@ function runRouteAction(action, targetPackId) {
     }
     if (pack && input?.value.trim()) {
       pack.memory.unshift(input.value.trim());
-      pack.activity.unshift("Memory note added in browser state.");
-      state.status = "Memory note added in browser state only.";
+      addPackActivity(pack, "Memory note added.");
+      state.status = "Memory note added.";
     } else {
       state.status = "Add a note from the Memory screen input.";
     }
@@ -3102,7 +3117,7 @@ function createSamplePack() {
     doneWhen: "Sample result is described.",
     sources: ["browser-state"],
     memory: ["Created in the static demo. Nothing was saved to local files."],
-    activity: ["Created in browser state."]
+    activity: ["Created."]
   };
   state.packs.unshift(pack);
   state.selectedId = pack.id;
@@ -3157,7 +3172,7 @@ function savePackDetail(id) {
   }
   const changed = packForwardPathSignature(pack) !== before;
   if (changed) {
-    pack.activity.unshift("Forward path changed.");
+    addPackActivity(pack, "Forward path changed.");
   }
   setSaveConfirmation(pack, changed);
   render();
