@@ -2442,10 +2442,8 @@ function bindListActions() {
           const input = el(`next-${pack.id}`);
           state.selectedId = pack.id;
           if (input) {
-            pack.next = input.value.trim() || "Open";
-            pack.blocker = pack.blocker === "missing Button runs next" ? "none" : pack.blocker;
-            addPackActivity(pack, "Button runs next changed.");
-            setActionConfirmation(pack, "set-next");
+            const result = setPackNextAction(pack, input.value);
+            setNextConfirmation(pack, result);
           } else {
             state.status = `${pack.title} selected for next-action setup.`;
             go("next", pack.id);
@@ -2497,6 +2495,19 @@ function setSaveConfirmation(pack, changed) {
   const summary = changed
     ? `Forward path updated for ${pack.title}.`
     : `No forward path changes for ${pack.title}.`;
+  setActionReceipt(
+    pack,
+    summary,
+    resolvePrimaryCommandForPack(pack)
+  );
+}
+
+function setNextConfirmation(pack, result) {
+  if (!pack) return;
+
+  const summary = result.changed
+    ? `Button runs next set to ${result.next} for ${pack.title}.`
+    : `Button already runs ${result.next} for ${pack.title}.`;
   setActionReceipt(
     pack,
     summary,
@@ -2612,19 +2623,36 @@ function addPackMemoryNote(pack, note) {
   return { added: true, note: copy };
 }
 
+function setPackNextAction(pack, value) {
+  const next = normalizeCopy(value) || "Open";
+  const beforeNext = normalizeCopy(pack?.next);
+  const beforeBlocker = normalizeCopy(pack?.blocker);
+
+  if (!pack) {
+    return { changed: false, next };
+  }
+
+  pack.next = next;
+  if (pack.blocker === "missing Button runs next") {
+    pack.blocker = "none";
+  }
+
+  const changed = beforeNext !== next || beforeBlocker !== normalizeCopy(pack.blocker);
+  if (changed) {
+    addPackActivity(pack, `Button runs next changed to ${next}.`);
+  }
+
+  return { changed, next };
+}
+
 function applyNextChoice(id) {
   const pack = findPack(id);
   if (!pack) return;
 
   const choice = valueOf("next-action-choice") || "Open";
-  pack.next = choice;
-  if (pack.blocker === "missing Button runs next") {
-    pack.blocker = "none";
-  }
-
-  addPackActivity(pack, `Button runs next changed to ${choice}.`);
+  const result = setPackNextAction(pack, choice);
   state.selectedId = pack.id;
-  setActionConfirmation(pack, "set-next");
+  setNextConfirmation(pack, result);
   go("work", pack.id);
 }
 
