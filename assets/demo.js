@@ -29,7 +29,7 @@ const state = {
   selectedId: "",
   query: "",
   filter: "all",
-  status: "Demo actions update browser state only.",
+  status: "Demo actions update this sample only.",
   copyProfile: "general",
   scenarioId: "default",
   metadata: null,
@@ -389,7 +389,7 @@ function resetState() {
   state.filter = "all";
   state.triageInput = defaultTriageInput();
   state.triageRows = [];
-  state.status = "Demo data reset. Browser state only.";
+  state.status = "Demo data reset for this browser.";
   state.actionReceipt = null;
   syncSearchParam("scenario", null);
   render();
@@ -633,13 +633,13 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     next: { title: "Next setup command flow", ...selectedWorkReadyCommand },
     check: { title: "Check command flow", where: "Check", blocker: `${reviewCount} sample item(s) still need decisions`, next: "Validate sample", stateText: "Ready", action: "validate-sample", targetPackId: "" },
     search: { title: "Search command flow", where: "Search", blocker: "type title, owner, next action, or due date", next: "Search", stateText: "Ready", action: "search-demo", targetPackId: "" },
-    stats: { title: "Stats command flow", where: "Stats", blocker: "sample counts are calculated in browser state", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" },
-    notes: { title: "Notes command flow", where: "Notes", blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
-    timeline: { title: "Timeline command flow", where: "Timeline", blocker: "sample activity is browser-only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
+    stats: { title: "Stats command flow", where: "Stats", blocker: "sample counts are calculated in this demo", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" },
+    notes: { title: "Notes command flow", where: "Notes", blocker: "sample notes stay with this browser", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
+    timeline: { title: "Timeline command flow", where: "Timeline", blocker: "sample activity stays with this browser", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     files: { title: "Files command flow", where: "Files", blocker: "sample sources are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     calendar: { title: "Calendar command flow", ...selectedWorkCommand },
     create: { title: "Create command flow", where: "Create", blocker: "required fields are title, owner, and Button runs next", next: "Save sample", stateText: "Draft", action: "create-sample", targetPackId: "" },
-    memory: { title: "Memory command flow", where: selectedWorkCommand.where, blocker: "sample notes are browser-only", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
+    memory: { title: "Memory command flow", where: selectedWorkCommand.where, blocker: "sample notes stay with this browser", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
     lab: { title: "Demo Lab command flow", ...selectedWorkCommand, stateText: "Lab" },
     meta: { title: "Meta command flow", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
     feedback: { title: "Feedback command flow", where: "Feedback", blocker: `Version ${stateVersionLabel()} is active`, next: "Report feedback", stateText: "Ready", action: "report-feedback", targetPackId: "" },
@@ -932,7 +932,7 @@ function renderHome() {
   const scenario = DEMO_SCENARIO_BY_ID[state.scenarioId] || DEMO_SCENARIO_BY_ID.default;
   el("screen-content").innerHTML = `
     <div class="demo-grid">
-      ${metricCard("Visible work", state.packs.length, "Sample packs in browser state.")}
+      ${metricCard("Visible work", state.packs.length, "Sample packs in this demo.")}
       ${metricCard("Review", reviewCount, "Items with blockers or missing next actions.")}
       ${metricCard("Done", doneCount, "Finished sample work.")}
     </div>
@@ -1260,7 +1260,7 @@ function bindTriageControls() {
   el("parse-triage")?.addEventListener("click", () => {
     state.triageInput = input?.value || "";
     state.triageRows = parseTriageText(state.triageInput);
-    state.status = `${state.triageRows.length} work item(s) parsed in browser state.`;
+    state.status = `${state.triageRows.length} work item(s) parsed.`;
     queueFocus("triage-output");
     render();
   });
@@ -1275,7 +1275,7 @@ function bindTriageControls() {
       evidence: "Visible result or handoff note",
       doneWhen: "Next action has a visible result."
     }));
-    state.status = "Blank triage row added in browser state.";
+    state.status = "Blank triage row added.";
     queueFocus("triage-output");
     render();
   });
@@ -1283,7 +1283,7 @@ function bindTriageControls() {
   el("reset-triage")?.addEventListener("click", () => {
     state.triageInput = defaultTriageInput();
     state.triageRows = [];
-    state.status = "Triage tool reset in browser state.";
+    state.status = "Triage tool reset.";
     queueFocus("triage-input");
     render();
   });
@@ -1315,7 +1315,7 @@ function bindTriageControls() {
     button.addEventListener("click", () => {
       syncTriageRowsFromDom();
       state.triageRows = state.triageRows.filter((row) => row.id !== button.dataset.triageRemove);
-      state.status = "Triage row removed in browser state.";
+      state.status = "Triage row removed.";
       render();
     });
   });
@@ -1520,7 +1520,7 @@ function renderNext() {
         </div>
         <span class="demo-status">${escapeHtml(pack.title)}</span>
       </div>
-      <p>In the real app, this fills the work item's Button-runs-next field. In this static demo, it changes the sample text in browser state.</p>
+      <p>In the real app, this fills the work item's Button-runs-next field. In this static demo, it updates the sample text here.</p>
       <div class="demo-command-lines compact">
         ${factLine("Where", pack.title)}
         ${factLine("Blocker", blockerTextForPack(pack))}
@@ -1670,7 +1670,7 @@ function renderTimeline() {
         </div>
       </div>
       <div class="demo-list">
-        ${rows.map(timelineRow).join("") || emptyState("No sample activity exists.", "Run a sample action to add browser-state activity.")}
+        ${rows.map(timelineRow).join("") || emptyState("No sample activity exists.", "Run a sample action to add activity.")}
       </div>
     </section>
   `;
@@ -1837,7 +1837,7 @@ function renderMemory() {
           <span class="section-label">Memory</span>
           <h2>${pack ? escapeHtml(pack.title) : "Sample memory"}</h2>
         </div>
-        <span class="demo-status">Stored in browser state</span>
+        <span class="demo-status">Stored in this browser</span>
       </div>
       <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.")) : emptyState("No memory available.", "Choose sample work before adding memory.")}</div>
       <div class="demo-inline-form">
@@ -1901,7 +1901,7 @@ function renderSettings() {
     button.addEventListener("click", () => {
       state.copyProfile = button.dataset.profile;
       syncSearchParam("profile", button.dataset.profile);
-      state.status = `${capitalize(state.copyProfile)} copy profile applied in demo state.`;
+      state.status = `${capitalize(state.copyProfile)} copy profile applied.`;
       render();
     });
   });
@@ -1929,7 +1929,7 @@ function renderHealth() {
       <p><small>Snapshot generated: ${escapeHtml(now)}</small></p>
     </section>
     <div class="demo-grid">
-      ${metricCard("Data", state.packs.length, "Loaded sample packs in browser state.")}
+      ${metricCard("Data", state.packs.length, "Loaded sample packs for this demo.")}
       ${metricCard("Checks", checks.filter((check) => check.status).length, "Passing health checks.")}
       ${metricCard("Checks total", checks.length, "All expected telemetry checks.")}
       ${metricCard("Scenario", state.scenarioId, "Current scenario library preset.")}
@@ -1985,7 +1985,7 @@ function renderMeta() {
         </div>
         <span class="demo-status">${escapeHtml(context.version || stateVersionLabel())}</span>
       </div>
-      <p>A compact product-like summary from browser-only state and runtime checks.</p>
+      <p>A compact product-like summary from this browser's sample state and runtime checks.</p>
       <div class="demo-grid">
         ${metricCard("Version", context.version || stateVersionLabel(), "Build label from demo metadata.")}
         ${metricCard("Scenario", state.scenarioId, "Active demo preset.")}
@@ -2406,8 +2406,8 @@ function supportActionReason(action, pack) {
   const reasons = {
     open: `Open the work path for ${where} without running the main button.`,
     focus: `Show ${where} in the Focus view without changing status.`,
-    block: `Mark ${where} blocked in browser state.`,
-    done: `Finish ${where} in browser state.`,
+    block: `Mark ${where} blocked for this sample.`,
+    done: `Finish ${where} for this sample.`,
     edit: `Open the work path fields for ${where}.`
   };
   return reasons[action] || `Run ${actionLabelFromKey(action)} for ${where}.`;
@@ -2432,11 +2432,11 @@ function bindListActions() {
       const action = button.dataset.action;
       if (action === "set-due-today") {
         state.packs.forEach((pack) => { if (pack.status !== "done") pack.due = "2026-06-16"; });
-        state.status = "All unfinished sample work is due today in browser state.";
+        state.status = "All unfinished sample work is due today.";
       } else if (action === "validate-sample") {
         const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
         state.status = attention === 0
-          ? "Sample data passed the browser-state checks."
+          ? "Sample data passed checks."
           : `${attention} sample check item(s) still need attention.`;
       } else if (action === "set-next") {
         const pack = findPack(button.dataset.pack);
@@ -2653,7 +2653,7 @@ function handlePackAction(id, action) {
     setActionConfirmation(pack, "unblock");
   } else if (action === "block") {
     pack.status = "blocked";
-    pack.blocker = "blocked in demo state";
+    pack.blocker = "blocked in this sample";
     pack.next = "Unblock";
     addPackActivity(pack, "Blocked.");
     setActionConfirmation(pack, "block");
@@ -2820,7 +2820,7 @@ function runRouteAction(action, targetPackId) {
     const input = el("triage-input");
     state.triageInput = input?.value || state.triageInput || "";
     state.triageRows = parseTriageText(state.triageInput);
-    state.status = `${state.triageRows.length} work item(s) parsed in browser state.`;
+    state.status = `${state.triageRows.length} work item(s) parsed.`;
     queueFocus("triage-output");
     render();
     return true;
@@ -2853,7 +2853,7 @@ function runRouteAction(action, targetPackId) {
   }
 
   if (action === "search-demo") {
-    state.status = "Search checks browser-state sample data only.";
+    state.status = "Search checks sample data only.";
     render();
     return true;
   }
@@ -2861,7 +2861,7 @@ function runRouteAction(action, targetPackId) {
   if (action === "validate-sample") {
     const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
     state.status = attention === 0
-      ? "Sample data passed the browser-state checks."
+      ? "Sample data passed checks."
       : `${attention} sample check item(s) still need attention.`;
     render();
     return true;
@@ -2886,7 +2886,7 @@ function runRouteAction(action, targetPackId) {
   }
 
   if (action === "apply-profile") {
-    state.status = `${capitalize(state.copyProfile)} profile is active in demo state.`;
+    state.status = `${capitalize(state.copyProfile)} profile is active.`;
     render();
     return true;
   }
