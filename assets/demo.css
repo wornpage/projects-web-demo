@@ -539,6 +539,17 @@ html[data-theme="dark"] .demo-metric {
   line-height: 1.3;
 }
 
+.demo-memory-strip.compact {
+  border-left-width: 3px;
+  gap: 3px;
+  margin: 10px 0 0;
+  padding: 8px 10px;
+}
+
+.demo-memory-strip.compact strong {
+  font-size: 13px;
+}
+
 .demo-command-next {
   background: color-mix(in srgb, var(--cockpit-accent) 24%, var(--cockpit-surface));
   border-color: color-mix(in srgb, var(--cockpit-accent) 44%, var(--cockpit-border));

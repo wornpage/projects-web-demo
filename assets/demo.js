@@ -2327,6 +2327,7 @@ function workCard(pack) {
       <span>${escapeHtml(formatDue(pack))}</span>
       <span>${escapeHtml(pack.owner)}</span>
     </div>
+    ${relevantMemoryCardStrip(pack)}
     <details class="demo-card-support" data-support-actions="work-card">
       <summary>
         <span>Support actions</span>
@@ -2373,6 +2374,7 @@ function reviewCard(pack) {
       <span>${escapeHtml(formatDue(pack))}</span>
       <span>${escapeHtml(pack.owner)}</span>
     </div>
+    ${relevantMemoryCardStrip(pack)}
     <div class="demo-card-actions">
       <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(command.label)}</button>
       ${supportActionButton("focus", "Focus", pack)}
@@ -3398,6 +3400,25 @@ function relevantMemoryStrip(pack) {
     <span>Relevant Memory</span>
     <strong>${escapeHtml(visible)}</strong>
     ${latest ? "" : `<small>How to fill: add a memory note below or from the Memory route.</small>`}
+  </div>`;
+}
+
+function relevantMemoryCardStrip(pack) {
+  if (!pack || pack.id !== state.selectedId) {
+    return "";
+  }
+
+  const latest = pack.memory?.find((note) => String(note || "").trim());
+  const visible = latest
+    ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
+    : "none yet";
+  const help = latest
+    ? `Relevant Memory: ${latest}`
+    : "Relevant Memory: none yet. Add a memory note from the selected work path.";
+
+  return `<div class="demo-memory-strip compact" data-memory-strip="selected-card" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
+    <span>Relevant Memory</span>
+    <strong>${escapeHtml(visible)}</strong>
   </div>`;
 }
 
