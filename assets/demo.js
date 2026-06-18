@@ -2011,15 +2011,24 @@ function blockerStateField(pack) {
   const hasBlocker = Boolean(pack && pack.blocker && pack.blocker !== "none");
   const blocker = hasBlocker ? pack.blocker : "";
   return `
-    <div class="demo-field demo-blocker-field" data-blocker-field>
-      <span>Blocker</span>
-      <div class="demo-segmented-control" role="group" aria-label="Blocker state">
-        <button id="edit-blocker-clear" class="demo-segment${hasBlocker ? "" : " active"}" type="button" data-blocker-mode="clear" aria-pressed="${hasBlocker ? "false" : "true"}">None</button>
-        <button id="edit-blocker-set" class="demo-segment${hasBlocker ? " active" : ""}" type="button" data-blocker-mode="set" aria-pressed="${hasBlocker ? "true" : "false"}">Blocked</button>
+    <fieldset class="demo-field demo-blocker-field" data-blocker-field>
+      <legend>Blocker</legend>
+      <div class="demo-segmented-control" role="radiogroup" aria-label="Blocker state">
+        <label class="demo-segment${hasBlocker ? "" : " active"}" data-blocker-mode-label="clear" for="edit-blocker-clear">
+          <input id="edit-blocker-clear" name="edit-blocker-mode" type="radio" value="clear" data-blocker-mode="clear"${hasBlocker ? "" : " checked"}>
+          <span>No blocker</span>
+        </label>
+        <label class="demo-segment${hasBlocker ? " active" : ""}" data-blocker-mode-label="set" for="edit-blocker-set">
+          <input id="edit-blocker-set" name="edit-blocker-mode" type="radio" value="set" data-blocker-mode="set"${hasBlocker ? " checked" : ""}>
+          <span>Blocked</span>
+        </label>
       </div>
-      <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="Reason blocking this work" ${hasBlocker ? "" : "hidden aria-hidden=\"true\" tabindex=\"-1\""}>
+      <div class="demo-blocker-reason" data-blocker-reason${hasBlocker ? "" : " hidden"}>
+        <label for="edit-blocker">Blocker reason</label>
+        <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="Reason blocking this work"${hasBlocker ? "" : " disabled"}>
+      </div>
       <p class="demo-field-help" data-blocker-help>${hasBlocker ? "Describe the blocker so the next action can resolve it." : "No blocker is set; this work can move forward."}</p>
-    </div>
+    </fieldset>
   `;
 }
 
@@ -3058,6 +3067,11 @@ function handlePackAction(id, action) {
     setActionConfirmation(pack, "edit");
     go("pack", pack.id);
     return;
+  } else if (action === "memory") {
+    queueFocus("memory-note", pack.id);
+    state.status = memoryRouteStatus(pack);
+    go("memory", pack.id);
+    return;
   } else if (action === "open") {
     queueFocus("pack-detail", pack.id);
     const changed = addPackActivity(pack, "Opened.");
@@ -3514,8 +3528,8 @@ function bindPackDetailValidation(pack) {
     });
   });
   document.querySelectorAll("[data-blocker-mode]").forEach((button) => {
-    button.addEventListener("click", () => {
-      setBlockerMode(button.dataset.blockerMode === "set");
+    button.addEventListener("change", () => {
+      setBlockerMode(button.value === "set");
       syncPackDetailValidation(pack);
     });
   });
@@ -3539,10 +3553,13 @@ function setBlockerMode(hasBlocker) {
   const input = el("edit-blocker");
   const status = el("edit-status");
   const help = document.querySelector("[data-blocker-help]");
-  clear?.classList.toggle("active", !hasBlocker);
-  set?.classList.toggle("active", hasBlocker);
-  clear?.setAttribute("aria-pressed", hasBlocker ? "false" : "true");
-  set?.setAttribute("aria-pressed", hasBlocker ? "true" : "false");
+  const reason = document.querySelector("[data-blocker-reason]");
+  const clearLabel = document.querySelector('[data-blocker-mode-label="clear"]');
+  const setLabel = document.querySelector('[data-blocker-mode-label="set"]');
+  if (clear) clear.checked = !hasBlocker;
+  if (set) set.checked = hasBlocker;
+  clearLabel?.classList.toggle("active", !hasBlocker);
+  setLabel?.classList.toggle("active", hasBlocker);
   if (status && hasBlocker && valueOf("edit-status") !== "blocked") {
     status.value = "blocked";
   }
@@ -3550,15 +3567,16 @@ function setBlockerMode(hasBlocker) {
     status.value = "active";
   }
   if (input) {
-    input.hidden = !hasBlocker;
-    input.setAttribute("aria-hidden", hasBlocker ? "false" : "true");
-    input.tabIndex = hasBlocker ? 0 : -1;
+    input.disabled = !hasBlocker;
     if (hasBlocker && !normalizeCopy(input.value)) {
       input.value = "needs review";
     }
     if (hasBlocker) {
       input.focus();
     }
+  }
+  if (reason) {
+    reason.hidden = !hasBlocker;
   }
   if (help) {
     help.textContent = hasBlocker
@@ -3742,7 +3760,7 @@ function packForwardPathFormValues(pack) {
     return input ? valueOf(id) : (fallback || "");
   };
   const blockerInput = el("edit-blocker");
-  const blockerMode = el("edit-blocker-set")?.classList.contains("active") ? "set" : "clear";
+  const blockerMode = document.querySelector('input[name="edit-blocker-mode"]:checked')?.value === "set" ? "set" : "clear";
   const blocker = blockerMode === "set"
     ? normalizeCopy(blockerInput?.value || "") || "needs review"
     : "none";
@@ -3900,11 +3918,15 @@ function relevantMemoryStrip(pack) {
   const help = latest
     ? `Relevant Memory: ${latest}`
     : "Relevant Memory: none yet. How to fill: add a memory note from the Memory route.";
+  const actionHelp = memoryStripActionHelp(pack);
 
   return `<div class="demo-memory-strip" data-memory-strip="selected-work" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
-    <span>Relevant Memory</span>
-    <strong>${escapeHtml(visible)}</strong>
-    ${latest ? "" : `<small>How to fill: add a memory note below or from the Memory route.</small>`}
+    <div class="demo-memory-copy">
+      <span>Relevant Memory</span>
+      <strong>${escapeHtml(visible)}</strong>
+      ${latest ? "" : `<small>How to fill: add a memory note from here or from the Memory route.</small>`}
+    </div>
+    <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack?.id || "")}"${controlLabelAttributes(actionHelp)}>Add note</button>
   </div>`;
 }
 
@@ -3920,12 +3942,22 @@ function relevantMemoryCardStrip(pack) {
   const help = latest
     ? `Relevant Memory: ${latest}`
     : "Relevant Memory: none yet. Add a memory note from the selected work path.";
+  const actionHelp = memoryStripActionHelp(pack);
 
   return `<div class="demo-memory-strip compact" data-memory-strip="selected-card" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
-    <span>Relevant Memory</span>
-    <strong>${escapeHtml(visible)}</strong>
-    ${latest ? "" : `<small>How to fill: open Memory or selected work to add recall.</small>`}
+    <div class="demo-memory-copy">
+      <span>Relevant Memory</span>
+      <strong>${escapeHtml(visible)}</strong>
+      ${latest ? "" : `<small>How to fill: open Memory or selected work to add recall.</small>`}
+    </div>
+    <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(actionHelp)}>Add note</button>
   </div>`;
+}
+
+function memoryStripActionHelp(pack) {
+  return pack
+    ? `Where: Relevant Memory / ${pack.title}. Blocker: memory note is empty. Button runs next: add memory note.`
+    : "Where: Relevant Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory.";
 }
 
 function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {

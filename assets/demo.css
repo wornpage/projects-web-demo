@@ -613,8 +613,15 @@ html[data-theme="dark"] .demo-header-metadata {
   color: var(--cockpit-text-secondary);
   display: grid;
   gap: 5px;
+  grid-template-columns: minmax(0, 1fr) auto;
   margin: 12px 0;
   padding: 10px 12px;
+}
+
+.demo-memory-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
 }
 
 .demo-memory-strip span {
@@ -648,6 +655,12 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-memory-strip.compact strong {
   font-size: 13px;
+}
+
+.demo-memory-action {
+  align-self: center;
+  justify-self: end;
+  white-space: nowrap;
 }
 
 .demo-command-next {
@@ -1488,7 +1501,9 @@ html[data-theme="dark"] .demo-state-pill {
 }
 
 .demo-fact span,
-.demo-field span {
+.demo-field > span,
+.demo-field > legend,
+.demo-blocker-reason > label {
   color: var(--cockpit-text-muted);
   display: block;
   font-size: 12px;
@@ -1536,12 +1551,16 @@ html[data-theme="dark"] .demo-state-pill {
 }
 
 .demo-blocker-field {
+  border: 0;
   display: grid;
   gap: 8px;
+  margin: 0;
+  padding: 0;
 }
 
-.demo-blocker-field > span {
+.demo-blocker-field > legend {
   margin-bottom: 0;
+  padding: 0;
 }
 
 .demo-segmented-control {
@@ -1555,17 +1574,22 @@ html[data-theme="dark"] .demo-state-pill {
 }
 
 .demo-segment {
+  align-items: center;
   appearance: none;
   background: transparent;
   border: 0;
   border-radius: 999px;
   color: var(--cockpit-text-secondary);
   cursor: pointer;
+  display: inline-flex;
   font: inherit;
   font-size: 13px;
   font-weight: 780;
+  justify-content: center;
   min-height: 36px;
   padding: 8px 12px;
+  position: relative;
+  text-align: center;
 }
 
 .demo-segment.active {
@@ -1573,9 +1597,41 @@ html[data-theme="dark"] .demo-state-pill {
   color: var(--cockpit-accent-text);
 }
 
+.demo-segment input {
+  cursor: pointer;
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.demo-segment span {
+  color: inherit;
+  display: block;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 0;
+  line-height: 1.15;
+  margin: 0;
+  text-transform: none;
+}
+
 .demo-segment:focus-visible {
   outline: 3px solid var(--cockpit-focus);
   outline-offset: 2px;
+}
+
+.demo-segment:has(input:focus-visible) {
+  outline: 3px solid var(--cockpit-focus);
+  outline-offset: 2px;
+}
+
+.demo-blocker-reason {
+  display: grid;
+  gap: 8px;
+}
+
+.demo-blocker-reason[hidden] {
+  display: none;
 }
 
 html.dark .demo-segmented-control,
@@ -2245,6 +2301,14 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
     min-width: 0;
     padding-inline: 10px;
     width: auto;
+  }
+
+  .demo-memory-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .demo-memory-action {
+    justify-self: stretch;
   }
 
   .demo-main {
