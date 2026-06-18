@@ -21,7 +21,9 @@ const DEMO_COPY_LIMITS = Object.freeze({
   commandFlowHelp: 140,
   memoryVisible: 96,
   receiptVisible: 96,
-  receiptHelp: 180
+  receiptHelp: 180,
+  statusVisible: 96,
+  statusHelp: 180
 });
 
 const state = {
@@ -1876,6 +1878,8 @@ function renderMemory() {
 }
 
 function renderSettings() {
+  const statusHelp = helpCopy(state.status, DEMO_COPY_LIMITS.statusHelp);
+  const statusVisible = visibleCopy(statusHelp, DEMO_COPY_LIMITS.statusVisible);
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1886,7 +1890,7 @@ function renderSettings() {
         <button class="btn" type="button" id="reset-demo">Reset demo data</button>
       </div>
       <p>Copy profile changes labels in this static demo. It does not change ontology, local methods, or real pack storage.</p>
-      <p class="demo-status-line">${escapeHtml(state.status)}</p>
+      <p class="demo-status-line" title="${escapeAttribute(statusHelp)}" aria-label="${escapeAttribute(statusHelp)}">${escapeHtml(statusVisible)}</p>
       <h3>Profile</h3>
       <div class="demo-profile-grid">
         ${Object.entries(copyProfiles).map(([key, value]) => `
