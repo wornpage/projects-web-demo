@@ -1868,7 +1868,7 @@ function renderMemory() {
     }
 
     const result = addPackMemoryNote(pack, valueOf("memory-note"));
-    state.status = result.added ? "Memory note added." : "Memory note already exists.";
+    setMemoryConfirmation(pack, result);
     render();
   });
 }
@@ -2563,6 +2563,19 @@ function setCreateConfirmation(pack) {
   );
 }
 
+function setMemoryConfirmation(pack, result) {
+  if (!pack) return;
+
+  const summary = result.added
+    ? `Memory note added for ${pack.title}.`
+    : `Memory note already exists for ${pack.title}.`;
+  setActionReceipt(
+    pack,
+    summary,
+    resolvePrimaryCommandForPack(pack)
+  );
+}
+
 function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pack)) {
   const receipt = {
     summary: normalizeCopy(summary),
@@ -2985,7 +2998,7 @@ function runRouteAction(action, targetPackId) {
     }
     if (pack && input?.value.trim()) {
       const result = addPackMemoryNote(pack, input.value);
-      state.status = result.added ? "Memory note added." : "Memory note already exists.";
+      setMemoryConfirmation(pack, result);
     } else {
       state.status = "Add a note from the Memory screen input.";
     }
