@@ -754,14 +754,23 @@ function updateCommand(command) {
   el("primary-action").textContent = command.next;
   el("primary-action").dataset.action = command.action || "";
   el("primary-action").dataset.pack = command.targetPackId || "";
-  el("primary-action").setAttribute("aria-label", `Run ${command.next}`);
+  el("primary-action").setAttribute("aria-label", commandRunLabel(command));
+  el("primary-action").title = commandRunLabel(command);
   el("dock-where").textContent = command.where;
   el("dock-blocker").textContent = command.blocker;
   el("dock-next-label").textContent = command.next;
   el("dock-next").dataset.action = command.action || "";
   el("dock-next").dataset.pack = command.targetPackId || "";
-  el("dock-next").setAttribute("aria-label", `Run ${command.next}`);
+  el("dock-next").setAttribute("aria-label", commandRunLabel(command));
+  el("dock-next").title = commandRunLabel(command);
   updateActionReceipt();
+}
+
+function commandRunLabel(command) {
+  return helpCopy(
+    `Where: ${command.where}. Blocker: ${command.blocker}. Button runs next: ${command.next}.`,
+    DEMO_COPY_LIMITS.commandFlowHelp
+  );
 }
 
 function queueFocus(kind, packId = "") {
