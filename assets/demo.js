@@ -2521,9 +2521,10 @@ function packActionSummary(pack, action, actionLabel, changed) {
 function setSaveConfirmation(pack, changed) {
   if (!pack) return;
 
+  const proof = proofTargetForPack(pack);
   const summary = changed
-    ? `Forward path updated for ${pack.title}.`
-    : `No forward path changes for ${pack.title}.`;
+    ? `Forward path updated for ${pack.title}. Proof target: ${proof}.`
+    : `No forward path changes for ${pack.title}. Proof target: ${proof}.`;
   setActionReceipt(
     pack,
     summary,
