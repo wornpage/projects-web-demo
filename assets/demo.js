@@ -4602,7 +4602,8 @@ function currentOverflowStatus() {
 }
 
 function disabledReasonCoverageStatus() {
-  const controls = Array.from(document.querySelectorAll("button:disabled, select:disabled, input:disabled, textarea:disabled, [aria-disabled='true']"));
+  const controls = Array.from(document.querySelectorAll("button:disabled, select:disabled, input:disabled, textarea:disabled, [aria-disabled='true']"))
+    .filter(isDisabledAuditCandidate);
   const missing = controls.filter((control) => !disabledControlReason(control));
 
   return {
@@ -4613,6 +4614,19 @@ function disabledReasonCoverageStatus() {
       ? `${controls.length} disabled control(s) on this route explain why.`
       : `${missing.length} disabled control(s) need a reason: ${missing.map(disabledControlLabel).slice(0, 3).join(", ")}.`
   };
+}
+
+function isDisabledAuditCandidate(control) {
+  if (control.hidden || control.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(control);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return control.getClientRects().length > 0;
 }
 
 function disabledControlReason(control) {
