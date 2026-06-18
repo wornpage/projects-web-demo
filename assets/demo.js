@@ -2602,7 +2602,8 @@ function addPackMemoryNote(pack, note) {
   }
 
   pack.memory = Array.isArray(pack.memory) ? pack.memory : [];
-  if (pack.memory[0] === copy) {
+  const duplicate = pack.memory.some((existing) => normalizeCopy(existing) === copy);
+  if (duplicate) {
     return { added: false, note: copy };
   }
 
