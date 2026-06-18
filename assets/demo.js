@@ -3203,18 +3203,7 @@ function syncCreateValidation() {
 
   const stateForSave = createSaveState(createFormValues());
   help.textContent = stateForSave.help;
-  button.disabled = !stateForSave.canSave;
-  if (stateForSave.canSave) {
-    button.removeAttribute("title");
-    button.setAttribute("aria-label", "Save sample");
-    delete button.dataset.disabledReason;
-    return;
-  }
-
-  const copy = helpCopy(stateForSave.help, DEMO_COPY_LIMITS.commandFlowHelp);
-  button.title = copy;
-  button.setAttribute("aria-label", copy);
-  button.dataset.disabledReason = copy;
+  syncValidatedActionButton(button, stateForSave);
 }
 
 function memoryNoteSaveState(pack, note) {
@@ -3252,18 +3241,7 @@ function syncMemoryValidation(pack) {
 
   const stateForSave = memoryNoteSaveState(pack, valueOf("memory-note"));
   help.textContent = stateForSave.help;
-  button.disabled = !stateForSave.canSave;
-  if (stateForSave.canSave) {
-    button.removeAttribute("title");
-    button.setAttribute("aria-label", "Add note");
-    delete button.dataset.disabledReason;
-    return;
-  }
-
-  const copy = helpCopy(stateForSave.help, DEMO_COPY_LIMITS.commandFlowHelp);
-  button.title = copy;
-  button.setAttribute("aria-label", copy);
-  button.dataset.disabledReason = copy;
+  syncValidatedActionButton(button, stateForSave);
 }
 
 function packDetailSaveState(pack) {
@@ -3306,17 +3284,19 @@ function syncPackDetailValidation(pack) {
 
   const stateForSave = packDetailSaveState(pack);
   help.textContent = stateForSave.help;
-  button.disabled = !stateForSave.canSave;
-  if (stateForSave.canSave) {
-    button.removeAttribute("title");
-    button.setAttribute("aria-label", "Save forward path");
+  syncValidatedActionButton(button, stateForSave);
+}
+
+function syncValidatedActionButton(button, stateForAction) {
+  const copy = helpCopy(stateForAction.help, DEMO_COPY_LIMITS.commandFlowHelp);
+  button.disabled = !stateForAction.canSave;
+  button.title = copy;
+  button.setAttribute("aria-label", copy);
+  if (stateForAction.canSave) {
     delete button.dataset.disabledReason;
     return;
   }
 
-  const copy = helpCopy(stateForSave.help, DEMO_COPY_LIMITS.commandFlowHelp);
-  button.title = copy;
-  button.setAttribute("aria-label", copy);
   button.dataset.disabledReason = copy;
 }
 
