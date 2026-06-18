@@ -51,16 +51,16 @@ body {
   --demo-meta-font-weight: 600;
   --demo-card-bg: var(--cockpit-surface);
   --demo-card-border: var(--cockpit-border);
-  --demo-card-accent-edge: var(--cockpit-border-strong);
-  --demo-panel-bg: var(--cockpit-surface);
+  --demo-card-accent-edge: var(--cockpit-border);
+  --demo-panel-bg: color-mix(in srgb, var(--cockpit-surface) 96%, var(--cockpit-bg));
   --demo-card-head-bg: transparent;
-  --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-nav-bg) 64%, var(--cockpit-surface));
+  --demo-card-banner-bg: var(--cockpit-nav-bg);
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 68%, var(--cockpit-text));
   --demo-command-accent: var(--cockpit-selected-bg);
   --demo-command-line-accent: var(--cockpit-accent);
   --demo-command-line-border: var(--cockpit-border);
-  --demo-command-bg: color-mix(in srgb, var(--cockpit-nav-bg) 42%, var(--cockpit-surface));
-  --demo-meta-bg: color-mix(in srgb, var(--cockpit-nav-bg) 56%, var(--cockpit-surface));
+  --demo-command-bg: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
+  --demo-meta-bg: var(--cockpit-nav-bg);
   --demo-primary-on-accent: var(--cockpit-accent-text);
   font-size: calc(var(--demo-shell-font-size) * var(--demo-font-scale));
   line-height: var(--demo-shell-line-height);
@@ -68,31 +68,31 @@ body {
 
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
-  --demo-panel-bg: var(--cockpit-surface);
+  --demo-panel-bg: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
   --demo-card-bg: var(--cockpit-surface);
   --demo-card-border: var(--cockpit-border);
-  --demo-card-accent-edge: var(--cockpit-border-strong);
+  --demo-card-accent-edge: var(--cockpit-border);
   --demo-card-head-bg: transparent;
-  --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-nav-bg) 58%, var(--cockpit-surface));
+  --demo-card-banner-bg: var(--cockpit-nav-bg);
   --demo-command-accent: var(--cockpit-selected-bg);
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 78%, var(--cockpit-text));
   --demo-primary-on-accent: #061B16;
   --demo-command-line-accent: var(--cockpit-accent);
   --demo-command-line-border: var(--cockpit-border);
-  --demo-command-bg: color-mix(in srgb, var(--cockpit-nav-bg) 60%, var(--cockpit-surface));
-  --demo-meta-bg: color-mix(in srgb, var(--cockpit-nav-bg) 64%, var(--cockpit-surface));
+  --demo-command-bg: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
+  --demo-meta-bg: var(--cockpit-nav-bg);
 }
 
 .demo-sidebar {
-  background: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
+  background: var(--cockpit-nav-bg);
   border-right: 1px solid var(--cockpit-border);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 1px;
   max-width: 100%;
   min-width: 0;
   min-height: 100vh;
-  padding: 22px 16px;
+  padding: 8px 0;
   position: sticky;
   top: 0;
 }
@@ -106,14 +106,18 @@ html[data-theme="dark"] .demo-app-shell {
   align-items: center;
   color: var(--cockpit-text);
   display: inline-flex;
-  gap: 12px;
+  gap: 9px;
+  margin-bottom: 6px;
+  padding: 8px 10px 12px;
   text-decoration: none;
+  border-bottom: 1px solid var(--cockpit-border);
 }
 
 .demo-brand-mark {
   align-items: center;
-  background: var(--cockpit-accent);
-  border-radius: var(--cockpit-radius);
+  background: linear-gradient(135deg, var(--cockpit-accent), var(--cockpit-success-border));
+  border-radius: 12px;
+  box-shadow: var(--cockpit-shadow-sm);
   color: var(--cockpit-accent-text);
   display: inline-flex;
   font-weight: var(--font-display-weight);
@@ -157,10 +161,12 @@ html[data-theme="dark"] .demo-app-shell {
   display: flex;
   gap: 10px;
   height: 40px;
+  margin: 0 4px;
   min-width: 0;
   padding: 0 12px;
   text-decoration: none;
   transition: background-color var(--demo-motion-duration) ease, color var(--demo-motion-duration) ease;
+  width: calc(100% - 8px);
 }
 
 .demo-nav-item:hover {
@@ -188,13 +194,14 @@ html[data-theme="dark"] .demo-app-shell {
 }
 
 .demo-nav-item strong {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .demo-nav-item.active {
   background: var(--cockpit-selected-bg);
   color: var(--cockpit-selected-fg);
+  font-weight: 600;
 }
 
 .demo-nav-item.active span {
@@ -208,9 +215,9 @@ html[data-theme="dark"] .demo-app-shell {
   color: var(--cockpit-text-muted);
   font-size: 13px;
   line-height: 1.45;
-  margin-top: auto;
+  margin: auto 10px 0;
   padding: 12px;
-  background: color-mix(in srgb, var(--cockpit-surface) 82%, transparent);
+  background: color-mix(in srgb, var(--cockpit-surface) 78%, transparent);
 }
 
 .demo-sidebar-note strong {
@@ -231,7 +238,7 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-screen-title {
   font-family: var(--font-family-display);
-  font-size: clamp(20px, 2.4vw, 28px);
+  font-size: clamp(18px, 2vw, 24px);
   font-weight: 900;
   line-height: 1;
   margin: 2px 0 0;
@@ -347,7 +354,7 @@ html[data-theme="dark"] .demo-header-metadata {
   background: var(--demo-panel-bg);
   border: 1px solid var(--cockpit-border);
   border-radius: var(--demo-panel-radius);
-  box-shadow: var(--cockpit-shadow-sm);
+  box-shadow: none;
   position: relative;
   transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
 }
@@ -372,7 +379,7 @@ html[data-theme="dark"] .demo-command-brief,
 html[data-theme="dark"] .demo-toolbar,
 html[data-theme="dark"] .demo-metric {
   border-color: var(--cockpit-border);
-  box-shadow: var(--cockpit-shadow-sm);
+  box-shadow: none;
 }
 
 .demo-notice {
@@ -388,8 +395,8 @@ html[data-theme="dark"] .demo-metric {
 
 .demo-command-brief {
   display: grid;
-  gap: 16px;
-  padding: 24px;
+  gap: 12px;
+  padding: 16px;
 }
 
 .demo-command-top,
@@ -405,8 +412,8 @@ html[data-theme="dark"] .demo-metric {
 .demo-command-top h2,
 .demo-panel h2 {
   font-family: var(--font-family-display);
-  font-size: clamp(18px, 2.2vw, 24px);
-  font-weight: 900;
+  font-size: clamp(17px, 1.8vw, 22px);
+  font-weight: 850;
   line-height: 1.05;
   margin: 4px 0 0;
   overflow-wrap: anywhere;
@@ -418,9 +425,9 @@ html[data-theme="dark"] .demo-metric {
   border-radius: 999px;
   color: var(--cockpit-text);
   flex: 0 0 auto;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 760;
-  padding: 10px 14px;
+  padding: 6px 10px;
 }
 
 .demo-command-lines {
@@ -442,7 +449,7 @@ html[data-theme="dark"] .demo-metric {
   grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);
   min-width: 0;
   overflow: visible;
-  padding: 14px 16px;
+  padding: 12px 14px;
   position: relative;
 }
 
@@ -455,7 +462,7 @@ html[data-theme="dark"] .demo-metric {
   pointer-events: none;
   position: absolute;
   top: 10px;
-  width: 4px;
+  width: 2px;
 }
 
 .demo-command-line span,
@@ -469,7 +476,7 @@ html[data-theme="dark"] .demo-metric {
 
 .demo-command-line strong {
   color: var(--cockpit-text);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 760;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -638,14 +645,18 @@ html[data-theme="dark"] .demo-metric {
 
 .demo-grid {
   display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
 .demo-metric,
 .demo-toolbar,
 .demo-panel {
-  padding: 18px;
+  padding: 16px;
+}
+
+.demo-metric {
+  text-align: center;
 }
 
 .demo-toolbar {
@@ -703,9 +714,10 @@ html[data-theme="dark"] .demo-metric {
 .demo-metric strong {
   display: block;
   font-family: var(--font-family-display);
-  font-size: 38px;
-  font-weight: 780;
-  margin-top: 8px;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 4px;
 }
 
 .demo-metric p,
@@ -894,9 +906,9 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-note {
   background: var(--demo-card-bg);
   border: 1px solid var(--demo-card-border);
-  border-left: 3px solid var(--demo-card-accent-edge);
-  border-radius: calc(var(--demo-panel-radius) - 2px);
-  box-shadow: var(--cockpit-shadow-sm);
+  border-left-color: var(--demo-card-accent-edge);
+  border-radius: var(--demo-panel-radius);
+  box-shadow: none;
   min-width: 0;
   overflow: visible;
   padding: 16px;
@@ -915,7 +927,7 @@ html[data-theme="dark"] .demo-note {
   background: var(--demo-card-bg);
   border-color: var(--demo-card-border);
   border-left-color: var(--demo-card-accent-edge);
-  box-shadow: var(--cockpit-shadow-sm);
+  box-shadow: none;
 }
 
 html.dark .demo-work-card:hover,
@@ -928,7 +940,7 @@ html[data-theme="dark"] .demo-row:hover,
 html[data-theme="dark"] .demo-note:hover {
   border-color: var(--cockpit-border-strong);
   border-left-color: var(--cockpit-accent);
-  box-shadow: var(--cockpit-shadow-sm);
+  box-shadow: none;
 }
 
 .demo-row:hover {
@@ -939,7 +951,7 @@ html[data-theme="dark"] .demo-note:hover {
 .demo-work-card.selected {
   border-color: var(--cockpit-accent);
   border-left-color: var(--cockpit-accent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cockpit-accent) 20%, transparent), var(--cockpit-shadow-sm);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cockpit-accent) 20%, transparent);
 }
 
 .demo-scenario-grid {
@@ -1566,8 +1578,8 @@ html[data-theme="dark"] .demo-work-path {
 .demo-triage-card {
   background: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
   border: 1px solid var(--cockpit-border);
-  border-radius: calc(var(--demo-panel-radius) - 2px);
-  box-shadow: var(--cockpit-shadow-sm);
+  border-radius: var(--demo-panel-radius);
+  box-shadow: none;
   min-width: 0;
   overflow: clip;
   padding: 14px;
@@ -1625,7 +1637,7 @@ html[data-theme="dark"] .demo-work-path {
   border: 1px solid var(--cockpit-border);
   border-radius: var(--cockpit-radius);
   bottom: 16px;
-  box-shadow: var(--cockpit-shadow-md);
+  box-shadow: var(--cockpit-shadow-sm);
   display: grid;
   gap: 6px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1690,9 +1702,9 @@ html[data-theme="dark"] .demo-work-path {
 }
 
 html:not(.dark) .demo-theme-toggle {
-  background: var(--cockpit-accent);
-  border-color: var(--cockpit-accent);
-  color: var(--cockpit-accent-text);
+  background: var(--cockpit-surface);
+  border-color: var(--cockpit-border);
+  color: var(--cockpit-text-secondary);
 }
 
 html.dark .demo-theme-toggle,
@@ -1828,6 +1840,8 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 
   .demo-nav-item {
     flex: 0 0 auto;
+    margin: 0;
+    width: auto;
   }
 
   .demo-sidebar-note {
@@ -2087,7 +2101,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   .demo-panel,
   .demo-metric {
     border-radius: var(--demo-panel-radius);
-    box-shadow: var(--cockpit-shadow-sm);
+    box-shadow: none;
   }
 
   .demo-command-brief,
@@ -2192,7 +2206,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   }
 
   .demo-metric strong {
-    font-size: 28px;
+    font-size: 24px;
   }
 
   .demo-work-card,
