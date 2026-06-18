@@ -2197,7 +2197,7 @@ function nextCandidateRow(pack) {
     </div>
     <div class="demo-row-actions">
       ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
-      <button class="btn btn-sm" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Set Button runs next</button>
+      ${supportActionButton("set-next", "Set Button runs next", pack, "btn btn-sm")}
     </div>
   </div>`;
 }
@@ -2414,7 +2414,7 @@ function reviewCard(pack) {
       <div class="demo-inline-form">
         <label class="sr-only" for="next-${escapeAttribute(pack.id)}">Button runs next</label>
         <input id="next-${escapeAttribute(pack.id)}" class="demo-search-input" type="text" value="${escapeAttribute(pack.next)}">
-        <button class="btn" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Save Button runs next</button>
+        ${supportActionButton("set-next", "Save Button runs next", pack)}
       </div>
     </details>
   </article>`;
@@ -2433,7 +2433,8 @@ function supportActionReason(action, pack) {
     focus: `Show ${where} in the Focus view without changing status.`,
     block: `Mark ${where} blocked for this sample.`,
     done: `Finish ${where} for this sample.`,
-    edit: `Open the work path fields for ${where}.`
+    edit: `Open the work path fields for ${where}.`,
+    "set-next": `Choose the exact Button runs next action for ${where}.`
   };
   return reasons[action] || `Run ${actionLabelFromKey(action)} for ${where}.`;
 }
