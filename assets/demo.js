@@ -2037,7 +2037,7 @@ function renderSettings() {
         <span id="reset-demo-help" class="sr-only">${escapeHtml(resetHelp)}</span>
         <button class="btn" type="button" id="reset-demo"${controlHelpAttributes(false, resetHelp, "reset-demo-help")}>Reset demo data</button>
       </div>
-      <p>Copy profile changes labels in this static demo. It does not change ontology, local methods, or real pack storage.</p>
+      <p>Copy profile changes labels in this static demo. Sample edits stay in this browser only; ontology, local methods, and real pack storage are untouched.</p>
       <p class="demo-status-line" title="${escapeAttribute(statusHelp)}" aria-label="${escapeAttribute(statusHelp)}">${escapeHtml(statusVisible)}</p>
       <h3>Profile</h3>
       <div class="demo-profile-grid">
@@ -2742,7 +2742,7 @@ function setActionConfirmation(pack, action) {
   const actionLabel = actionLabelFromKey(action);
   setActionReceipt(
     pack,
-    `${actionLabel} finished for ${pack.title}. Demo state changed in this browser only.`,
+    `${actionLabel} finished for ${pack.title}.`,
     next
   );
 }
@@ -2777,8 +2777,8 @@ function setSaveConfirmation(pack, changed) {
 
   const proof = proofTargetForPack(pack);
   const summary = changed
-    ? `Forward path updated for ${pack.title}. Proof target: ${proof}.`
-    : `No forward path changes for ${pack.title}. Proof target: ${proof}.`;
+    ? `Work path saved for ${pack.title}. Proof target: ${proof}.`
+    : `No work path changes for ${pack.title}. Proof target: ${proof}.`;
   setActionReceipt(
     pack,
     summary,
