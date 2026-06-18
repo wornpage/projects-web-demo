@@ -486,7 +486,7 @@ html[data-theme="dark"] .demo-metric {
 .demo-command-receipt-lines {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .demo-command-receipt-lines div {

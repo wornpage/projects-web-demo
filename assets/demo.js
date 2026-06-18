@@ -2482,7 +2482,8 @@ function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pac
     summary: normalizeCopy(summary),
     where: `${pack.title} / ${pack.status}`,
     blocker: blockerTextForPack(pack),
-    next: next.label
+    next: next.label,
+    doneWhen: normalizeCopy(pack.doneWhen) || "No proof condition set."
   };
 
   state.status = receipt.summary;
@@ -2510,6 +2511,7 @@ function updateActionReceipt() {
       ${receiptLine("Where", receipt.where)}
       ${receiptLine("Blocker", receipt.blocker)}
       ${receiptLine("Button runs next", receipt.next)}
+      ${receiptLine("Done when", receipt.doneWhen)}
     </div>`;
 }
 
@@ -2529,11 +2531,12 @@ function normalizeActionReceipt(receipt) {
   const where = normalizeCopy(receipt.where);
   const blocker = normalizeCopy(receipt.blocker);
   const next = normalizeCopy(receipt.next);
+  const doneWhen = normalizeCopy(receipt.doneWhen) || "No proof condition set.";
   if (!summary || !where || !blocker || !next) {
     return null;
   }
 
-  return { summary, where, blocker, next };
+  return { summary, where, blocker, next, doneWhen };
 }
 
 function applyNextChoice(id) {
