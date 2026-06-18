@@ -65,7 +65,7 @@ const ROUTE_CONTRACT = Object.freeze({
   meta: { pattern: "#/meta", title: "Meta", commandSource: "route", navKey: "I", navLabel: "Meta" },
   feedback: { pattern: "#/feedback", title: "Feedback", commandSource: "route", navKey: "?", navLabel: "Feedback" },
   settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "...", navLabel: "Settings" },
-  pack: { pattern: "#/pack/{packId}", title: "Pack detail", commandSource: "selected-work", acceptsPackId: true }
+  pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true }
 });
 
 const NAV_ROUTE_IDS = Object.freeze([
@@ -645,7 +645,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     feedback: { title: "Feedback command flow", where: "Feedback", blocker: `Version ${stateVersionLabel()} is active`, next: "Report feedback", stateText: "Ready", action: "report-feedback", targetPackId: "" },
     health: { title: "Health command flow", where: "Health", blocker: "route, storage, data, and metadata checks are running", next: "Refresh", stateText: "Ready", action: "refresh-health", targetPackId: "" },
     settings: { title: "Settings command flow", where: "Settings", blocker: "copy profile changes labels only in this static demo", next: "Apply profile", stateText: "Ready", action: "apply-profile", targetPackId: "" },
-    pack: { title: "Pack detail command flow", ...selectedWorkCommand }
+    pack: { title: "Work path command flow", ...selectedWorkCommand }
   };
 
   const selectedFlow = selected ? `Flow: ${selected.title}` : "";
@@ -662,7 +662,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
       : "Flow: resolve blockers first.",
     focus: selectedActionFlow
       ? `${selectedActionFlow}`
-      : "Flow: confirm details, then act.",
+      : "Flow: confirm forward path, then act.",
     next: "Flow: set action, return, run.",
     check: "Flow: validate sample, fix gaps.",
     search: "Flow: search, open work, act.",
@@ -1761,7 +1761,7 @@ function renderCreate() {
 function renderPackDetail() {
   const pack = currentPack();
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("Choose sample work before opening detail.", "Open Work or Review and choose a work card.");
+    el("screen-content").innerHTML = emptyState("Choose sample work before opening the work path.", "Open Work or Review and choose a work card.");
     return;
   }
   const packCommand = resolvePrimaryCommandForPack(pack);
@@ -1769,7 +1769,7 @@ function renderPackDetail() {
     <section class="demo-panel demo-edit-panel" id="pack-edit-form" data-pack-id="${escapeAttribute(pack.id)}">
       <div class="demo-panel-head">
         <div>
-          <span class="section-label">Pack detail</span>
+          <span class="section-label">Selected work</span>
           <h2 id="pack-detail-title">${escapeHtml(pack.title)}</h2>
         </div>
         <span class="demo-status">Edits are browser-only</span>
@@ -1994,7 +1994,7 @@ function renderMeta() {
         ${metricCard("Demo CSS", styleAuditMetric("demoCss", "lines"), styleAuditDetail("demoCss"))}
         ${metricCard("Product CSS", styleAuditMetric("productCss", "lines"), styleAuditDetail("productCss"))}
         ${metricCard("CSS total", formatBytes(styleAudit.totals.cssBytes), `${styleAudit.totals.cssLines} CSS LOC shipped.`)}
-        ${metricCard("Routes", styleAudit.routeCount, `${navItems.length} nav routes plus pack detail.`)}
+        ${metricCard("Routes", styleAudit.routeCount, `${navItems.length} nav routes plus work path.`)}
       </div>
       <div class="demo-check-list">
         ${styleAuditChecks().map(healthLine).join("")}
@@ -3108,7 +3108,7 @@ function savePackDetail(id) {
   if (pack.status === "blocked" && pack.blocker === "none") {
     pack.status = "active";
   }
-  pack.activity.unshift("Sample detail saved in browser state.");
+  pack.activity.unshift("Forward path saved in browser state.");
   setSaveConfirmation(pack);
   render();
 }
