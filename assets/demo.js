@@ -2210,7 +2210,8 @@ function renderLab() {
   const pack = currentPack() || preferredReviewPack();
   const action = resolvePrimaryCommandForPack(pack);
   const styleAudit = buildStyleAuditSnapshot();
-  const snapshot = collectLabSnapshot(pack, action, styleAudit);
+  const initialChecks = labSmokeChecks(pack, styleAudit);
+  const snapshot = collectLabSnapshot(pack, action, styleAudit, initialChecks);
   const noPackReason = "Choose sample work before running Lab actions.";
   const labPackSelectHelp = labPackSelectReason(state.packs.length > 0);
   const labRunHelp = pack ? labRunActionHelp(pack, action) : noPackReason;
@@ -2277,8 +2278,8 @@ function renderLab() {
         </div>
         <span class="demo-status">${escapeHtml(styleAudit.currentRoute)}</span>
       </div>
-      <div class="demo-check-list">
-        ${labSmokeChecks(pack, styleAudit).map(healthLine).join("")}
+      <div id="lab-smoke-checks" class="demo-check-list">
+        ${initialChecks.map(healthLine).join("")}
       </div>
     </section>
     <section class="demo-panel">
@@ -2303,6 +2304,20 @@ function renderLab() {
 
   bindLabControls();
   bindGoButtons();
+  syncLabRenderedSmokeChecks(pack, action, styleAudit);
+}
+
+function syncLabRenderedSmokeChecks(pack, action, styleAudit) {
+  const renderedChecks = labSmokeChecks(pack, styleAudit, disabledReasonCoverageStatus());
+  const list = el("lab-smoke-checks");
+  if (list) {
+    list.innerHTML = renderedChecks.map(healthLine).join("");
+  }
+
+  const snapshot = el("lab-snapshot");
+  if (snapshot) {
+    snapshot.value = JSON.stringify(collectLabSnapshot(pack, action, styleAudit, renderedChecks), null, 2);
+  }
 }
 
 function labPackSelectReason(hasWork) {
@@ -4147,6 +4162,7 @@ function syncSearchParam(key, value) {
 
 function buildHealthChecks() {
   const routeContract = routeContractStatus();
+  const disabledReasons = disabledReasonCoverageStatus();
   const checks = [
     {
       label: "Demo metadata loaded",
@@ -4177,6 +4193,11 @@ function buildHealthChecks() {
       label: "Route contract",
       status: routeContract.status,
       detail: routeContract.detail
+    },
+    {
+      label: "Disabled control reasons",
+      status: disabledReasons.status,
+      detail: disabledReasons.detail
     },
     {
       label: "Pack list loaded",
@@ -4302,6 +4323,7 @@ function buildStyleAuditSnapshot() {
     copyLimits: copyLimitsSnapshot(),
     commandSync: commandSyncStatus(),
     currentOverflow: currentOverflowStatus(),
+    disabledReasonCoverage: disabledReasonCoverageStatus(),
     metadata: {
       version: state.metadata?.version || DEMO_DEFAULT_VERSION,
       commit: state.metadata?.commit || "unknown",
@@ -4385,6 +4407,11 @@ function styleAuditChecks() {
       detail: audit.currentOverflow.detail
     },
     {
+      label: "Disabled control reasons",
+      status: audit.disabledReasonCoverage.status,
+      detail: audit.disabledReasonCoverage.detail
+    },
+    {
       label: "Copy budgets",
       status: copyLimitStatus().status,
       detail: copyLimitStatus().detail
@@ -4399,7 +4426,7 @@ function styleAuditChecks() {
   ];
 }
 
-function collectLabSnapshot(pack, action, styleAudit) {
+function collectLabSnapshot(pack, action, styleAudit, smokeChecks = labSmokeChecks(pack, styleAudit)) {
   return {
     route: state.route,
     routeHash: location.hash,
@@ -4432,7 +4459,7 @@ function collectLabSnapshot(pack, action, styleAudit) {
       cssBytes: styleAudit.totals.cssBytes,
       routeCount: styleAudit.routeCount
     },
-    smokeReplay: labSmokeChecks(pack, styleAudit).map((check) => ({
+    smokeReplay: smokeChecks.map((check) => ({
       label: check.label,
       status: check.status,
       detail: check.detail
@@ -4441,10 +4468,15 @@ function collectLabSnapshot(pack, action, styleAudit) {
   };
 }
 
-function labSmokeChecks(pack, styleAudit) {
+function labSmokeChecks(pack, styleAudit, disabledReasons = null) {
   const action = resolvePrimaryCommandForPack(pack);
   const sync = commandSyncStatus();
   const overflow = currentOverflowStatus();
+  const disabledReasonCheck = disabledReasons ? [{
+    label: "Disabled control reasons",
+    status: disabledReasons.status,
+    detail: disabledReasons.detail
+  }] : [];
 
   return [
     {
@@ -4477,6 +4509,7 @@ function labSmokeChecks(pack, styleAudit) {
       status: overflow.status,
       detail: overflow.detail
     },
+    ...disabledReasonCheck,
     {
       label: "Style audit ready",
       status: styleAudit.status === "ready",
@@ -4534,6 +4567,51 @@ function currentOverflowStatus() {
       ? "No current horizontal overflow."
       : `${overflow}px horizontal overflow on this route.`
   };
+}
+
+function disabledReasonCoverageStatus() {
+  const controls = Array.from(document.querySelectorAll("button:disabled, select:disabled, input:disabled, textarea:disabled, [aria-disabled='true']"));
+  const missing = controls.filter((control) => !disabledControlReason(control));
+
+  return {
+    status: missing.length === 0,
+    count: controls.length,
+    missing: missing.map(disabledControlLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${controls.length} disabled control(s) on this route explain why.`
+      : `${missing.length} disabled control(s) need a reason: ${missing.map(disabledControlLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function disabledControlReason(control) {
+  const direct = [
+    control.getAttribute("data-disabled-reason"),
+    control.getAttribute("title"),
+    control.getAttribute("aria-label")
+  ].find((value) => normalizeCopy(value));
+  if (direct) {
+    return direct;
+  }
+
+  const describedBy = (control.getAttribute("aria-describedby") || "")
+    .split(/\s+/u)
+    .map((id) => document.getElementById(id)?.textContent || "")
+    .find((value) => normalizeCopy(value));
+  if (describedBy) {
+    return describedBy;
+  }
+
+  const nearby = control.closest(".demo-panel, .demo-card, .demo-work-card, .demo-command-brief")
+    ?.querySelector(".demo-disabled-reason")?.textContent;
+  return normalizeCopy(nearby) ? nearby : "";
+}
+
+function disabledControlLabel(control) {
+  return control.id
+    || control.getAttribute("data-action")
+    || control.getAttribute("data-go")
+    || control.textContent.trim()
+    || control.tagName.toLowerCase();
 }
 
 function healthLine(check) {
