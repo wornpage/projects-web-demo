@@ -1501,6 +1501,7 @@ function renderNext() {
   }
 
   state.selectedId = pack.id;
+  const nextCommand = resolvePrimaryCommandForPack(pack);
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1513,8 +1514,8 @@ function renderNext() {
       <p>In the real app, this fills the work item's Button-runs-next field. In this static demo, it changes the sample text in browser state.</p>
       <div class="demo-command-lines compact">
         ${factLine("Where", pack.title)}
-        ${factLine("Blocker", pack.blocker)}
-        ${factLine("Button runs next", pack.next)}
+        ${factLine("Blocker", blockerTextForPack(pack))}
+        ${factLine("Button runs next", nextCommand.label)}
       </div>
       <div class="demo-inline-form">
         <label class="sr-only" for="next-action-choice">Choose next action</label>
@@ -2161,7 +2162,7 @@ function nextCandidateRow(pack) {
     </div>
     <div class="demo-row-actions">
       <button class="btn btn-sm" type="button" data-action="focus" data-pack="${escapeAttribute(pack.id)}">Focus</button>
-      <button class="btn btn-sm btn-primary" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Set Button runs next</button>
+      <button class="btn btn-sm" type="button" data-action="set-next" data-pack="${escapeAttribute(pack.id)}">Set Button runs next</button>
     </div>
   </div>`;
 }
