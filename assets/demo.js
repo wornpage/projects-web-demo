@@ -2489,6 +2489,20 @@ function setActionConfirmation(pack, action) {
   );
 }
 
+function setPackActionConfirmation(pack, action, changed) {
+  if (!pack) return;
+
+  const actionLabel = actionLabelFromKey(action);
+  const summary = changed
+    ? `${actionLabel} updated ${pack.title}.`
+    : `No ${actionLabel.toLowerCase()} change for ${pack.title}.`;
+  setActionReceipt(
+    pack,
+    summary,
+    resolvePrimaryCommandForPack(pack)
+  );
+}
+
 function setSaveConfirmation(pack, changed) {
   if (!pack) return;
 
@@ -2645,6 +2659,14 @@ function setPackNextAction(pack, value) {
   return { changed, next };
 }
 
+function packActionSignature(pack) {
+  return JSON.stringify({
+    status: pack?.status || "",
+    blocker: pack?.blocker || "",
+    next: pack?.next || ""
+  });
+}
+
 function applyNextChoice(id) {
   const pack = findPack(id);
   if (!pack) return;
@@ -2683,29 +2705,45 @@ function handlePackAction(id, action) {
     go("next", pack.id);
     return;
   } else if (action === "start") {
+    const before = packActionSignature(pack);
     pack.status = "active";
     pack.blocker = pack.blocker === "missing setup" ? "none" : pack.blocker;
     pack.next = pack.next === "Choose next action" ? "Open" : pack.next;
-    addPackActivity(pack, "Started.");
-    setActionConfirmation(pack, "start");
+    const changed = packActionSignature(pack) !== before;
+    if (changed) {
+      addPackActivity(pack, "Started.");
+    }
+    setPackActionConfirmation(pack, "start", changed);
   } else if (action === "unblock") {
+    const before = packActionSignature(pack);
     pack.status = "active";
     pack.blocker = "none";
     pack.next = "Open";
-    addPackActivity(pack, "Unblocked.");
-    setActionConfirmation(pack, "unblock");
+    const changed = packActionSignature(pack) !== before;
+    if (changed) {
+      addPackActivity(pack, "Unblocked.");
+    }
+    setPackActionConfirmation(pack, "unblock", changed);
   } else if (action === "block") {
+    const before = packActionSignature(pack);
     pack.status = "blocked";
     pack.blocker = "blocked in this sample";
     pack.next = "Unblock";
-    addPackActivity(pack, "Blocked.");
-    setActionConfirmation(pack, "block");
+    const changed = packActionSignature(pack) !== before;
+    if (changed) {
+      addPackActivity(pack, "Blocked.");
+    }
+    setPackActionConfirmation(pack, "block", changed);
   } else if (action === "done") {
+    const before = packActionSignature(pack);
     pack.status = "done";
     pack.blocker = "none";
     pack.next = "Open";
-    addPackActivity(pack, "Marked done.");
-    setActionConfirmation(pack, "done");
+    const changed = packActionSignature(pack) !== before;
+    if (changed) {
+      addPackActivity(pack, "Marked done.");
+    }
+    setPackActionConfirmation(pack, "done", changed);
   } else if (action === "focus") {
     setActionConfirmation(pack, "focus");
     go("focus", pack.id);
@@ -2717,8 +2755,8 @@ function handlePackAction(id, action) {
     return;
   } else if (action === "open") {
     queueFocus("pack-detail", pack.id);
-    addPackActivity(pack, "Opened.");
-    setActionConfirmation(pack, "open");
+    const changed = addPackActivity(pack, "Opened.");
+    setPackActionConfirmation(pack, "open", changed);
     go("pack", pack.id);
     return;
   } else {
