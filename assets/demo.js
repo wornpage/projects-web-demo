@@ -2510,7 +2510,7 @@ function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pac
     where: `${pack.title} / ${pack.status}`,
     blocker: blockerTextForPack(pack),
     next: next.label,
-    doneWhen: normalizeCopy(pack.doneWhen) || "No proof condition set."
+    proof: proofTargetForPack(pack)
   };
 
   state.status = receipt.summary;
@@ -2538,7 +2538,7 @@ function updateActionReceipt() {
       ${receiptLine("Where", receipt.where)}
       ${receiptLine("Blocker", receipt.blocker)}
       ${receiptLine("Button runs next", receipt.next)}
-      ${receiptLine("Done when", receipt.doneWhen)}
+      ${receiptLine("Proof target", receipt.proof)}
     </div>`;
 }
 
@@ -2558,12 +2558,16 @@ function normalizeActionReceipt(receipt) {
   const where = normalizeCopy(receipt.where);
   const blocker = normalizeCopy(receipt.blocker);
   const next = normalizeCopy(receipt.next);
-  const doneWhen = normalizeCopy(receipt.doneWhen) || "No proof condition set.";
+  const proof = normalizeCopy(receipt.proof) || normalizeCopy(receipt.doneWhen) || "No proof target set.";
   if (!summary || !where || !blocker || !next) {
     return null;
   }
 
-  return { summary, where, blocker, next, doneWhen };
+  return { summary, where, blocker, next, proof };
+}
+
+function proofTargetForPack(pack) {
+  return normalizeCopy(pack?.doneWhen) || "No proof target set.";
 }
 
 function applyNextChoice(id) {
