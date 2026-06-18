@@ -2,6 +2,8 @@
 
 This folder contains the static public demo for **Projects**. It is intentionally browser-only:
 sample work is loaded from `data/demo-packs.json`, and all actions stay in localStorage.
+It is not a hosted service, sign-in surface, payment surface, or customer-data
+collection path.
 
 ## Runtime decision
 
@@ -99,10 +101,20 @@ hash path segments, and ids supplied to routes that do not accept ids.
 
 ## Build artifact
 
-The shared stylesheet and icon are copied from `src/Projects.Web`:
+The exported bundle combines copied Blazor assets with a thin static demo overlay:
 
-- `src/Projects.Web/wwwroot/css/app.css`
-- `src/Projects.Web/wwwroot/favicon.png`
+- `docs/demo/index.html` -> exported as `index.html`; the exporter rewrites only the output copy with versioned asset URLs.
+- `docs/demo/README.md` -> exported as `README.md`; public artifact guidance copied beside the demo for review.
+- `src/Projects.Web/wwwroot/css/app.css` -> exported as `assets/app.css`; shared Blazor shell, rail, button, typography, and token rules remain the styling baseline.
+- `src/Projects.Web/wwwroot/favicon.png` -> exported as `assets/favicon.png`
+- `docs/demo/assets/demo.js` -> exported as `assets/demo.js`; hash routes, browser-local state, simulated actions, and demo QA checks.
+- `docs/demo/assets/demo.css` -> exported as `assets/demo.css`; static hash-route layout plus Pages-only surface rules that use Blazor tokens without generated `.card` markup.
+- `docs/demo/assets/demo-metadata.json` -> merged into `assets/demo-metadata.json`; export-time version, commit, timestamp, and boundary fields win.
+- `docs/demo/data/demo-packs.json` -> exported as `data/demo-packs.json`; fake sample work only.
+
+`docs/demo/assets/app.css` is checked in only as a source-preview fallback for
+opening `docs/demo/index.html` directly. The exported public artifact always
+gets a fresh `assets/app.css` copied from `src/Projects.Web/wwwroot/css/app.css`.
 
 Metadata is generated during export and written to `assets/demo-metadata.json` with:
 
@@ -110,6 +122,7 @@ Metadata is generated during export and written to `assets/demo-metadata.json` w
 - commit
 - generated timestamp
 - repository/release links
+- service boundary note
 - scenario/profile defaults
 
 Build locally:
@@ -119,6 +132,20 @@ pwsh -NoLogo -NoProfile -File scripts/export-pages-demo.ps1 -OutputPath _site -C
 ```
 
 `-Clean` removes the destination folder first and re-creates it safely.
+
+The exporter also creates `.nojekyll` in the output folder. That marker is
+generated, not checked into `docs/demo/`, and keeps the Pages artifact a plain
+static bundle.
+
+During export, `index.html` asset references get the current commit as a `?v=`
+query string for `assets/app.css`, `assets/demo.css`, and `assets/demo.js`.
+The checked-in source `docs/demo/index.html` stays unversioned for direct local
+preview.
+
+The GitHub Actions review build uses `.github/workflows/deploy-demo.yml` to run the same exporter and upload `_site` as the `projects-static-demo` artifact.
+Keep that workflow's path filters aligned with the source assets above so demo
+HTML, artifact README, metadata, CSS, shared Blazor CSS, favicon, script, data,
+and exporter changes rebuild the artifact.
 
 ## Public demo output
 

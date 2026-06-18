@@ -6,24 +6,24 @@
   <meta name="description" content="Static Projects cockpit demo with sample work and simulated actions.">
   <title>Projects Static Demo</title>
   <link rel="icon" href="assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="assets/app.css?v=85f797f57">
-  <link rel="stylesheet" href="assets/demo.css?v=85f797f57">
-  <script src="assets/demo.js?v=85f797f57" defer></script>
+  <link rel="stylesheet" href="assets/app.css?v=7397788fb">
+  <link rel="stylesheet" href="assets/demo.css?v=7397788fb">
+  <script src="assets/demo.js?v=7397788fb" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#demo-main">Skip to demo</a>
-  <div class="demo-app-shell">
-    <aside class="demo-sidebar" aria-label="Demo navigation" aria-describedby="demo-sidebar-scroll-help" tabindex="0">
+  <div class="demo-app-shell app-shell">
+    <aside class="demo-sidebar nav-rail" aria-label="Demo navigation" aria-describedby="demo-sidebar-scroll-help" tabindex="0">
       <p id="demo-sidebar-scroll-help" class="sr-only">On wide screens, this navigation rail scrolls separately from the demo content.</p>
-      <a class="demo-brand" href="#/home" aria-label="Projects cockpit demo home">
-        <span class="demo-brand-mark" aria-hidden="true">P</span>
+      <a class="demo-brand nav-rail-brand-link" href="#/home" aria-label="Projects cockpit demo home">
+        <span class="demo-brand-mark nav-rail-brand-mark" aria-hidden="true">P</span>
         <span>
           <strong>Projects</strong>
           <small>static cockpit</small>
         </span>
       </a>
-      <nav id="demo-nav" class="demo-nav" aria-label="Primary demo screens"></nav>
-      <div class="demo-sidebar-note">
+      <nav id="demo-nav" class="demo-nav nav-rail-section" aria-label="Primary demo screens"></nav>
+      <div class="demo-sidebar-note card">
         <strong>Demo data only.</strong>
         Real packs, memory, files, and saves stay in the local app.
       </div>
@@ -40,7 +40,7 @@
             <small>Build</small>
             <strong id="demo-version">working</strong>
             <small>State</small>
-            <strong id="demo-state-schema">v5</strong>
+            <strong id="demo-state-schema">v6</strong>
             <a id="demo-changelog" href="https://github.com/jared-bidlow/projects-web-demo/releases" rel="noopener noreferrer" target="_blank">Changelog</a>
           </div>
           <div class="demo-header-actions">
@@ -51,13 +51,13 @@
         </div>
       </header>
 
-      <main id="demo-main" class="demo-main" tabindex="-1">
-        <section class="demo-notice" aria-label="Demo notice">
+      <main id="demo-main" class="demo-main page-content" tabindex="-1">
+        <section class="demo-notice card" aria-label="Demo notice">
           <strong>Demo data only.</strong>
           This GitHub Pages build simulates the cockpit in browser state. Buttons update sample data only.
         </section>
 
-        <section class="demo-command-brief" aria-label="Projects command brief">
+        <section class="demo-command-brief sidecar" aria-label="Projects command brief">
           <div class="demo-command-top">
             <div>
               <span class="demo-command-label">Command brief</span>

@@ -690,6 +690,13 @@ h3,
 .kanban-card-title { font-weight: 600; margin-bottom: 2px; }
 .kanban-card-meta { font-size: 11px; color: var(--cockpit-text-muted); }
 .kanban-card-due-overdue { color: var(--cockpit-danger-text); font-weight: 700; }
+.kanban-action-help {
+    color: var(--cockpit-text-muted);
+    font-size: 0.72rem;
+    font-weight: 650;
+    line-height: 1.3;
+    margin: 0.35rem 0 0;
+}
 .kanban-inline-form { display: inline; }
 .kanban-start-all-form { margin-left: 4px; }
 .kanban-start-drafts-button {
@@ -5520,9 +5527,20 @@ h3,
 
 .mobile-command-brief,
 .home-mobile-work-card,
-.mobile-shell-brief,
-.nav-rail {
+.mobile-shell-brief {
     overflow: visible;
+}
+
+/* ===== Projects nav rail independent scroll ===== */
+@media (min-width: 901px) {
+    .nav-rail {
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+    }
 }
 
 /* ===== Projects cockpit reduced motion safety ===== */
@@ -6807,6 +6825,54 @@ h3,
     flex-direction: column;
     gap: 6px;
     margin-top: 4px;
+}
+
+.new-work-submit-help,
+.new-work-template-help,
+.new-work-date-help-text {
+    margin: 0;
+    color: var(--cockpit-text-muted);
+    font-size: 0.82rem;
+    font-weight: 650;
+    line-height: 1.35;
+}
+
+.new-work-template-help {
+    margin: -6px 0 8px;
+}
+
+.new-work-date-help-text {
+    margin: -4px 0 2px;
+}
+
+.owner-suggestion-help {
+    margin: -4px 0 2px;
+    color: var(--cockpit-text-muted);
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.35;
+}
+
+.pack-detail-setup-owner-form {
+    flex-wrap: wrap;
+}
+
+.pack-detail-setup-owner-help {
+    flex: 1 0 100%;
+    margin: -2px 0 0;
+}
+
+.pack-detail-secondary-action-help {
+    flex: 1 0 100%;
+    margin: 0;
+    color: var(--cockpit-text-muted);
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.35;
+}
+
+.pack-detail-page-content .pd-mobile-primary-actions {
+    flex-wrap: wrap;
 }
 
 .new-work-command-form :is(button, a, [role="button"]).btn {
@@ -11569,6 +11635,44 @@ body[data-theme="dark"] .app-shell :is(.today-mobile-stats strong, .focus-mobile
     color: #7f1d1d;
 }
 
+.pack-detail-page-content .pack-detail-memory-strip {
+    align-items: center;
+    column-gap: 10px;
+}
+
+.pack-detail-page-content .pack-detail-memory-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: #151922;
+    font-size: 0.9rem;
+    font-weight: 720;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.pack-detail-page-content .pack-detail-memory-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 0.35rem 0.62rem;
+    border: 1px solid rgba(29, 111, 100, 0.2);
+    border-radius: 7px;
+    background: rgba(234, 244, 240, 0.78);
+    color: #0f4c45;
+    font-size: 0.78rem;
+    font-weight: 820;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.pack-detail-page-content .pack-detail-memory-link:hover {
+    border-color: rgba(29, 111, 100, 0.36);
+    background: rgba(221, 239, 234, 0.92);
+    color: #0b3f39;
+}
+
 .pack-detail-page-content .pd-command-detail .sidecar-row form {
     min-width: min(100%, 18rem);
 }
@@ -12130,8 +12234,15 @@ html[data-theme="dark"] .pack-detail-page-content :is(.pack-detail-path-delete-b
 
 html.dark .new-work-page-content .new-work-command-field-readonly strong,
 html[data-theme="dark"] .new-work-page-content .new-work-command-field-readonly strong,
-html.dark .pack-detail-page-content :is(.pd-command-detail .sidecar-value, .pd-command-detail .sidecar-action, .detail-grid .sidecar-row > div, .note-card span, .activity-action, .pack-detail-path-body, .pack-detail-path-name, .pack-detail-note-text),
-html[data-theme="dark"] .pack-detail-page-content :is(.pd-command-detail .sidecar-value, .pd-command-detail .sidecar-action, .detail-grid .sidecar-row > div, .note-card span, .activity-action, .pack-detail-path-body, .pack-detail-path-name, .pack-detail-note-text) {
+html.dark .pack-detail-page-content :is(.pd-command-detail .sidecar-value, .pd-command-detail .sidecar-action, .pack-detail-memory-value, .detail-grid .sidecar-row > div, .note-card span, .activity-action, .pack-detail-path-body, .pack-detail-path-name, .pack-detail-note-text),
+html[data-theme="dark"] .pack-detail-page-content :is(.pd-command-detail .sidecar-value, .pd-command-detail .sidecar-action, .pack-detail-memory-value, .detail-grid .sidecar-row > div, .note-card span, .activity-action, .pack-detail-path-body, .pack-detail-path-name, .pack-detail-note-text) {
+    color: var(--cockpit-text) !important;
+}
+
+html.dark .pack-detail-page-content .pack-detail-memory-link,
+html[data-theme="dark"] .pack-detail-page-content .pack-detail-memory-link {
+    border-color: color-mix(in srgb, var(--cockpit-accent) 34%, var(--cockpit-border)) !important;
+    background: color-mix(in srgb, var(--cockpit-accent) 16%, var(--cockpit-bg)) !important;
     color: var(--cockpit-text) !important;
 }
 
@@ -12182,8 +12293,20 @@ html[data-theme="dark"] .pack-detail-page-content .action-bar :is(a, button).act
     .pack-detail-page-content .pd-command-detail .sidecar-value,
     .pack-detail-page-content .pd-command-detail .sidecar-action,
     .pack-detail-page-content .pd-command-detail .sidecar-blocker,
+    .pack-detail-page-content .pack-detail-memory-value,
     .pack-detail-page-content .detail-grid .sidecar-row > div {
         text-align: left !important;
+    }
+
+    .pack-detail-page-content .pack-detail-memory-strip {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+    }
+
+    .pack-detail-page-content .pack-detail-memory-link {
+        justify-self: start;
+        width: 100%;
+        max-width: 12rem;
     }
 
     .pack-detail-page-content .pd-command-detail .sidecar-row form,
