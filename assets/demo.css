@@ -1,5 +1,5 @@
 :root {
-  --demo-sidebar-width: 248px;
+  --demo-sidebar-width: 180px;
 }
 
 * {
@@ -36,38 +36,31 @@ body {
 }
 
 .demo-app-shell {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--cockpit-accent) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(0deg, color-mix(in srgb, var(--cockpit-accent) 5%, transparent) 1px, transparent 1px),
-    var(--cockpit-bg);
-  background-size: 36px 36px;
+  background: var(--cockpit-bg);
   color: var(--cockpit-text);
   display: grid;
   grid-template-columns: var(--demo-sidebar-width) minmax(0, 1fr);
   min-height: 100vh;
-  --font-body-weight: 520;
-  --font-display-weight: 710;
-  --font-label-weight: 660;
-  --demo-font-scale: 1.0;
-  --demo-motion-duration: 0.16s;
-  --demo-panel-radius: 20px;
-  --demo-shell-font-size: 15px;
+  --demo-font-scale: 1;
+  --demo-motion-duration: 0.12s;
+  --demo-panel-radius: var(--cockpit-radius);
+  --demo-shell-font-size: 14px;
   --demo-shell-line-height: 1.45;
-  --demo-card-title-weight: 740;
-  --demo-card-meta-weight: 620;
-  --demo-meta-font-weight: 620;
-  --demo-card-bg: color-mix(in srgb, var(--cockpit-surface) 96%, var(--cockpit-bg));
-  --demo-card-border: color-mix(in srgb, var(--cockpit-border) 82%, transparent);
-  --demo-card-accent-edge: color-mix(in srgb, var(--cockpit-accent) 38%, transparent);
-  --demo-panel-bg: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
-  --demo-card-head-bg: color-mix(in srgb, var(--cockpit-surface) 86%, var(--demo-card-bg));
-  --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 84%, var(--cockpit-bg));
+  --demo-card-title-weight: 700;
+  --demo-card-meta-weight: 600;
+  --demo-meta-font-weight: 600;
+  --demo-card-bg: var(--cockpit-surface);
+  --demo-card-border: var(--cockpit-border);
+  --demo-card-accent-edge: var(--cockpit-border-strong);
+  --demo-panel-bg: var(--cockpit-surface);
+  --demo-card-head-bg: transparent;
+  --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-nav-bg) 64%, var(--cockpit-surface));
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 68%, var(--cockpit-text));
-  --demo-command-accent: color-mix(in srgb, var(--cockpit-accent-50) 68%, var(--cockpit-surface));
-  --demo-command-line-accent: color-mix(in srgb, var(--cockpit-accent) 22%, transparent);
-  --demo-command-line-border: color-mix(in srgb, var(--cockpit-accent) 30%, var(--cockpit-border));
-  --demo-command-bg: color-mix(in srgb, var(--cockpit-surface) 82%, transparent);
-  --demo-meta-bg: color-mix(in srgb, var(--cockpit-surface) 94%, transparent);
+  --demo-command-accent: var(--cockpit-selected-bg);
+  --demo-command-line-accent: var(--cockpit-accent);
+  --demo-command-line-border: var(--cockpit-border);
+  --demo-command-bg: color-mix(in srgb, var(--cockpit-nav-bg) 42%, var(--cockpit-surface));
+  --demo-meta-bg: color-mix(in srgb, var(--cockpit-nav-bg) 56%, var(--cockpit-surface));
   --demo-primary-on-accent: var(--cockpit-accent-text);
   font-size: calc(var(--demo-shell-font-size) * var(--demo-font-scale));
   line-height: var(--demo-shell-line-height);
@@ -75,19 +68,19 @@ body {
 
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
-  --demo-panel-bg: color-mix(in srgb, var(--cockpit-surface) 86%, var(--cockpit-bg));
-  --demo-card-bg: color-mix(in srgb, var(--cockpit-surface) 74%, var(--cockpit-bg));
-  --demo-card-border: color-mix(in srgb, var(--cockpit-accent-text) 18%, var(--cockpit-border));
-  --demo-card-accent-edge: color-mix(in srgb, var(--cockpit-accent) 72%, var(--cockpit-accent-text));
-  --demo-card-head-bg: color-mix(in srgb, var(--cockpit-accent-100) 14%, var(--demo-card-bg));
-  --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 78%, var(--cockpit-bg));
-  --demo-command-accent: color-mix(in srgb, var(--cockpit-accent) 30%, var(--cockpit-accent-text));
+  --demo-panel-bg: var(--cockpit-surface);
+  --demo-card-bg: var(--cockpit-surface);
+  --demo-card-border: var(--cockpit-border);
+  --demo-card-accent-edge: var(--cockpit-border-strong);
+  --demo-card-head-bg: transparent;
+  --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-nav-bg) 58%, var(--cockpit-surface));
+  --demo-command-accent: var(--cockpit-selected-bg);
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 78%, var(--cockpit-text));
   --demo-primary-on-accent: #061B16;
-  --demo-command-line-accent: color-mix(in srgb, var(--cockpit-accent-text) 65%, transparent);
-  --demo-command-line-border: color-mix(in srgb, var(--cockpit-accent-text) 28%, var(--cockpit-border));
-  --demo-command-bg: color-mix(in srgb, var(--cockpit-surface) 88%, transparent);
-  --demo-meta-bg: color-mix(in srgb, var(--cockpit-surface) 98%, transparent);
+  --demo-command-line-accent: var(--cockpit-accent);
+  --demo-command-line-border: var(--cockpit-border);
+  --demo-command-bg: color-mix(in srgb, var(--cockpit-nav-bg) 60%, var(--cockpit-surface));
+  --demo-meta-bg: color-mix(in srgb, var(--cockpit-nav-bg) 64%, var(--cockpit-surface));
 }
 
 .demo-sidebar {
@@ -104,6 +97,11 @@ html[data-theme="dark"] .demo-app-shell {
   top: 0;
 }
 
+.demo-sidebar:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: -6px;
+}
+
 .demo-brand {
   align-items: center;
   color: var(--cockpit-text);
@@ -115,20 +113,20 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-brand-mark {
   align-items: center;
   background: var(--cockpit-accent);
-  border-radius: 12px;
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-accent-text);
   display: inline-flex;
   font-weight: var(--font-display-weight);
-  height: 44px;
+  height: 34px;
   justify-content: center;
-  width: 44px;
+  width: 34px;
 }
 
 .demo-brand strong {
   display: block;
   font-family: var(--font-family-display);
-  font-size: 20px;
-  font-weight: 760;
+  font-size: 16px;
+  font-weight: 900;
   line-height: 1;
 }
 
@@ -146,27 +144,28 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-nav {
   display: grid;
-  gap: 8px;
+  gap: 1px;
+  align-content: start;
   min-width: 0;
 }
 
 .demo-nav-item {
   align-items: center;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  color: var(--cockpit-text-secondary);
+  border: 0;
+  border-radius: var(--cockpit-radius-sm);
+  color: var(--cockpit-text-muted);
   display: flex;
-  gap: 12px;
+  gap: 10px;
+  height: 40px;
   min-width: 0;
-  padding: 10px;
+  padding: 0 12px;
   text-decoration: none;
-  transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease, color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
+  transition: background-color var(--demo-motion-duration) ease, color var(--demo-motion-duration) ease;
 }
 
 .demo-nav-item:hover {
-  background: color-mix(in srgb, var(--cockpit-accent) 14%, var(--cockpit-surface));
-  border-color: color-mix(in srgb, var(--cockpit-accent) 24%, var(--cockpit-border));
-  color: var(--cockpit-text);
+  background: var(--cockpit-accent-50);
+  color: var(--cockpit-accent);
 }
 
 .demo-nav-item:focus-visible {
@@ -176,16 +175,16 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-nav-item span {
   align-items: center;
-  background: color-mix(in srgb, var(--cockpit-surface, var(--cockpit-bg)) 80%, var(--cockpit-bg));
-  border-radius: 9px;
+  background: color-mix(in srgb, var(--cockpit-surface) 70%, transparent);
+  border-radius: var(--cockpit-radius-sm);
   color: var(--cockpit-text-muted);
   display: inline-flex;
   flex: 0 0 auto;
-  font-size: 12px;
-  font-weight: 760;
-  height: 30px;
+  font-size: 10px;
+  font-weight: 800;
+  height: 24px;
   justify-content: center;
-  width: 34px;
+  width: 26px;
 }
 
 .demo-nav-item strong {
@@ -194,9 +193,8 @@ html[data-theme="dark"] .demo-app-shell {
 }
 
 .demo-nav-item.active {
-  background: color-mix(in srgb, var(--cockpit-accent) 18%, var(--cockpit-surface));
-  border-color: color-mix(in srgb, var(--cockpit-accent) 40%, var(--cockpit-border));
-  color: var(--cockpit-text);
+  background: var(--cockpit-selected-bg);
+  color: var(--cockpit-selected-fg);
 }
 
 .demo-nav-item.active span {
@@ -206,7 +204,7 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-sidebar-note {
   border: 1px solid var(--cockpit-border);
-  border-radius: 16px;
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-text-muted);
   font-size: 13px;
   line-height: 1.45;
@@ -225,20 +223,16 @@ html[data-theme="dark"] .demo-app-shell {
   width: 100%;
 }
 
-.demo-header {
-  backdrop-filter: blur(16px);
-}
-
 .demo-header-inner {
-  max-width: 1180px;
+  max-width: 960px;
   min-width: 0;
   gap: 12px;
 }
 
 .demo-screen-title {
   font-family: var(--font-family-display);
-  font-size: clamp(24px, 3.2vw, 42px);
-  font-weight: 780;
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 900;
   line-height: 1;
   margin: 2px 0 0;
   overflow-wrap: anywhere;
@@ -247,7 +241,7 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-header-metadata {
   align-items: center;
   border: 1px solid var(--cockpit-border);
-  border-radius: 12px;
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-text-secondary);
   display: inline-flex;
   flex-wrap: wrap;
@@ -303,11 +297,46 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-main {
   display: grid;
-  gap: 18px;
+  gap: 14px;
   margin: 0 auto;
-  max-width: 1180px;
+  max-width: 960px;
   min-width: 0;
-  padding: 24px 22px 122px;
+  padding: 16px 24px 104px;
+}
+
+@media (min-width: 981px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .demo-app-shell {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .demo-sidebar {
+    height: 100dvh;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  .demo-shell {
+    height: 100dvh;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .demo-main {
+    width: 100%;
+  }
 }
 
 .demo-notice,
@@ -318,9 +347,9 @@ html[data-theme="dark"] .demo-header-metadata {
   background: var(--demo-panel-bg);
   border: 1px solid var(--cockpit-border);
   border-radius: var(--demo-panel-radius);
-  box-shadow: var(--cockpit-shadow-md);
+  box-shadow: var(--cockpit-shadow-sm);
   position: relative;
-  transition: transform var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
+  transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
 }
 
 .demo-notice:hover,
@@ -331,8 +360,7 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-work-card:hover,
 .demo-review-card:hover,
 .demo-note:hover {
-  box-shadow: var(--cockpit-shadow-lg);
-  border-color: color-mix(in srgb, var(--cockpit-accent) 24%, var(--cockpit-border));
+  border-color: var(--cockpit-border-strong);
 }
 
 html.dark .demo-panel,
@@ -343,10 +371,8 @@ html[data-theme="dark"] .demo-panel,
 html[data-theme="dark"] .demo-command-brief,
 html[data-theme="dark"] .demo-toolbar,
 html[data-theme="dark"] .demo-metric {
-  border-color: color-mix(in srgb, var(--cockpit-accent-text) 16%, var(--cockpit-border));
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--cockpit-accent-text) 8%, transparent),
-    0 0 0 1px color-mix(in srgb, #000 36%, transparent);
+  border-color: var(--cockpit-border);
+  box-shadow: var(--cockpit-shadow-sm);
 }
 
 .demo-notice {
@@ -379,8 +405,8 @@ html[data-theme="dark"] .demo-metric {
 .demo-command-top h2,
 .demo-panel h2 {
   font-family: var(--font-family-display);
-  font-size: clamp(22px, 3vw, 34px);
-  font-weight: 780;
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 900;
   line-height: 1.05;
   margin: 4px 0 0;
   overflow-wrap: anywhere;
@@ -410,7 +436,7 @@ html[data-theme="dark"] .demo-metric {
   align-items: center;
   background: var(--demo-command-bg);
   border: 1px solid var(--demo-command-line-border);
-  border-radius: 16px;
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 12px;
   grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);
@@ -421,7 +447,7 @@ html[data-theme="dark"] .demo-metric {
 }
 
 .demo-command-line::before {
-  background: linear-gradient(180deg, var(--demo-command-line-accent), color-mix(in srgb, var(--demo-command-line-accent) 68%, transparent));
+  background: var(--demo-command-line-accent);
   border-radius: 999px;
   bottom: 10px;
   content: "";
@@ -452,7 +478,7 @@ html[data-theme="dark"] .demo-metric {
 .demo-command-receipt {
   background: color-mix(in srgb, var(--cockpit-surface) 88%, var(--cockpit-accent) 12%);
   border: 1px solid color-mix(in srgb, var(--cockpit-accent) 28%, var(--cockpit-border));
-  border-radius: 12px;
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 10px;
   padding: 12px 14px;
@@ -696,7 +722,7 @@ html[data-theme="dark"] .demo-metric {
 .demo-field select {
   background: color-mix(in srgb, var(--cockpit-surface) 88%, var(--cockpit-bg));
   border: 1px solid var(--cockpit-border);
-  border-radius: 12px;
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-text);
   font: inherit;
   font-size: 15px;
@@ -770,7 +796,6 @@ html[data-theme="dark"] .demo-metric {
 .demo-chip:hover,
 .demo-chip:focus-visible {
   border-color: color-mix(in srgb, var(--cockpit-accent) 42%, var(--cockpit-border));
-  transform: translateY(-1px);
   background: color-mix(in srgb, var(--cockpit-accent) 10%, transparent);
 }
 
@@ -800,7 +825,7 @@ html[data-theme="dark"] .demo-metric {
 .demo-status-line {
   background: color-mix(in srgb, var(--cockpit-accent) 12%, var(--cockpit-surface));
   border: 1px solid color-mix(in srgb, var(--cockpit-accent) 30%, var(--cockpit-border));
-  border-radius: 14px;
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-text);
   font-weight: 700;
   padding: 10px 12px;
@@ -821,14 +846,14 @@ html[data-theme="dark"] .demo-status-line {
 .demo-focus-pulse {
   animation: demo-focus-pulse 1.8s ease;
   border-color: var(--cockpit-accent) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cockpit-accent) 28%, transparent), var(--cockpit-shadow-lg) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cockpit-accent) 24%, transparent) !important;
 }
 
 .demo-meta-row {
   align-items: center;
   background: var(--demo-meta-bg);
   border: 1px solid var(--cockpit-border);
-  border-radius: 12px;
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-text-secondary);
   display: flex;
   flex-wrap: wrap;
@@ -869,16 +894,14 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-note {
   background: var(--demo-card-bg);
   border: 1px solid var(--demo-card-border);
+  border-left: 3px solid var(--demo-card-accent-edge);
   border-radius: calc(var(--demo-panel-radius) - 2px);
-  box-shadow:
-    inset 4px 0 0 var(--demo-card-accent-edge),
-    0 1px 0 color-mix(in srgb, var(--cockpit-text) 8%, transparent),
-    var(--cockpit-shadow-sm);
+  box-shadow: var(--cockpit-shadow-sm);
   min-width: 0;
   overflow: visible;
   padding: 16px;
   position: relative;
-  transition: transform var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
+  transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
 }
 
 html.dark .demo-work-card,
@@ -889,14 +912,10 @@ html[data-theme="dark"] .demo-work-card,
 html[data-theme="dark"] .demo-review-card,
 html[data-theme="dark"] .demo-row,
 html[data-theme="dark"] .demo-note {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cockpit-accent-text) 5%, var(--demo-card-bg)), var(--demo-card-bg));
+  background: var(--demo-card-bg);
   border-color: var(--demo-card-border);
-  box-shadow:
-    inset 5px 0 0 var(--demo-card-accent-edge),
-    inset 0 1px 0 color-mix(in srgb, var(--cockpit-accent-text) 7%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, var(--cockpit-accent-text) 6%, transparent),
-    0 1px 0 color-mix(in srgb, #000 72%, transparent);
+  border-left-color: var(--demo-card-accent-edge);
+  box-shadow: var(--cockpit-shadow-sm);
 }
 
 html.dark .demo-work-card:hover,
@@ -907,26 +926,20 @@ html[data-theme="dark"] .demo-work-card:hover,
 html[data-theme="dark"] .demo-review-card:hover,
 html[data-theme="dark"] .demo-row:hover,
 html[data-theme="dark"] .demo-note:hover {
-  border-color: color-mix(in srgb, var(--cockpit-accent) 58%, var(--cockpit-border));
-  box-shadow:
-    inset 5px 0 0 var(--cockpit-accent),
-    inset 0 1px 0 color-mix(in srgb, var(--cockpit-accent-text) 10%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, var(--cockpit-accent-text) 8%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--cockpit-accent) 32%, transparent);
+  border-color: var(--cockpit-border-strong);
+  border-left-color: var(--cockpit-accent);
+  box-shadow: var(--cockpit-shadow-sm);
 }
 
 .demo-row:hover {
-  box-shadow: var(--cockpit-shadow-lg);
-  border-color: color-mix(in srgb, var(--cockpit-accent) 24%, var(--cockpit-border));
+  border-color: var(--cockpit-border-strong);
+  border-left-color: var(--cockpit-accent);
 }
 
 .demo-work-card.selected {
   border-color: var(--cockpit-accent);
-  box-shadow:
-    inset 4px 0 0 var(--cockpit-accent),
-    0 0 0 2px color-mix(in srgb, var(--cockpit-accent) 22%, transparent),
-    var(--cockpit-shadow-lg);
-  transform: translateY(-1px);
+  border-left-color: var(--cockpit-accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cockpit-accent) 20%, transparent), var(--cockpit-shadow-sm);
 }
 
 .demo-scenario-grid {
@@ -938,13 +951,13 @@ html[data-theme="dark"] .demo-note:hover {
 .demo-scenario-card {
   background: color-mix(in srgb, var(--cockpit-surface) 88%, transparent);
   border: 1px solid var(--cockpit-border);
-  border-radius: 14px;
+  border-radius: var(--cockpit-radius);
   cursor: pointer;
   display: grid;
   gap: 8px;
   padding: 14px;
   text-align: left;
-  transition: transform var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease, background-color var(--demo-motion-duration) ease;
+  transition: border-color var(--demo-motion-duration) ease, background-color var(--demo-motion-duration) ease;
 }
 
 .demo-scenario-card strong {
@@ -966,7 +979,6 @@ html[data-theme="dark"] .demo-note:hover {
 
 .demo-scenario-card:hover,
 .demo-scenario-card:focus-visible {
-  transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--cockpit-accent) 42%, var(--cockpit-border));
 }
 
@@ -1006,9 +1018,9 @@ html[data-theme="dark"] .demo-note:hover {
   margin-bottom: 12px;
   color: var(--cockpit-text);
   background: var(--demo-card-head-bg);
-  border: 1px solid color-mix(in srgb, var(--cockpit-border) 58%, transparent);
-  border-radius: 8px;
-  padding: 8px 12px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
   overflow: visible;
 }
 
@@ -1168,7 +1180,7 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-command-row {
   align-items: center;
   border: 1px solid var(--demo-command-line-border);
-  border-radius: 14px;
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 10px;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1179,7 +1191,7 @@ html[data-theme="dark"] .demo-state-pill {
 }
 
 .demo-command-row::before {
-  background: linear-gradient(180deg, var(--demo-command-line-accent), color-mix(in srgb, var(--demo-command-line-accent) 72%, transparent));
+  background: var(--demo-command-line-accent);
   border-radius: 999px;
   bottom: 9px;
   content: "";
@@ -1202,7 +1214,7 @@ html[data-theme="dark"] .demo-state-pill {
 
 .demo-empty {
   border: 1px dashed var(--cockpit-border);
-  border-radius: 16px;
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-text-muted);
   display: grid;
   gap: 6px;
@@ -1278,7 +1290,7 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-calendar-card {
   background: color-mix(in srgb, var(--cockpit-surface, var(--cockpit-bg)) 84%, transparent);
   border: 1px solid var(--cockpit-border);
-  border-radius: 16px;
+  border-radius: var(--cockpit-radius);
   min-width: 0;
   padding: 14px;
 }
@@ -1371,7 +1383,7 @@ html[data-theme="dark"] .demo-state-pill {
 
 .demo-fact {
   border: 1px solid var(--cockpit-border);
-  border-radius: 16px;
+  border-radius: var(--cockpit-radius);
   padding: 14px;
   background: color-mix(in srgb, var(--cockpit-surface) 96%, var(--cockpit-bg));
 }
@@ -1400,7 +1412,7 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-forward-panel {
   background: color-mix(in srgb, var(--cockpit-surface) 88%, var(--cockpit-accent) 12%);
   border: 1px solid color-mix(in srgb, var(--cockpit-accent) 28%, var(--cockpit-border));
-  border-radius: 14px;
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 12px;
   padding: 14px;
@@ -1428,7 +1440,7 @@ html[data-theme="dark"] .demo-state-pill {
   align-items: center;
   background: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
   border: 1px solid color-mix(in srgb, var(--cockpit-border) 84%, transparent);
-  border-radius: 12px;
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 8px;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1476,7 +1488,7 @@ html[data-theme="dark"] .demo-work-path {
 .demo-support-details {
   background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
   border: 1px solid var(--cockpit-border);
-  border-radius: 14px;
+  border-radius: var(--cockpit-radius);
   display: block;
   margin-top: 18px;
   padding: 0;
@@ -1593,7 +1605,7 @@ html[data-theme="dark"] .demo-work-path {
 }
 
 .demo-profile-card {
-  border-radius: 16px;
+  border-radius: var(--cockpit-radius);
   padding: 16px;
   text-align: left;
 }
@@ -1611,9 +1623,9 @@ html[data-theme="dark"] .demo-work-path {
 .demo-bottom-brief {
   background: color-mix(in srgb, var(--cockpit-surface) 96%, var(--cockpit-bg));
   border: 1px solid var(--cockpit-border);
-  border-radius: 20px;
+  border-radius: var(--cockpit-radius);
   bottom: 16px;
-  box-shadow: var(--cockpit-shadow-lg);
+  box-shadow: var(--cockpit-shadow-md);
   display: grid;
   gap: 6px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1624,13 +1636,12 @@ html[data-theme="dark"] .demo-work-path {
   transform: translateX(calc(-50% - var(--demo-sidebar-width) / 2));
   width: min(820px, calc(100vw - var(--demo-sidebar-width) - 44px));
   z-index: 20;
-  backdrop-filter: blur(12px);
 }
 
 .demo-bottom-item {
   background: color-mix(in srgb, var(--cockpit-surface, var(--cockpit-bg)) 78%, transparent);
   border: 1px solid var(--cockpit-border);
-  border-radius: 14px;
+  border-radius: var(--cockpit-radius-sm);
   color: var(--cockpit-text);
   display: grid;
   gap: 3px;
@@ -1638,13 +1649,12 @@ html[data-theme="dark"] .demo-work-path {
   padding: 9px 10px;
   text-align: left;
   text-decoration: none;
-  transition: border-color var(--demo-motion-duration) ease, transform var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
+  transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
 }
 
 .demo-bottom-item:hover {
   border-color: color-mix(in srgb, var(--cockpit-accent) 36%, var(--cockpit-border));
-  transform: translateY(-1px);
-  box-shadow: var(--cockpit-shadow-md);
+  background: var(--cockpit-accent-50);
 }
 
 .demo-bottom-item span {
@@ -1687,11 +1697,10 @@ html:not(.dark) .demo-theme-toggle {
 
 html.dark .demo-theme-toggle,
 html[data-theme="dark"] .demo-theme-toggle {
-  background: color-mix(in srgb, var(--cockpit-accent) 16%, var(--cockpit-surface));
-  border-color: color-mix(in srgb, var(--cockpit-accent) 80%, var(--cockpit-border));
+  background: var(--cockpit-surface);
+  border-color: var(--cockpit-border);
   color: var(--cockpit-text);
   -webkit-text-fill-color: var(--cockpit-text);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent-text) 32%, transparent);
 }
 
 html.dark .demo-theme-toggle:hover,
@@ -1699,10 +1708,9 @@ html.dark .demo-theme-toggle:focus-visible,
 html[data-theme="dark"] .demo-theme-toggle:hover,
 html[data-theme="dark"] .demo-theme-toggle:focus-visible {
   border-color: var(--cockpit-text);
-  background: color-mix(in srgb, var(--cockpit-accent) 28%, var(--cockpit-surface));
+  background: var(--cockpit-accent-50);
   color: var(--cockpit-text);
   -webkit-text-fill-color: var(--cockpit-text);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cockpit-accent-text) 38%, transparent);
 }
 
 html.dark .demo-app-shell :is(.btn-primary, .demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"], .demo-bottom-next strong),
@@ -1712,11 +1720,11 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 }
 
 .demo-shell .btn {
-  border-radius: 10px;
+  border-radius: var(--cockpit-radius);
   font-weight: 700;
   gap: 0.28rem;
   letter-spacing: 0;
-  transition: transform var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease, background-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
+  transition: border-color var(--demo-motion-duration) ease, background-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
 }
 
 .demo-shell .btn:hover {
@@ -1739,7 +1747,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 
 .demo-work-card:hover,
 .demo-review-card:hover {
-  transform: translateY(-1px);
+  border-left-color: var(--cockpit-accent);
 }
 
 .demo-shell .btn:active {
@@ -1959,7 +1967,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   .demo-app-shell {
     display: block;
     min-height: 100dvh;
-    --demo-panel-radius: 14px;
+    --demo-panel-radius: var(--cockpit-radius);
     --demo-shell-font-size: 14px;
   }
 
@@ -2000,7 +2008,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 
   .demo-nav-item {
     border-color: var(--cockpit-border);
-    border-radius: 11px;
+    border-radius: var(--cockpit-radius);
     flex-basis: auto;
     gap: 6px;
     min-height: 34px;
@@ -2192,7 +2200,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   .demo-triage-card,
   .demo-row,
   .demo-note {
-    border-radius: 13px;
+    border-radius: var(--cockpit-radius);
     padding: 12px;
   }
 
@@ -2239,7 +2247,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   }
 
   .demo-bottom-brief {
-    border-radius: 14px 14px calc(14px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-bottom));
+    border-radius: var(--cockpit-radius);
     bottom: calc(8px + env(safe-area-inset-bottom));
     gap: 4px;
     left: 8px;
@@ -2251,7 +2259,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   }
 
   .demo-bottom-item {
-    border-radius: 10px;
+    border-radius: var(--cockpit-radius-sm);
     min-height: 44px;
     min-width: 0;
     padding: 7px 6px;

@@ -1,19 +1,20 @@
 <!doctype html>
-<html lang="en" class="dark" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Static Projects cockpit demo with sample work and simulated actions.">
   <title>Projects Static Demo</title>
   <link rel="icon" href="assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="assets/app.css?v=822b9d00d">
-  <link rel="stylesheet" href="assets/demo.css?v=822b9d00d">
-  <script src="assets/demo.js?v=822b9d00d" defer></script>
+  <link rel="stylesheet" href="assets/app.css?v=873ce70e8">
+  <link rel="stylesheet" href="assets/demo.css?v=873ce70e8">
+  <script src="assets/demo.js?v=873ce70e8" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#demo-main">Skip to demo</a>
   <div class="demo-app-shell">
-    <aside class="demo-sidebar" aria-label="Demo navigation">
+    <aside class="demo-sidebar" aria-label="Demo navigation" aria-describedby="demo-sidebar-scroll-help" tabindex="0">
+      <p id="demo-sidebar-scroll-help" class="sr-only">On wide screens, this navigation rail scrolls separately from the demo content.</p>
       <a class="demo-brand" href="#/home" aria-label="Projects cockpit demo home">
         <span class="demo-brand-mark" aria-hidden="true">P</span>
         <span>
@@ -43,14 +44,14 @@
             <a id="demo-changelog" href="https://github.com/jared-bidlow/projects-web-demo/releases" rel="noopener noreferrer" target="_blank">Changelog</a>
           </div>
           <div class="demo-header-actions">
-            <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="true">Light mode</button>
+            <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="false">Dark mode</button>
             <a class="btn btn-sm" href="https://github.com/jared-bidlow/projects-web-demo">Public repo</a>
             <a class="btn btn-primary btn-lg" href="https://github.com/jared-bidlow/projects-desktop">Source</a>
           </div>
         </div>
       </header>
 
-      <main id="demo-main" class="demo-main">
+      <main id="demo-main" class="demo-main" tabindex="-1">
         <section class="demo-notice" aria-label="Demo notice">
           <strong>Demo data only.</strong>
           This GitHub Pages build simulates the cockpit in browser state. Buttons update sample data only.

@@ -255,7 +255,7 @@ window.addEventListener("hashchange", () => {
 
 function initTheme() {
   const saved = localStorage.getItem(THEME_STORAGE_KEY);
-  const dark = saved ? saved === "dark" : true;
+  const dark = saved ? saved === "dark" : false;
   setTheme(dark);
   el("theme-toggle").addEventListener("click", () => {
     setTheme(!document.documentElement.classList.contains("dark"));
@@ -402,7 +402,7 @@ function resetState() {
 function renderNav() {
   el("demo-nav").innerHTML = navItems.map(([route, key, label]) => `
     <a class="demo-nav-item" href="${escapeAttribute(formatRouteHash(route))}" data-route="${route}">
-      <span>${escapeHtml(key)}</span>
+      <span aria-hidden="true">${escapeHtml(key)}</span>
       <strong>${escapeHtml(label)}</strong>
     </a>
   `).join("");
@@ -504,7 +504,13 @@ function render() {
   }
 
   document.querySelectorAll(".demo-nav-item").forEach((item) => {
-    item.classList.toggle("active", item.dataset.route === state.route);
+    const isActive = item.dataset.route === state.route;
+    item.classList.toggle("active", isActive);
+    if (isActive) {
+      item.setAttribute("aria-current", "page");
+    } else {
+      item.removeAttribute("aria-current");
+    }
   });
 
   const screenTitle = screenTitleForRoute();
