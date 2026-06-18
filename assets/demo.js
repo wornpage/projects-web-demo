@@ -846,6 +846,10 @@ function focusSelectors(kind, packId) {
     return ["#triage-output", ".demo-triage-card", "#triage-snapshot"];
   }
 
+  if (kind === "memory-note") {
+    return ["#memory-note", "#memory-note-help", "#add-memory"];
+  }
+
   if (kind === "pack-edit") {
     return [
       "#edit-title",
@@ -917,6 +921,10 @@ function focusKindForAction(action) {
 
   if (action === "review") {
     return "blocker";
+  }
+
+  if (action === "add-note") {
+    return "memory-note";
   }
 
   if (action === "edit") {
@@ -2968,6 +2976,10 @@ function runRouteAction(action, targetPackId) {
     const pack = findPack(targetPackId) || currentPack();
     const input = el("memory-note");
     if (state.route !== "memory") {
+      queueFocus("memory-note", pack?.id || "");
+      state.status = pack
+        ? `Memory note input ready for ${pack.title}.`
+        : "Choose sample work before adding memory.";
       go("memory", pack?.id || "");
       return true;
     }
