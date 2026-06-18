@@ -1507,6 +1507,9 @@ function renderReview() {
   const reviewCommand = firstReview ? resolvePrimaryCommandForPack(firstReview) : null;
   const reviewButtonLabel = reviewCommand?.label || "Review work";
   const reviewButtonReason = "Where: Review. Blocker: no sample work needs review. Button runs next: create or edit work.";
+  const reviewButton = firstReview
+    ? primaryCommandButton(firstReview)
+    : `<button class="btn btn-primary" type="button" data-action="run-next" data-pack=""${disabledReasonAttributes(true, reviewButtonReason)}>${escapeHtml(reviewButtonLabel)}</button>`;
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1514,7 +1517,7 @@ function renderReview() {
           <span class="section-label">Needs decision</span>
           <h2>${review.length} review item(s)</h2>
         </div>
-        <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(firstReview?.id || "")}"${disabledReasonAttributes(!firstReview, reviewButtonReason)}>${escapeHtml(reviewButtonLabel)}</button>
+        ${reviewButton}
       </div>
       ${disabledReasonNotice(!firstReview, reviewButtonReason)}
       <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.")}</div>
@@ -1596,7 +1599,7 @@ function renderFocus() {
   }
   const focusCommand = resolvePrimaryCommandForPack(pack);
   const doneAction = focusCommand.action === "done"
-    ? `<button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>`
+    ? supportActionButton("done", "Mark done", pack)
     : "";
 
   state.selectedId = pack.id;
@@ -1619,7 +1622,7 @@ function renderFocus() {
       ${relevantMemoryStrip(pack)}
       <p>${escapeHtml(pack.purpose)}</p>
       <div class="demo-card-actions">
-        <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeHtml(pack.id)}">${escapeHtml(focusCommand.label)}</button>
+        ${primaryCommandButton(pack)}
       </div>
       <details class="demo-card-support">
         <summary>
@@ -1627,8 +1630,8 @@ function renderFocus() {
           <strong>Open, edit, or finish</strong>
         </summary>
         <div class="demo-card-actions compact">
-          <button class="btn" type="button" data-action="open" data-pack="${escapeHtml(pack.id)}">Open</button>
-          <button class="btn" type="button" data-action="edit" data-pack="${escapeHtml(pack.id)}">Edit sample</button>
+          ${supportActionButton("open", "Open", pack)}
+          ${supportActionButton("edit", "Edit sample", pack)}
           ${doneAction}
         </div>
       </details>
@@ -1797,7 +1800,7 @@ function renderPackDetail() {
   }
   const packCommand = resolvePrimaryCommandForPack(pack);
   const doneAction = packCommand.action === "done"
-    ? `<button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>`
+    ? supportActionButton("done", "Mark done", pack)
     : "";
   const saveState = packDetailSaveState(pack);
   el("screen-content").innerHTML = `
@@ -2337,7 +2340,6 @@ function bindLabControls() {
 
 function workCard(pack) {
   const selected = pack.id === state.selectedId ? " selected" : "";
-  const command = resolvePrimaryCommandForPack(pack);
   return `<article class="demo-work-card${selected}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select">${escapeHtml(pack.title)}</button>
@@ -2348,7 +2350,7 @@ function workCard(pack) {
         <span>Button runs next</span>
         <strong>${escapeHtml(pack.next)}</strong>
       </div>
-      <button type="button" class="btn btn-primary" data-action="run-next">${escapeHtml(command.label)}</button>
+      ${primaryCommandButton(pack)}
     </div>
     <div class="demo-card-meta">
       <span>${escapeHtml(pack.blocker === "none" ? "Blocker: none" : pack.blocker)}</span>
@@ -2372,14 +2374,13 @@ function workCard(pack) {
 }
 
 function todayRow(pack) {
-  const command = resolvePrimaryCommandForPack(pack);
   return `<div class="demo-row">
     <div>
       <strong>${escapeHtml(pack.title)}</strong>
       <span>${escapeHtml(formatDue(pack))} / ${escapeHtml(pack.owner)}</span>
     </div>
     <div class="demo-row-actions">
-      <button class="btn btn-sm btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(command.label)}</button>
+      ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
       ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
     </div>
   </div>`;
@@ -2404,7 +2405,7 @@ function reviewCard(pack) {
     </div>
     ${relevantMemoryCardStrip(pack)}
     <div class="demo-card-actions">
-      <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(command.label)}</button>
+      ${primaryCommandButton(pack)}
       ${supportActionButton("focus", "Focus", pack)}
       ${supportActionButton("edit", "Edit", pack)}
       ${doneAction}
@@ -2421,6 +2422,16 @@ function reviewCard(pack) {
       </div>
     </details>
   </article>`;
+}
+
+function primaryCommandButton(pack, className = "btn btn-primary") {
+  const command = resolvePrimaryCommandForPack(pack);
+  const copy = helpCopy(primaryCommandReason(pack, command), DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<button class="${escapeAttribute(className)}" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(command.label)}</button>`;
+}
+
+function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)) {
+  return `Where: ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`;
 }
 
 function supportActionButton(action, label, pack, className = "btn") {
