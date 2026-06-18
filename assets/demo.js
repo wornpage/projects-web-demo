@@ -1592,7 +1592,7 @@ function renderFocus() {
         ${factBlock("Where", `${profile().work}: ${pack.type}`)}
         ${factBlock("Blocker", blockerTextForPack(pack))}
         ${factBlock("Button runs next", focusCommand.label)}
-        ${factBlock("Done when", pack.doneWhen)}
+        ${factBlock("Proof target", proofTargetForPack(pack))}
       </div>
       ${workPathStrip(pack, focusCommand)}
       ${relevantMemoryStrip(pack)}
@@ -1802,7 +1802,7 @@ function renderPackDetail() {
           ${selectField("edit-status", "Status", ["draft", "active", "blocked", "done"], pack.status)}
           ${inputField("edit-blocker", "Blocker", pack.blocker)}
           ${inputField("edit-next", "Button runs next", pack.next)}
-          ${inputField("edit-done-when", "Done when", pack.doneWhen)}
+          ${inputField("edit-done-when", "Proof target", pack.doneWhen)}
         </div>
       </div>
       <details class="demo-support-details" data-support-details="pack-detail">
