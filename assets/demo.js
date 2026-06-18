@@ -3425,10 +3425,11 @@ function relevantMemoryCardStrip(pack) {
 }
 
 function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
-  const current = workPathStage(pack);
+  const current = workPathStage(pack, command);
   const steps = [
     { id: "draft", label: "Draft", help: "Set the forward path." },
     { id: "review", label: "Review", help: "Clear the blocker or run the next action." },
+    { id: "proof", label: "Proof", help: "Run the next action and keep the proof target visible." },
     { id: "done", label: "Done", help: "Finish when proof is ready." }
   ];
 
@@ -3441,7 +3442,7 @@ function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
   </div>`;
 }
 
-function workPathStage(pack) {
+function workPathStage(pack, command = resolvePrimaryCommandForPack(pack)) {
   if (!pack) {
     return "draft";
   }
@@ -3454,7 +3455,11 @@ function workPathStage(pack) {
     return "draft";
   }
 
-  return "review";
+  if (hasBlocker(pack)) {
+    return "review";
+  }
+
+  return command.action === "done" || normalizeCopy(pack.doneWhen) ? "proof" : "review";
 }
 
 function inputField(id, label, value) {
