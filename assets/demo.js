@@ -2497,14 +2497,25 @@ function setPackActionConfirmation(pack, action, changed) {
   if (!pack) return;
 
   const actionLabel = actionLabelFromKey(action);
-  const summary = changed
-    ? `${actionLabel} updated ${pack.title}.`
-    : `No ${actionLabel.toLowerCase()} change for ${pack.title}.`;
+  const summary = packActionSummary(pack, action, actionLabel, changed);
   setActionReceipt(
     pack,
     summary,
     resolvePrimaryCommandForPack(pack)
   );
+}
+
+function packActionSummary(pack, action, actionLabel, changed) {
+  if (action === "done") {
+    const proof = proofTargetForPack(pack);
+    return changed
+      ? `Done for ${pack.title}. Proof target: ${proof}.`
+      : `No done change for ${pack.title}. Proof target: ${proof}.`;
+  }
+
+  return changed
+    ? `${actionLabel} updated ${pack.title}.`
+    : `No ${actionLabel.toLowerCase()} change for ${pack.title}.`;
 }
 
 function setSaveConfirmation(pack, changed) {
