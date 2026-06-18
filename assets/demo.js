@@ -1765,6 +1765,9 @@ function renderPackDetail() {
     return;
   }
   const packCommand = resolvePrimaryCommandForPack(pack);
+  const doneAction = packCommand.action === "done"
+    ? `<button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>`
+    : "";
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-edit-panel" id="pack-edit-form" data-pack-id="${escapeAttribute(pack.id)}">
       <div class="demo-panel-head">
@@ -1805,8 +1808,8 @@ function renderPackDetail() {
       </details>
       ${relevantMemoryStrip(pack)}
       <div class="demo-card-actions">
-        <button id="save-pack" class="btn btn-primary" type="button">Save sample changes</button>
-        <button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>
+        <button id="save-pack" class="btn btn-primary" type="button">Save forward path</button>
+        ${doneAction}
       </div>
     </section>
     ${activityPanel(pack)}
