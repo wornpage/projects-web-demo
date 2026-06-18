@@ -3051,8 +3051,8 @@ function commandActionForLabel(label) {
     return { label, action: "start" };
   }
 
-  if (normalized === "done" || normalized === "complete") {
-    return { label, action: "done" };
+  if (normalized === "done" || normalized === "complete" || normalized === "finish with proof") {
+    return { label: "Finish with proof", action: "done" };
   }
 
   return { label: label === "Open" ? "Open" : label, action: "open" };
