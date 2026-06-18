@@ -1,5 +1,5 @@
 :root {
-  --demo-sidebar-width: 180px;
+  --demo-sidebar-width: 220px;
 }
 
 * {
@@ -85,16 +85,18 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-sidebar {
   background: var(--cockpit-nav-bg);
+  border-bottom: 0;
   border-right: 1px solid var(--cockpit-border);
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   max-width: 100%;
   min-width: 0;
   min-height: 100vh;
-  padding: 8px 0;
+  padding: 10px 0;
   position: sticky;
   top: 0;
+  z-index: 25;
 }
 
 .demo-sidebar:focus-visible {
@@ -108,14 +110,16 @@ html[data-theme="dark"] .demo-app-shell {
   display: inline-flex;
   gap: 9px;
   margin-bottom: 6px;
-  padding: 8px 10px 12px;
+  padding: 8px 12px 12px;
   text-decoration: none;
   border-bottom: 1px solid var(--cockpit-border);
+  width: 100%;
 }
 
 .demo-brand-mark {
   align-items: center;
   background: var(--cockpit-accent);
+  border: 1px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius-sm);
   box-shadow: none;
   color: var(--cockpit-accent-text);
@@ -147,26 +151,29 @@ html[data-theme="dark"] .demo-app-shell {
 }
 
 .demo-nav {
-  display: grid;
-  gap: 1px;
   align-content: start;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
   min-width: 0;
+  width: 100%;
 }
 
 .demo-nav-item {
   align-items: center;
-  border: 0;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--cockpit-radius-sm);
   color: var(--cockpit-text-muted);
   display: flex;
   gap: 10px;
-  height: 40px;
-  margin: 0 4px;
+  min-height: 40px;
+  margin: 0 6px;
   min-width: 0;
   padding: 0 12px;
   text-decoration: none;
   transition: background-color var(--demo-motion-duration) ease, color var(--demo-motion-duration) ease;
-  width: calc(100% - 8px);
+  width: calc(100% - 12px);
 }
 
 .demo-nav-item:hover {
@@ -191,6 +198,7 @@ html[data-theme="dark"] .demo-app-shell {
   font-weight: 800;
   height: 24px;
   justify-content: center;
+  min-width: 26px;
   width: 26px;
 }
 
@@ -201,6 +209,7 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-nav-item.active {
   background: var(--cockpit-selected-bg);
+  border-color: var(--cockpit-border);
   color: var(--cockpit-selected-fg);
   font-weight: 600;
 }
@@ -217,6 +226,7 @@ html[data-theme="dark"] .demo-app-shell {
   font-size: 13px;
   line-height: 1.45;
   margin: auto 10px 0;
+  max-width: none;
   padding: 12px;
   background: var(--cockpit-surface);
 }
@@ -232,7 +242,7 @@ html[data-theme="dark"] .demo-app-shell {
 }
 
 .demo-header-inner {
-  max-width: 960px;
+  max-width: 1040px;
   min-width: 0;
   gap: 12px;
 }
@@ -307,7 +317,7 @@ html[data-theme="dark"] .demo-header-metadata {
   display: grid;
   gap: 14px;
   margin: 0 auto;
-  max-width: 960px;
+  max-width: 1040px;
   min-width: 0;
   padding: 16px 24px 104px;
 }
@@ -331,7 +341,7 @@ html[data-theme="dark"] .demo-header-metadata {
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-gutter: stable both-edges;
+    scrollbar-gutter: stable;
   }
 
   .demo-shell {
@@ -340,6 +350,7 @@ html[data-theme="dark"] .demo-header-metadata {
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
 
   .demo-main {
@@ -1789,14 +1800,26 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   }
 
   .demo-sidebar {
+    align-items: center;
     border-bottom: 1px solid var(--cockpit-border);
     border-right: 0;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px 12px;
     max-width: 100%;
     min-width: 0;
     min-height: 0;
     overflow: hidden;
+    padding: 10px 24px;
     position: static;
     width: 100%;
+  }
+
+  .demo-brand {
+    border-bottom: 0;
+    margin-bottom: 0;
+    padding: 4px 10px 4px 0;
+    width: auto;
   }
 
   .demo-shell,
@@ -1817,10 +1840,16 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   .demo-nav {
     display: flex;
     gap: 8px;
+    flex-wrap: nowrap;
     max-width: 100%;
     min-width: 0;
     overflow-x: auto;
     padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .demo-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .demo-nav-item {

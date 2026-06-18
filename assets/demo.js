@@ -4,7 +4,7 @@ const LEGACY_DEMO_STORAGE_KEYS = [
   "projects-static-demo-state-v4",
   "projects-static-demo-state-v5"
 ];
-const THEME_STORAGE_KEY = "projects-demo-theme";
+const THEME_STORAGE_KEY = "projects-demo-theme-v2";
 const DEMO_METADATA_FILE = "assets/demo-metadata.json";
 const DEMO_REPO_URL = "https://github.com/jared-bidlow/projects-web-demo";
 const DEMO_ISSUE_URL = `${DEMO_REPO_URL}/issues/new`;

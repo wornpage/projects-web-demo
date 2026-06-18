@@ -7731,6 +7731,7 @@ h3,
     padding-top: 18px;
 }
 
+.command-empty-note,
 .evidence-empty-note {
     margin: 4px 0 0;
     font-size: 0.78rem;

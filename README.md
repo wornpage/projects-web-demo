@@ -93,7 +93,7 @@ hash path segments, and ids supplied to routes that do not accept ids.
 | Versioning | Header `Build` uses release metadata; `State` in the header shows localStorage schema (`v6`). |
 | Actions | Browser-only mutations (no remote write-back). |
 | Triage | Converts pasted task text into editable `Where`, `Blocker`, `Button runs next`, evidence, and done-when rows. |
-| Theme | Supports light/dark, defaults to dark. |
+| Theme | Supports light/dark, defaults to light. |
 | Routes | `#/home` default when no route is provided. |
 | Metadata | Loaded from `assets/demo-metadata.json` and shown in the header. |
 
