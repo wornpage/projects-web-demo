@@ -3139,6 +3139,7 @@ function uniquePackId(baseId) {
 function savePackDetail(id) {
   const pack = findPack(id);
   if (!pack) return;
+  const before = packForwardPathSignature(pack);
   pack.title = valueOf("edit-title") || pack.title;
   pack.status = valueOf("edit-status") || pack.status;
   pack.blocker = valueOf("edit-blocker") || pack.blocker;
@@ -3151,9 +3152,24 @@ function savePackDetail(id) {
   if (pack.status === "blocked" && pack.blocker === "none") {
     pack.status = "active";
   }
-  pack.activity.unshift("Forward path saved in browser state.");
+  if (packForwardPathSignature(pack) !== before) {
+    pack.activity.unshift("Forward path changed in browser state.");
+  }
   setSaveConfirmation(pack);
   render();
+}
+
+function packForwardPathSignature(pack) {
+  return JSON.stringify({
+    title: pack.title || "",
+    status: pack.status || "",
+    blocker: pack.blocker || "",
+    owner: pack.owner || "",
+    due: pack.due || "",
+    next: pack.next || "",
+    doneWhen: pack.doneWhen || "",
+    purpose: pack.purpose || ""
+  });
 }
 
 function filteredPacks() {
