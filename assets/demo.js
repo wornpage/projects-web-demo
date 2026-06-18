@@ -1594,6 +1594,7 @@ function renderFocus() {
         ${factBlock("Button runs next", focusCommand.label)}
         ${factBlock("Done when", pack.doneWhen)}
       </div>
+      ${workPathStrip(pack, focusCommand)}
       ${relevantMemoryStrip(pack)}
       <p>${escapeHtml(pack.purpose)}</p>
       <div class="demo-card-actions">
@@ -1796,6 +1797,7 @@ function renderPackDetail() {
           ${factLine("Blocker", blockerTextForPack(pack))}
           ${factLine("Button runs next", packCommand.label)}
         </div>
+        ${workPathStrip(pack, packCommand)}
         <div class="demo-form-grid demo-forward-fields">
           ${selectField("edit-status", "Status", ["draft", "active", "blocked", "done"], pack.status)}
           ${inputField("edit-blocker", "Blocker", pack.blocker)}
@@ -3420,6 +3422,39 @@ function relevantMemoryCardStrip(pack) {
     <span>Relevant Memory</span>
     <strong>${escapeHtml(visible)}</strong>
   </div>`;
+}
+
+function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
+  const current = workPathStage(pack);
+  const steps = [
+    { id: "draft", label: "Draft", help: "Set the forward path." },
+    { id: "review", label: "Review", help: "Clear the blocker or run the next action." },
+    { id: "done", label: "Done", help: "Finish when proof is ready." }
+  ];
+
+  return `<div class="demo-work-path" data-work-path="selected-work" aria-label="${escapeAttribute(`Work path: ${current}. Next: ${command.label}.`)}">
+    <span class="section-label">Work path</span>
+    <div class="demo-work-path-steps">
+      ${steps.map((step) => `<span class="demo-work-path-step${step.id === current ? " active" : ""}" title="${escapeAttribute(step.help)}" aria-current="${step.id === current ? "step" : "false"}">${escapeHtml(step.label)}</span>`).join("")}
+    </div>
+    <strong>Next: ${escapeHtml(command.label)}</strong>
+  </div>`;
+}
+
+function workPathStage(pack) {
+  if (!pack) {
+    return "draft";
+  }
+
+  if (pack.status === "done") {
+    return "done";
+  }
+
+  if (pack.status === "draft" || isMissingNextAction(pack)) {
+    return "draft";
+  }
+
+  return "review";
 }
 
 function inputField(id, label, value) {

@@ -1424,6 +1424,55 @@ html[data-theme="dark"] .demo-state-pill {
   gap: 12px;
 }
 
+.demo-work-path {
+  align-items: center;
+  background: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
+  border: 1px solid color-mix(in srgb, var(--cockpit-border) 84%, transparent);
+  border-radius: 12px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 10px 12px;
+}
+
+html.dark .demo-work-path,
+html[data-theme="dark"] .demo-work-path {
+  background: color-mix(in srgb, var(--cockpit-surface) 82%, var(--cockpit-bg));
+  border-color: color-mix(in srgb, var(--cockpit-accent-text) 18%, var(--cockpit-border));
+}
+
+.demo-work-path-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.demo-work-path-step {
+  background: color-mix(in srgb, var(--cockpit-surface) 86%, var(--cockpit-bg));
+  border: 1px solid var(--cockpit-border);
+  border-radius: 999px;
+  color: var(--cockpit-text-secondary);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1;
+  padding: 7px 9px;
+}
+
+.demo-work-path-step.active {
+  background: var(--cockpit-accent);
+  border-color: var(--cockpit-accent);
+  color: var(--cockpit-accent-text);
+}
+
+.demo-work-path strong {
+  color: var(--cockpit-text);
+  font-size: 13px;
+  font-weight: 780;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
 .demo-support-details {
   background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
   border: 1px solid var(--cockpit-border);
@@ -1884,6 +1933,15 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   .demo-command-line,
   .demo-command-row {
     grid-template-columns: 1fr;
+  }
+
+  .demo-work-path {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
+  .demo-work-path strong {
+    text-align: left;
   }
 
   .demo-bottom-brief {
