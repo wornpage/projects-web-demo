@@ -165,6 +165,21 @@
     "activity": ["Public demo repo linked.", "Demo-only banner added."]
   },
   {
+    "id": "make-an-old-fashioned",
+    "title": "make-an-old-fashioned",
+    "type": "personal",
+    "status": "active",
+    "blocker": "none",
+    "next": "Open",
+    "due": "2026-06-23",
+    "owner": "Jared",
+    "purpose": "Keep a small repeatable checklist for making an Old Fashioned.",
+    "doneWhen": "Ingredients, glass, garnish, and stirring steps are ready.",
+    "sources": ["recipe note", "bar checklist"],
+    "memory": ["Use this as a low-stakes example of a personal pack."],
+    "activity": ["Sample personal pack added.", "Ready to open."]
+  },
+  {
     "id": "calendar-date-pass",
     "title": "calendar-date-pass",
     "type": "planning",

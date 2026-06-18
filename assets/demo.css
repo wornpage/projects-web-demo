@@ -1115,6 +1115,25 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   margin-top: 10px;
 }
 
+.demo-disabled-reason {
+  background: color-mix(in srgb, var(--cockpit-surface) 88%, var(--cockpit-bg));
+  border: 1px dashed color-mix(in srgb, var(--cockpit-border) 84%, transparent);
+  border-radius: 10px;
+  color: var(--cockpit-text-secondary);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  margin: 10px 0 0;
+  padding: 8px 10px;
+}
+
+html.dark .demo-disabled-reason,
+html[data-theme="dark"] .demo-disabled-reason {
+  background: color-mix(in srgb, var(--cockpit-surface) 78%, var(--cockpit-bg));
+  border-color: color-mix(in srgb, var(--cockpit-accent-text) 18%, var(--cockpit-border));
+  color: color-mix(in srgb, var(--cockpit-text) 86%, var(--cockpit-text-secondary));
+}
+
 .demo-state-pill {
   align-items: center;
   background: color-mix(in srgb, var(--cockpit-accent-50) 70%, var(--cockpit-surface));

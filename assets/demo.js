@@ -185,6 +185,15 @@ const DEMO_SCENARIOS = [
           ...pack,
           due: "2026-06-16"
         })
+  },
+  {
+    id: "empty",
+    label: "Empty state",
+    description: "Show how disabled controls explain what to do when no sample work is loaded.",
+    profile: "general",
+    route: "review",
+    filter: "all",
+    transform: () => []
   }
 ];
 
@@ -1477,6 +1486,7 @@ function renderReview() {
         </div>
         <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeAttribute(firstReview?.id || "")}"${disabledReasonAttributes(!firstReview, reviewButtonReason)}>${escapeHtml(reviewButtonLabel)}</button>
       </div>
+      ${disabledReasonNotice(!firstReview, reviewButtonReason)}
       <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.")}</div>
     </section>
   `;
@@ -2051,6 +2061,7 @@ function renderLab() {
         <p id="lab-pack-select-help" class="demo-field-help">How to fill: ${escapeHtml(state.packs.length === 0 ? "reset demo data or choose a scenario with work." : "choose sample work to preview its next action.")}</p>
         <button id="lab-run-action" class="btn btn-primary" type="button"${disabledReasonAttributes(!pack, noPackReason)}>Run ${escapeHtml(action.label)}</button>
         <button id="lab-set-next" class="btn" type="button"${disabledReasonAttributes(!pack, noPackReason)}>Set Button runs next</button>
+        ${disabledReasonNotice(!pack, noPackReason)}
       </div>
       <div class="demo-command-lines compact">
         ${factLine("Where", pack?.title || "No sample work selected")}
@@ -3261,6 +3272,16 @@ function disabledReasonAttributes(disabled, reason) {
 
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
   return ` disabled title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}" data-disabled-reason="${escapeAttribute(copy)}"`;
+}
+
+function disabledReasonNotice(disabled, reason) {
+  if (!disabled) {
+    return "";
+  }
+
+  const copy = visibleCopy(reason, DEMO_COPY_LIMITS.commandFlowVisible);
+  const help = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<p class="demo-disabled-reason" title="${escapeAttribute(help)}">Blocked: ${escapeHtml(copy)}</p>`;
 }
 
 function recentActivityPanel() {
