@@ -1794,6 +1794,7 @@ function renderPackDetail() {
 
 function renderMemory() {
   const pack = currentPack() || state.packs[0];
+  const memoryState = memoryNoteSaveState(pack, "");
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1807,18 +1808,21 @@ function renderMemory() {
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
         <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a sample memory note">
-        <button id="add-memory" class="btn btn-primary" type="button">Add note</button>
+        <p id="memory-note-help" class="demo-field-help" aria-live="polite">${escapeHtml(memoryState.help)}</p>
+        <button id="add-memory" class="btn btn-primary" type="button" aria-describedby="memory-note-help"${disabledReasonAttributes(!memoryState.canSave, memoryState.help)}>Add note</button>
       </div>
     </section>
   `;
+  bindMemoryValidation(pack);
   el("add-memory").addEventListener("click", () => {
-    if (!pack) return;
-    const value = el("memory-note").value.trim();
-    if (!value) {
-      state.status = "Memory note needs text.";
-      render();
+    const memoryState = memoryNoteSaveState(pack, valueOf("memory-note"));
+    if (!memoryState.canSave) {
+      state.status = memoryState.help;
+      syncMemoryValidation(pack);
       return;
     }
+
+    const value = el("memory-note").value.trim();
     pack.memory.unshift(value);
     pack.activity.unshift("Memory note added in browser state.");
     state.status = "Memory note added in browser state only.";
@@ -2034,7 +2038,7 @@ function renderLab() {
         </select>
         <p id="lab-pack-select-help" class="demo-field-help">How to fill: ${escapeHtml(state.packs.length === 0 ? "reset demo data or choose a scenario with work." : "choose sample work to preview its next action.")}</p>
         <button id="lab-run-action" class="btn btn-primary" type="button"${disabledReasonAttributes(!pack, noPackReason)}>Run ${escapeHtml(action.label)}</button>
-        <button id="lab-set-next" class="btn" type="button"${disabledReasonAttributes(!pack, noPackReason)}>Set next</button>
+        <button id="lab-set-next" class="btn" type="button"${disabledReasonAttributes(!pack, noPackReason)}>Set Button runs next</button>
       </div>
       <div class="demo-command-lines compact">
         ${factLine("Where", pack?.title || "No sample work selected")}
@@ -2942,6 +2946,55 @@ function syncCreateValidation() {
   if (stateForSave.canSave) {
     button.removeAttribute("title");
     button.setAttribute("aria-label", "Save sample");
+    delete button.dataset.disabledReason;
+    return;
+  }
+
+  const copy = helpCopy(stateForSave.help, DEMO_COPY_LIMITS.commandFlowHelp);
+  button.title = copy;
+  button.setAttribute("aria-label", copy);
+  button.dataset.disabledReason = copy;
+}
+
+function memoryNoteSaveState(pack, note) {
+  if (!pack) {
+    return {
+      canSave: false,
+      help: "Where: Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory."
+    };
+  }
+
+  if (!String(note || "").trim()) {
+    return {
+      canSave: false,
+      help: `Where: Memory. Blocker: memory note is empty. Button runs next: type a note for ${pack.title}.`
+    };
+  }
+
+  return {
+    canSave: true,
+    help: `Where: Memory. Blocker: none. Button runs next: add memory note to ${pack.title}.`
+  };
+}
+
+function bindMemoryValidation(pack) {
+  el("memory-note")?.addEventListener("input", () => syncMemoryValidation(pack));
+  syncMemoryValidation(pack);
+}
+
+function syncMemoryValidation(pack) {
+  const button = el("add-memory");
+  const help = el("memory-note-help");
+  if (!button || !help) {
+    return;
+  }
+
+  const stateForSave = memoryNoteSaveState(pack, valueOf("memory-note"));
+  help.textContent = stateForSave.help;
+  button.disabled = !stateForSave.canSave;
+  if (stateForSave.canSave) {
+    button.removeAttribute("title");
+    button.setAttribute("aria-label", "Add note");
     delete button.dataset.disabledReason;
     return;
   }

@@ -59,6 +59,7 @@ body {
   --demo-card-bg: color-mix(in srgb, var(--cockpit-surface) 96%, var(--cockpit-bg));
   --demo-card-border: color-mix(in srgb, var(--cockpit-border) 82%, transparent);
   --demo-card-accent-edge: color-mix(in srgb, var(--cockpit-accent) 38%, transparent);
+  --demo-panel-bg: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
   --demo-card-head-bg: color-mix(in srgb, var(--cockpit-surface) 86%, var(--demo-card-bg));
   --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 84%, var(--cockpit-bg));
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 68%, var(--cockpit-text));
@@ -74,11 +75,12 @@ body {
 
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
-  --demo-card-bg: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
-  --demo-card-border: color-mix(in srgb, var(--cockpit-border) 78%, transparent);
-  --demo-card-accent-edge: color-mix(in srgb, var(--cockpit-accent-100) 54%, transparent);
+  --demo-panel-bg: color-mix(in srgb, var(--cockpit-surface) 86%, var(--cockpit-bg));
+  --demo-card-bg: color-mix(in srgb, var(--cockpit-surface) 74%, var(--cockpit-bg));
+  --demo-card-border: color-mix(in srgb, var(--cockpit-accent-text) 18%, var(--cockpit-border));
+  --demo-card-accent-edge: color-mix(in srgb, var(--cockpit-accent) 72%, var(--cockpit-accent-text));
   --demo-card-head-bg: color-mix(in srgb, var(--cockpit-accent-100) 14%, var(--demo-card-bg));
-  --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 92%, var(--cockpit-bg));
+  --demo-card-banner-bg: color-mix(in srgb, var(--cockpit-surface) 78%, var(--cockpit-bg));
   --demo-command-accent: color-mix(in srgb, var(--cockpit-accent) 30%, var(--cockpit-accent-text));
   --demo-focus-ring: color-mix(in srgb, var(--cockpit-accent) 78%, var(--cockpit-text));
   --demo-primary-on-accent: #061B16;
@@ -313,7 +315,7 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-toolbar,
 .demo-panel,
 .demo-metric {
-  background: color-mix(in srgb, var(--cockpit-surface) 94%, var(--cockpit-bg));
+  background: var(--demo-panel-bg);
   border: 1px solid var(--cockpit-border);
   border-radius: var(--demo-panel-radius);
   box-shadow: var(--cockpit-shadow-md);
@@ -331,6 +333,20 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-note:hover {
   box-shadow: var(--cockpit-shadow-lg);
   border-color: color-mix(in srgb, var(--cockpit-accent) 24%, var(--cockpit-border));
+}
+
+html.dark .demo-panel,
+html.dark .demo-command-brief,
+html.dark .demo-toolbar,
+html.dark .demo-metric,
+html[data-theme="dark"] .demo-panel,
+html[data-theme="dark"] .demo-command-brief,
+html[data-theme="dark"] .demo-toolbar,
+html[data-theme="dark"] .demo-metric {
+  border-color: color-mix(in srgb, var(--cockpit-accent-text) 16%, var(--cockpit-border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--cockpit-accent-text) 8%, transparent),
+    0 0 0 1px color-mix(in srgb, #000 36%, transparent);
 }
 
 .demo-notice {
@@ -852,6 +868,36 @@ html[data-theme="dark"] .demo-meta-row {
   padding: 16px;
   position: relative;
   transition: transform var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
+}
+
+html.dark .demo-work-card,
+html.dark .demo-review-card,
+html.dark .demo-row,
+html.dark .demo-note,
+html[data-theme="dark"] .demo-work-card,
+html[data-theme="dark"] .demo-review-card,
+html[data-theme="dark"] .demo-row,
+html[data-theme="dark"] .demo-note {
+  border-color: var(--demo-card-border);
+  box-shadow:
+    inset 5px 0 0 var(--demo-card-accent-edge),
+    inset 0 1px 0 color-mix(in srgb, var(--cockpit-accent-text) 7%, transparent),
+    0 0 0 1px color-mix(in srgb, #000 42%, transparent);
+}
+
+html.dark .demo-work-card:hover,
+html.dark .demo-review-card:hover,
+html.dark .demo-row:hover,
+html.dark .demo-note:hover,
+html[data-theme="dark"] .demo-work-card:hover,
+html[data-theme="dark"] .demo-review-card:hover,
+html[data-theme="dark"] .demo-row:hover,
+html[data-theme="dark"] .demo-note:hover {
+  border-color: color-mix(in srgb, var(--cockpit-accent) 58%, var(--cockpit-border));
+  box-shadow:
+    inset 5px 0 0 var(--cockpit-accent),
+    inset 0 1px 0 color-mix(in srgb, var(--cockpit-accent-text) 10%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--cockpit-accent) 32%, transparent);
 }
 
 .demo-row:hover {
