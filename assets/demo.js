@@ -2493,12 +2493,15 @@ function setActionConfirmation(pack, action) {
   );
 }
 
-function setSaveConfirmation(pack) {
+function setSaveConfirmation(pack, changed) {
   if (!pack) return;
 
+  const summary = changed
+    ? `Forward path updated for ${pack.title}.`
+    : `No forward path changes for ${pack.title}.`;
   setActionReceipt(
     pack,
-    `Saved forward path for ${pack.title}. Demo state changed in this browser only.`,
+    summary,
     resolvePrimaryCommandForPack(pack)
   );
 }
@@ -3152,10 +3155,11 @@ function savePackDetail(id) {
   if (pack.status === "blocked" && pack.blocker === "none") {
     pack.status = "active";
   }
-  if (packForwardPathSignature(pack) !== before) {
-    pack.activity.unshift("Forward path changed in browser state.");
+  const changed = packForwardPathSignature(pack) !== before;
+  if (changed) {
+    pack.activity.unshift("Forward path changed.");
   }
-  setSaveConfirmation(pack);
+  setSaveConfirmation(pack, changed);
   render();
 }
 
