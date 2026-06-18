@@ -3438,7 +3438,23 @@ function metricCard(label, value, note) {
 }
 
 function navButton(route, label) {
-  return `<button class="btn" type="button" data-go="${escapeAttribute(route)}">${escapeHtml(label)}</button>`;
+  const reason = routeButtonReason(route, label);
+  const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<button class="btn" type="button" data-go="${escapeAttribute(route)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
+}
+
+function routeButtonReason(route, label) {
+  const reasons = {
+    work: "Open the work list to choose one sample pack.",
+    triage: "Open triage to turn pasted work into Where, Blocker, and Button runs next.",
+    today: "Open dated work and run the next action from due items.",
+    lab: "Open Demo Lab to inspect the selected command state.",
+    meta: "Open Meta to inspect routes, assets, and build metadata.",
+    create: "Create sample work with required forward-motion fields.",
+    settings: "Change the static demo copy profile.",
+    feedback: "Open feedback with the current demo context."
+  };
+  return reasons[route] || `Open ${label}.`;
 }
 
 function factBlock(label, value) {
