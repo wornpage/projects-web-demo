@@ -2221,7 +2221,7 @@ function renderLab() {
   const styleAudit = buildStyleAuditSnapshot();
   const initialChecks = labSmokeChecks(pack, styleAudit);
   const snapshot = collectLabSnapshot(pack, action, styleAudit, initialChecks);
-  const noPackReason = "Choose sample work before running Lab actions.";
+  const noPackReason = labNoPackReason();
   const labPackSelectHelp = labPackSelectReason(state.packs.length > 0);
   const labRunHelp = pack ? labRunActionHelp(pack, action) : noPackReason;
   const labSetNextHelp = pack ? labSetNextActionHelp(pack) : noPackReason;
@@ -2335,12 +2335,16 @@ function labPackSelectReason(hasWork) {
     : "Where: Demo Lab. Blocker: no sample work is available. Button runs next: reset demo data or choose a scenario with work.";
 }
 
+function labNoPackReason() {
+  return "Where: Demo Lab. Blocker: no sample work is selected. Button runs next: reset demo data or choose a scenario with work.";
+}
+
 function labRunActionHelp(pack, action) {
-  return `Run ${action.label} for ${pack.title}. Current blocker: ${blockerTextForPack(pack)}.`;
+  return `Where: Demo Lab / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: run ${action.label}.`;
 }
 
 function labSetNextActionHelp(pack) {
-  return `Open Button runs next setup for ${pack.title} without changing status.`;
+  return `Where: Demo Lab / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: set Button runs next.`;
 }
 
 function workToolbar(label) {
