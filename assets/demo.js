@@ -1244,7 +1244,7 @@ function triageCard(row) {
       ${triageSelectInput(row, "next", "Button runs next")}
       ${triageTextInput(row, "blocker", "Blocker")}
       ${triageTextInput(row, "evidence", "Evidence needed")}
-      ${triageTextInput(row, "doneWhen", "Done when", true)}
+      ${triageTextInput(row, "doneWhen", "Proof target", true)}
     </div>
     <div class="demo-card-actions">
       <button class="btn btn-sm" type="button" data-triage-remove="${escapeAttribute(row.id)}">Remove</button>
@@ -1411,7 +1411,7 @@ function collectTriageSnapshot(rows = normalizedTriageRows()) {
       blocker: row.blocker,
       buttonRunsNext: row.next,
       evidenceNeeded: row.evidence,
-      doneWhen: row.doneWhen
+      proofTarget: row.doneWhen
     })),
     generatedAt: new Date().toISOString()
   };
@@ -1425,7 +1425,7 @@ function triageMarkdown(rows = normalizedTriageRows()) {
   const header = [
     "# Button Runs Next Triage",
     "",
-    "| Work | Where | Blocker | Button runs next | Evidence needed | Done when |",
+    "| Work | Where | Blocker | Button runs next | Evidence needed | Proof target |",
     "|---|---|---|---|---|---|"
   ];
   const body = rows.map((row) => [
