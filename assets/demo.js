@@ -1,7 +1,8 @@
-const DEMO_STORAGE_KEY = "projects-static-demo-state-v5";
+const DEMO_STORAGE_KEY = "projects-static-demo-state-v6";
 const LEGACY_DEMO_STORAGE_KEYS = [
   "projects-static-demo-state-v3",
-  "projects-static-demo-state-v4"
+  "projects-static-demo-state-v4",
+  "projects-static-demo-state-v5"
 ];
 const THEME_STORAGE_KEY = "projects-demo-theme";
 const DEMO_METADATA_FILE = "assets/demo-metadata.json";
@@ -3588,7 +3589,7 @@ function styleAuditChecks() {
     },
     {
       label: "State key reset",
-      status: DEMO_STORAGE_KEY.endsWith("-v5"),
+      status: DEMO_STORAGE_KEY.endsWith("-v6"),
       detail: DEMO_STORAGE_KEY
     },
     {

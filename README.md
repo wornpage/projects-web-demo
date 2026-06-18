@@ -89,8 +89,8 @@ hash path segments, and ids supplied to routes that do not accept ids.
 | Area | Demo behavior |
 |---|---|
 | Data | Reads fake sample work from `data/demo-packs.json`. |
-| State | Persists temporary demo state in localStorage under `projects-static-demo-state-v5`. |
-| Versioning | Header `Build` uses release metadata; `State` in the header shows localStorage schema (`v5`). |
+| State | Persists temporary demo state in localStorage under `projects-static-demo-state-v6`. |
+| Versioning | Header `Build` uses release metadata; `State` in the header shows localStorage schema (`v6`). |
 | Actions | Browser-only mutations (no remote write-back). |
 | Triage | Converts pasted task text into editable `Where`, `Blocker`, `Button runs next`, evidence, and done-when rows. |
 | Theme | Supports light/dark, defaults to dark. |

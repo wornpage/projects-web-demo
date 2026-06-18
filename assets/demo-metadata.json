@@ -1,9 +1,9 @@
 {
+  "commit": "e48ca02ea",
   "releaseNotesUrl": "https://github.com/jared-bidlow/projects-web-demo/releases",
-  "version": "v3.3.3",
   "profileApplied": "general",
+  "generatedAt": "2026-06-18T00:11:08.0913852Z",
   "repository": "https://github.com/jared-bidlow/projects-web-demo",
-  "generatedAt": "2026-06-18T00:07:51.0563951Z",
   "scenario": "default",
-  "commit": "92d5ef859"
+  "version": "v3.3.3"
 }
