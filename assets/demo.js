@@ -2187,12 +2187,17 @@ function boardColumn(status) {
       <span>${packs.length}</span>
     </div>
     <div class="demo-list">
-      ${packs.map((pack) => `<article class="demo-mini-card">
-        <button type="button" class="demo-card-title" data-action="focus" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(pack.title)}</button>
-        <span>${escapeHtml(pack.blocker === "none" ? pack.next : pack.blocker)}</span>
-      </article>`).join("") || emptyState(`No ${status} sample work.`, "Change filters, choose another scenario, or edit work status.")}
+      ${packs.map(boardMiniCard).join("") || emptyState(`No ${status} sample work.`, "Change filters, choose another scenario, or edit work status.")}
     </div>
   </section>`;
+}
+
+function boardMiniCard(pack) {
+  const command = resolvePrimaryCommandForPack(pack);
+  return `<article class="demo-mini-card">
+    <button type="button" class="demo-card-title" data-action="focus" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(pack.title)}</button>
+    <span>${escapeHtml(pack.blocker === "none" ? command.label : pack.blocker)}</span>
+  </article>`;
 }
 
 function nextCandidateRow(pack) {
@@ -2340,6 +2345,7 @@ function bindLabControls() {
 
 function workCard(pack) {
   const selected = pack.id === state.selectedId ? " selected" : "";
+  const command = resolvePrimaryCommandForPack(pack);
   return `<article class="demo-work-card${selected}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select">${escapeHtml(pack.title)}</button>
@@ -2348,7 +2354,7 @@ function workCard(pack) {
     <div class="demo-command-row">
       <div>
         <span>Button runs next</span>
-        <strong>${escapeHtml(pack.next)}</strong>
+        <strong>${escapeHtml(command.label)}</strong>
       </div>
       ${primaryCommandButton(pack)}
     </div>
