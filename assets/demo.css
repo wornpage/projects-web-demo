@@ -878,11 +878,14 @@ html[data-theme="dark"] .demo-work-card,
 html[data-theme="dark"] .demo-review-card,
 html[data-theme="dark"] .demo-row,
 html[data-theme="dark"] .demo-note {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cockpit-accent-text) 5%, var(--demo-card-bg)), var(--demo-card-bg));
   border-color: var(--demo-card-border);
   box-shadow:
     inset 5px 0 0 var(--demo-card-accent-edge),
     inset 0 1px 0 color-mix(in srgb, var(--cockpit-accent-text) 7%, transparent),
-    0 0 0 1px color-mix(in srgb, #000 42%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--cockpit-accent-text) 6%, transparent),
+    0 1px 0 color-mix(in srgb, #000 72%, transparent);
 }
 
 html.dark .demo-work-card:hover,
@@ -897,6 +900,7 @@ html[data-theme="dark"] .demo-note:hover {
   box-shadow:
     inset 5px 0 0 var(--cockpit-accent),
     inset 0 1px 0 color-mix(in srgb, var(--cockpit-accent-text) 10%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--cockpit-accent-text) 8%, transparent),
     0 0 0 1px color-mix(in srgb, var(--cockpit-accent) 32%, transparent);
 }
 
@@ -1100,6 +1104,11 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
 
 .demo-card-support[open] summary::after {
   content: "-";
+}
+
+.demo-card-support:not([open]) .demo-card-actions,
+.demo-card-support:not([open]) .demo-inline-form {
+  display: none;
 }
 
 .demo-card-support .demo-inline-form {

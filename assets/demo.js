@@ -1553,6 +1553,10 @@ function renderFocus() {
     return;
   }
   const focusCommand = resolvePrimaryCommandForPack(pack);
+  const doneAction = focusCommand.action === "done"
+    ? `<button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>`
+    : "";
+
   state.selectedId = pack.id;
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-focus-panel">
@@ -1565,23 +1569,30 @@ function renderFocus() {
       </div>
       <div class="demo-focus-grid">
         ${factBlock("Where", `${profile().work}: ${pack.type}`)}
-        ${factBlock("Blocker", pack.blocker)}
-        ${factBlock("Button runs next", pack.next)}
+        ${factBlock("Blocker", blockerTextForPack(pack))}
+        ${factBlock("Button runs next", focusCommand.label)}
         ${factBlock("Done when", pack.doneWhen)}
       </div>
       ${relevantMemoryStrip(pack)}
       <p>${escapeHtml(pack.purpose)}</p>
       <div class="demo-card-actions">
         <button class="btn btn-primary" type="button" data-action="run-next" data-pack="${escapeHtml(pack.id)}">${escapeHtml(focusCommand.label)}</button>
-        <button class="btn" type="button" data-action="open" data-pack="${escapeHtml(pack.id)}">Open</button>
-        <button class="btn" type="button" data-action="done" data-pack="${escapeHtml(pack.id)}">Mark done</button>
-        <button class="btn" type="button" data-go="pack" data-pack="${escapeHtml(pack.id)}">Edit sample</button>
       </div>
+      <details class="demo-card-support">
+        <summary>
+          <span>Support setup</span>
+          <strong>Open, edit, or finish</strong>
+        </summary>
+        <div class="demo-card-actions compact">
+          <button class="btn" type="button" data-action="open" data-pack="${escapeHtml(pack.id)}">Open</button>
+          <button class="btn" type="button" data-action="edit" data-pack="${escapeHtml(pack.id)}">Edit sample</button>
+          ${doneAction}
+        </div>
+      </details>
     </section>
     ${activityPanel(pack)}
   `;
   bindListActions();
-  bindGoButtons();
 }
 
 function renderStats() {
