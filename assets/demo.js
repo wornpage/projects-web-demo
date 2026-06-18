@@ -963,7 +963,7 @@ function renderHome() {
           <span class="section-label">Start here</span>
           <h2>Move from brief to action</h2>
         </div>
-        <button class="btn btn-primary" type="button" data-go="review">Review work</button>
+        ${navButton("review", "Review work", "btn btn-primary")}
       </div>
       <p>The demo shows the public-safe shape of Projects: pick work, read Where / Blocker / Button runs next, then run a simulated action.</p>
       <div class="demo-quick-actions">
@@ -1082,7 +1082,7 @@ function renderTriage() {
       <div class="demo-card-actions">
         <button id="copy-triage-markdown" class="btn btn-primary" type="button">Copy Markdown</button>
         <button id="copy-triage-json" class="btn" type="button">Copy JSON</button>
-        <button class="btn" type="button" data-go="work">Open work list</button>
+        ${navButton("work", "Open work list")}
       </div>
     </section>
   `;
@@ -1453,7 +1453,7 @@ function renderWork() {
           <span class="section-label">Work cards</span>
           <h2>${visible.length} visible</h2>
         </div>
-        <button class="btn btn-primary" type="button" data-go="create">${escapeHtml(profile().newWork)}</button>
+        ${navButton("create", profile().newWork, "btn btn-primary")}
       </div>
       <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.")}</div>
     </section>
@@ -1489,7 +1489,7 @@ function renderBoard() {
           <span class="section-label">Board</span>
           <h2>Status lanes</h2>
         </div>
-        <button class="btn btn-primary" type="button" data-go="next">Set Button runs next</button>
+        ${navButton("next", "Set Button runs next", "btn btn-primary")}
       </div>
       <div class="demo-board-grid">
         ${groups.map((status) => boardColumn(status)).join("")}
@@ -1671,7 +1671,7 @@ function renderNotes() {
           <span class="section-label">Notes</span>
           <h2>Sample notes across work</h2>
         </div>
-        <button class="btn btn-primary" type="button" data-go="memory">Add note</button>
+        ${navButton("memory", "Add note", "btn btn-primary")}
       </div>
       <div class="demo-list">
         ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyState("No sample notes exist.", "Open Memory and add a note to selected work.")}
@@ -2143,7 +2143,7 @@ function renderLab() {
       </div>
       <div class="demo-card-actions">
         <button id="copy-lab-snapshot" class="btn btn-primary" type="button">Copy lab snapshot</button>
-        <button class="btn" type="button" data-go="meta">Open meta</button>
+        ${navButton("meta", "Open meta")}
       </div>
     </section>
   `;
@@ -3437,10 +3437,10 @@ function metricCard(label, value, note) {
   </section>`;
 }
 
-function navButton(route, label) {
+function navButton(route, label, className = "btn") {
   const reason = routeButtonReason(route, label);
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
-  return `<button class="btn" type="button" data-go="${escapeAttribute(route)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
+  return `<button class="${escapeAttribute(className)}" type="button" data-go="${escapeAttribute(route)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
 }
 
 function routeButtonReason(route, label) {
@@ -3448,9 +3448,12 @@ function routeButtonReason(route, label) {
     work: "Open the work list to choose one sample pack.",
     triage: "Open triage to turn pasted work into Where, Blocker, and Button runs next.",
     today: "Open dated work and run the next action from due items.",
+    review: "Open review work and resolve the next blocker.",
+    next: "Open Button runs next setup for review work.",
     lab: "Open Demo Lab to inspect the selected command state.",
     meta: "Open Meta to inspect routes, assets, and build metadata.",
     create: "Create sample work with required forward-motion fields.",
+    memory: "Open Memory to add recall notes to selected work.",
     settings: "Change the static demo copy profile.",
     feedback: "Open feedback with the current demo context."
   };
