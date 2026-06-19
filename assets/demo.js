@@ -1763,7 +1763,7 @@ function renderFocus() {
   }
   const focusCommand = resolvePrimaryCommandForPack(pack);
   const doneAction = focusCommand.action === "done"
-    ? supportActionButton("done", "Mark done", pack)
+    ? supportActionButton("done", "Finish with proof", pack)
     : "";
 
   state.selectedId = pack.id;
@@ -1966,7 +1966,7 @@ function renderPackDetail() {
   }
   const packCommand = resolvePrimaryCommandForPack(pack);
   const doneAction = packCommand.action === "done"
-    ? supportActionButton("done", "Mark done", pack)
+    ? supportActionButton("done", "Finish with proof", pack)
     : "";
   const saveState = packDetailSaveState(pack);
   el("screen-content").innerHTML = `
@@ -2648,7 +2648,7 @@ function workCard(pack) {
         ${supportActionButton("open", "Open", pack, "btn btn-sm")}
         ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
         ${supportActionButton("block", "Block", pack, "btn btn-sm")}
-        ${supportActionButton("done", "Done", pack, "btn btn-sm")}
+        ${supportActionButton("done", "Finish with proof", pack, "btn btn-sm")}
       </div>
     </details>
   </article>`;
@@ -2670,7 +2670,7 @@ function todayRow(pack) {
 function reviewCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const doneAction = command.action === "done"
-    ? supportActionButton("done", "Done", pack)
+    ? supportActionButton("done", "Finish with proof", pack)
     : "";
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack)
@@ -2734,7 +2734,7 @@ function supportActionReason(action, pack) {
     focus: `Show ${where} in the Focus view without changing status.`,
     block: `Mark ${where} blocked for this sample.`,
     unblock: `Clear the blocker for ${where}; the demo stores Blocker: none automatically.`,
-    done: `Finish ${where} for this sample.`,
+    done: `Finish ${where} and keep the proof target in the receipt.`,
     edit: `Open the work path fields for ${where}.`,
     "set-next": `Choose the exact Button runs next action for ${where}.`
   };
@@ -2797,7 +2797,7 @@ function actionLabelFromKey(action) {
     start: "Start",
     unblock: "Unblock",
     block: "Block",
-    done: "Done",
+    done: "Finish with proof",
     focus: "Focus",
     edit: "Open",
     open: "Open"
