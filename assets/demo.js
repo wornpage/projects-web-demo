@@ -2741,6 +2741,9 @@ function bindLabControls() {
 function workCard(pack) {
   const selected = pack.id === state.selectedId ? " selected" : "";
   const command = resolvePrimaryCommandForPack(pack);
+  const blockerAction = hasBlocker(pack)
+    ? supportActionButton("unblock", "Clear blocker", pack, "btn btn-sm")
+    : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
   return `<article class="demo-work-card${selected}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select">${escapeHtml(pack.title)}</button>
@@ -2768,7 +2771,7 @@ function workCard(pack) {
       <div class="demo-card-actions">
         ${supportActionButton("open", "Open", pack, "btn btn-sm")}
         ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
-        ${supportActionButton("block", "Block", pack, "btn btn-sm")}
+        ${blockerAction}
         ${supportActionButton("done", "Finish with proof", pack, "btn btn-sm")}
       </div>
     </details>
