@@ -2016,7 +2016,7 @@ function blockerStateField(pack) {
       <div class="demo-segmented-control" role="radiogroup" aria-label="Blocker state">
         <label class="demo-segment${hasBlocker ? "" : " active"}" data-blocker-mode-label="clear" for="edit-blocker-clear">
           <input id="edit-blocker-clear" name="edit-blocker-mode" type="radio" value="clear" data-blocker-mode="clear"${hasBlocker ? "" : " checked"}>
-          <span>No blocker</span>
+          <span>None</span>
         </label>
         <label class="demo-segment${hasBlocker ? " active" : ""}" data-blocker-mode-label="set" for="edit-blocker-set">
           <input id="edit-blocker-set" name="edit-blocker-mode" type="radio" value="set" data-blocker-mode="set"${hasBlocker ? " checked" : ""}>
@@ -2027,7 +2027,7 @@ function blockerStateField(pack) {
         <label for="edit-blocker">Blocker reason</label>
         <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="Reason blocking this work"${hasBlocker ? "" : " disabled"}>
       </div>
-      <p class="demo-field-help" data-blocker-help>${hasBlocker ? "Describe the blocker so the next action can resolve it." : "No blocker is set; this work can move forward."}</p>
+      <p class="demo-field-help" data-blocker-help>${hasBlocker ? "Describe the blocker so the next action can resolve it." : "None is the unblocked state; no typing is needed."}</p>
     </fieldset>
   `;
 }
@@ -2621,6 +2621,9 @@ function reviewCard(pack) {
   const doneAction = command.action === "done"
     ? supportActionButton("done", "Done", pack)
     : "";
+  const blockerAction = hasBlocker(pack)
+    ? supportActionButton("unblock", "Set blocker to None", pack)
+    : supportActionButton("block", "Mark blocked", pack);
 
   return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-command-lines compact">
@@ -2643,8 +2646,11 @@ function reviewCard(pack) {
     <details class="demo-card-support">
       <summary>
         <span>Support setup</span>
-        <strong>Update the selected work action before running it</strong>
+        <strong>Clear blocker or choose Button runs next</strong>
       </summary>
+      <div class="demo-card-actions">
+        ${blockerAction}
+      </div>
       <div class="demo-inline-form">
         <label class="sr-only" for="next-${escapeAttribute(pack.id)}">Button runs next</label>
         <input id="next-${escapeAttribute(pack.id)}" class="demo-search-input" type="text" value="${escapeAttribute(pack.next)}">
@@ -2676,6 +2682,7 @@ function supportActionReason(action, pack) {
     open: `Open the work path for ${where} without running the main button.`,
     focus: `Show ${where} in the Focus view without changing status.`,
     block: `Mark ${where} blocked for this sample.`,
+    unblock: `Set Blocker to None for ${where} so it can move forward.`,
     done: `Finish ${where} for this sample.`,
     edit: `Open the work path fields for ${where}.`,
     "set-next": `Choose the exact Button runs next action for ${where}.`
@@ -3556,6 +3563,7 @@ function setBlockerMode(hasBlocker) {
   const set = el("edit-blocker-set");
   const input = el("edit-blocker");
   const status = el("edit-status");
+  const next = el("edit-next");
   const help = document.querySelector("[data-blocker-help]");
   const reason = document.querySelector("[data-blocker-reason]");
   const clearLabel = document.querySelector('[data-blocker-mode-label="clear"]');
@@ -3569,6 +3577,9 @@ function setBlockerMode(hasBlocker) {
   }
   if (status && !hasBlocker && valueOf("edit-status") === "blocked") {
     status.value = "active";
+  }
+  if (!hasBlocker && next && isBlockerReviewAction(next.value)) {
+    next.value = "Open";
   }
   if (input) {
     input.disabled = !hasBlocker;
@@ -3585,8 +3596,16 @@ function setBlockerMode(hasBlocker) {
   if (help) {
     help.textContent = hasBlocker
       ? "Describe the blocker so the next action can resolve it."
-      : "No blocker is set; this work can move forward.";
+      : "None is the unblocked state; no typing is needed.";
   }
+}
+
+function isBlockerReviewAction(value) {
+  const normalized = normalizeCopy(value).toLowerCase();
+  return normalized === "review"
+    || normalized === "review work"
+    || normalized === "review blocker"
+    || normalized === "unblock";
 }
 
 function syncPackDetailValidation(pack) {
