@@ -788,6 +788,7 @@ function updateCommand(command) {
     el("command-flow").title = helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp);
     el("command-flow").setAttribute("aria-label", helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp));
   }
+  updateCommandWorkPath(command);
   const commandMemory = normalizeCopy(command.memory);
   const commandMemoryElement = el("command-memory");
   if (commandMemoryElement) {
@@ -813,6 +814,58 @@ function updateCommand(command) {
   el("dock-next").setAttribute("aria-label", commandRunLabel(command));
   el("dock-next").title = commandRunLabel(command);
   updateActionReceipt();
+}
+
+function updateCommandWorkPath(command) {
+  const path = el("command-work-path");
+  if (!path) return;
+
+  const steps = commandWorkPathSteps(command);
+  if (!steps.length) {
+    path.hidden = true;
+    path.innerHTML = "";
+    return;
+  }
+
+  const detail = commandWorkPathDetail(command, findPack(command.targetPackId) || currentPack());
+  const aria = helpCopy(
+    `Path now: ${steps.map((step) => `${step.label}${step.active ? " current" : ""}`).join(", ")}. ${detail}`,
+    DEMO_COPY_LIMITS.commandFlowHelp
+  );
+  path.hidden = false;
+  path.title = aria;
+  path.setAttribute("aria-label", aria);
+  path.innerHTML = `
+    <span class="section-label">Path now</span>
+    <div class="demo-work-path-steps">
+      ${steps.map((step) => `<span class="demo-work-path-step${step.active ? " active" : ""}" title="${escapeAttribute(step.help)}" aria-current="${step.active ? "step" : "false"}">${escapeHtml(step.label)}</span>`).join("")}
+    </div>
+    <strong>${escapeHtml(detail)}</strong>`;
+}
+
+function commandWorkPathSteps(command) {
+  const pack = findPack(command.targetPackId) || currentPack();
+  if (!pack) {
+    return [
+      { id: "where", label: "Where", active: true, help: `Where: ${command.where}.` },
+      { id: "blocker", label: "Blocker", active: false, help: `Blocker: ${command.blocker}.` },
+      { id: "next", label: "Run", active: false, help: `Button runs next: ${command.next}.` }
+    ];
+  }
+
+  const stage = workPathStage(pack, { label: command.next, action: command.action, targetPackId: command.targetPackId });
+  return workPathSteps().map((step) => ({
+    ...step,
+    active: step.id === stage
+  }));
+}
+
+function commandWorkPathDetail(command, pack) {
+  if (pack) {
+    return `Proof: ${visibleCopy(proofTargetForPack(pack), DEMO_COPY_LIMITS.commandFlowVisible)}`;
+  }
+
+  return `Next: ${visibleCopy(command.next, DEMO_COPY_LIMITS.commandFlowVisible)}`;
 }
 
 function commandRunLabel(command) {
@@ -4127,12 +4180,7 @@ function memoryStripActionHelp(pack) {
 
 function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
   const current = workPathStage(pack, command);
-  const steps = [
-    { id: "draft", label: "Draft", help: "Set the forward path." },
-    { id: "review", label: "Review", help: "Clear the blocker or run the next action." },
-    { id: "proof", label: "Proof", help: "Run the next action and keep the proof target visible." },
-    { id: "done", label: "Done", help: "Finish when proof is ready." }
-  ];
+  const steps = workPathSteps();
 
   return `<div class="demo-work-path" data-work-path="selected-work" aria-label="${escapeAttribute(`Work path: ${current}. Next: ${command.label}.`)}">
     <span class="section-label">Work path</span>
@@ -4141,6 +4189,15 @@ function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
     </div>
     <strong>Next: ${escapeHtml(command.label)}</strong>
   </div>`;
+}
+
+function workPathSteps() {
+  return [
+    { id: "draft", label: "Draft", help: "Set the forward path." },
+    { id: "review", label: "Review", help: "Clear the blocker or run the next action." },
+    { id: "proof", label: "Proof", help: "Run the next action and keep the proof target visible." },
+    { id: "done", label: "Done", help: "Finish when proof is ready." }
+  ];
 }
 
 function workPathStage(pack, command = resolvePrimaryCommandForPack(pack)) {

@@ -1808,10 +1808,23 @@ html[data-theme="dark"] .demo-segment.active {
   padding: 10px 12px;
 }
 
+.demo-command-work-path {
+  background: var(--cockpit-selected-bg);
+}
+
+.demo-command-work-path[hidden] {
+  display: none;
+}
+
 html.dark .demo-work-path,
 html[data-theme="dark"] .demo-work-path {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
+}
+
+html.dark .demo-command-work-path,
+html[data-theme="dark"] .demo-command-work-path {
+  background: var(--cockpit-selected-bg);
 }
 
 .demo-work-path-steps {
