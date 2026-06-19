@@ -548,6 +548,36 @@ html[data-theme="dark"] .demo-header-metadata {
   overflow-wrap: anywhere;
 }
 
+.demo-command-memory {
+  background: var(--cockpit-selected-bg);
+  border: 1px solid var(--cockpit-border);
+  border-left: 3px solid var(--cockpit-accent);
+  border-radius: var(--cockpit-radius);
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+}
+
+.demo-command-memory[hidden] {
+  display: none;
+}
+
+.demo-command-memory span {
+  color: var(--cockpit-text-muted);
+  font-size: 11px;
+  font-weight: 760;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.demo-command-memory strong {
+  color: var(--cockpit-text);
+  font-size: 13px;
+  font-weight: 740;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
 .demo-command-receipt {
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
@@ -607,33 +637,35 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-copy-payload {
   border-radius: calc(var(--cockpit-radius) + 4px);
   padding: 0;
-  transition: background-color var(--demo-motion-duration) ease, outline-color var(--demo-motion-duration) ease, padding var(--demo-motion-duration) ease;
+  transition: background-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease, outline-color var(--demo-motion-duration) ease, padding var(--demo-motion-duration) ease;
 }
 
 .demo-copy-payload.is-copied {
   background: var(--cockpit-selected-bg);
+  box-shadow: var(--cockpit-shadow-sm);
   outline: 2px solid var(--cockpit-accent);
   outline-offset: 2px;
-  padding: 6px;
+  padding: 8px;
 }
 
 .demo-copy-payload.is-copied textarea,
 .demo-copy-payload.is-copied .demo-search-input {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-accent);
+  min-height: min(46vh, 360px);
 }
 
 .demo-clipboard-notice {
   animation: demo-clipboard-pop 160ms ease-out;
   background: var(--cockpit-selected-bg);
-  border: 1px solid var(--cockpit-accent);
-  border-left-width: 4px;
+  border: 2px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
+  box-shadow: var(--cockpit-shadow-sm);
   color: var(--cockpit-text);
   display: grid;
-  gap: 4px;
-  margin-top: 10px;
-  padding: 12px 14px;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px 16px;
 }
 
 .demo-clipboard-notice.blocked {
@@ -641,14 +673,47 @@ html[data-theme="dark"] .demo-header-metadata {
   border-color: var(--cockpit-danger-border);
 }
 
-.demo-clipboard-notice strong {
+.demo-clipboard-notice-head {
+  display: grid;
+  gap: 3px;
+}
+
+.demo-clipboard-notice-head > span {
+  color: var(--cockpit-text-muted);
+  font-size: 11px;
+  font-weight: 820;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.demo-clipboard-notice strong,
+.demo-clipboard-next strong {
   color: var(--cockpit-text);
   font-size: 14px;
   font-weight: 820;
   line-height: 1.25;
 }
 
-.demo-clipboard-notice span,
+.demo-clipboard-next {
+  align-items: center;
+  background: var(--cockpit-surface);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
+  display: grid;
+  gap: 4px;
+  grid-template-columns: minmax(112px, 0.32fr) minmax(0, 1fr);
+  padding: 10px 12px;
+}
+
+.demo-clipboard-next span {
+  color: var(--cockpit-text-muted);
+  font-size: 11px;
+  font-weight: 820;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.demo-clipboard-notice > span,
 .demo-clipboard-notice small {
   color: var(--cockpit-text-secondary);
   font-size: 13px;
@@ -2053,6 +2118,7 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 .demo-shell .btn.is-copied {
   background: var(--cockpit-accent);
   border-color: var(--cockpit-accent);
+  box-shadow: var(--cockpit-shadow-sm);
   color: var(--demo-primary-on-accent) !important;
   -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
 }

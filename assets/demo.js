@@ -749,7 +749,8 @@ function selectedPackCommand(selected) {
     next: resolvedAction.label,
     stateText: selected?.status || "Ready",
     action: resolvedAction.action,
-    targetPackId: resolvedAction.targetPackId
+    targetPackId: resolvedAction.targetPackId,
+    memory: latestRelevantMemory(selected)
   };
 }
 
@@ -787,6 +788,16 @@ function updateCommand(command) {
     el("command-flow").title = helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp);
     el("command-flow").setAttribute("aria-label", helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp));
   }
+  const commandMemory = normalizeCopy(command.memory);
+  const commandMemoryElement = el("command-memory");
+  if (commandMemoryElement) {
+    commandMemoryElement.hidden = !commandMemory;
+    commandMemoryElement.title = commandMemory ? `Relevant Memory: ${commandMemory}` : "";
+    commandMemoryElement.setAttribute("aria-label", commandMemory ? `Relevant Memory: ${commandMemory}` : "No relevant memory for selected work.");
+  }
+  if (el("command-memory-text")) {
+    el("command-memory-text").textContent = commandMemory ? visibleCopy(commandMemory, DEMO_COPY_LIMITS.memoryVisible) : "No memory yet.";
+  }
   el("primary-action").textContent = command.next;
   el("primary-action").dataset.action = command.action || "";
   el("primary-action").dataset.pack = command.targetPackId || "";
@@ -805,8 +816,10 @@ function updateCommand(command) {
 }
 
 function commandRunLabel(command) {
+  const memory = normalizeCopy(command.memory);
+  const memoryCopy = memory ? ` Relevant Memory: ${memory}.` : "";
   return helpCopy(
-    `Where: ${command.where}. Blocker: ${command.blocker}. Button runs next: ${command.next}.`,
+    `Where: ${command.where}. Blocker: ${command.blocker}. Button runs next: ${command.next}.${memoryCopy}`,
     DEMO_COPY_LIMITS.commandFlowHelp
   );
 }
@@ -2994,6 +3007,10 @@ function receiptLine(label, value) {
   </div>`;
 }
 
+function latestRelevantMemory(pack) {
+  return normalizeCopy(pack?.memory?.find((note) => normalizeCopy(note)));
+}
+
 function normalizeActionReceipt(receipt) {
   if (!receipt || typeof receipt !== "object") {
     return null;
@@ -4059,7 +4076,7 @@ function factLine(label, value) {
 }
 
 function relevantMemoryStrip(pack) {
-  const latest = pack?.memory?.find((note) => String(note || "").trim());
+  const latest = latestRelevantMemory(pack);
   const visible = latest
     ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
     : "none yet";
@@ -4083,7 +4100,7 @@ function relevantMemoryCardStrip(pack) {
     return "";
   }
 
-  const latest = pack.memory?.find((note) => String(note || "").trim());
+  const latest = latestRelevantMemory(pack);
   const visible = latest
     ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
     : "none yet";
@@ -4854,7 +4871,7 @@ function copyButton(controlId, label, className, help, describedById) {
     ? receipt.kind === "success" ? " is-copied" : " is-blocked"
     : "";
   const visibleLabel = receipt
-    ? receipt.kind === "success" ? "Copied" : "Copy blocked"
+    ? receipt.kind === "success" ? "Copied - paste ready" : "Copy manually"
     : label;
   return `<button id="${escapeAttribute(controlId)}" class="${escapeAttribute(`${className}${stateClass}`)}" type="button"${controlHelpAttributes(false, help, describedById)}>${escapeHtml(visibleLabel)}</button>`;
 }
@@ -4869,9 +4886,17 @@ function clipboardNoticePanel(controlId) {
     return "";
   }
 
+  const eyebrow = receipt.kind === "success" ? "Clipboard ready" : "Manual copy needed";
   return `<div id="clipboard-notice-${escapeAttribute(controlId)}" class="demo-clipboard-notice ${escapeAttribute(receipt.kind)}" role="status" tabindex="-1">
-    <strong>${escapeHtml(receipt.title)}</strong>
+    <div class="demo-clipboard-notice-head">
+      <span>${escapeHtml(eyebrow)}</span>
+      <strong>${escapeHtml(receipt.title)}</strong>
+    </div>
     <span>${escapeHtml(receipt.detail)}</span>
+    <div class="demo-clipboard-next">
+      <span>Button runs next</span>
+      <strong>${escapeHtml(receipt.next)}</strong>
+    </div>
     <small>${escapeHtml(receipt.at)}</small>
   </div>`;
 }
@@ -4892,16 +4917,45 @@ function clipboardTargetIsActive(targetId) {
 
 function setClipboardReceipt(kind, options = {}) {
   const success = kind === "success";
+  const title = options.title || (success ? "Copied to clipboard" : "Clipboard blocked");
+  const detail = options.detail || (success
+    ? "The selected snapshot is on the clipboard."
+    : "Browser clipboard access was blocked. Select the visible text and copy it manually.");
+  const next = options.next || (success ? "Paste where needed" : "Copy visible text manually");
+  const proof = options.proof || (success
+    ? "Clipboard contains the copied demo payload."
+    : "The visible payload remains available for manual selection.");
   state.clipboardReceipt = {
     kind: success ? "success" : "blocked",
     route: state.route,
     controlId: options.controlId || "",
     targetId: options.targetId || "",
-    title: options.title || (success ? "Copied to clipboard" : "Clipboard blocked"),
-    detail: options.detail || (success
-      ? "The selected snapshot is on the clipboard."
-      : "Browser clipboard access was blocked. Select the visible text and copy it manually."),
+    title,
+    detail,
+    next,
+    proof,
     at: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })
+  };
+  setClipboardCommandReceipt(state.clipboardReceipt);
+}
+
+function setClipboardCommandReceipt(receipt) {
+  const routeCommand = commandForRoute(currentPack(), filteredPacks().length, state.packs.filter(isReview).length);
+  const success = receipt.kind === "success";
+  const summary = normalizeCopy(`${receipt.title}. ${receipt.detail}`);
+  const where = `${routeCommand.where || screenTitleForRoute()} / clipboard`;
+  const blocker = success ? "none" : "browser blocked clipboard access";
+  const next = receipt.next || (success ? "Paste where needed" : "Copy visible text manually");
+  const proof = receipt.proof || (success
+    ? "Clipboard contains the copied demo payload."
+    : "The visible payload remains available for manual selection.");
+  state.actionReceipt = {
+    summary: helpCopy(`${summary} Where: ${where}. Blocker: ${blocker}. Button runs next: ${next}. Proof target: ${proof}.`, DEMO_COPY_LIMITS.receiptHelp),
+    visibleSummary: visibleCopy(summary, DEMO_COPY_LIMITS.receiptVisible),
+    where,
+    blocker,
+    next,
+    proof
   };
 }
 
@@ -4911,7 +4965,10 @@ function focusClipboardNotice(controlId) {
   }
 
   requestAnimationFrame(() => {
-    el(`clipboard-notice-${controlId}`)?.focus({ preventScroll: true });
+    const notice = el(`clipboard-notice-${controlId}`);
+    if (!notice) return;
+    notice.focus({ preventScroll: true });
+    notice.scrollIntoView({ block: "nearest", inline: "nearest" });
   });
 }
 
