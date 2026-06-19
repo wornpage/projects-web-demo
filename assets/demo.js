@@ -4451,7 +4451,7 @@ function workPathStage(pack, command = resolvePrimaryCommandForPack(pack)) {
     return "review";
   }
 
-  return command.action === "done" || normalizeCopy(pack.doneWhen) ? "proof" : "review";
+  return command.action === "done" ? "proof" : "review";
 }
 
 function inputField(id, label, value) {
