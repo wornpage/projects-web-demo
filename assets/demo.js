@@ -2829,7 +2829,9 @@ function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)
 function supportActionButton(action, label, pack, className = "btn") {
   const reason = supportActionReason(action, pack);
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
-  return `<button class="${escapeAttribute(className)}" type="button" data-action="${escapeAttribute(action)}" data-pack="${escapeAttribute(pack.id)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
+  const visibleReason = supportActionVisibleReason(action);
+  const buttonClass = `${className} demo-support-action`;
+  return `<button class="${escapeAttribute(buttonClass)}" type="button" data-action="${escapeAttribute(action)}" data-pack="${escapeAttribute(pack.id)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}" data-support-reason="${escapeAttribute(visibleReason)}"><span class="demo-support-label">${escapeHtml(label)}</span><small class="demo-support-reason">${escapeHtml(visibleReason)}</small></button>`;
 }
 
 function supportActionReason(action, pack) {
@@ -2844,6 +2846,19 @@ function supportActionReason(action, pack) {
     "set-next": `Choose the exact Button runs next action for ${where}.`
   };
   return reasons[action] || `Run ${actionLabelFromKey(action)} for ${where}.`;
+}
+
+function supportActionVisibleReason(action) {
+  const reasons = {
+    open: "Open fields without running next.",
+    focus: "Inspect without changing status.",
+    block: "Add a blocker for review.",
+    unblock: "Stores Blocker: none.",
+    done: "Finish with proof visible.",
+    edit: "Edit forward path fields.",
+    "set-next": "Choose the exact next button."
+  };
+  return reasons[action] || "Secondary action.";
 }
 
 function bindWorkCards() {

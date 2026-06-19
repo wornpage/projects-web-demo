@@ -1339,6 +1339,51 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   padding-top: 14px;
 }
 
+.demo-support-action {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: center;
+  line-height: 1.15;
+  text-align: left;
+  white-space: normal;
+}
+
+.demo-support-label {
+  color: inherit;
+  display: block;
+  font: inherit;
+  line-height: inherit;
+}
+
+.demo-support-reason {
+  color: inherit;
+  display: none;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.25;
+  opacity: 0.78;
+  overflow-wrap: anywhere;
+}
+
+.demo-card-actions .demo-support-reason,
+.demo-card-support[open] .demo-support-reason {
+  display: block;
+}
+
+.demo-row-actions .demo-support-action,
+.demo-source-list .demo-support-action,
+.demo-calendar-card .demo-support-action {
+  align-items: center;
+  text-align: center;
+}
+
+.demo-row-actions .demo-support-reason,
+.demo-source-list .demo-support-reason,
+.demo-calendar-card .demo-support-reason {
+  display: none;
+}
+
 .demo-card-support {
   border-top: 1px solid var(--cockpit-border);
   margin-top: 12px;
