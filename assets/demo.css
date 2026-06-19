@@ -634,6 +634,52 @@ html[data-theme="dark"] .demo-header-metadata {
   overflow-wrap: anywhere;
 }
 
+.demo-card-receipt {
+  animation: demo-clipboard-pop 160ms ease-out;
+  background: var(--cockpit-selected-bg);
+  border: 2px solid var(--cockpit-accent);
+  border-radius: var(--cockpit-radius);
+  box-shadow: var(--cockpit-shadow-sm);
+  color: var(--cockpit-text);
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 10px 12px;
+}
+
+.demo-card-receipt span {
+  color: var(--cockpit-text-muted);
+  font-size: 11px;
+  font-weight: 820;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.demo-card-receipt strong {
+  color: var(--cockpit-text);
+  font-size: 14px;
+  font-weight: 820;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.demo-card-receipt small {
+  color: var(--cockpit-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.demo-card-receipt:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
+}
+
+.demo-route-receipt {
+  margin-bottom: 12px;
+}
+
 .demo-copy-payload {
   border-radius: calc(var(--cockpit-radius) + 4px);
   padding: 0;

@@ -949,6 +949,16 @@ function focusSelectors(kind, packId) {
     ];
   }
 
+  if (kind === "card-result") {
+    return [
+      `[data-card-receipt="${id}"]`,
+      `[data-route-receipt="${id}"]`,
+      "#command-receipt",
+      `.demo-work-card[data-pack-id="${id}"]`,
+      `.demo-review-card[data-pack-id="${id}"]`
+    ];
+  }
+
   if (kind === "triage-input") {
     return ["#triage-input"];
   }
@@ -1612,6 +1622,7 @@ function renderWork() {
         </div>
         ${navButton("create", profile().newWork, "btn btn-primary")}
       </div>
+      ${routeActionReceiptPanel(visible, "Work filters")}
       <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.")}</div>
     </section>
   `;
@@ -1679,6 +1690,7 @@ function renderReview() {
         ${reviewButton}
       </div>
       ${disabledReasonNotice(!firstReview, reviewButtonReason)}
+      ${routeActionReceiptPanel(review, "Review")}
       <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.")}</div>
     </section>
   `;
@@ -2744,6 +2756,7 @@ function workCard(pack) {
       <span>${escapeHtml(pack.owner)}</span>
     </div>
     ${relevantMemoryCardStrip(pack)}
+    ${actionReceiptCard(pack)}
     <details class="demo-card-support" data-support-actions="work-card">
       <summary>
         <span>Support actions</span>
@@ -2793,6 +2806,7 @@ function reviewCard(pack) {
       <span>${escapeHtml(pack.owner)}</span>
     </div>
     ${relevantMemoryCardStrip(pack)}
+    ${actionReceiptCard(pack)}
     <div class="demo-card-actions">
       ${primaryCommandButton(pack)}
       ${supportActionButton("focus", "Focus", pack)}
@@ -3018,6 +3032,7 @@ function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pac
   const outcomeSummary = normalizeCopy(summary);
   const fullSummary = actionReceiptSummary(outcomeSummary, pack, next);
   const receipt = {
+    packId: pack.id,
     summary: fullSummary,
     visibleSummary: visibleCopy(outcomeSummary || fullSummary, DEMO_COPY_LIMITS.receiptVisible),
     where: `${pack.title} / ${pack.status}`,
@@ -3028,6 +3043,7 @@ function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pac
 
   state.status = receipt.summary;
   state.actionReceipt = receipt;
+  queueFocus("card-result", pack.id);
 }
 
 function actionReceiptSummary(summary, pack, next) {
@@ -3068,6 +3084,44 @@ function updateActionReceipt() {
     </div>`;
 }
 
+function actionReceiptCard(pack) {
+  const receipt = normalizeActionReceipt(state.actionReceipt);
+  if (!pack || !receipt || receipt.packId !== pack.id) {
+    return "";
+  }
+
+  const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
+  const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
+  const nextLine = visibleCopy(`Now: Blocker ${receipt.blocker}. Button runs next ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
+  return `<div class="demo-card-receipt" data-card-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
+    <span>Last result</span>
+    <strong>${escapeHtml(visibleSummary)}</strong>
+    <small>${escapeHtml(nextLine)}</small>
+  </div>`;
+}
+
+function routeActionReceiptPanel(visiblePacks, routeLabel) {
+  const receipt = normalizeActionReceipt(state.actionReceipt);
+  const visibleIds = new Set((visiblePacks || []).map((pack) => pack.id));
+  if (!receipt?.packId || visibleIds.has(receipt.packId)) {
+    return "";
+  }
+
+  const pack = findPack(receipt.packId);
+  if (!pack) {
+    return "";
+  }
+
+  const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
+  const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
+  const nextLine = visibleCopy(`Out of ${routeLabel}. Blocker ${receipt.blocker}. Next ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
+  return `<div class="demo-card-receipt demo-route-receipt" data-route-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
+    <span>Last result</span>
+    <strong>${escapeHtml(visibleSummary)}</strong>
+    <small>${escapeHtml(nextLine)}</small>
+  </div>`;
+}
+
 function receiptLine(label, value) {
   return `<div>
     <span>${escapeHtml(label)}</span>
@@ -3086,6 +3140,7 @@ function normalizeActionReceipt(receipt) {
 
   const summary = normalizeCopy(receipt.summary);
   const visibleSummary = normalizeCopy(receipt.visibleSummary);
+  const packId = normalizeCopy(receipt.packId);
   const where = normalizeCopy(receipt.where);
   const blocker = normalizeCopy(receipt.blocker);
   const next = normalizeCopy(receipt.next);
@@ -3095,6 +3150,7 @@ function normalizeActionReceipt(receipt) {
   }
 
   return {
+    packId,
     summary,
     visibleSummary: visibleSummary || visibleCopy(summary, DEMO_COPY_LIMITS.receiptVisible),
     where,
