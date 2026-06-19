@@ -1677,12 +1677,8 @@ function renderReview() {
   const review = state.packs.filter(isReview);
   const selected = currentPack();
   const firstReview = selected && review.some((pack) => pack.id === selected.id) ? selected : review[0] || null;
-  const reviewCommand = firstReview ? resolvePrimaryCommandForPack(firstReview) : null;
-  const reviewButtonLabel = reviewCommand?.label || "Review work";
   const reviewButtonReason = "Where: Review. Blocker: no sample work needs review. Button runs next: create or edit work.";
-  const reviewButton = firstReview
-    ? primaryCommandButton(firstReview)
-    : `<button class="btn btn-primary" type="button" data-action="run-next" data-pack=""${disabledReasonAttributes(true, reviewButtonReason)}>${escapeHtml(reviewButtonLabel)}</button>`;
+  const reviewState = firstReview ? `${review.length} needs decision` : "clear";
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1690,7 +1686,7 @@ function renderReview() {
           <span class="section-label">Needs decision</span>
           <h2>${review.length} review item(s)</h2>
         </div>
-        ${reviewButton}
+        <span class="demo-status">${escapeHtml(reviewState)}</span>
       </div>
       ${disabledReasonNotice(!firstReview, reviewButtonReason)}
       ${routeActionReceiptPanel(review, "Review")}
@@ -2801,10 +2797,18 @@ function reviewCard(pack) {
     : supportActionButton("block", "Mark blocked", pack);
 
   return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
-    <div class="demo-command-lines compact">
-      ${factLine("Where", pack.title)}
-      ${factLine("Blocker", blockerTextForPack(pack))}
-      ${factLine("Button runs next", command.label)}
+    <div class="demo-review-card-main">
+      <div class="demo-command-lines compact">
+        ${factLine("Where", pack.title)}
+        ${factLine("Blocker", blockerTextForPack(pack))}
+        ${factLine("Button runs next", command.label)}
+      </div>
+      <div class="demo-review-card-actions">
+        ${primaryCommandButton(pack)}
+        ${supportActionButton("focus", "Focus", pack)}
+        ${supportActionButton("edit", "Edit", pack)}
+        ${doneAction}
+      </div>
     </div>
     <div class="demo-card-meta">
       <span>${escapeHtml(pack.status)}</span>
@@ -2813,12 +2817,6 @@ function reviewCard(pack) {
     </div>
     ${relevantMemoryCardStrip(pack)}
     ${actionReceiptCard(pack)}
-    <div class="demo-card-actions">
-      ${primaryCommandButton(pack)}
-      ${supportActionButton("focus", "Focus", pack)}
-      ${supportActionButton("edit", "Edit", pack)}
-      ${doneAction}
-    </div>
     <details class="demo-card-support">
       <summary>
         <span>Support setup</span>
@@ -5108,7 +5106,13 @@ function copyButton(controlId, label, className, help, describedById) {
   const visibleLabel = receipt
     ? receipt.kind === "success" ? "Copied - paste ready" : "Copy manually"
     : label;
-  return `<button id="${escapeAttribute(controlId)}" class="${escapeAttribute(`${className}${stateClass}`)}" type="button"${controlHelpAttributes(false, help, describedById)}>${escapeHtml(visibleLabel)}</button>`;
+  const stateHint = receipt
+    ? receipt.kind === "success" ? "Clipboard updated" : "Browser blocked clipboard"
+    : "";
+  const content = receipt
+    ? `<span class="demo-copy-button-label">${escapeHtml(visibleLabel)}</span><small>${escapeHtml(stateHint)}</small>`
+    : escapeHtml(visibleLabel);
+  return `<button id="${escapeAttribute(controlId)}" class="${escapeAttribute(`${className}${stateClass}`)}" type="button" data-copy-state="${escapeAttribute(receipt?.kind || "idle")}"${controlHelpAttributes(false, help, describedById)}>${content}</button>`;
 }
 
 function copyPayloadClass(targetId) {
@@ -5122,12 +5126,17 @@ function clipboardNoticePanel(controlId) {
     return "";
   }
 
-  const eyebrow = receipt.kind === "success" ? "Clipboard ready" : "Manual copy needed";
+  const success = receipt.kind === "success";
+  const eyebrow = success ? "Clipboard ready" : "Manual copy needed";
   const targetLabel = receipt.targetLabel || clipboardTargetLabel(receipt.targetId);
-  const stepOne = receipt.kind === "success" ? "Copied" : "Blocked";
-  const stepTwo = receipt.kind === "success" ? "Preview opened" : `${targetLabel} visible`;
-  const stepThree = receipt.kind === "success" ? "Paste ready" : "Copy manually";
-  const targetActionLabel = receipt.kind === "success" ? "Select copied text" : "Select visible text";
+  const stepOne = success ? "Copied" : "Blocked";
+  const stepTwo = success ? "Preview opened" : `${targetLabel} visible`;
+  const stepThree = success ? "Paste ready" : "Copy manually";
+  const targetActionLabel = success ? "Select copied text" : "Select visible text";
+  const confirmationTitle = success ? "Clipboard updated" : "Clipboard not updated";
+  const confirmationDetail = success
+    ? `${targetLabel} is ready to paste.`
+    : `${targetLabel} is visible below for manual copy.`;
   const targetAction = receipt.targetId
     ? `<button class="btn btn-sm demo-clipboard-target-action" type="button" data-copy-target="${escapeAttribute(receipt.targetId)}">${escapeHtml(targetActionLabel)}</button>`
     : "";
@@ -5136,10 +5145,14 @@ function clipboardNoticePanel(controlId) {
       <span>${escapeHtml(eyebrow)}</span>
       <strong>${escapeHtml(receipt.title)}</strong>
     </div>
+    <div class="demo-clipboard-confirmation">
+      <strong>${escapeHtml(confirmationTitle)}</strong>
+      <span>${escapeHtml(confirmationDetail)}</span>
+    </div>
     <div class="demo-clipboard-steps" aria-label="${escapeAttribute(eyebrow)}">
       <span class="demo-clipboard-step active">${escapeHtml(stepOne)}</span>
       <span class="demo-clipboard-step active">${escapeHtml(stepTwo)}</span>
-      <span class="demo-clipboard-step">${escapeHtml(stepThree)}</span>
+      <span class="demo-clipboard-step${success ? " active" : ""}">${escapeHtml(stepThree)}</span>
     </div>
     <span class="demo-clipboard-detail">${escapeHtml(receipt.detail)}</span>
     <div class="demo-clipboard-next">

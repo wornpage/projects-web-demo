@@ -805,6 +805,46 @@ html[data-theme="dark"] .demo-header-metadata {
   line-height: 1.25;
 }
 
+.demo-clipboard-confirmation {
+  align-items: center;
+  background: var(--cockpit-accent);
+  border: 1px solid var(--cockpit-accent);
+  border-radius: var(--cockpit-radius);
+  color: var(--demo-primary-on-accent);
+  display: grid;
+  gap: 4px;
+  grid-template-columns: minmax(112px, max-content) minmax(0, 1fr);
+  padding: 10px 12px;
+}
+
+.demo-clipboard-confirmation strong,
+.demo-clipboard-confirmation span {
+  color: var(--demo-primary-on-accent);
+  line-height: 1.25;
+}
+
+.demo-clipboard-confirmation strong {
+  font-size: 13px;
+  font-weight: 860;
+}
+
+.demo-clipboard-confirmation span {
+  font-size: 13px;
+  font-weight: 720;
+  overflow-wrap: anywhere;
+}
+
+.demo-clipboard-notice.blocked .demo-clipboard-confirmation {
+  background: var(--cockpit-danger-bg);
+  border-color: var(--cockpit-danger-border);
+  color: var(--cockpit-danger-text);
+}
+
+.demo-clipboard-notice.blocked .demo-clipboard-confirmation strong,
+.demo-clipboard-notice.blocked .demo-clipboard-confirmation span {
+  color: var(--cockpit-danger-text);
+}
+
 .demo-clipboard-steps {
   display: grid;
   gap: 8px;
@@ -1375,6 +1415,40 @@ html[data-theme="dark"] .demo-meta-row {
 
 .demo-row:hover {
   border-color: var(--cockpit-border-strong);
+}
+
+.demo-review-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.demo-review-card-main {
+  align-items: start;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(156px, 0.22fr);
+}
+
+.demo-review-card-main .demo-command-lines {
+  min-width: 0;
+}
+
+.demo-review-card-actions {
+  align-content: start;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.demo-review-card-actions .btn {
+  justify-content: center;
+  width: 100%;
+}
+
+.demo-review-card .demo-card-meta {
+  margin-top: 2px;
+  padding-top: 8px;
 }
 
 .demo-work-card.selected {
@@ -2365,6 +2439,31 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   min-height: 38px;
 }
 
+.demo-shell .btn[data-copy-state="success"],
+.demo-shell .btn[data-copy-state="blocked"] {
+  align-items: center;
+  display: inline-grid;
+  gap: 2px;
+  justify-items: center;
+  line-height: 1.15;
+  min-height: 52px;
+  padding-block: 8px;
+}
+
+.demo-copy-button-label {
+  font-weight: 840;
+}
+
+.demo-shell .btn[data-copy-state="success"] small,
+.demo-shell .btn[data-copy-state="blocked"] small {
+  color: inherit;
+  font-size: 11px;
+  font-weight: 760;
+  line-height: 1.15;
+  opacity: 0.86;
+  overflow-wrap: anywhere;
+}
+
 .demo-shell .btn.is-copied {
   background: var(--cockpit-accent);
   border-color: var(--cockpit-accent);
@@ -2829,6 +2928,11 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
     grid-template-columns: 1fr;
   }
 
+  .demo-clipboard-confirmation {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
   .demo-clipboard-target-action,
   .demo-clipboard-actions .btn {
     justify-content: center;
@@ -2869,6 +2973,14 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   .demo-note {
     border-radius: var(--cockpit-radius);
     padding: 12px;
+  }
+
+  .demo-review-card-main {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-review-card-actions {
+    grid-template-columns: 1fr;
   }
 
   .demo-card-head {
