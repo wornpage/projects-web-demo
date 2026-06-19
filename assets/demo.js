@@ -1614,6 +1614,7 @@ function renderNext() {
   state.selectedId = pack.id;
   const nextCommand = resolvePrimaryCommandForPack(pack);
   const saveNextHelp = saveNextChoiceHelp(pack);
+  const nextPreviewHelp = nextChoicePreviewHelp(pack, nextCommand);
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1623,18 +1624,19 @@ function renderNext() {
         </div>
         <span class="demo-status">${escapeHtml(pack.title)}</span>
       </div>
-      <p>In the real app, this fills the work item's Button-runs-next field. In this static demo, it updates the sample text here.</p>
-      <div class="demo-command-lines compact">
+      <p>Pick the action to store for this work. The preview shows the button that will actually run after blocker rules apply.</p>
+      <div class="demo-command-lines compact" data-next-preview>
         ${factLine("Where", pack.title)}
         ${factLine("Blocker", blockerTextForPack(pack))}
         ${factLine("Button runs next", nextCommand.label)}
       </div>
       <div class="demo-inline-form">
         <label class="sr-only" for="next-action-choice">Choose next action</label>
-        <select id="next-action-choice" class="demo-search-input">
+        <select id="next-action-choice" class="demo-search-input" aria-describedby="next-choice-preview-help">
           ${["Review", "Open", "Focus", "Unblock", "Start", "Done"].map((option) => `<option value="${escapeAttribute(option)}"${option === pack.next ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
         </select>
         <span id="apply-next-action-help" class="sr-only">${escapeHtml(saveNextHelp)}</span>
+        <p id="next-choice-preview-help" class="demo-field-help" aria-live="polite">${escapeHtml(nextPreviewHelp)}</p>
         <button id="apply-next-action" class="btn btn-primary" type="button"${controlHelpAttributes(false, saveNextHelp, "apply-next-action-help")}>Save Button runs next</button>
       </div>
     </section>
@@ -1648,7 +1650,9 @@ function renderNext() {
       <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No sample work needs next setup.", "Open work, add a blocker, or clear Button runs next to create a candidate.")}</div>
     </section>
   `;
+  el("next-action-choice").addEventListener("change", () => syncNextChoicePreview(pack));
   el("apply-next-action").addEventListener("click", () => applyNextChoice(pack.id));
+  syncNextChoicePreview(pack);
   bindListActions();
 }
 
@@ -1692,8 +1696,55 @@ function validationStatus(attention) {
     : `Where: Check. Blocker: ${attention} sample check item(s) need attention. Button runs next: fix check items.`;
 }
 
-function saveNextChoiceHelp(pack) {
-  return `Save Button runs next for ${pack.title} and return to the work path.`;
+function saveNextChoiceHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
+  return `Where: Next setup / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: save choice; preview resolves to ${command.label}.`;
+}
+
+function syncNextChoicePreview(pack) {
+  if (!pack) {
+    return;
+  }
+
+  const pending = nextChoicePreviewPack(pack);
+  const command = resolvePrimaryCommandForPack(pending);
+  const preview = document.querySelector("[data-next-preview]");
+  const where = preview?.querySelector('[data-command-field="where"] strong');
+  const blocker = preview?.querySelector('[data-command-field="blocker"] strong');
+  const next = preview?.querySelector('[data-command-field="button-runs-next"] strong');
+  if (where) where.textContent = pending.title;
+  if (blocker) blocker.textContent = blockerTextForPack(pending);
+  if (next) next.textContent = command.label;
+
+  const previewHelp = el("next-choice-preview-help");
+  if (previewHelp) {
+    previewHelp.textContent = nextChoicePreviewHelp(pending, command);
+  }
+
+  const saveHelp = saveNextChoiceHelp(pending, command);
+  const applyHelp = el("apply-next-action-help");
+  const applyButton = el("apply-next-action");
+  if (applyHelp) {
+    applyHelp.textContent = saveHelp;
+  }
+  if (applyButton) {
+    const copy = helpCopy(saveHelp, DEMO_COPY_LIMITS.commandFlowHelp);
+    applyButton.title = copy;
+    applyButton.setAttribute("aria-label", copy);
+  }
+}
+
+function nextChoicePreviewPack(pack) {
+  return {
+    ...pack,
+    next: valueOf("next-action-choice") || pack.next
+  };
+}
+
+function nextChoicePreviewHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
+  const blocker = hasBlocker(pack) && command.action !== "unblock"
+    ? " because this work is still blocked"
+    : "";
+  return `After save, Button runs next shows ${command.label}${blocker}.`;
 }
 
 function validateSampleHelp() {
