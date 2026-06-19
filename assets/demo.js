@@ -2012,11 +2012,11 @@ function blockerStateField(pack) {
   const blocker = hasBlocker ? pack.blocker : "";
   return `
     <fieldset class="demo-field demo-blocker-field" data-blocker-field>
-      <legend>Blocker</legend>
+      <legend>Blocker state</legend>
       <div class="demo-segmented-control" role="radiogroup" aria-label="Blocker state">
         <label class="demo-segment${hasBlocker ? "" : " active"}" data-blocker-mode-label="clear" for="edit-blocker-clear">
           <input id="edit-blocker-clear" name="edit-blocker-mode" type="radio" value="clear" data-blocker-mode="clear"${hasBlocker ? "" : " checked"}>
-          <span>None</span>
+          <span>Unblocked</span>
         </label>
         <label class="demo-segment${hasBlocker ? " active" : ""}" data-blocker-mode-label="set" for="edit-blocker-set">
           <input id="edit-blocker-set" name="edit-blocker-mode" type="radio" value="set" data-blocker-mode="set"${hasBlocker ? " checked" : ""}>
@@ -2024,10 +2024,10 @@ function blockerStateField(pack) {
         </label>
       </div>
       <div class="demo-blocker-reason" data-blocker-reason${hasBlocker ? "" : " hidden"}>
-        <label for="edit-blocker">Blocker reason</label>
-        <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="Reason blocking this work"${hasBlocker ? "" : " disabled"}>
+        <label for="edit-blocker">Why blocked?</label>
+        <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="missing owner, source, approval..."${hasBlocker ? "" : " disabled"}>
       </div>
-      <p class="demo-field-help" data-blocker-help>${hasBlocker ? "Describe the blocker so the next action can resolve it." : "None is the unblocked state; no typing is needed."}</p>
+      <p class="demo-field-help" data-blocker-help>${hasBlocker ? "Describe what must be cleared before the next action." : "Unblocked stores Blocker: none automatically; no typing required."}</p>
     </fieldset>
   `;
 }
@@ -2622,7 +2622,7 @@ function reviewCard(pack) {
     ? supportActionButton("done", "Done", pack)
     : "";
   const blockerAction = hasBlocker(pack)
-    ? supportActionButton("unblock", "Set blocker to None", pack)
+    ? supportActionButton("unblock", "Clear blocker", pack)
     : supportActionButton("block", "Mark blocked", pack);
 
   return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
@@ -2646,7 +2646,7 @@ function reviewCard(pack) {
     <details class="demo-card-support">
       <summary>
         <span>Support setup</span>
-        <strong>Clear blocker or choose Button runs next</strong>
+        <strong>Clear blocker or set Button runs next</strong>
       </summary>
       <div class="demo-card-actions">
         ${blockerAction}
@@ -2682,7 +2682,7 @@ function supportActionReason(action, pack) {
     open: `Open the work path for ${where} without running the main button.`,
     focus: `Show ${where} in the Focus view without changing status.`,
     block: `Mark ${where} blocked for this sample.`,
-    unblock: `Set Blocker to None for ${where} so it can move forward.`,
+    unblock: `Clear the blocker for ${where}; the demo stores Blocker: none automatically.`,
     done: `Finish ${where} for this sample.`,
     edit: `Open the work path fields for ${where}.`,
     "set-next": `Choose the exact Button runs next action for ${where}.`
@@ -2781,10 +2781,10 @@ function setPackActionConfirmation(pack, action, changed) {
 
 function packActionSummary(pack, action, actionLabel, changed) {
   if (action === "done") {
-    const proof = proofTargetForPack(pack);
+    const proof = proofTargetSentence(pack);
     return changed
-      ? `Done for ${pack.title}. Proof target: ${proof}.`
-      : `No done change for ${pack.title}. Proof target: ${proof}.`;
+      ? `Done for ${pack.title}. ${proof}`
+      : `No done change for ${pack.title}. ${proof}`;
   }
 
   return changed
@@ -2795,10 +2795,10 @@ function packActionSummary(pack, action, actionLabel, changed) {
 function setSaveConfirmation(pack, changed) {
   if (!pack) return;
 
-  const proof = proofTargetForPack(pack);
+  const proof = proofTargetSentence(pack);
   const summary = changed
-    ? `Work path saved for ${pack.title}. Proof target: ${proof}.`
-    : `No work path changes for ${pack.title}. Proof target: ${proof}.`;
+    ? `Work path saved for ${pack.title}. ${proof}`
+    : `No work path changes for ${pack.title}. ${proof}`;
   setActionReceipt(
     pack,
     summary,
@@ -2860,11 +2860,14 @@ function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pac
 }
 
 function actionReceiptSummary(summary, pack, next) {
-  return helpCopy(`${summary} ${actionReceiptContext(pack, next)}`, DEMO_COPY_LIMITS.receiptHelp);
+  return helpCopy(`${summary} ${actionReceiptContext(pack, next, summary)}`, DEMO_COPY_LIMITS.receiptHelp);
 }
 
-function actionReceiptContext(pack, next) {
-  return `Where: ${pack.title} / ${pack.status}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`;
+function actionReceiptContext(pack, next, summary = "") {
+  const proof = /(^|\s)Proof target:/iu.test(summary)
+    ? ""
+    : ` Proof target: ${proofTargetForPack(pack)}.`;
+  return `Where: ${pack.title} / ${pack.status}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.${proof}`;
 }
 
 function updateActionReceipt() {
@@ -2928,6 +2931,14 @@ function normalizeActionReceipt(receipt) {
 
 function proofTargetForPack(pack) {
   return normalizeCopy(pack?.doneWhen) || "No proof target set.";
+}
+
+function proofTargetSentence(pack) {
+  return `Proof target: ${sentenceValue(proofTargetForPack(pack))}.`;
+}
+
+function sentenceValue(value) {
+  return (normalizeCopy(value) || "No proof target set").replace(/[.!?]+$/u, "");
 }
 
 function addPackActivity(pack, message) {
@@ -3553,7 +3564,7 @@ function syncBlockerModeFromStatus() {
     setBlockerMode(true);
     return;
   }
-  if (status === "done") {
+  if (status === "active" || status === "done") {
     setBlockerMode(false);
   }
 }
@@ -3595,8 +3606,8 @@ function setBlockerMode(hasBlocker) {
   }
   if (help) {
     help.textContent = hasBlocker
-      ? "Describe the blocker so the next action can resolve it."
-      : "None is the unblocked state; no typing is needed.";
+      ? "Describe what must be cleared before the next action."
+      : "Unblocked stores Blocker: none automatically; no typing required.";
   }
 }
 
@@ -3783,14 +3794,17 @@ function packForwardPathFormValues(pack) {
     return input ? valueOf(id) : (fallback || "");
   };
   const blockerInput = el("edit-blocker");
+  const rawStatus = fieldValue("edit-status", pack.status) || pack.status || "";
   const blockerMode = document.querySelector('input[name="edit-blocker-mode"]:checked')?.value === "set" ? "set" : "clear";
-  const blocker = blockerMode === "set"
+  const rawBlocker = blockerMode === "set"
     ? normalizeCopy(blockerInput?.value || "") || "needs review"
     : "none";
+  const blocker = rawStatus === "done" ? "none" : rawBlocker;
+  const status = forwardPathStatusForBlocker(rawStatus, blocker);
 
   return {
     title: fieldValue("edit-title", pack.title) || pack.title || "",
-    status: fieldValue("edit-status", pack.status) || pack.status || "",
+    status,
     blocker,
     owner: fieldValue("edit-owner", pack.owner) || pack.owner || "",
     due: fieldValue("edit-due", pack.due),
@@ -3798,6 +3812,20 @@ function packForwardPathFormValues(pack) {
     doneWhen: fieldValue("edit-done-when", pack.doneWhen) || pack.doneWhen || "",
     purpose: fieldValue("edit-purpose", pack.purpose) || pack.purpose || ""
   };
+}
+
+function forwardPathStatusForBlocker(status, blocker) {
+  const normalizedStatus = normalizeCopy(status) || "active";
+  if (normalizedStatus === "done") {
+    return "done";
+  }
+  if (blocker && blocker !== "none") {
+    return "blocked";
+  }
+  if (normalizedStatus === "blocked") {
+    return "active";
+  }
+  return normalizedStatus;
 }
 
 function filteredPacks() {
