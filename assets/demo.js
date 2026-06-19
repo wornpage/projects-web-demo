@@ -3843,10 +3843,18 @@ function packDetailSaveState(pack) {
 function bindPackDetailValidation(pack) {
   ["edit-title", "edit-status", "edit-blocker", "edit-owner", "edit-due", "edit-next", "edit-done-when", "edit-purpose"].forEach((id) => {
     const input = el(id);
-    input?.addEventListener("input", () => syncPackDetailValidation(pack));
+    input?.addEventListener("input", () => {
+      if (id === "edit-owner") {
+        syncOwnerBlockerResolution();
+      }
+      syncPackDetailValidation(pack);
+    });
     input?.addEventListener("change", () => {
       if (id === "edit-status") {
         syncBlockerModeFromStatus();
+      }
+      if (id === "edit-owner") {
+        syncOwnerBlockerResolution();
       }
       syncPackDetailValidation(pack);
     });
@@ -3917,6 +3925,26 @@ function isBlockerReviewAction(value) {
     || normalized === "unblock";
 }
 
+function syncOwnerBlockerResolution() {
+  const blockerMode = document.querySelector('input[name="edit-blocker-mode"]:checked')?.value;
+  if (blockerMode !== "set") {
+    return;
+  }
+
+  if (ownerFixClearsBlocker(el("edit-blocker")?.value, valueOf("edit-owner"))) {
+    setBlockerMode(false);
+  }
+}
+
+function ownerFixClearsBlocker(blocker, owner) {
+  return normalizeCopy(blocker).toLowerCase().includes("owner") && !isMissingOwnerValue(owner);
+}
+
+function isMissingOwnerValue(owner) {
+  const normalizedOwner = normalizeCopy(owner).toLowerCase();
+  return !normalizedOwner || normalizedOwner === "unassigned" || normalizedOwner === "no owner";
+}
+
 function syncPackDetailValidation(pack) {
   const button = el("save-pack");
   const help = el("pack-save-help");
@@ -3958,9 +3986,11 @@ function syncBlockerFieldHelp() {
     }
   }
   if (help) {
-    help.textContent = issue || (hasBlocker
-      ? "Describe what must be cleared before the next action."
-      : "Unblocked stores Blocker: none automatically; no typing required.");
+    const ownerResolvedBlocker = ownerFixClearsBlocker(input?.value, valueOf("edit-owner"));
+    const clearHelp = ownerResolvedBlocker
+      ? "Owner filled; Save will store Blocker: none."
+      : "Unblocked stores Blocker: none automatically; no typing required.";
+    help.textContent = issue || (hasBlocker ? "Describe what must be cleared before the next action." : clearHelp);
   }
 }
 
@@ -4064,8 +4094,7 @@ function initialWorkflowForCreatedPack(title, owner, next) {
     return { status: "draft", blocker: "missing Button runs next" };
   }
 
-  const normalizedOwner = normalizeCopy(owner).toLowerCase();
-  if (!normalizedOwner || normalizedOwner === "unassigned" || normalizedOwner === "no owner") {
+  if (isMissingOwnerValue(owner)) {
     return { status: "draft", blocker: "missing owner" };
   }
 
@@ -4144,20 +4173,24 @@ function packForwardPathFormValues(pack) {
   };
   const blockerInput = el("edit-blocker");
   const rawStatus = fieldValue("edit-status", pack.status) || pack.status || "";
+  const owner = fieldValue("edit-owner", pack.owner) || pack.owner || "";
+  const requestedNext = fieldValue("edit-next", pack.next) || pack.next || "";
   const blockerMode = document.querySelector('input[name="edit-blocker-mode"]:checked')?.value === "set" ? "set" : "clear";
   const rawBlocker = blockerMode === "set"
     ? normalizeCopy(blockerInput?.value || "") || "needs review"
     : "none";
-  const blocker = rawStatus === "done" ? "none" : rawBlocker;
+  const ownerResolvedBlocker = ownerFixClearsBlocker(rawBlocker, owner);
+  const blocker = rawStatus === "done" || ownerResolvedBlocker ? "none" : rawBlocker;
   const status = forwardPathStatusForBlocker(rawStatus, blocker);
+  const next = ownerResolvedBlocker && isBlockerReviewAction(requestedNext) ? "Open" : requestedNext;
 
   return {
     title: fieldValue("edit-title", pack.title) || pack.title || "",
     status,
     blocker,
-    owner: fieldValue("edit-owner", pack.owner) || pack.owner || "",
+    owner,
     due: fieldValue("edit-due", pack.due),
-    next: fieldValue("edit-next", pack.next) || pack.next || "",
+    next,
     doneWhen: fieldValue("edit-done-when", pack.doneWhen) || pack.doneWhen || "",
     purpose: fieldValue("edit-purpose", pack.purpose) || pack.purpose || ""
   };
