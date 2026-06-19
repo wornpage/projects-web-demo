@@ -972,6 +972,17 @@ html[data-theme="dark"] .demo-header-metadata {
   padding: 10px 12px;
 }
 
+.demo-memory-strip.has-memory {
+  background: var(--cockpit-selected-bg);
+  border-color: var(--cockpit-accent);
+  box-shadow: var(--cockpit-shadow-sm);
+}
+
+.demo-memory-strip.is-empty {
+  background: var(--cockpit-surface);
+  border-left-style: dashed;
+}
+
 .demo-memory-copy {
   display: grid;
   gap: 5px;
@@ -1015,6 +1026,11 @@ html[data-theme="dark"] .demo-header-metadata {
   align-self: center;
   justify-self: end;
   white-space: nowrap;
+}
+
+.demo-memory-strip.has-memory .demo-memory-action {
+  border-color: var(--cockpit-accent);
+  color: var(--cockpit-text);
 }
 
 .demo-command-next {

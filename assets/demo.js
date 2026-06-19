@@ -4037,8 +4037,8 @@ function createSamplePack() {
     purpose: values.purpose || "Sample work created in the static demo.",
     doneWhen: "Sample result is described.",
     sources: ["browser-state"],
-    memory: ["Created in the static demo. Nothing was saved to local files."],
-    activity: ["Created."]
+    memory: [],
+    activity: ["Created in this browser-only demo."]
   };
   state.packs.unshift(pack);
   state.selectedId = pack.id;
@@ -4306,21 +4306,23 @@ function factLine(label, value) {
 
 function relevantMemoryStrip(pack) {
   const latest = latestRelevantMemory(pack);
+  const stateClass = latest ? "has-memory" : "is-empty";
   const visible = latest
     ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
     : "none yet";
   const help = latest
     ? `Relevant Memory: ${latest}`
     : "Relevant Memory: none yet. How to fill: add a memory note from the Memory route.";
-  const actionHelp = memoryStripActionHelp(pack);
+  const actionLabel = memoryStripActionLabel(pack, latest);
+  const actionHelp = memoryStripActionHelp(pack, latest);
 
-  return `<div class="demo-memory-strip" data-memory-strip="selected-work" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
+  return `<div class="demo-memory-strip ${escapeAttribute(stateClass)}" data-memory-strip="selected-work" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
     <div class="demo-memory-copy">
       <span>Relevant Memory</span>
       <strong>${escapeHtml(visible)}</strong>
       ${latest ? "" : `<small>How to fill: add a memory note from here or from the Memory route.</small>`}
     </div>
-    <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack?.id || "")}"${controlLabelAttributes(actionHelp)}>Add note</button>
+    <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack?.id || "")}"${controlLabelAttributes(actionHelp)}>${escapeHtml(actionLabel)}</button>
   </div>`;
 }
 
@@ -4330,28 +4332,42 @@ function relevantMemoryCardStrip(pack) {
   }
 
   const latest = latestRelevantMemory(pack);
+  const stateClass = latest ? "has-memory" : "is-empty";
   const visible = latest
     ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
     : "none yet";
   const help = latest
     ? `Relevant Memory: ${latest}`
     : "Relevant Memory: none yet. Add a memory note from the selected work path.";
-  const actionHelp = memoryStripActionHelp(pack);
+  const actionLabel = memoryStripActionLabel(pack, latest);
+  const actionHelp = memoryStripActionHelp(pack, latest);
 
-  return `<div class="demo-memory-strip compact" data-memory-strip="selected-card" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
+  return `<div class="demo-memory-strip compact ${escapeAttribute(stateClass)}" data-memory-strip="selected-card" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
     <div class="demo-memory-copy">
       <span>Relevant Memory</span>
       <strong>${escapeHtml(visible)}</strong>
       ${latest ? "" : `<small>How to fill: open Memory or selected work to add recall.</small>`}
     </div>
-    <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(actionHelp)}>Add note</button>
+    <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(actionHelp)}>${escapeHtml(actionLabel)}</button>
   </div>`;
 }
 
-function memoryStripActionHelp(pack) {
-  return pack
-    ? `Where: Relevant Memory / ${pack.title}. Blocker: memory note is empty. Button runs next: add memory note.`
-    : "Where: Relevant Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory.";
+function memoryStripActionLabel(pack, latest = latestRelevantMemory(pack)) {
+  if (!pack) {
+    return "Choose work";
+  }
+
+  return latest ? "Open memory" : "Add memory";
+}
+
+function memoryStripActionHelp(pack, latest = latestRelevantMemory(pack)) {
+  if (!pack) {
+    return "Where: Relevant Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory.";
+  }
+
+  return latest
+    ? `Where: Relevant Memory / ${pack.title}. Blocker: none. Button runs next: open saved memory for this work.`
+    : `Where: Relevant Memory / ${pack.title}. Blocker: no saved memory note yet. Button runs next: add memory note.`;
 }
 
 function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
