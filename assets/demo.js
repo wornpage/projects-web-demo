@@ -3277,8 +3277,7 @@ function handlePackAction(id, action) {
     runResolvedPackAction(pack);
     return;
   } else if (action === "review") {
-    state.status = selectedWorkStatus("Review", pack);
-    go("review", pack.id);
+    openReviewFixPath(pack);
     return;
   } else if (action === "set-next") {
     state.status = selectedWorkStatus("Next setup", pack, "choose Button runs next");
@@ -3394,6 +3393,31 @@ function runResolvedPackAction(pack) {
   handlePackAction(pack.id, resolved.action);
 }
 
+function openReviewFixPath(pack) {
+  if (!pack) {
+    return false;
+  }
+
+  const focusKind = reviewFocusKindForPack(pack);
+  state.selectedId = pack.id;
+  state.status = selectedWorkStatus("Work path", pack, reviewFixNextForPack(pack));
+  go("pack", pack.id, focusKind);
+  return true;
+}
+
+function reviewFixNextForPack(pack) {
+  const focusKind = reviewFocusKindForPack(pack);
+  if (focusKind === "support-owner") {
+    return "fill support owner";
+  }
+
+  if (focusKind === "next") {
+    return "set Button runs next";
+  }
+
+  return "edit blocker fields";
+}
+
 function pendingPackForAction(targetPackId) {
   const pack = findPack(targetPackId) || currentPack();
   const form = el("pack-edit-form");
@@ -3498,27 +3522,12 @@ function runRouteAction(action, targetPackId) {
       return true;
     }
 
-    if (state.route === "pack") {
-      state.selectedId = selected.id;
-      queueFocus(reviewFocusKindForPack(selected), selected.id);
-      state.status = selectedWorkStatus("Work path", selected, "edit blocker fields");
-      render();
-      return true;
-    }
-
-    if (state.route !== "review") {
-      state.selectedId = selected.id;
-      go("review", selected.id);
-      return true;
-    }
-
     const routeCommand = resolvePrimaryCommandForPack(selected);
     if (routeCommand.action !== "review") {
       return runRouteAction(routeCommand.action, routeCommand.targetPackId);
     }
 
-    go("pack", selected.id);
-    return true;
+    return openReviewFixPath(selected);
   }
 
   if (action === "open" && state.route === "pack") {
