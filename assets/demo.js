@@ -2846,11 +2846,17 @@ function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)
 }
 
 function supportActionButton(action, label, pack, className = "btn") {
-  const reason = supportActionReason(action, pack);
+  const disabledReason = supportActionDisabledReason(action, pack);
+  const reason = disabledReason || supportActionReason(action, pack);
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
-  const visibleReason = supportActionVisibleReason(action);
+  const visibleReason = disabledReason
+    ? supportActionDisabledVisibleReason(action, pack)
+    : supportActionVisibleReason(action);
   const buttonClass = `${className} demo-support-action`;
-  return `<button class="${escapeAttribute(buttonClass)}" type="button" data-action="${escapeAttribute(action)}" data-pack="${escapeAttribute(pack.id)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}" data-support-reason="${escapeAttribute(visibleReason)}"><span class="demo-support-label">${escapeHtml(label)}</span><small class="demo-support-reason">${escapeHtml(visibleReason)}</small></button>`;
+  const stateAttributes = disabledReason
+    ? `${disabledReasonAttributes(true, disabledReason)} aria-label="${escapeAttribute(copy)}"`
+    : ` title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}"`;
+  return `<button class="${escapeAttribute(buttonClass)}" type="button" data-action="${escapeAttribute(action)}" data-pack="${escapeAttribute(pack.id)}" data-support-reason="${escapeAttribute(visibleReason)}"${stateAttributes}><span class="demo-support-label">${escapeHtml(label)}</span><small class="demo-support-reason">${escapeHtml(visibleReason)}</small></button>`;
 }
 
 function supportActionReason(action, pack) {
@@ -2865,6 +2871,23 @@ function supportActionReason(action, pack) {
     "set-next": `Choose the exact Button runs next action for ${where}.`
   };
   return reasons[action] || `Run ${actionLabelFromKey(action)} for ${where}.`;
+}
+
+function supportActionDisabledReason(action, pack) {
+  const where = pack?.title || "selected work";
+  if (action === "done" && pack?.status === "done") {
+    return `Where: ${where} / done. Blocker: proof is already saved. Button runs next: Open to inspect this work.`;
+  }
+
+  return "";
+}
+
+function supportActionDisabledVisibleReason(action, pack) {
+  if (action === "done" && pack?.status === "done") {
+    return "Already done; Open inspects it.";
+  }
+
+  return "Action is unavailable.";
 }
 
 function supportActionVisibleReason(action) {
