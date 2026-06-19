@@ -680,7 +680,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     meta: { title: "Meta command flow", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
     feedback: { title: "Feedback command flow", where: "Feedback", blocker: `Version ${stateVersionLabel()} is active`, next: "Report feedback", stateText: "Ready", action: "report-feedback", targetPackId: "" },
     health: { title: "Health command flow", where: "Health", blocker: "route, storage, data, and metadata checks are running", next: "Refresh", stateText: "Ready", action: "refresh-health", targetPackId: "" },
-    settings: { title: "Settings command flow", where: "Settings", blocker: "copy profile changes labels only in this static demo", next: "Apply profile", stateText: "Ready", action: "apply-profile", targetPackId: "" },
+    settings: { title: "Settings command flow", where: "Settings", blocker: "copy profile changes labels only in this static demo", next: "Choose profile", stateText: "Ready", action: "choose-profile", targetPackId: "" },
     pack: { title: "Work path command flow", ...selectedWorkCommand }
   };
 
@@ -968,6 +968,14 @@ function focusSelectors(kind, packId) {
 
   if (kind === "triage-output") {
     return ["#triage-output", ".demo-triage-card", "#triage-snapshot"];
+  }
+
+  if (kind === "search-input") {
+    return ["#screen-search", "#demo-search"];
+  }
+
+  if (kind === "settings-profile") {
+    return [".demo-profile-card[aria-pressed=\"true\"]", ".demo-profile-card", "#reset-demo"];
   }
 
   if (kind === "memory-note") {
@@ -3613,7 +3621,15 @@ function runRouteAction(action, targetPackId) {
   }
 
   if (action === "search-demo") {
-    state.status = routeStatus("Search", "browser-local sample data only", "review filtered work");
+    if (state.route !== "search") {
+      queueFocus("search-input");
+      state.status = routeStatus("Search", "search field is not open", "type search text");
+      go("search");
+      return true;
+    }
+
+    queueFocus("search-input");
+    state.status = routeStatus("Search", "none", "type search text");
     render();
     return true;
   }
@@ -3644,8 +3660,16 @@ function runRouteAction(action, targetPackId) {
     return true;
   }
 
-  if (action === "apply-profile") {
-    state.status = profileStatus(state.copyProfile);
+  if (action === "choose-profile") {
+    if (state.route !== "settings") {
+      queueFocus("settings-profile");
+      state.status = routeStatus("Settings", "copy profile chooser is not open", "choose profile");
+      go("settings");
+      return true;
+    }
+
+    queueFocus("settings-profile");
+    state.status = routeStatus("Settings", "choose one profile card", "use selected profile labels");
     render();
     return true;
   }
