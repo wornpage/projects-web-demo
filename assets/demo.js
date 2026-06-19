@@ -2113,8 +2113,8 @@ function renderFeedback() {
   const issueTitle = `Projects static demo issue (${stateVersionLabel()})`;
   const issueBody = `Context:\n\n${JSON.stringify(context, null, 2)}`;
   const issueUrl = `${DEMO_ISSUE_URL}?title=${encodeURIComponent(issueTitle)}&labels=demo%2Cfeedback&body=${encodeURIComponent(issueBody)}`;
-  const copyFeedbackHelp = "Copy diagnostic context for the demo issue body.";
-  const openFeedbackHelp = "Open a prefilled GitHub issue for this static demo.";
+  const copyFeedbackHelp = clipboardStatus("Feedback", "copy diagnostic context into issue body");
+  const openFeedbackHelp = routeStatus("Feedback", "none", "open the prefilled GitHub issue");
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -2150,8 +2150,8 @@ function renderMeta() {
   const context = collectDiagnosticContext();
   const styleAudit = buildStyleAuditSnapshot();
   const now = new Date().toLocaleString();
-  const copyMetaHelp = "Copy this browser's demo metadata and command context.";
-  const copyStyleAuditHelp = "Copy the style audit for shipped demo assets.";
+  const copyMetaHelp = clipboardStatus("Meta", "copy metadata and command context");
+  const copyStyleAuditHelp = clipboardStatus("Meta", "copy shipped asset style audit");
 
   el("screen-content").innerHTML = `
     <section class="demo-panel">
@@ -2225,7 +2225,7 @@ function renderLab() {
   const labPackSelectHelp = labPackSelectReason(state.packs.length > 0);
   const labRunHelp = pack ? labRunActionHelp(pack, action) : noPackReason;
   const labSetNextHelp = pack ? labSetNextActionHelp(pack) : noPackReason;
-  const copyLabSnapshotHelp = "Copy the current Demo Lab snapshot as JSON.";
+  const copyLabSnapshotHelp = clipboardStatus("Demo Lab", "copy lab snapshot JSON");
   const labOptions = state.packs.length
     ? state.packs.map((item) => `<option value="${escapeAttribute(item.id)}"${item.id === pack?.id ? " selected" : ""}>${escapeHtml(item.title)} / ${escapeHtml(resolvePrimaryCommandForPack(item).label)}</option>`).join("")
     : `<option value="" selected>No sample work: reset demo data or choose a scenario</option>`;
