@@ -1626,7 +1626,7 @@ function renderWork() {
         ${navButton("create", profile().newWork, "btn btn-primary")}
       </div>
       ${routeActionReceiptPanel(visible, "Work filters")}
-      <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.")}</div>
+      <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.", emptyStateContextFor("Work filters", "current search or status filter hides every sample item", "clear search or choose another status filter"))}</div>
     </section>
   `;
   bindToolbar();
@@ -1647,7 +1647,7 @@ function renderToday() {
         <span id="today-set-due-help" class="sr-only">${escapeHtml(dueHelp)}</span>
         <button class="btn" type="button" data-action="set-due-today"${controlHelpAttributes(false, dueHelp, "today-set-due-help")}>Set all due today</button>
       </div>
-      <div class="demo-list">${today.map(todayRow).join("")}</div>
+      <div class="demo-list">${today.length ? today.map(todayRow).join("") : emptyState("No sample work is due today.", "Use Set all due today or edit a work due date.", emptyStateContextFor("Today", "no active or dated sample work is visible", "set all due today or create work"))}</div>
     </section>
   `;
   bindListActions();
@@ -1690,7 +1690,7 @@ function renderReview() {
       </div>
       ${disabledReasonNotice(!firstReview, reviewButtonReason)}
       ${routeActionReceiptPanel(review, "Review")}
-      <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.")}</div>
+      <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.", emptyStateContextFor("Review", "no blockers or missing Button-runs-next items are visible", "create or edit work"))}</div>
     </section>
   `;
   bindListActions();
@@ -1699,7 +1699,7 @@ function renderReview() {
 function renderNext() {
   const pack = currentPack() || state.packs.find(isReview) || state.packs[0];
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("No sample work is available.", "Reset demo data or choose a scenario with sample work.");
+    el("screen-content").innerHTML = emptyState("No sample work is available.", "Reset demo data or choose a scenario with sample work.", emptyStateContextFor("Next setup", "no sample work exists in this browser state", "reset demo data or choose a scenario with work"));
     return;
   }
 
@@ -1739,7 +1739,7 @@ function renderNext() {
           <h2>Work that needs a clearer button</h2>
         </div>
       </div>
-      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No sample work needs next setup.", "Open work, add a blocker, or clear Button runs next to create a candidate.")}</div>
+      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No sample work needs next setup.", "Open work, add a blocker, or clear Button runs next to create a candidate.", emptyStateContextFor("Next setup", "every visible work item already has a clear Button-runs-next path", "open work or create a review candidate"))}</div>
     </section>
   `;
   el("next-action-choice").addEventListener("change", () => syncNextChoicePreview(pack));
@@ -1850,7 +1850,7 @@ function resetDemoHelp() {
 function renderFocus() {
   const pack = currentPack() || state.packs[0];
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("No sample work is available.", "Reset demo data or choose a scenario with sample work.");
+    el("screen-content").innerHTML = emptyState("No sample work is available.", "Reset demo data or choose a scenario with sample work.", emptyStateContextFor("Focus", "no sample work exists in this browser state", "reset demo data or choose a scenario with work"));
     return;
   }
   const focusCommand = resolvePrimaryCommandForPack(pack);
@@ -1933,7 +1933,7 @@ function renderNotes() {
         ${navButton("memory", "Add note", "btn btn-primary")}
       </div>
       <div class="demo-list">
-        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyState("No sample notes exist.", "Open Memory and add a note to selected work.")}
+        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyState("No sample notes exist.", "Open Memory and add a note to selected work.", emptyStateContextFor("Notes", "no memory notes have been saved in this browser", "open Memory and add a note"))}
       </div>
     </section>
   `;
@@ -1951,7 +1951,7 @@ function renderTimeline() {
         </div>
       </div>
       <div class="demo-list">
-        ${rows.map(timelineRow).join("") || emptyState("No sample activity exists.", "Run a sample action to add activity.")}
+        ${rows.map(timelineRow).join("") || emptyState("No sample activity exists.", "Run a sample action to add activity.", emptyStateContextFor("Timeline", "no sample action has written activity yet", "run a work action"))}
       </div>
     </section>
   `;
@@ -1969,7 +1969,7 @@ function renderFiles() {
         <span class="demo-status">No local files are opened in the demo</span>
       </div>
       <div class="demo-source-list">
-        ${rows.map(sourceRow).join("") || emptyState("No sample source references exist.", "Choose a scenario with sample source references.")}
+        ${rows.map(sourceRow).join("") || emptyState("No sample source references exist.", "Choose a scenario with sample source references.", emptyStateContextFor("Files", "this scenario has no source references", "choose a source-backed scenario"))}
       </div>
     </section>
   `;
@@ -1993,7 +1993,7 @@ function renderCalendar() {
         <button class="btn" type="button" data-action="set-due-today"${controlHelpAttributes(false, dueHelp, "calendar-set-due-help")}>Set all due today</button>
       </div>
       <div class="demo-calendar-grid">
-        ${rows.map(calendarCard).join("") || emptyState("No sample due dates exist.", "Use Set all due today or edit a work due date.")}
+        ${rows.map(calendarCard).join("") || emptyState("No sample due dates exist.", "Use Set all due today or edit a work due date.", emptyStateContextFor("Calendar", "no sample work has a due date", "set all due today or edit a due date"))}
       </div>
     </section>
   `;
@@ -2013,7 +2013,7 @@ function renderSearch() {
       </div>
       <label class="sr-only" for="screen-search">Search demo work</label>
       <input id="screen-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search title, owner, next action, source, or due date">
-      <div class="demo-work-list demo-search-results">${visible.map(workCard).join("") || emptyState("No sample work matches the search.", "Clear search or try title, owner, due date, or next action.")}</div>
+      <div class="demo-work-list demo-search-results">${visible.map(workCard).join("") || emptyState("No sample work matches the search.", "Clear search or try title, owner, due date, or next action.", emptyStateContextFor("Search", "search text hides every sample item", "clear search or try title, owner, due date, or next action"))}</div>
     </section>
   `;
   el("screen-search").addEventListener("input", (event) => {
@@ -2053,7 +2053,7 @@ function renderCreate() {
 function renderPackDetail() {
   const pack = currentPack();
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("Choose sample work before opening the work path.", "Open Work or Review and choose a work card.");
+    el("screen-content").innerHTML = emptyState("Choose sample work before opening the work path.", "Open Work or Review and choose a work card.", emptyStateContextFor("Work path", "no sample work is selected", "open Work or Review and choose a work card"));
     return;
   }
   const packCommand = resolvePrimaryCommandForPack(pack);
@@ -2126,7 +2126,7 @@ function renderMemory() {
         </div>
         <span class="demo-status">Stored in this browser</span>
       </div>
-      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.")) : emptyState("No memory available.", "Choose sample work before adding memory.")}</div>
+      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${pack.title}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Choose sample work before adding memory.", emptyStateContextFor("Memory", "no sample work is selected", "choose work before adding memory"))}</div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
         <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a sample memory note">
@@ -2574,7 +2574,7 @@ function boardColumn(status) {
       <span>${packs.length}</span>
     </div>
     <div class="demo-list">
-      ${packs.map(boardMiniCard).join("") || emptyState(`No ${status} sample work.`, "Change filters, choose another scenario, or edit work status.")}
+      ${packs.map(boardMiniCard).join("") || emptyState(`No ${status} sample work.`, "Change filters, choose another scenario, or edit work status.", emptyStateContextFor(`${capitalize(status)} lane`, `no sample work is marked ${status}`, "edit work status or choose another scenario"))}
     </div>
   </section>`;
 }
@@ -5505,8 +5505,7 @@ function clipboardBlockedStatus() {
   return "Where: Clipboard. Blocker: browser blocked clipboard access. Button runs next: copy from the visible text area.";
 }
 
-function emptyState(text, help = "Use the nearby controls or reset demo data.") {
-  const context = emptyStateContext();
+function emptyState(text, help = "Use the nearby controls or reset demo data.", context = emptyStateContext()) {
   return `<div class="demo-empty">
     <strong>${escapeHtml(text)}</strong>
     <span><b>How to fill:</b> ${escapeHtml(help)}</span>
@@ -5523,6 +5522,10 @@ function emptyStateContext() {
     blocker: command.blocker,
     next: command.next
   };
+}
+
+function emptyStateContextFor(where, blocker, next) {
+  return { where, blocker, next };
 }
 
 function valueOf(id) {
