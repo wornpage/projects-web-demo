@@ -604,6 +604,81 @@ html[data-theme="dark"] .demo-header-metadata {
   overflow-wrap: anywhere;
 }
 
+.demo-copy-payload {
+  border-radius: calc(var(--cockpit-radius) + 4px);
+  padding: 0;
+  transition: background-color var(--demo-motion-duration) ease, outline-color var(--demo-motion-duration) ease, padding var(--demo-motion-duration) ease;
+}
+
+.demo-copy-payload.is-copied {
+  background: var(--cockpit-selected-bg);
+  outline: 2px solid var(--cockpit-accent);
+  outline-offset: 2px;
+  padding: 6px;
+}
+
+.demo-copy-payload.is-copied textarea,
+.demo-copy-payload.is-copied .demo-search-input {
+  background: var(--cockpit-surface);
+  border-color: var(--cockpit-accent);
+}
+
+.demo-clipboard-notice {
+  animation: demo-clipboard-pop 160ms ease-out;
+  background: var(--cockpit-selected-bg);
+  border: 1px solid var(--cockpit-accent);
+  border-left-width: 4px;
+  border-radius: var(--cockpit-radius);
+  color: var(--cockpit-text);
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 12px 14px;
+}
+
+.demo-clipboard-notice.blocked {
+  background: var(--cockpit-surface);
+  border-color: var(--cockpit-danger-border);
+}
+
+.demo-clipboard-notice strong {
+  color: var(--cockpit-text);
+  font-size: 14px;
+  font-weight: 820;
+  line-height: 1.25;
+}
+
+.demo-clipboard-notice span,
+.demo-clipboard-notice small {
+  color: var(--cockpit-text-secondary);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.demo-clipboard-notice small {
+  color: var(--cockpit-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.demo-clipboard-notice:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
+}
+
+@keyframes demo-clipboard-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .demo-memory-strip {
   align-items: start;
   background: var(--cockpit-surface);
@@ -1973,6 +2048,20 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 .demo-shell button.btn {
   max-width: 100%;
   min-height: 38px;
+}
+
+.demo-shell .btn.is-copied {
+  background: var(--cockpit-accent);
+  border-color: var(--cockpit-accent);
+  color: var(--demo-primary-on-accent) !important;
+  -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
+}
+
+.demo-shell .btn.is-blocked {
+  background: var(--cockpit-danger-bg);
+  border-color: var(--cockpit-danger-border);
+  color: var(--cockpit-danger-text) !important;
+  -webkit-text-fill-color: var(--cockpit-danger-text) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

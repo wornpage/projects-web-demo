@@ -40,6 +40,7 @@ const state = {
   styleAudit: null,
   pendingFocus: null,
   actionReceipt: null,
+  clipboardReceipt: null,
   lastRenderedHash: "",
   memoryDraft: "",
   triageInput: "",
@@ -356,6 +357,7 @@ function applyScenario(scenario, options = {}) {
   state.query = "";
   state.selectedId = state.packs[0]?.id || "";
   state.actionReceipt = null;
+  state.clipboardReceipt = null;
   if (force || options.skipSave) {
     state.status = scenarioStatus(current);
   }
@@ -395,6 +397,7 @@ function resetState() {
   state.triageRows = [];
   state.status = resetDemoStatus();
   state.actionReceipt = null;
+  state.clipboardReceipt = null;
   syncSearchParam("scenario", null);
   render();
 }
@@ -1112,17 +1115,19 @@ function renderTriage() {
         </div>
         <span class="demo-status">${snapshot.rows.length} row(s)</span>
       </div>
-      <div class="demo-inline-form">
+      <div class="${copyPayloadClass("triage-snapshot")}">
         <label class="sr-only" for="triage-snapshot">Triage snapshot markdown</label>
         <textarea id="triage-snapshot" class="demo-search-input" rows="8" readonly>${escapeHtml(triageMarkdown(rows))}</textarea>
       </div>
       <div class="demo-card-actions">
         <span id="copy-triage-markdown-help" class="sr-only">${escapeHtml(copyMarkdownHelp)}</span>
         <span id="copy-triage-json-help" class="sr-only">${escapeHtml(copyJsonHelp)}</span>
-        <button id="copy-triage-markdown" class="btn btn-primary" type="button"${controlHelpAttributes(false, copyMarkdownHelp, "copy-triage-markdown-help")}>Copy Markdown</button>
-        <button id="copy-triage-json" class="btn" type="button"${controlHelpAttributes(false, copyJsonHelp, "copy-triage-json-help")}>Copy JSON</button>
+        ${copyButton("copy-triage-markdown", "Copy Markdown", "btn btn-primary", copyMarkdownHelp, "copy-triage-markdown-help")}
+        ${copyButton("copy-triage-json", "Copy JSON", "btn", copyJsonHelp, "copy-triage-json-help")}
         ${navButton("work", "Open work list")}
       </div>
+      ${clipboardNoticePanel("copy-triage-markdown")}
+      ${clipboardNoticePanel("copy-triage-json")}
     </section>
   `;
 
@@ -1377,12 +1382,22 @@ function bindTriageControls() {
 
   el("copy-triage-markdown")?.addEventListener("click", () => {
     syncTriageRowsFromDom();
-    copyToClipboard(triageMarkdown(state.triageRows), clipboardStatus("Triage", "paste Markdown into handoff"));
+    copyToClipboard(triageMarkdown(state.triageRows), clipboardStatus("Triage", "paste Markdown into handoff"), {
+      controlId: "copy-triage-markdown",
+      targetId: "triage-snapshot",
+      title: "Triage Markdown copied",
+      detail: `${state.triageRows.length} triage row(s) are on the clipboard as Markdown.`
+    });
   });
 
   el("copy-triage-json")?.addEventListener("click", () => {
     syncTriageRowsFromDom();
-    copyToClipboard(JSON.stringify(collectTriageSnapshot(state.triageRows), null, 2), clipboardStatus("Triage", "paste JSON into handoff"));
+    copyToClipboard(JSON.stringify(collectTriageSnapshot(state.triageRows), null, 2), clipboardStatus("Triage", "paste JSON into handoff"), {
+      controlId: "copy-triage-json",
+      targetId: "triage-snapshot",
+      title: "Triage JSON copied",
+      detail: `${state.triageRows.length} triage row(s) are on the clipboard as JSON.`
+    });
   });
 
   el("screen-content").querySelectorAll("[data-triage-field]").forEach((control) => {
@@ -2176,19 +2191,25 @@ function renderFeedback() {
         <span class="demo-status">${escapeHtml(stateVersionLabel())}</span>
       </div>
       <p>Attach pre-filled environment context, or copy it and paste into the issue body.</p>
-      <div class="demo-inline-form">
+      <div class="${copyPayloadClass("feedback-context")}">
         <label class="sr-only" for="feedback-context">Demo diagnostic context</label>
         <textarea id="feedback-context" class="demo-search-input" rows="10">${escapeHtml(JSON.stringify(context, null, 2))}</textarea>
       </div>
       <div class="demo-card-actions">
         <span id="copy-feedback-help" class="sr-only">${escapeHtml(copyFeedbackHelp)}</span>
         <span id="open-feedback-help" class="sr-only">${escapeHtml(openFeedbackHelp)}</span>
-        <button id="copy-feedback" class="btn" type="button"${controlHelpAttributes(false, copyFeedbackHelp, "copy-feedback-help")}>Copy context</button>
+        ${copyButton("copy-feedback", "Copy context", "btn", copyFeedbackHelp, "copy-feedback-help")}
         <a class="btn btn-primary" id="open-feedback" href="${escapeAttribute(issueUrl)}" rel="noopener noreferrer" target="_blank"${controlHelpAttributes(false, openFeedbackHelp, "open-feedback-help")}>Open GitHub issue</a>
       </div>
+      ${clipboardNoticePanel("copy-feedback")}
     </section>
   `;
-  el("copy-feedback").addEventListener("click", () => copyToClipboard(issueBody));
+  el("copy-feedback").addEventListener("click", () => copyToClipboard(issueBody, copyFeedbackHelp, {
+    controlId: "copy-feedback",
+    targetId: "feedback-context",
+    title: "Feedback context copied",
+    detail: "Diagnostic context is on the clipboard for the issue body."
+  }));
   el("open-feedback").addEventListener("click", () => {
     state.status = routeStatus("Feedback", "none", "review the prefilled GitHub issue");
   });
@@ -2245,24 +2266,36 @@ function renderMeta() {
         ${metricCard("Done packs", counts.done, "Completed sample packs.")}
         ${metricCard("All packs", counts.all, "Total packs loaded.")}
       </div>
-      <div class="demo-inline-form">
+      <div class="${copyPayloadClass("meta-context")}">
         <label class="sr-only" for="meta-context">Meta context payload</label>
         <textarea id="meta-context" class="demo-search-input" rows="8">${escapeHtml(JSON.stringify(context, null, 2))}</textarea>
       </div>
       <div class="demo-card-actions">
         <span id="copy-meta-context-help" class="sr-only">${escapeHtml(copyMetaHelp)}</span>
         <span id="copy-style-audit-help" class="sr-only">${escapeHtml(copyStyleAuditHelp)}</span>
-        <button id="copy-meta-context" class="btn" type="button"${controlHelpAttributes(false, copyMetaHelp, "copy-meta-context-help")}>Copy meta snapshot</button>
-        <button id="copy-style-audit" class="btn" type="button"${controlHelpAttributes(false, copyStyleAuditHelp, "copy-style-audit-help")}>Copy style audit</button>
+        ${copyButton("copy-meta-context", "Copy meta snapshot", "btn", copyMetaHelp, "copy-meta-context-help")}
+        ${copyButton("copy-style-audit", "Copy style audit", "btn", copyStyleAuditHelp, "copy-style-audit-help")}
       </div>
+      ${clipboardNoticePanel("copy-meta-context")}
+      ${clipboardNoticePanel("copy-style-audit")}
       <p><small>Snapshot generated: ${escapeHtml(now)}</small></p>
     </section>
   `;
   el("copy-meta-context").addEventListener("click", () => {
-    copyToClipboard(JSON.stringify(context, null, 2), clipboardStatus("Meta", "share the meta snapshot"));
+    copyToClipboard(JSON.stringify(context, null, 2), clipboardStatus("Meta", "share the meta snapshot"), {
+      controlId: "copy-meta-context",
+      targetId: "meta-context",
+      title: "Meta snapshot copied",
+      detail: "The current route, command context, metadata, and style audit summary are on the clipboard."
+    });
   });
   el("copy-style-audit").addEventListener("click", () => {
-    copyToClipboard(JSON.stringify(styleAudit, null, 2), clipboardStatus("Meta", "share the style audit"));
+    copyToClipboard(JSON.stringify(styleAudit, null, 2), clipboardStatus("Meta", "share the style audit"), {
+      controlId: "copy-style-audit",
+      targetId: "meta-context",
+      title: "Style audit copied",
+      detail: "The shipped asset audit is on the clipboard."
+    });
   });
 }
 
@@ -2350,15 +2383,16 @@ function renderLab() {
         </div>
         <span class="demo-status">copyable</span>
       </div>
-      <div class="demo-inline-form">
+      <div class="${copyPayloadClass("lab-snapshot")}">
         <label class="sr-only" for="lab-snapshot">Lab snapshot payload</label>
         <textarea id="lab-snapshot" class="demo-search-input" rows="10">${escapeHtml(JSON.stringify(snapshot, null, 2))}</textarea>
       </div>
       <div class="demo-card-actions">
         <span id="copy-lab-snapshot-help" class="sr-only">${escapeHtml(copyLabSnapshotHelp)}</span>
-        <button id="copy-lab-snapshot" class="btn btn-primary" type="button"${controlHelpAttributes(false, copyLabSnapshotHelp, "copy-lab-snapshot-help")}>Copy lab snapshot</button>
+        ${copyButton("copy-lab-snapshot", "Copy lab snapshot", "btn btn-primary", copyLabSnapshotHelp, "copy-lab-snapshot-help")}
         ${navButton("meta", "Open meta")}
       </div>
+      ${clipboardNoticePanel("copy-lab-snapshot")}
     </section>
   `;
 
@@ -2614,7 +2648,12 @@ function bindLabControls() {
 
   const copy = el("copy-lab-snapshot");
   if (copy) {
-    copy.addEventListener("click", () => copyToClipboard(valueOf("lab-snapshot"), clipboardStatus("Demo Lab", "share the lab snapshot")));
+    copy.addEventListener("click", () => copyToClipboard(valueOf("lab-snapshot"), clipboardStatus("Demo Lab", "share the lab snapshot"), {
+      controlId: "copy-lab-snapshot",
+      targetId: "lab-snapshot",
+      title: "Lab snapshot copied",
+      detail: "The command simulator snapshot is on the clipboard."
+    }));
   }
 }
 
@@ -3337,7 +3376,12 @@ function runRouteAction(action, targetPackId) {
       return true;
     }
 
-    copyToClipboard(triageMarkdown(state.triageRows), clipboardStatus("Triage", "paste Markdown into handoff"));
+    copyToClipboard(triageMarkdown(state.triageRows), clipboardStatus("Triage", "paste Markdown into handoff"), {
+      controlId: "copy-triage-markdown",
+      targetId: "triage-snapshot",
+      title: "Triage Markdown copied",
+      detail: `${state.triageRows.length} triage row(s) are on the clipboard as Markdown.`
+    });
     return true;
   }
 
@@ -3583,9 +3627,10 @@ function packDetailSaveState(pack) {
     };
   }
 
+  const pending = pendingPackFromForwardPathForm(pack);
   return {
     canSave: true,
-    help: `Where: Forward path. Blocker: none. Button runs next: save forward path for ${pack.title}.`
+    help: `Where: Forward path. Blocker: ${blockerTextForPack(pending)}. Button runs next: save forward path for ${pending.title}.`
   };
 }
 
@@ -4801,17 +4846,139 @@ function collectDiagnosticContext() {
   };
 }
 
-function copyToClipboard(value, successMessage = clipboardStatus("Feedback", "paste diagnostic context into issue")) {
-  navigator.clipboard?.writeText(value).then(
+function copyButton(controlId, label, className, help, describedById) {
+  const receipt = clipboardReceiptFor(controlId);
+  const stateClass = receipt
+    ? receipt.kind === "success" ? " is-copied" : " is-blocked"
+    : "";
+  const visibleLabel = receipt
+    ? receipt.kind === "success" ? "Copied" : "Copy blocked"
+    : label;
+  return `<button id="${escapeAttribute(controlId)}" class="${escapeAttribute(`${className}${stateClass}`)}" type="button"${controlHelpAttributes(false, help, describedById)}>${escapeHtml(visibleLabel)}</button>`;
+}
+
+function copyPayloadClass(targetId) {
+  return `demo-inline-form demo-copy-payload${clipboardTargetIsActive(targetId) ? " is-copied" : ""}`;
+}
+
+function clipboardNoticePanel(controlId) {
+  const receipt = clipboardReceiptFor(controlId);
+  if (!receipt) {
+    return "";
+  }
+
+  return `<div id="clipboard-notice-${escapeAttribute(controlId)}" class="demo-clipboard-notice ${escapeAttribute(receipt.kind)}" role="status" tabindex="-1">
+    <strong>${escapeHtml(receipt.title)}</strong>
+    <span>${escapeHtml(receipt.detail)}</span>
+    <small>${escapeHtml(receipt.at)}</small>
+  </div>`;
+}
+
+function clipboardReceiptFor(controlId) {
+  const receipt = state.clipboardReceipt;
+  if (!receipt || receipt.route !== state.route || receipt.controlId !== controlId) {
+    return null;
+  }
+
+  return receipt;
+}
+
+function clipboardTargetIsActive(targetId) {
+  const receipt = state.clipboardReceipt;
+  return Boolean(receipt && receipt.route === state.route && receipt.targetId === targetId);
+}
+
+function setClipboardReceipt(kind, options = {}) {
+  const success = kind === "success";
+  state.clipboardReceipt = {
+    kind: success ? "success" : "blocked",
+    route: state.route,
+    controlId: options.controlId || "",
+    targetId: options.targetId || "",
+    title: options.title || (success ? "Copied to clipboard" : "Clipboard blocked"),
+    detail: options.detail || (success
+      ? "The selected snapshot is on the clipboard."
+      : "Browser clipboard access was blocked. Select the visible text and copy it manually."),
+    at: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })
+  };
+}
+
+function focusClipboardNotice(controlId) {
+  if (!controlId) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    el(`clipboard-notice-${controlId}`)?.focus({ preventScroll: true });
+  });
+}
+
+function copyToClipboard(value, successMessage = clipboardStatus("Feedback", "paste diagnostic context into issue"), options = {}) {
+  if (copyWithSelectionFallback(value, options.targetId)) {
+    state.status = successMessage;
+    setClipboardReceipt("success", options);
+    render();
+    focusClipboardNotice(options.controlId);
+    return;
+  }
+
+  const write = navigator.clipboard?.writeText
+    ? navigator.clipboard.writeText(value)
+    : Promise.reject(new Error("Clipboard API unavailable"));
+  write.then(
     () => {
       state.status = successMessage;
+      setClipboardReceipt("success", options);
       render();
+      focusClipboardNotice(options.controlId);
     },
     () => {
       state.status = clipboardBlockedStatus();
+      setClipboardReceipt("blocked", {
+        ...options,
+        title: "Clipboard blocked",
+        detail: "Browser clipboard access was blocked. Select the visible text and copy it manually."
+      });
       render();
+      focusClipboardNotice(options.controlId);
     }
   );
+}
+
+function copyWithSelectionFallback(value, targetId = "") {
+  const visibleTarget = targetId ? el(targetId) : null;
+  const canUseVisibleTarget = visibleTarget
+    && typeof visibleTarget.select === "function"
+    && typeof visibleTarget.value === "string"
+    && visibleTarget.value === value;
+  const target = canUseVisibleTarget ? visibleTarget : document.createElement("textarea");
+  const temporary = target !== visibleTarget;
+
+  if (temporary) {
+    target.value = value;
+    target.setAttribute("readonly", "");
+    target.style.position = "fixed";
+    target.style.inset = "0 auto auto -9999px";
+    target.style.width = "1px";
+    target.style.height = "1px";
+    target.style.opacity = "0";
+    document.body.appendChild(target);
+  }
+
+  try {
+    target.focus();
+    target.select();
+    if (typeof target.setSelectionRange === "function") {
+      target.setSelectionRange(0, target.value.length);
+    }
+    return Boolean(document.execCommand?.("copy"));
+  } catch {
+    return false;
+  } finally {
+    if (temporary) {
+      target.remove();
+    }
+  }
 }
 
 function clipboardStatus(where, next) {
