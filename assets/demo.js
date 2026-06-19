@@ -3758,7 +3758,8 @@ function syncValidatedActionButton(button, stateForAction) {
   const copy = helpCopy(stateForAction.help, DEMO_COPY_LIMITS.commandFlowHelp);
   button.disabled = !stateForAction.canSave;
   button.title = copy;
-  button.setAttribute("aria-label", copy);
+  button.setAttribute("aria-description", copy);
+  button.removeAttribute("aria-label");
   if (stateForAction.canSave) {
     delete button.dataset.disabledReason;
     return;
@@ -4174,7 +4175,7 @@ function disabledReasonAttributes(disabled, reason) {
   }
 
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
-  return ` disabled title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}" data-disabled-reason="${escapeAttribute(copy)}"`;
+  return ` disabled title="${escapeAttribute(copy)}" aria-description="${escapeAttribute(copy)}" data-disabled-reason="${escapeAttribute(copy)}"`;
 }
 
 function controlHelpAttributes(disabled, reason, describedById) {
@@ -4780,6 +4781,7 @@ function disabledControlReason(control) {
   const direct = [
     control.getAttribute("data-disabled-reason"),
     control.getAttribute("title"),
+    control.getAttribute("aria-description"),
     control.getAttribute("aria-label")
   ].find((value) => normalizeCopy(value));
   if (direct) {
