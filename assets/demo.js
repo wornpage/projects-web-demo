@@ -2171,6 +2171,7 @@ function blockerStateField(pack) {
         <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="missing owner, source, approval..."${hasBlocker ? "" : " disabled"}>
       </div>
       <p class="demo-field-help" data-blocker-help>${hasBlocker ? "Describe what must be cleared before the next action." : "Unblocked stores Blocker: none automatically; no typing required."}</p>
+      <p class="demo-blocker-resolution" data-blocker-resolution hidden aria-live="polite"></p>
     </fieldset>
   `;
 }
@@ -3845,7 +3846,7 @@ function bindPackDetailValidation(pack) {
     const input = el(id);
     input?.addEventListener("input", () => {
       if (id === "edit-owner") {
-        syncOwnerBlockerResolution();
+        syncOwnerBlockerResolutionPreview();
       }
       syncPackDetailValidation(pack);
     });
@@ -3854,7 +3855,7 @@ function bindPackDetailValidation(pack) {
         syncBlockerModeFromStatus();
       }
       if (id === "edit-owner") {
-        syncOwnerBlockerResolution();
+        syncOwnerBlockerResolutionPreview();
       }
       syncPackDetailValidation(pack);
     });
@@ -3925,15 +3926,8 @@ function isBlockerReviewAction(value) {
     || normalized === "unblock";
 }
 
-function syncOwnerBlockerResolution() {
-  const blockerMode = document.querySelector('input[name="edit-blocker-mode"]:checked')?.value;
-  if (blockerMode !== "set") {
-    return;
-  }
-
-  if (ownerFixClearsBlocker(el("edit-blocker")?.value, valueOf("edit-owner"))) {
-    setBlockerMode(false);
-  }
+function syncOwnerBlockerResolutionPreview() {
+  syncBlockerFieldHelp();
 }
 
 function ownerFixClearsBlocker(blocker, owner) {
@@ -3974,9 +3968,11 @@ function syncBlockerFieldHelp() {
   const field = document.querySelector("[data-blocker-field]");
   const input = el("edit-blocker");
   const help = document.querySelector("[data-blocker-help]");
+  const resolution = document.querySelector("[data-blocker-resolution]");
   const selected = document.querySelector('input[name="edit-blocker-mode"]:checked');
   const hasBlocker = selected?.value === "set";
   const issue = blockerModeIssue();
+  const ownerResolvedBlocker = ownerFixClearsBlocker(input?.value, valueOf("edit-owner"));
   field?.classList.toggle("invalid", Boolean(issue));
   if (input) {
     if (issue) {
@@ -3985,13 +3981,24 @@ function syncBlockerFieldHelp() {
       input.removeAttribute("aria-invalid");
     }
   }
-  if (help) {
-    const ownerResolvedBlocker = ownerFixClearsBlocker(input?.value, valueOf("edit-owner"));
-    const clearHelp = ownerResolvedBlocker
-      ? "Owner filled; Save will store Blocker: none."
-      : "Unblocked stores Blocker: none automatically; no typing required.";
-    help.textContent = issue || (hasBlocker ? "Describe what must be cleared before the next action." : clearHelp);
+  if (resolution) {
+    resolution.hidden = !ownerResolvedBlocker;
+    resolution.textContent = ownerResolvedBlocker
+      ? ownerBlockerResolutionHelp()
+      : "";
   }
+  if (help) {
+    const clearHelp = ownerResolvedBlocker
+      ? "Owner filled; Save will clear this blocker. No need to press Unblocked."
+      : "Unblocked stores Blocker: none automatically; no typing required.";
+    help.textContent = issue || (hasBlocker && !ownerResolvedBlocker ? "Describe what must be cleared before the next action." : clearHelp);
+  }
+}
+
+function ownerBlockerResolutionHelp() {
+  const requestedNext = valueOf("edit-next");
+  const savedNext = isBlockerReviewAction(requestedNext) ? "Open" : (requestedNext || "Open");
+  return `Owner filled. Save stores Blocker: none and Button runs next: ${savedNext}.`;
 }
 
 function syncPackDetailForwardPanel(pack) {
