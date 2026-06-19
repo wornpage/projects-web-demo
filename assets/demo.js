@@ -3342,6 +3342,9 @@ function handlePackAction(id, action) {
 function runPrimaryAction(control = el("primary-action")) {
   const action = control?.dataset.action || el("primary-action").dataset.action;
   const targetPackId = control?.dataset.pack || el("primary-action").dataset.pack;
+  if (pendingForwardPathBlocksAction(targetPackId)) {
+    return;
+  }
   applyPendingForwardPathForAction(targetPackId);
   if (action === "run-next") {
     runResolvedPackAction(findPack(targetPackId) || currentPack());
@@ -3395,10 +3398,42 @@ function applyPendingForwardPathForAction(targetPackId) {
     return false;
   }
 
+  if (blockerModeIssue()) {
+    return false;
+  }
+
   return applyPackForwardPathFormValues(pack);
 }
 
+function pendingForwardPathBlocksAction(targetPackId) {
+  const pack = findPack(targetPackId) || currentPack();
+  const form = el("pack-edit-form");
+  if (!pack || !form || form.dataset.packId !== pack.id) {
+    return false;
+  }
+
+  const issue = blockerModeIssue();
+  if (!issue) {
+    return false;
+  }
+
+  state.status = `Where: Forward path. Blocker: ${issue} Button runs next: choose Unblocked or enter a blocker reason.`;
+  syncPackDetailValidation(pack);
+  requestAnimationFrame(() => focusCommandTarget("pack-blocker", pack.id));
+  return true;
+}
+
 function runRouteAction(action, targetPackId) {
+  if (action === "fix-blocker-mode") {
+    const selected = findPack(targetPackId) || currentPack();
+    if (selected) {
+      queueFocus("pack-blocker", selected.id);
+      state.status = "Where: Forward path. Blocker: blocked mode needs a real blocker. Button runs next: choose Unblocked or enter a blocker reason.";
+      render();
+    }
+    return true;
+  }
+
   if (action === "route-review") {
     const pack = findPack(targetPackId) || preferredReviewPack();
     if (pack) {
@@ -3760,6 +3795,14 @@ function packDetailSaveState(pack) {
     };
   }
 
+  const blockerIssue = blockerModeIssue();
+  if (blockerIssue) {
+    return {
+      canSave: false,
+      help: `Where: Forward path. Blocker: ${blockerIssue} Button runs next: choose Unblocked or enter a blocker reason.`
+    };
+  }
+
   const changed = packForwardPathFormSignature(pack) !== packForwardPathSignature(pack);
   if (!changed) {
     return {
@@ -3841,11 +3884,7 @@ function setBlockerMode(hasBlocker) {
   if (reason) {
     reason.hidden = !hasBlocker;
   }
-  if (help) {
-    help.textContent = hasBlocker
-      ? "Describe what must be cleared before the next action."
-      : "Unblocked stores Blocker: none automatically; no typing required.";
-  }
+  syncBlockerFieldHelp();
 }
 
 function isBlockerReviewAction(value) {
@@ -3864,9 +3903,43 @@ function syncPackDetailValidation(pack) {
   }
 
   const stateForSave = packDetailSaveState(pack);
+  syncBlockerFieldHelp();
   syncPackDetailForwardPanel(pack);
   help.textContent = stateForSave.help;
   syncValidatedActionButton(button, stateForSave);
+}
+
+function blockerModeIssue() {
+  const field = document.querySelector("[data-blocker-field]");
+  const selected = document.querySelector('input[name="edit-blocker-mode"]:checked');
+  const blocker = normalizeCopy(el("edit-blocker")?.value).toLowerCase();
+  if (!field || selected?.value !== "set" || blocker !== "none") {
+    return "";
+  }
+
+  return "Blocked mode needs a real blocker; use Unblocked to store Blocker: none.";
+}
+
+function syncBlockerFieldHelp() {
+  const field = document.querySelector("[data-blocker-field]");
+  const input = el("edit-blocker");
+  const help = document.querySelector("[data-blocker-help]");
+  const selected = document.querySelector('input[name="edit-blocker-mode"]:checked');
+  const hasBlocker = selected?.value === "set";
+  const issue = blockerModeIssue();
+  field?.classList.toggle("invalid", Boolean(issue));
+  if (input) {
+    if (issue) {
+      input.setAttribute("aria-invalid", "true");
+    } else {
+      input.removeAttribute("aria-invalid");
+    }
+  }
+  if (help) {
+    help.textContent = issue || (hasBlocker
+      ? "Describe what must be cleared before the next action."
+      : "Unblocked stores Blocker: none automatically; no typing required.");
+  }
 }
 
 function syncPackDetailForwardPanel(pack) {
@@ -3876,13 +3949,29 @@ function syncPackDetailForwardPanel(pack) {
 
   const pending = pendingPackFromForwardPathForm(pack);
   const command = resolvePrimaryCommandForPack(pending);
+  const issue = blockerModeIssue();
   const panel = document.querySelector('[data-forward-motion="pack-detail"]');
   const head = panel?.querySelector(".demo-forward-head strong");
   const where = panel?.querySelector('[data-command-field="where"] strong');
   const blocker = panel?.querySelector('[data-command-field="blocker"] strong');
   const next = panel?.querySelector('[data-command-field="button-runs-next"] strong');
-  if (head) head.textContent = command.label;
   if (where) where.textContent = `${pending.title} / ${pending.status}`;
+  if (issue) {
+    if (head) head.textContent = "Choose Unblocked";
+    if (blocker) blocker.textContent = issue;
+    if (next) next.textContent = "Choose Unblocked";
+    const invalidCommand = commandForRoute(pending, filteredPacks().length, state.packs.filter(isReview).length);
+    invalidCommand.blocker = issue;
+    invalidCommand.next = "Choose Unblocked";
+    invalidCommand.action = "fix-blocker-mode";
+    invalidCommand.targetPackId = pending.id;
+    invalidCommand.stateText = "Fix blocker";
+    invalidCommand.flowHint = "Flow: fix blocker state, then save.";
+    updateCommand(invalidCommand);
+    return;
+  }
+
+  if (head) head.textContent = command.label;
   if (blocker) blocker.textContent = blockerTextForPack(pending);
   if (next) next.textContent = command.label;
   updateCommand(commandForRoute(pending, filteredPacks().length, state.packs.filter(isReview).length));

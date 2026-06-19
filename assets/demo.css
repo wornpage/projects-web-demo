@@ -1805,6 +1805,24 @@ html[data-theme="dark"] .demo-state-pill {
   padding: 0;
 }
 
+.demo-blocker-field.invalid {
+  background: var(--cockpit-danger-bg);
+  border: 1px solid var(--cockpit-danger-border);
+  border-radius: var(--cockpit-radius);
+  padding: 10px;
+}
+
+.demo-blocker-field.invalid [data-blocker-help] {
+  color: var(--cockpit-danger-text);
+  font-weight: 780;
+}
+
+.demo-blocker-field.invalid input[aria-invalid="true"] {
+  border-color: var(--cockpit-danger-border);
+  outline: 2px solid var(--cockpit-danger-border);
+  outline-offset: 1px;
+}
+
 .demo-segmented-control {
   background: var(--cockpit-nav-bg);
   border: 1px solid var(--cockpit-border);
