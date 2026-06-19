@@ -19,6 +19,7 @@ const STYLE_AUDIT_ASSETS = [
 const DEMO_COPY_LIMITS = Object.freeze({
   commandFlowVisible: 48,
   commandFlowHelp: 140,
+  clipboardPayloadPreview: 1200,
   memoryVisible: 96,
   receiptVisible: 96,
   receiptHelp: 180,
@@ -612,6 +613,8 @@ function render() {
       renderWork();
       break;
   }
+
+  bindClipboardReceiptControls();
 
   if (shouldResetScroll) {
     requestAnimationFrame(() => {
@@ -2271,7 +2274,7 @@ function renderFeedback() {
       <p>Attach pre-filled environment context, or copy it and paste into the issue body.</p>
       <div class="${copyPayloadClass("feedback-context")}">
         <label class="sr-only" for="feedback-context">Demo diagnostic context</label>
-        <textarea id="feedback-context" class="demo-search-input" rows="10">${escapeHtml(JSON.stringify(context, null, 2))}</textarea>
+        <textarea id="feedback-context" class="demo-search-input" rows="10">${escapeHtml(issueBody)}</textarea>
       </div>
       <div class="demo-card-actions">
         <span id="copy-feedback-help" class="sr-only">${escapeHtml(copyFeedbackHelp)}</span>
@@ -3065,15 +3068,22 @@ function updateActionReceipt() {
   if (!receipt) {
     receiptElement.hidden = true;
     receiptElement.innerHTML = "";
+    delete receiptElement.dataset.receiptKind;
+    delete receiptElement.dataset.receiptTone;
     return;
   }
 
   receiptElement.hidden = false;
+  receiptElement.dataset.receiptKind = receipt.kind || "action";
+  receiptElement.dataset.receiptTone = receipt.tone || "success";
   const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
+  const eyebrow = receipt.kind === "clipboard"
+    ? receipt.tone === "blocked" ? "Clipboard blocked" : "Clipboard ready"
+    : "Last result";
   receiptElement.innerHTML = `
     <div class="demo-command-receipt-head" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
-      <span>Last result</span>
+      <span>${escapeHtml(eyebrow)}</span>
       <strong>${escapeHtml(visibleSummary)}</strong>
     </div>
     <div class="demo-command-receipt-lines">
@@ -3150,6 +3160,8 @@ function normalizeActionReceipt(receipt) {
   }
 
   return {
+    kind: normalizeCopy(receipt.kind) || "action",
+    tone: normalizeCopy(receipt.tone) || "success",
     packId,
     summary,
     visibleSummary: visibleSummary || visibleCopy(summary, DEMO_COPY_LIMITS.receiptVisible),
@@ -4146,6 +4158,9 @@ function forwardPathStatusForBlocker(status, blocker) {
   if (normalizedStatus === "done") {
     return "done";
   }
+  if (normalizedStatus === "draft") {
+    return "draft";
+  }
   if (blocker && blocker !== "none") {
     return "blocked";
   }
@@ -5094,7 +5109,8 @@ function copyButton(controlId, label, className, help, describedById) {
 }
 
 function copyPayloadClass(targetId) {
-  return `demo-inline-form demo-copy-payload${clipboardTargetIsActive(targetId) ? " is-copied" : ""}`;
+  const targetState = clipboardTargetState(targetId);
+  return `demo-inline-form demo-copy-payload${targetState ? ` ${targetState}` : ""}`;
 }
 
 function clipboardNoticePanel(controlId) {
@@ -5104,16 +5120,31 @@ function clipboardNoticePanel(controlId) {
   }
 
   const eyebrow = receipt.kind === "success" ? "Clipboard ready" : "Manual copy needed";
+  const targetLabel = receipt.targetLabel || clipboardTargetLabel(receipt.targetId);
+  const stepOne = receipt.kind === "success" ? "Copied" : "Blocked";
+  const stepTwo = receipt.kind === "success" ? "Preview opened" : `${targetLabel} visible`;
+  const stepThree = receipt.kind === "success" ? "Paste ready" : "Copy manually";
+  const targetActionLabel = receipt.kind === "success" ? "Select copied text" : "Select visible text";
+  const targetAction = receipt.targetId
+    ? `<button class="btn btn-sm demo-clipboard-target-action" type="button" data-copy-target="${escapeAttribute(receipt.targetId)}">${escapeHtml(targetActionLabel)}</button>`
+    : "";
   return `<div id="clipboard-notice-${escapeAttribute(controlId)}" class="demo-clipboard-notice ${escapeAttribute(receipt.kind)}" role="status" tabindex="-1">
     <div class="demo-clipboard-notice-head">
       <span>${escapeHtml(eyebrow)}</span>
       <strong>${escapeHtml(receipt.title)}</strong>
     </div>
-    <span>${escapeHtml(receipt.detail)}</span>
+    <div class="demo-clipboard-steps" aria-label="${escapeAttribute(eyebrow)}">
+      <span class="demo-clipboard-step active">${escapeHtml(stepOne)}</span>
+      <span class="demo-clipboard-step active">${escapeHtml(stepTwo)}</span>
+      <span class="demo-clipboard-step">${escapeHtml(stepThree)}</span>
+    </div>
+    <span class="demo-clipboard-detail">${escapeHtml(receipt.detail)}</span>
     <div class="demo-clipboard-next">
       <span>Button runs next</span>
       <strong>${escapeHtml(receipt.next)}</strong>
     </div>
+    ${clipboardPayloadPreviewPanel(receipt)}
+    ${targetAction ? `<div class="demo-clipboard-actions">${targetAction}</div>` : ""}
     <small>${escapeHtml(receipt.at)}</small>
   </div>`;
 }
@@ -5132,6 +5163,15 @@ function clipboardTargetIsActive(targetId) {
   return Boolean(receipt && receipt.route === state.route && receipt.targetId === targetId);
 }
 
+function clipboardTargetState(targetId) {
+  const receipt = state.clipboardReceipt;
+  if (!receipt || receipt.route !== state.route || receipt.targetId !== targetId) {
+    return "";
+  }
+
+  return receipt.kind === "success" ? "is-copied" : "is-blocked";
+}
+
 function setClipboardReceipt(kind, options = {}) {
   const success = kind === "success";
   const title = options.title || (success ? "Copied to clipboard" : "Clipboard blocked");
@@ -5142,15 +5182,20 @@ function setClipboardReceipt(kind, options = {}) {
   const proof = options.proof || (success
     ? "Clipboard contains the copied demo payload."
     : "The visible payload remains available for manual selection.");
+  const targetLabel = options.targetLabel || clipboardTargetLabel(options.targetId);
+  const payloadPreview = normalizeClipboardPayload(options.payloadPreview);
   state.clipboardReceipt = {
     kind: success ? "success" : "blocked",
     route: state.route,
     controlId: options.controlId || "",
     targetId: options.targetId || "",
+    targetLabel,
     title,
     detail,
     next,
     proof,
+    payloadPreview,
+    payloadTruncated: Boolean(options.payloadTruncated),
     at: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })
   };
   setClipboardCommandReceipt(state.clipboardReceipt);
@@ -5167,6 +5212,8 @@ function setClipboardCommandReceipt(receipt) {
     ? "Clipboard contains the copied demo payload."
     : "The visible payload remains available for manual selection.");
   state.actionReceipt = {
+    kind: "clipboard",
+    tone: receipt.kind,
     summary: helpCopy(`${summary} Where: ${where}. Blocker: ${blocker}. Button runs next: ${next}. Proof target: ${proof}.`, DEMO_COPY_LIMITS.receiptHelp),
     visibleSummary: visibleCopy(summary, DEMO_COPY_LIMITS.receiptVisible),
     where,
@@ -5189,10 +5236,57 @@ function focusClipboardNotice(controlId) {
   });
 }
 
+function bindClipboardReceiptControls() {
+  document.querySelectorAll("[data-copy-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectClipboardTarget(button.dataset.copyTarget || "");
+    });
+  });
+
+  document.querySelectorAll("[data-clipboard-preview]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectClipboardTarget(button.dataset.clipboardPreview || "");
+    });
+  });
+}
+
+function selectClipboardTarget(targetId) {
+  const target = targetId ? el(targetId) : null;
+  if (!target) {
+    return;
+  }
+
+  const payload = target.closest(".demo-copy-payload");
+  if (payload) {
+    payload.classList.remove("is-pulsing");
+    void payload.offsetWidth;
+    payload.classList.add("is-pulsing");
+  }
+
+  target.scrollIntoView({ block: "center", inline: "nearest" });
+  if (typeof target.focus === "function") {
+    target.focus({ preventScroll: true });
+  }
+  if (typeof target.select === "function") {
+    target.select();
+  }
+  if (typeof target.setSelectionRange === "function" && typeof target.value === "string") {
+    target.setSelectionRange(0, target.value.length);
+  }
+}
+
 function copyToClipboard(value, successMessage = clipboardStatus("Feedback", "paste diagnostic context into issue"), options = {}) {
+  const targetMatchesPayload = clipboardTargetMatchesValue(value, options.targetId);
+  const receiptOptions = {
+    ...options,
+    targetId: targetMatchesPayload ? options.targetId : "",
+    targetLabel: options.targetLabel || clipboardTargetLabel(options.targetId),
+    ...clipboardPreviewOptions(value)
+  };
+
   if (copyWithSelectionFallback(value, options.targetId)) {
     state.status = successMessage;
-    setClipboardReceipt("success", options);
+    setClipboardReceipt("success", receiptOptions);
     render();
     focusClipboardNotice(options.controlId);
     return;
@@ -5204,14 +5298,14 @@ function copyToClipboard(value, successMessage = clipboardStatus("Feedback", "pa
   write.then(
     () => {
       state.status = successMessage;
-      setClipboardReceipt("success", options);
+      setClipboardReceipt("success", receiptOptions);
       render();
       focusClipboardNotice(options.controlId);
     },
     () => {
       state.status = clipboardBlockedStatus();
       setClipboardReceipt("blocked", {
-        ...options,
+        ...receiptOptions,
         title: "Clipboard blocked",
         detail: "Browser clipboard access was blocked. Select the visible text and copy it manually."
       });
@@ -5219,6 +5313,52 @@ function copyToClipboard(value, successMessage = clipboardStatus("Feedback", "pa
       focusClipboardNotice(options.controlId);
     }
   );
+}
+
+function clipboardTargetMatchesValue(value, targetId = "") {
+  const visibleTarget = targetId ? el(targetId) : null;
+  return Boolean(visibleTarget
+    && typeof visibleTarget.value === "string"
+    && visibleTarget.value === value);
+}
+
+function clipboardTargetLabel(targetId = "") {
+  const labels = {
+    "feedback-context": "Feedback context",
+    "lab-snapshot": "Lab snapshot",
+    "meta-context": "Meta snapshot",
+    "triage-snapshot": "Triage snapshot"
+  };
+  return labels[targetId] || "Copied payload";
+}
+
+function clipboardPreviewOptions(value) {
+  const normalized = normalizeClipboardPayload(value);
+  const limit = DEMO_COPY_LIMITS.clipboardPayloadPreview;
+  return {
+    payloadPreview: normalized.length > limit ? `${normalized.slice(0, limit).trimEnd()}...` : normalized,
+    payloadTruncated: normalized.length > limit
+  };
+}
+
+function clipboardPayloadPreviewPanel(receipt) {
+  const preview = normalizeClipboardPayload(receipt.payloadPreview);
+  if (!preview) {
+    return "";
+  }
+
+  const previewId = `clipboard-preview-${receipt.controlId}`;
+  const summary = receipt.payloadTruncated ? "Copied text preview (truncated)" : "Copied text preview";
+  return `<details class="demo-clipboard-payload" open>
+    <summary>${escapeHtml(summary)}</summary>
+    <label class="sr-only" for="${escapeAttribute(previewId)}">${escapeHtml(summary)}</label>
+    <textarea id="${escapeAttribute(previewId)}" class="demo-search-input" rows="4" readonly>${escapeHtml(preview)}</textarea>
+    <button class="btn btn-sm demo-clipboard-target-action" type="button" data-clipboard-preview="${escapeAttribute(previewId)}">Select preview</button>
+  </details>`;
+}
+
+function normalizeClipboardPayload(value) {
+  return String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
 }
 
 function copyWithSelectionFallback(value, targetId = "") {

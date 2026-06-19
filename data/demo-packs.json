@@ -3,7 +3,7 @@
     "id": "venue-hold-calendar",
     "title": "venue-hold-calendar",
     "type": "operations",
-    "status": "active",
+    "status": "blocked",
     "blocker": "missing owner",
     "next": "Review",
     "due": "2026-06-20",

@@ -579,13 +579,27 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-command-receipt {
+  animation: demo-clipboard-pop 180ms ease-out;
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
-  border-left: 3px solid var(--cockpit-accent);
+  border-left: 5px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
   display: grid;
   gap: 10px;
   padding: 12px 14px;
+}
+
+.demo-command-receipt[data-receipt-kind="clipboard"] {
+  background: var(--cockpit-selected-bg);
+  border-color: var(--cockpit-accent);
+  border-left-width: 8px;
+  box-shadow: var(--cockpit-shadow-sm);
+}
+
+.demo-command-receipt[data-receipt-tone="blocked"] {
+  background: var(--cockpit-danger-bg);
+  border-color: var(--cockpit-danger-border);
+  border-left-color: var(--cockpit-danger-border);
 }
 
 .demo-command-receipt[hidden] {
@@ -686,6 +700,22 @@ html[data-theme="dark"] .demo-header-metadata {
   transition: background-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease, outline-color var(--demo-motion-duration) ease, padding var(--demo-motion-duration) ease;
 }
 
+.demo-inline-form.demo-copy-payload {
+  align-items: stretch;
+  display: grid;
+  gap: 8px;
+}
+
+.demo-copy-payload::before {
+  border-radius: var(--cockpit-radius-sm);
+  color: var(--cockpit-text);
+  display: none;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  padding: 9px 11px;
+}
+
 .demo-copy-payload.is-copied {
   background: var(--cockpit-selected-bg);
   box-shadow: var(--cockpit-shadow-sm);
@@ -694,28 +724,63 @@ html[data-theme="dark"] .demo-header-metadata {
   padding: 8px;
 }
 
+.demo-copy-payload.is-copied::before {
+  background: var(--cockpit-accent);
+  color: var(--demo-primary-on-accent);
+  content: "Copied payload is highlighted below. Paste it where needed.";
+  display: block;
+}
+
+.demo-copy-payload.is-blocked {
+  background: var(--cockpit-danger-bg);
+  box-shadow: var(--cockpit-shadow-sm);
+  outline: 2px solid var(--cockpit-danger-border);
+  outline-offset: 2px;
+  padding: 8px;
+}
+
+.demo-copy-payload.is-blocked::before {
+  background: var(--cockpit-danger-bg);
+  border: 1px solid var(--cockpit-danger-border);
+  color: var(--cockpit-danger-text);
+  content: "Clipboard was blocked. Select and copy this visible payload manually.";
+  display: block;
+}
+
 .demo-copy-payload.is-copied textarea,
-.demo-copy-payload.is-copied .demo-search-input {
+.demo-copy-payload.is-copied .demo-search-input,
+.demo-copy-payload.is-blocked textarea,
+.demo-copy-payload.is-blocked .demo-search-input {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-accent);
   min-height: min(46vh, 360px);
+}
+
+.demo-copy-payload.is-blocked textarea,
+.demo-copy-payload.is-blocked .demo-search-input {
+  border-color: var(--cockpit-danger-border);
+}
+
+.demo-copy-payload.is-pulsing {
+  animation: demo-clipboard-pop 180ms ease-out;
 }
 
 .demo-clipboard-notice {
   animation: demo-clipboard-pop 160ms ease-out;
   background: var(--cockpit-selected-bg);
   border: 2px solid var(--cockpit-accent);
+  border-left-width: 6px;
   border-radius: var(--cockpit-radius);
   box-shadow: var(--cockpit-shadow-sm);
   color: var(--cockpit-text);
   display: grid;
-  gap: 10px;
+  gap: 12px;
   margin-top: 12px;
   padding: 14px 16px;
 }
 
 .demo-clipboard-notice.blocked {
-  background: var(--cockpit-surface);
+  background: var(--cockpit-danger-bg);
   border-color: var(--cockpit-danger-border);
 }
 
@@ -740,6 +805,34 @@ html[data-theme="dark"] .demo-header-metadata {
   line-height: 1.25;
 }
 
+.demo-clipboard-steps {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.demo-clipboard-step {
+  background: var(--cockpit-surface);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius-sm);
+  color: var(--cockpit-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  min-width: 0;
+  padding: 8px 9px;
+}
+
+.demo-clipboard-step.active {
+  border-color: var(--cockpit-accent);
+  color: var(--cockpit-text);
+}
+
+.demo-clipboard-notice.blocked .demo-clipboard-step.active {
+  border-color: var(--cockpit-danger-border);
+  color: var(--cockpit-danger-text);
+}
+
 .demo-clipboard-next {
   align-items: center;
   background: var(--cockpit-surface);
@@ -751,6 +844,41 @@ html[data-theme="dark"] .demo-header-metadata {
   padding: 10px 12px;
 }
 
+.demo-clipboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.demo-clipboard-target-action {
+  width: fit-content;
+}
+
+.demo-clipboard-payload {
+  background: var(--cockpit-surface);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.demo-clipboard-payload summary {
+  color: var(--cockpit-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 820;
+  line-height: 1.3;
+}
+
+.demo-clipboard-payload .demo-search-input {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 0;
+  min-height: 112px;
+}
+
 .demo-clipboard-next span {
   color: var(--cockpit-text-muted);
   font-size: 11px;
@@ -759,7 +887,7 @@ html[data-theme="dark"] .demo-header-metadata {
   text-transform: uppercase;
 }
 
-.demo-clipboard-notice > span,
+.demo-clipboard-detail,
 .demo-clipboard-notice small {
   color: var(--cockpit-text-secondary);
   font-size: 13px;
@@ -2695,6 +2823,16 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 
   .demo-command-receipt-lines {
     grid-template-columns: 1fr;
+  }
+
+  .demo-clipboard-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-clipboard-target-action,
+  .demo-clipboard-actions .btn {
+    justify-content: center;
+    width: 100%;
   }
 
   .demo-grid {
