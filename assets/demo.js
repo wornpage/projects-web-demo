@@ -4012,16 +4012,14 @@ function syncBlockerFieldHelp() {
   }
   if (help) {
     const clearHelp = ownerResolvedBlocker
-      ? "Owner filled; Save will clear this blocker. No need to press Unblocked."
+      ? "Owner filled; choose Unblocked to store Blocker: none."
       : "Unblocked stores Blocker: none automatically; no typing required.";
     help.textContent = issue || (hasBlocker && !ownerResolvedBlocker ? "Describe what must be cleared before the next action." : clearHelp);
   }
 }
 
 function ownerBlockerResolutionHelp() {
-  const requestedNext = valueOf("edit-next");
-  const savedNext = isBlockerReviewAction(requestedNext) ? "Open" : (requestedNext || "Open");
-  return `Owner filled. Save stores Blocker: none and Button runs next: ${savedNext}.`;
+  return "Owner filled. To clear this blocker, choose Unblocked, then save.";
 }
 
 function syncPackDetailForwardPanel(pack) {
@@ -4209,10 +4207,8 @@ function packForwardPathFormValues(pack) {
   const rawBlocker = blockerMode === "set"
     ? normalizeCopy(blockerInput?.value || "") || "needs review"
     : "none";
-  const ownerResolvedBlocker = ownerFixClearsBlocker(rawBlocker, owner);
-  const blocker = rawStatus === "done" || ownerResolvedBlocker ? "none" : rawBlocker;
+  const blocker = rawStatus === "done" ? "none" : rawBlocker;
   const status = forwardPathStatusForBlocker(rawStatus, blocker);
-  const next = ownerResolvedBlocker && isBlockerReviewAction(requestedNext) ? "Open" : requestedNext;
 
   return {
     title: fieldValue("edit-title", pack.title) || pack.title || "",
@@ -4220,7 +4216,7 @@ function packForwardPathFormValues(pack) {
     blocker,
     owner,
     due: fieldValue("edit-due", pack.due),
-    next,
+    next: requestedNext,
     doneWhen: fieldValue("edit-done-when", pack.doneWhen) || pack.doneWhen || "",
     purpose: fieldValue("edit-purpose", pack.purpose) || pack.purpose || ""
   };
