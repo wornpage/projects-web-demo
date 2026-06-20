@@ -4472,31 +4472,41 @@ html[data-theme="dark"] .demo-command-work-path {
 
 /* ===== North Star card and dock separation pass ===== */
 .demo-app-shell {
-  --demo-work-card-bg: #fffdf8;
-  --demo-work-card-border: #b6aa97;
-  --demo-work-card-shadow: 0 10px 22px rgba(35, 29, 18, 0.1), 0 1px 0 rgba(255, 255, 255, 0.9);
-  --demo-work-card-hover-shadow: 0 12px 24px rgba(35, 29, 18, 0.14), 0 1px 0 rgba(255, 255, 255, 0.95);
-  --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.3), 0 12px 24px rgba(35, 29, 18, 0.14);
-  --demo-card-inner-bg: #fbf7ef;
-  --demo-card-inner-border: #cabcaa;
-  --demo-card-divider: #d7c9b8;
+  --demo-work-card-bg: #fffaf1;
+  --demo-work-card-border: #9f927c;
+  --demo-work-card-shadow: 0 0 0 1px rgba(70, 53, 30, 0.08), 0 9px 18px rgba(35, 29, 18, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --demo-work-card-hover-shadow: 0 0 0 1px rgba(70, 53, 30, 0.12), 0 11px 22px rgba(35, 29, 18, 0.17), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.34), 0 11px 22px rgba(35, 29, 18, 0.17);
+  --demo-card-inner-bg: #fffdf8;
+  --demo-card-inner-border: #b8aa96;
+  --demo-card-divider: #cabcaa;
+  --demo-card-command-bg: #d8eee7;
+  --demo-card-memory-bg: #e4f2ed;
+  --demo-card-memory-border: #88b4a4;
+  --demo-card-status-bg: #e4f2ed;
+  --demo-card-status-border: #8daf9f;
 }
 
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
-  --demo-work-card-bg: #1d2925;
-  --demo-work-card-border: #697a72;
-  --demo-work-card-shadow: 0 10px 22px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --demo-work-card-hover-shadow: 0 12px 24px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --demo-work-card-selected-shadow: 0 0 0 2px rgba(103, 197, 177, 0.5), 0 12px 24px rgba(0, 0, 0, 0.42);
-  --demo-card-inner-bg: #111b18;
-  --demo-card-inner-border: #52635c;
-  --demo-card-divider: #405149;
+  --demo-work-card-bg: #1a2823;
+  --demo-work-card-border: #82978e;
+  --demo-work-card-shadow: 0 0 0 1px rgba(212, 244, 232, 0.08), 0 10px 22px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --demo-work-card-hover-shadow: 0 0 0 1px rgba(212, 244, 232, 0.12), 0 12px 24px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --demo-work-card-selected-shadow: 0 0 0 2px rgba(117, 218, 195, 0.58), 0 12px 24px rgba(0, 0, 0, 0.56);
+  --demo-card-inner-bg: #0d1714;
+  --demo-card-inner-border: #657b71;
+  --demo-card-divider: #53685e;
+  --demo-card-command-bg: #17352d;
+  --demo-card-memory-bg: #15312a;
+  --demo-card-memory-border: #62a892;
+  --demo-card-status-bg: #173f35;
+  --demo-card-status-border: #66b39e;
 }
 
 .demo-work-list,
 .demo-review-list {
-  gap: 18px;
+  gap: 24px;
 }
 
 .demo-work-card,
@@ -4508,10 +4518,29 @@ html[data-theme="dark"] .demo-app-shell {
   border-color: var(--demo-work-card-border);
 }
 
+.demo-work-card,
+.demo-review-card {
+  padding: 18px;
+}
+
 .demo-work-card > .demo-card-head,
 .demo-review-card > .demo-card-head {
   border-bottom: 1px solid var(--demo-card-divider);
-  padding-bottom: 12px;
+  padding-bottom: 14px;
+}
+
+.demo-review-card-main {
+  gap: 18px;
+}
+
+.demo-card-facts {
+  border-left: 3px solid var(--demo-card-inner-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.demo-command-row {
+  border-color: var(--demo-card-inner-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .demo-work-card.has-blocker .demo-card-facts,
