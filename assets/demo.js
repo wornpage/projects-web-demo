@@ -752,6 +752,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   const notesCommand = selected
     ? { title: "Notes", ...selectedWorkCommand, blocker: "notes stay with this browser", next: "Open memory", stateText: "Ready", stateHelp: `Saved notes for ${workTitle(selected)} stay in this browser.`, action: "memory", targetPackId: selectedWorkCommand.targetPackId }
     : { title: "Notes", ...selectedWorkCommand };
+  const createCommand = createRouteCommand();
   const memoryCommand = memoryRouteCommand(selected, selectedWorkCommand);
 
   const routeCommands = {
@@ -770,7 +771,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     timeline: { title: "Timeline", where: "Timeline", blocker: "activity stays with this browser", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     files: { title: "Files", where: "Files", blocker: "source links are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     calendar: { title: "Calendar", ...selectedWorkCommand },
-    create: { title: "Create", where: "Create", blocker: "required fields are title, owner, and Button runs next", next: "Save work", stateText: "Draft", action: "create-sample", targetPackId: "" },
+    create: createCommand,
     memory: memoryCommand,
     lab: { title: "Demo Lab", ...selectedWorkCommand },
     meta: { title: "Meta", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
@@ -825,7 +826,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
       ? `${selectedActionFlow}`
       : "Flow: choose work, preview button, run next.",
     pack: selected ? `${selectedActionFlow}` : "Flow: review work, run next.",
-    create: "Flow: create work, review, run next.",
+    create: createRouteFlowHint(createCommand),
     meta: "Flow: inspect, copy diagnostics.",
     feedback: "Flow: copy context, then open issue.",
     health: "Flow: verify, return to work.",
@@ -842,6 +843,51 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     targetPackId: routeCommand.targetPackId || "",
     flowHint: routeCommandsHints[state.route] || routeCommandsHints.work
   };
+}
+
+function createRouteCommand() {
+  const values = currentCreateValues();
+  const createState = createSaveState(values);
+  return {
+    title: "Create",
+    where: "Create",
+    blocker: blockerDisplayValue(createState.blocker),
+    next: createState.canSave ? "Save work" : createActionForBlocker(createState.blocker),
+    stateText: createState.canSave ? "Ready" : "Needs field",
+    stateHelp: createState.help,
+    action: createState.canSave ? "create-sample" : createFocusActionForBlocker(createState.blocker),
+    targetPackId: ""
+  };
+}
+
+function currentCreateValues() {
+  return document.getElementById("new-title")
+    ? createFormValues()
+    : defaultCreateValues();
+}
+
+function createFocusActionForBlocker(blocker) {
+  if (blocker === "missing title") {
+    return "focus-create-title";
+  }
+
+  if (blocker === "missing owner") {
+    return "focus-create-owner";
+  }
+
+  if (blocker === "missing Button runs next") {
+    return "focus-create-next";
+  }
+
+  return "create-sample";
+}
+
+function createRouteFlowHint(command) {
+  if (command?.action === "create-sample") {
+    return "Flow: save work, review, run next.";
+  }
+
+  return `Flow: ${normalizeCopy(command?.next).toLowerCase()}, then save work.`;
 }
 
 function memoryRouteCommand(selected, selectedWorkCommand) {
@@ -1295,6 +1341,14 @@ function focusSelectors(kind, packId) {
     return ["#new-title", "#create-save-help", "#create-sample"];
   }
 
+  if (kind === "create-owner") {
+    return ["#new-owner", "#create-save-help", "#create-sample"];
+  }
+
+  if (kind === "create-next") {
+    return ["#new-next", "#create-save-help", "#create-sample"];
+  }
+
   if (kind === "pack-edit") {
     return [
       "#edit-title",
@@ -1353,6 +1407,18 @@ function isFocusable(target) {
 function focusKindForAction(action) {
   if (action === "parse-triage" || action === "copy-triage") {
     return "triage-output";
+  }
+
+  if (action === "focus-create-title") {
+    return "create-title";
+  }
+
+  if (action === "focus-create-owner") {
+    return "create-owner";
+  }
+
+  if (action === "focus-create-next") {
+    return "create-next";
   }
 
   if (action === "set-next" || action === "focus" || action === "start" || action === "done" || action === "unblock" || action === "clear-owner-blocker" || action === "save-work-path") {
@@ -4440,6 +4506,19 @@ function runRouteAction(action, targetPackId) {
     return true;
   }
 
+  if (action === "focus-create-title" || action === "focus-create-owner" || action === "focus-create-next") {
+    if (state.route !== "create") {
+      queueFocus(focusKindForAction(action));
+      go("create");
+      return true;
+    }
+
+    state.status = createSaveState(createFormValues()).help;
+    state.pendingFocus = null;
+    focusCommandTarget(focusKindForAction(action));
+    return true;
+  }
+
   if (action === "search-demo") {
     if (state.route !== "search") {
       queueFocus("search-input");
@@ -4641,15 +4720,15 @@ function createSaveState(values) {
 
 function createActionForBlocker(blocker) {
   if (blocker === "missing title") {
-    return "fill title";
+    return "Fill title";
   }
 
   if (blocker === "missing owner") {
-    return "fill owner";
+    return "Fill owner";
   }
 
   if (blocker === "missing Button runs next") {
-    return "fill Button runs next";
+    return "Fill Button runs next";
   }
 
   return "Save work";
@@ -4672,6 +4751,15 @@ function syncCreateValidation() {
   const stateForSave = createSaveState(createFormValues());
   help.textContent = stateForSave.help;
   syncValidatedActionButton(button, stateForSave);
+  syncCreateRouteCommand();
+}
+
+function syncCreateRouteCommand() {
+  if (state.route !== "create") {
+    return;
+  }
+
+  updateCommand(commandForRoute(currentPack(), filteredPacks().length, state.packs.filter(isReview).length));
 }
 
 function memoryNoteSaveState(pack, note) {
