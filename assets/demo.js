@@ -3702,6 +3702,8 @@ function updateActionReceipt() {
     delete receiptElement.dataset.receiptKind;
     delete receiptElement.dataset.receiptTone;
     delete receiptElement.dataset.receiptSurface;
+    receiptElement.removeAttribute("aria-label");
+    receiptElement.removeAttribute("title");
     return;
   }
 
@@ -3709,13 +3711,15 @@ function updateActionReceipt() {
   receiptElement.dataset.receiptSurface = receipt.kind === "clipboard" ? "clipboard" : "command";
   receiptElement.dataset.receiptKind = receipt.kind || "action";
   receiptElement.dataset.receiptTone = receipt.tone || "success";
-  const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
+  const fullSummary = receiptAccessibleSummary(receipt);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
+  receiptElement.setAttribute("aria-label", fullSummary);
+  receiptElement.setAttribute("title", fullSummary);
   const eyebrow = receipt.kind === "clipboard"
     ? receipt.tone === "blocked" ? "Clipboard blocked" : "Clipboard ready"
     : "Last result";
   receiptElement.innerHTML = `
-    <div class="demo-command-receipt-head" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
+    <div class="demo-command-receipt-head">
       <span>${escapeHtml(eyebrow)}</span>
       <strong>${escapeHtml(visibleSummary)}</strong>
     </div>
@@ -3733,7 +3737,7 @@ function actionReceiptCard(pack) {
     return "";
   }
 
-  const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
+  const fullSummary = receiptAccessibleSummary(receipt);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
   return `<div class="demo-card-receipt" data-receipt-surface="card" data-card-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
@@ -3754,12 +3758,12 @@ function routeActionReceiptPanel(visiblePacks, routeLabel) {
     return "";
   }
 
-  const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
-  const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
   const routeReceipt = {
     ...receipt,
     where: `${routeLabel} / ${workTitle(pack)}`
   };
+  const fullSummary = receiptAccessibleSummary(routeReceipt);
+  const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
   return `<div class="demo-card-receipt demo-route-receipt" data-receipt-surface="route" data-route-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
@@ -3782,6 +3786,12 @@ function receiptLine(label, value) {
     <span>${escapeHtml(label)}</span>
     <strong${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
   </div>`;
+}
+
+function receiptAccessibleSummary(receipt) {
+  const context = `Where: ${sentenceValue(receipt.where)}. Blocker: ${sentenceValue(receipt.blocker)}. Button runs next: ${sentenceValue(receipt.next)}. Proof target: ${sentenceValue(receipt.proof)}.`;
+  const result = normalizeCopy(receipt.visibleSummary || receipt.summary);
+  return helpCopy(`${context}${result ? ` Result: ${sentenceValue(result)}.` : ""}`, DEMO_COPY_LIMITS.receiptHelp);
 }
 
 function latestRelevantMemory(pack) {
