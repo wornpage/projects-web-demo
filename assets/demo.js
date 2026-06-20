@@ -3837,9 +3837,10 @@ function setSaveConfirmation(pack, result) {
 function setNextConfirmation(pack, result) {
   if (!pack) return;
 
+  const nextLabel = result?.label || buttonRunsNextDisplayLabel(result?.next);
   const summary = result.changed
-    ? `Button runs next set to ${result.next} for ${workTitle(pack)}.`
-    : `Button already runs ${result.next} for ${workTitle(pack)}.`;
+    ? `Button runs next set to ${nextLabel} for ${workTitle(pack)}.`
+    : `Button already runs ${nextLabel} for ${workTitle(pack)}.`;
   setActionReceipt(
     pack,
     summary,
@@ -4105,11 +4106,12 @@ function setPackNextAction(pack, value) {
   const changed = beforeStatus !== normalizeCopy(pack.status)
     || beforeNext !== normalizeCopy(pack.next)
     || beforeBlocker !== normalizeCopy(pack.blocker);
+  const label = buttonRunsNextDisplayLabel(pack.next);
   if (changed) {
-    addPackActivity(pack, `Button runs next changed to ${pack.next}.`);
+    addPackActivity(pack, `Button runs next changed to ${label}.`);
   }
 
-  return { changed, next: pack.next };
+  return { changed, next: pack.next, label };
 }
 
 function nextChoiceForwardPath(pack, value) {
@@ -4697,6 +4699,10 @@ function commandActionForLabel(label) {
   }
 
   return { label: label === "Open" ? "Open" : label, action: "open" };
+}
+
+function buttonRunsNextDisplayLabel(value) {
+  return commandActionForLabel(value || "Open").label;
 }
 
 function defaultCreateValues() {
