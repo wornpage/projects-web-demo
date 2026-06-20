@@ -2494,6 +2494,7 @@ function renderPackDetail() {
         <button id="save-pack" class="btn" type="button" aria-describedby="pack-save-help"${disabledReasonAttributes(!saveState.canSave, saveState.help)}>Save work path</button>
       </div>
       <p id="pack-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(saveState.help)}</p>
+      ${actionReceiptCard(pack)}
     </section>
     ${activityPanel(pack)}
   `;
@@ -4056,7 +4057,9 @@ function runPrimaryAction(control = el("primary-action")) {
       return;
     }
   }
-  applyPendingForwardPathForAction(targetPackId);
+  if (savePendingForwardPathForAction(targetPackId)) {
+    return;
+  }
   if (action === "run-next") {
     runResolvedPackAction(findPack(targetPackId) || currentPack());
     return;
@@ -4127,18 +4130,28 @@ function pendingPackForAction(targetPackId) {
   return pendingPackFromForwardPathForm(pack);
 }
 
-function applyPendingForwardPathForAction(targetPackId) {
+function savePendingForwardPathForAction(targetPackId) {
   const pack = findPack(targetPackId) || currentPack();
   const form = el("pack-edit-form");
   if (!pack || !form || form.dataset.packId !== pack.id) {
     return false;
   }
 
-  if (blockerModeIssue()) {
+  const hasPendingChanges = packForwardPathFormSignature(pack) !== packForwardPathSignature(pack);
+  if (!hasPendingChanges) {
     return false;
   }
 
-  return applyPackForwardPathFormValues(pack);
+  const stateForSave = packDetailSaveState(pack);
+  if (!stateForSave.canSave) {
+    state.status = stateForSave.help;
+    syncPackDetailValidation(pack);
+    return true;
+  }
+
+  savePackForwardPathFromForm(pack);
+  render();
+  return true;
 }
 
 function pendingForwardPathBlocksAction(targetPackId) {
@@ -4892,32 +4905,29 @@ function syncPackDetailForwardPanel(pack) {
   const hasPendingChanges = packForwardPathFormSignature(pack) !== packForwardPathSignature(pack);
   if (hasPendingChanges) {
     const nextAfterSave = command.next;
-    const saveThenNext = saveThenActionLabel(nextAfterSave);
-    command.next = saveThenNext;
+    const saveAction = "Save work path";
+    command.next = saveAction;
+    command.action = "save-work-path";
+    command.targetPackId = pending.id;
     const editedWorkflow = { ...workflow, label: "Edited", help: "Unsaved work path changes." };
     command.stateText = "Edited";
-    command.stateHelp = `Unsaved work path changes. Button runs next saves them first, then ${nextAfterSave}.`;
+    command.stateHelp = `Unsaved work path changes. Button runs next saves them first. After save, the button shows ${nextAfterSave}.`;
     command.flowHint = `Flow: save work path, then ${nextAfterSave}.`;
-    command.runNote = `Saves pending work path changes first, then ${nextAfterSave}.`;
-    if (head) head.textContent = saveThenNext;
+    command.runNote = `Saves pending work path changes. After save, ${nextAfterSave} is visible.`;
+    if (head) head.textContent = saveAction;
     setWorkPathSummary(
       panel,
-      `Unsaved changes. Next: ${saveThenNext}.`,
-      `Where: ${workTitle(pending)}. Blocker: ${blockerTextForPack(pending)}. Button runs next: ${saveThenNext}.`
+      `Unsaved changes. Next: ${saveAction}.`,
+      `Where: ${workTitle(pending)}. Blocker: ${blockerTextForPack(pending)}. Button runs next: ${saveAction}.`
     );
-    syncSelectedWorkTriad(panel, pending, { label: saveThenNext });
-    syncWorkPathStrip(panel, pending, { label: saveThenNext }, editedWorkflow);
+    syncSelectedWorkTriad(panel, pending, { label: saveAction });
+    syncWorkPathStrip(panel, pending, { label: saveAction }, editedWorkflow);
   } else if (head) {
     head.textContent = actionCommand.label;
   }
 
   updateCommand(command);
   syncPackPrimaryAction(command);
-}
-
-function saveThenActionLabel(label) {
-  const next = normalizeCopy(label) || "run next";
-  return /^save then\b/i.test(next) ? next : `Save then ${next}`;
 }
 
 function syncWorkPathStrip(panel, pack, command = resolvePrimaryCommandForPack(pack), workflow = workflowStateForPack(pack, command)) {
@@ -5040,6 +5050,11 @@ function savePackDetail(id) {
     render();
     return;
   }
+  savePackForwardPathFromForm(pack);
+  render();
+}
+
+function savePackForwardPathFromForm(pack) {
   const before = packForwardPathSnapshot(pack);
   const changed = applyPackForwardPathFormValues(pack);
   const after = packForwardPathSnapshot(pack);
@@ -5047,7 +5062,7 @@ function savePackDetail(id) {
     changed,
     summary: forwardPathChangeSummary(before, after)
   });
-  render();
+  return changed;
 }
 
 function applyPackForwardPathFormValues(pack) {
