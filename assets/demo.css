@@ -4354,6 +4354,10 @@ html[data-theme="dark"] .demo-command-work-path {
   margin-top: 14px;
 }
 
+.demo-bottom-brief[hidden] {
+  display: none;
+}
+
 .demo-bottom-item {
   background: transparent;
   border: 0;

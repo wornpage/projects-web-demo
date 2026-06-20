@@ -254,6 +254,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   purgeLegacyDemoState();
   bindShellControls();
+  bindBottomDockVisibility();
   renderNav();
 
   try {
@@ -1022,11 +1023,44 @@ function updateCommand(command) {
   el("dock-next").setAttribute("aria-label", commandRunLabel(command));
   el("dock-next").title = commandRunLabel(command);
   updateActionReceipt();
+  scheduleBottomDockVisibility();
 }
 
 function commandFlowCopy(flowHint) {
   const hint = normalizeCopy(flowHint) || "Flow: choose work, run next.";
   return hint.replace(/^Flow:\s*/iu, "Next step: ");
+}
+
+function bindBottomDockVisibility() {
+  window.addEventListener("scroll", scheduleBottomDockVisibility, { passive: true });
+  window.addEventListener("resize", scheduleBottomDockVisibility);
+}
+
+function scheduleBottomDockVisibility() {
+  if (scheduleBottomDockVisibility.pending) {
+    return;
+  }
+
+  scheduleBottomDockVisibility.pending = true;
+  requestAnimationFrame(() => {
+    scheduleBottomDockVisibility.pending = false;
+    updateBottomDockVisibility();
+  });
+}
+
+function updateBottomDockVisibility() {
+  const dock = document.querySelector(".demo-bottom-brief");
+  const brief = document.querySelector(".demo-command-brief");
+  if (!dock || !brief) {
+    return;
+  }
+
+  const mobileDockApplies = window.matchMedia("(max-width: 700px)").matches;
+  const briefRect = brief.getBoundingClientRect();
+  const briefVisible = briefRect.bottom > 0 && briefRect.top < window.innerHeight;
+  const suppressDock = mobileDockApplies && briefVisible;
+  dock.hidden = suppressDock;
+  dock.dataset.suppressedByBrief = suppressDock ? "true" : "false";
 }
 
 function updateCommandWorkPath(command) {
