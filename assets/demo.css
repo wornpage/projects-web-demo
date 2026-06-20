@@ -4477,6 +4477,7 @@ html[data-theme="dark"] .demo-command-work-path {
 /* ===== North Star card and dock separation pass ===== */
 .demo-app-shell {
   --demo-work-card-bg: #fffaf1;
+  --demo-work-card-bg-alt: #fff7e7;
   --demo-work-card-border: #9f927c;
   --demo-work-card-shadow: 0 0 0 1px rgba(70, 53, 30, 0.08), 0 9px 18px rgba(35, 29, 18, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --demo-work-card-hover-shadow: 0 0 0 1px rgba(70, 53, 30, 0.12), 0 11px 22px rgba(35, 29, 18, 0.17), inset 0 1px 0 rgba(255, 255, 255, 0.95);
@@ -4489,23 +4490,30 @@ html[data-theme="dark"] .demo-command-work-path {
   --demo-card-memory-border: #88b4a4;
   --demo-card-status-bg: #e4f2ed;
   --demo-card-status-border: #8daf9f;
+  --demo-work-card-state-rail: #6e806f;
+  --demo-work-card-setup-border: #8d681e;
+  --demo-work-card-setup-rail: #9a6b12;
 }
 
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
-  --demo-work-card-bg: #1a2823;
-  --demo-work-card-border: #82978e;
-  --demo-work-card-shadow: 0 0 0 1px rgba(212, 244, 232, 0.08), 0 10px 22px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --demo-work-card-hover-shadow: 0 0 0 1px rgba(212, 244, 232, 0.12), 0 12px 24px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --demo-work-card-bg: #18251f;
+  --demo-work-card-bg-alt: #121f1a;
+  --demo-work-card-border: #9bb0a7;
+  --demo-work-card-shadow: 0 0 0 1px rgba(212, 244, 232, 0.12), 0 10px 22px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --demo-work-card-hover-shadow: 0 0 0 1px rgba(212, 244, 232, 0.18), 0 12px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --demo-work-card-selected-shadow: 0 0 0 2px rgba(117, 218, 195, 0.58), 0 12px 24px rgba(0, 0, 0, 0.56);
   --demo-card-inner-bg: #0d1714;
-  --demo-card-inner-border: #657b71;
-  --demo-card-divider: #53685e;
+  --demo-card-inner-border: #7f958b;
+  --demo-card-divider: #63786e;
   --demo-card-command-bg: #17352d;
   --demo-card-memory-bg: #15312a;
   --demo-card-memory-border: #62a892;
   --demo-card-status-bg: #173f35;
   --demo-card-status-border: #66b39e;
+  --demo-work-card-state-rail: #8aa79c;
+  --demo-work-card-setup-border: #d4b263;
+  --demo-work-card-setup-rail: #d7bd72;
 }
 
 .demo-work-list,
@@ -4515,16 +4523,31 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-work-card,
 .demo-review-card,
-.demo-work-card.has-blocker,
-.demo-review-card.has-blocker,
-.demo-work-card.needs-next,
-.demo-review-card.needs-next {
+.demo-review-card.selected {
   border-color: var(--demo-work-card-border);
 }
 
 .demo-work-card,
 .demo-review-card {
-  padding: 18px;
+  padding: 18px 18px 18px 24px;
+}
+
+.demo-work-list > .demo-work-card:nth-child(even),
+.demo-review-list > .demo-review-card:nth-child(even) {
+  background: var(--demo-work-card-bg-alt);
+}
+
+.demo-work-card::before,
+.demo-review-card::before {
+  background: var(--demo-work-card-state-rail);
+  border-radius: 999px;
+  bottom: 14px;
+  content: "";
+  left: 10px;
+  opacity: 0.74;
+  position: absolute;
+  top: 14px;
+  width: 4px;
 }
 
 .demo-work-card > .demo-card-head,
@@ -4552,6 +4575,33 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-work-card.needs-next .demo-card-facts,
 .demo-review-card.needs-next .demo-card-facts {
   border-left: 3px solid var(--demo-work-card-alert-border);
+}
+
+.demo-work-card.has-blocker,
+.demo-review-card.has-blocker {
+  border-color: var(--demo-work-card-alert-border);
+}
+
+.demo-work-card.needs-next,
+.demo-review-card.needs-next {
+  border-color: var(--demo-work-card-setup-border);
+}
+
+.demo-work-card.has-blocker::before,
+.demo-review-card.has-blocker::before {
+  background: var(--demo-work-card-alert-border);
+  opacity: 1;
+}
+
+.demo-work-card.needs-next::before,
+.demo-review-card.needs-next::before {
+  background: var(--demo-work-card-setup-rail);
+  opacity: 1;
+}
+
+.demo-work-card.selected,
+.demo-review-card.selected {
+  box-shadow: var(--demo-work-card-selected-shadow);
 }
 
 .demo-work-card.has-blocker .demo-state-pill,
