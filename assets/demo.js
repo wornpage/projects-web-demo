@@ -2219,8 +2219,8 @@ function renderFocus() {
       </div>
       <details class="demo-card-support">
         <summary>
-          <span>Details</span>
-          <strong>Open for inspect, edit, and proof actions</strong>
+          <span>Other actions</span>
+          <strong>Open for optional inspect, edit, and proof actions.</strong>
         </summary>
         <div class="demo-card-actions compact">
           ${supportActionButton("open", "Open", pack)}
@@ -3015,7 +3015,7 @@ function nextCandidateRow(pack) {
 function compactRowSupport(summary, content) {
   return `<details class="demo-row-support">
     <summary>
-      <span>Details</span>
+      <span>Other actions</span>
       <strong>${escapeHtml(summary)}</strong>
     </summary>
     <div class="demo-row-actions compact">
@@ -3210,8 +3210,8 @@ function workCard(pack) {
     ${actionReceiptCard(pack)}
     <details class="demo-card-support" data-support-actions="work-card">
       <summary>
-        <span>Details</span>
-        <strong>Open for inspect, edit, and proof actions</strong>
+        <span>Other actions</span>
+        <strong>Open for optional inspect, edit, and proof actions.</strong>
       </summary>
       <div class="demo-card-actions">
         ${supportActionButton("open", "Open", pack, "btn btn-sm")}
@@ -3268,8 +3268,8 @@ function reviewCard(pack) {
     ${actionReceiptCard(pack)}
     <details class="demo-card-support" data-support-actions="review-card">
       <summary>
-        <span>Details</span>
-        <strong>Open for edit, blocker, and Button-runs-next setup</strong>
+        <span>Other actions</span>
+        <strong>Open for optional focus, edit, blocker, and Button-runs-next setup.</strong>
       </summary>
       <div class="demo-card-actions">
         ${supportActionButton("focus", "Focus", pack)}
