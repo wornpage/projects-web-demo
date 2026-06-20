@@ -750,10 +750,10 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     ? { title: "Stats", where: "Stats", blocker: "counts are calculated in this browser", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
     : noSampleWorkCommand("Stats", "Stats", "Create work or reset demo data before reviewing stats.");
   const notesCommand = selected
-    ? { title: "Notes", where: "Notes", blocker: "notes stay with this browser", next: "Open memory", stateText: "Ready", action: "memory", targetPackId: selectedWorkCommand.targetPackId }
+    ? { title: "Notes", ...selectedWorkCommand, blocker: "notes stay with this browser", next: "Open memory", stateText: "Ready", stateHelp: `Saved notes for ${workTitle(selected)} stay in this browser.`, action: "memory", targetPackId: selectedWorkCommand.targetPackId }
     : { title: "Notes", ...selectedWorkCommand };
   const memoryCommand = selected
-    ? { title: "Memory", where: selectedWorkCommand.where, blocker: "notes stay with this browser", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId }
+    ? { title: "Memory", ...selectedWorkCommand, blocker: "notes stay with this browser", next: "Add note", stateText: "Ready", stateHelp: `Add recall for ${workTitle(selected)}.`, action: "add-note", targetPackId: selectedWorkCommand.targetPackId }
     : { title: "Memory", ...selectedWorkCommand };
 
   const routeCommands = {
