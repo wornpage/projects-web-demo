@@ -3010,7 +3010,7 @@ function nextCandidateRow(pack) {
     <div class="demo-row-actions">
       ${supportActionButton("set-next", "Set Button runs next", pack, "btn btn-sm btn-primary")}
     </div>
-    ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
+    ${compactRowSupport("Open for optional focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </div>`;
 }
 
@@ -3111,7 +3111,7 @@ function sourceRow({ pack, source }) {
     <div class="demo-row-actions">
       ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
     </div>
-    ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
+    ${compactRowSupport("Open for optional focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </div>`;
 }
 
@@ -3122,7 +3122,7 @@ function calendarCard(pack) {
     <strong>${escapeHtml(workTitle(pack))}</strong>
     <small>${escapeHtml(workflow.label)} / ${escapeHtml(pack.owner)}</small>
     ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
-    ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
+    ${compactRowSupport("Open for optional focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </article>`;
 }
 
@@ -3235,7 +3235,7 @@ function todayRow(pack) {
     <div class="demo-row-actions">
       ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
     </div>
-    ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
+    ${compactRowSupport("Open for optional focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </div>`;
 }
 
