@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Static Projects cockpit demo with sample work and simulated actions.">
+  <meta name="description" content="Static Projects demo with sample work and Button-runs-next controls.">
   <title>Projects Static Demo</title>
   <link rel="icon" href="assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="assets/app.css?v=cedcd61e1">
-  <link rel="stylesheet" href="assets/demo.css?v=cedcd61e1">
-  <script src="assets/demo.js?v=cedcd61e1" defer></script>
+  <link rel="stylesheet" href="assets/app.css?v=34c8f7172-b5bd0a7505">
+  <link rel="stylesheet" href="assets/demo.css?v=34c8f7172-b5bd0a7505">
+  <script src="assets/demo.js?v=34c8f7172-b5bd0a7505" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#demo-main">Skip to demo</a>
   <div class="demo-app-shell app-shell">
     <aside class="demo-sidebar nav-rail" aria-label="Demo navigation" aria-describedby="demo-sidebar-scroll-help" tabindex="0">
       <p id="demo-sidebar-scroll-help" class="sr-only">On wide screens, this navigation rail scrolls separately from the demo content.</p>
-      <a class="demo-brand nav-rail-brand-link" href="#/home" aria-label="Projects cockpit demo home">
+      <a class="demo-brand nav-rail-brand-link" href="#/home" aria-label="Projects static demo home">
         <span class="demo-brand-mark nav-rail-brand-mark" aria-hidden="true">P</span>
         <span>
           <strong>Projects</strong>
-          <small>static cockpit</small>
+          <small>Static demo</small>
         </span>
       </a>
       <nav id="demo-nav" class="demo-nav nav-rail-section" aria-label="Primary demo screens"></nav>
@@ -33,7 +33,7 @@
       <header class="page-header demo-header">
         <div class="page-header-inner demo-header-inner">
           <div>
-            <div class="demo-kicker">Projects cockpit</div>
+            <div class="demo-kicker">Projects demo</div>
             <h1 id="screen-title" class="demo-screen-title">Work list</h1>
           </div>
           <div class="demo-header-metadata">
@@ -54,14 +54,14 @@
       <main id="demo-main" class="demo-main page-content" tabindex="-1">
         <section class="demo-notice card" aria-label="Demo notice">
           <strong>Demo data only.</strong>
-          This GitHub Pages build simulates the cockpit in browser state. Buttons update sample data only.
+          Browser-local sample data. Buttons update this tab only.
         </section>
 
-        <section class="demo-command-brief sidecar" aria-label="Projects command brief">
+        <section class="demo-command-brief sidecar" aria-label="Projects current path">
           <div class="demo-command-top">
             <div>
-              <span class="demo-command-label">Command brief</span>
-              <h2 id="command-title">Work list command flow</h2>
+              <span class="demo-command-label">Current path</span>
+              <h2 id="command-title">Work list</h2>
             </div>
             <span id="command-state" class="demo-command-state">Ready</span>
           </div>
@@ -76,20 +76,19 @@
             </div>
             <div class="demo-command-line demo-command-next">
               <span>Button runs next</span>
-              <strong id="command-next">Review</strong>
+              <strong id="command-next">Review work</strong>
             </div>
           </div>
           <div id="command-work-path" class="demo-work-path demo-command-work-path" data-work-path="command-brief" hidden></div>
           <div id="command-memory" class="demo-command-memory" hidden>
             <span>Relevant Memory</span>
-            <strong id="command-memory-text">No memory yet.</strong>
+            <strong id="command-memory-text">none yet - add memory note</strong>
           </div>
           <div class="demo-command-footer">
             <span id="command-scope">Scope: sample work is loading.</span>
-            <p id="command-flow" class="demo-command-flow">Select a work item to see its next action.</p>
+            <p id="command-flow" class="demo-command-flow">Select work to see what the button runs next.</p>
             <div class="demo-command-actions">
-              <button id="primary-action" class="btn btn-primary" type="button">Review</button>
-              <button id="secondary-action" class="btn" type="button">Focus</button>
+              <button id="primary-action" class="btn btn-primary" type="button">Review work</button>
             </div>
           </div>
           <div id="command-receipt" class="demo-command-receipt" hidden></div>
@@ -97,7 +96,7 @@
 
         <section id="screen-content" class="demo-screen" aria-live="polite"></section>
 
-        <aside class="demo-bottom-brief" aria-label="Sticky command summary">
+        <aside class="demo-bottom-brief" aria-label="Sticky current path summary">
           <a id="dock-where-item" class="demo-bottom-item" href="#/work">
             <span>Where</span>
             <strong id="dock-where">Work</strong>

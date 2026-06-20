@@ -1,7 +1,7 @@
 # Projects GitHub Pages Demo
 
 This folder contains the static public demo for **Projects**. It is intentionally browser-only:
-sample work is loaded from `data/demo-packs.json`, and all actions stay in localStorage.
+sample work is loaded from `data/demo-packs.json`, and button results stay in localStorage.
 It is not a hosted service, sign-in surface, payment surface, or customer-data
 collection path.
 
@@ -32,19 +32,23 @@ The demo acts like a product landing surface for quick proofing:
 ## Routes
 
 The app is hash-routed. The hash path chooses the screen; browser-local state
-chooses the selected sample work; the command brief combines both to decide the
-primary button.
+chooses the selected sample work; the current path panel combines both to decide the
+Button-runs-next control.
 
-| Hash path | Screen | Meaning | Primary action source |
+Navigation keeps the main workflow visible first: Home, Review, Work, Focus,
+Next, and Create. Supporting views and system/proof screens stay collapsed by
+default so the public demo reads as one workflow before it reads as a route list.
+
+| Hash path | Screen | Meaning | Button source |
 |---|---|---|---|
-| `#/home` | Command cockpit | Cockpit overview and scenario launch pad. | Route |
+| `#/home` | Work overview | Work overview and scenario launch pad. | Route |
 | `#/triage` | Work triage tool | Browser-local work triage tool for pasted tasks. | Route |
-| `#/work/{packId}` | Work list | Work list browsing and action simulation. | Selected work |
+| `#/work/{packId}` | Work list | Work list browsing and Button-runs-next tryout. | Selected work |
 | `#/today/{packId}` | Today | Today-focused items. | Selected work |
 | `#/board/{packId}` | Board | Status lane board. | Selected work |
 | `#/review/{packId}` | Review | Review queue and next-step tuning. | Selected work |
 | `#/focus/{packId}` | Focus | Single selected sample work. | Selected work |
-| `#/next/{packId}` | Next setup | Configure a sample item's next action. | Route + selected work |
+| `#/next/{packId}` | Next setup | Configure a sample item's Button-runs-next value. | Route + selected work |
 | `#/check` | Check | Browser checks against sample data and quality rules. | Route |
 | `#/search` | Search | Search through sample work fields. | Route |
 | `#/stats` | Stats | Simple status and review metrics. | Route |
@@ -56,9 +60,9 @@ primary button.
 | `#/memory/{packId}` | Memory | Per-item memory. | Route + selected work |
 | `#/settings` | Settings | Copy profile and scenario controls. | Route |
 | `#/feedback` | Feedback | Feedback workflow with prefilled diagnostics. | Route |
-| `#/health` | Demo health | Demo health checks and metadata summary. | Route |
-| `#/meta` | Meta | Product-style telemetry and meta snapshot for demos. | Route |
-| `#/lab/{packId}` | Demo Lab | Demo command-flow simulator and copyable snapshot. | Route + selected work |
+| `#/health` | Demo health | Demo health checks and build summary. | Route |
+| `#/meta` | Meta | Product-style build and route snapshot for demos. | Route |
+| `#/lab/{packId}` | Demo Lab | Button-runs-next test and copyable snapshot. | Route + selected work |
 
 `docs/demo/assets/demo.js` keeps the same contract in `ROUTE_CONTRACT`,
 `parseHashRoute()`, and `formatRouteHash()`.
@@ -93,11 +97,13 @@ hash path segments, and ids supplied to routes that do not accept ids.
 | Data | Reads fake sample work from `data/demo-packs.json`. |
 | State | Persists temporary demo state in localStorage under `projects-static-demo-state-v6`. |
 | Versioning | Header `Build` uses release metadata; `State` in the header shows localStorage schema (`v6`). |
-| Actions | Browser-only mutations (no remote write-back). |
+| Button results | Browser-only sample-data changes (no remote write-back). |
 | Triage | Converts pasted task text into editable `Where`, `Blocker`, `Button runs next`, evidence, and done-when rows. |
 | Theme | Supports light/dark, defaults to light. |
 | Routes | `#/home` default when no route is provided. |
 | Metadata | Loaded from `assets/demo-metadata.json` and shown in the header. |
+| Copy budgets | Visible Current path copy is bounded separately from tooltip/ARIA help. Health, Meta, and Lab flag command labels missing `data-copy-*` coverage and compact button/badge labels that exceed visible/help limits. |
+| North Star audit | Health, Meta, and Lab check that Where, Blocker, Button runs next, memory, memory guidance, editable-field guidance, plain-language copy, details opt-in, compact label limits, disabled-button reasons, support-action reasons, empty-state guidance, receipt confirmations, and select guidance are visible on the rendered route. |
 
 ## Build artifact
 
@@ -107,7 +113,7 @@ The exported bundle combines copied Blazor assets with a thin static demo overla
 - `docs/demo/README.md` -> exported as `README.md`; public artifact guidance copied beside the demo for review.
 - `src/Projects.Web/wwwroot/css/app.css` -> exported as `assets/app.css`; shared Blazor shell, rail, button, typography, and token rules remain the styling baseline.
 - `src/Projects.Web/wwwroot/favicon.png` -> exported as `assets/favicon.png`
-- `docs/demo/assets/demo.js` -> exported as `assets/demo.js`; hash routes, browser-local state, simulated actions, and demo QA checks.
+- `docs/demo/assets/demo.js` -> exported as `assets/demo.js`; hash routes, browser-local state, Button-runs-next controls, and demo QA checks.
 - `docs/demo/assets/demo.css` -> exported as `assets/demo.css`; static hash-route layout plus Pages-only surface rules that use Blazor tokens without generated `.card` markup.
 - `docs/demo/assets/demo-metadata.json` -> merged into `assets/demo-metadata.json`; export-time version, commit, timestamp, and boundary fields win.
 - `docs/demo/data/demo-packs.json` -> exported as `data/demo-packs.json`; fake sample work only.
@@ -137,8 +143,9 @@ The exporter also creates `.nojekyll` in the output folder. That marker is
 generated, not checked into `docs/demo/`, and keeps the Pages artifact a plain
 static bundle.
 
-During export, `index.html` asset references get the current commit as a `?v=`
-query string for `assets/app.css`, `assets/demo.css`, and `assets/demo.js`.
+During export, `index.html` asset references get the current commit plus a
+source-asset fingerprint as a `?v=` query string for `assets/app.css`,
+`assets/demo.css`, and `assets/demo.js`.
 The checked-in source `docs/demo/index.html` stays unversioned for direct local
 preview.
 

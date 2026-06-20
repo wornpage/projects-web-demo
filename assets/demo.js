@@ -10,6 +10,15 @@ const DEMO_REPO_URL = "https://github.com/jared-bidlow/projects-web-demo";
 const DEMO_ISSUE_URL = `${DEMO_REPO_URL}/issues/new`;
 const DEMO_RELEASE_NOTES_URL = `${DEMO_REPO_URL}/releases`;
 const DEMO_DEFAULT_VERSION = "working";
+const DEMO_BLOCKER_NONE = "none";
+const DEMO_BLOCKER_NONE_LABEL = "None";
+const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
+const BLOCKER_REASON_PRESETS = Object.freeze([
+  "missing owner",
+  "missing source",
+  "needs decision",
+  "waiting on approval"
+]);
 
 const STYLE_AUDIT_ASSETS = [
   { id: "productCss", label: "Product CSS", path: "assets/app.css", type: "css" },
@@ -17,8 +26,14 @@ const STYLE_AUDIT_ASSETS = [
   { id: "demoJs", label: "Demo JS", path: "assets/demo.js", type: "js" }
 ];
 const DEMO_COPY_LIMITS = Object.freeze({
+  commandFieldVisible: 72,
+  commandButtonVisible: 36,
   commandFlowVisible: 48,
   commandFlowHelp: 140,
+  compactButtonVisible: 32,
+  compactBadgeVisible: 48,
+  compactNavVisible: 16,
+  compactHelp: 140,
   clipboardPayloadPreview: 1200,
   memoryVisible: 96,
   receiptVisible: 96,
@@ -27,6 +42,17 @@ const DEMO_COPY_LIMITS = Object.freeze({
   statusHelp: 180
 });
 
+const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
+  ["title", "title"],
+  ["status", "status"],
+  ["blocker", "blocker"],
+  ["owner", "owner"],
+  ["due", "due date"],
+  ["next", "Button runs next"],
+  ["doneWhen", "proof target"],
+  ["purpose", "purpose"]
+]);
+
 const state = {
   basePacks: [],
   packs: [],
@@ -34,7 +60,7 @@ const state = {
   selectedId: "",
   query: "",
   filter: "all",
-  status: "Demo actions update this sample only.",
+  status: "Demo buttons update sample data in this browser only.",
   copyProfile: "general",
   scenarioId: "default",
   metadata: null,
@@ -49,7 +75,7 @@ const state = {
 };
 
 const ROUTE_CONTRACT = Object.freeze({
-  home: { pattern: "#/home", title: "Command cockpit", commandSource: "route", navKey: "H", navLabel: "Home" },
+  home: { pattern: "#/home", title: "Work overview", commandSource: "route", navKey: "H", navLabel: "Home" },
   triage: { pattern: "#/triage", title: "Work triage tool", commandSource: "route", navKey: ">", navLabel: "Triage" },
   work: { pattern: "#/work/{packId}", title: "Work list", commandSource: "selected-work", acceptsPackId: true, navKey: "W", navLabel: "Work" },
   today: { pattern: "#/today/{packId}", title: "Today", commandSource: "selected-work", acceptsPackId: true, navKey: "T", navLabel: "Today" },
@@ -74,34 +100,31 @@ const ROUTE_CONTRACT = Object.freeze({
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true }
 });
 
-const NAV_ROUTE_IDS = Object.freeze([
-  "home",
-  "triage",
-  "work",
-  "today",
-  "board",
-  "review",
-  "focus",
-  "next",
-  "check",
-  "health",
-  "search",
-  "stats",
-  "notes",
-  "timeline",
-  "files",
-  "calendar",
-  "create",
-  "memory",
-  "lab",
-  "meta",
-  "feedback",
-  "settings"
+const NAV_ROUTE_GROUPS = Object.freeze([
+  Object.freeze({
+    id: "workflow",
+    label: "Workflow",
+    routes: Object.freeze(["home", "review", "work", "focus", "next", "create"])
+  }),
+  Object.freeze({
+    id: "support",
+    label: "Support",
+    collapsed: true,
+    routes: Object.freeze(["triage", "today", "board", "search", "calendar", "memory"])
+  }),
+  Object.freeze({
+    id: "system",
+    label: "System",
+    collapsed: true,
+    routes: Object.freeze(["check", "stats", "notes", "timeline", "files", "health", "lab", "meta", "feedback", "settings"])
+  })
 ]);
+
+const NAV_ROUTE_IDS = Object.freeze(NAV_ROUTE_GROUPS.flatMap((group) => group.routes));
 
 const navItems = Object.freeze(NAV_ROUTE_IDS.map((route) => {
   const contract = ROUTE_CONTRACT[route];
-  return Object.freeze([route, contract.navKey, contract.navLabel]);
+  return Object.freeze({ route, key: contract.navKey, label: contract.navLabel, group: navGroupIdForRoute(route) });
 }));
 
 const filters = [
@@ -137,19 +160,12 @@ const DEMO_SCENARIOS = [
     profile: "developer",
     route: "review",
     filter: "review",
-    transform: (packs) => packs.map((pack) => pack.status === "done"
-      ? pack
-      : {
-          ...pack,
-          blocker: pack.blocker === "none" ? "Needs review context" : pack.blocker,
-          next: "Review",
-          status: "blocked"
-        })
+    transform: (packs) => packs.map(reviewScenarioPack)
   },
   {
     id: "healthy",
     label: "Healthy queue",
-    description: "Normalize blockers and next actions to reduce friction in the demo.",
+    description: "Normalize blockers and Button-runs-next values to reduce friction in the demo.",
     profile: "general",
     route: "work",
     filter: "active",
@@ -157,15 +173,15 @@ const DEMO_SCENARIOS = [
       ? pack
       : {
           ...pack,
-          blocker: "none",
-          next: pack.next === "Choose next action" || !pack.next ? "Open" : pack.next,
+          blocker: DEMO_BLOCKER_NONE,
+          next: isPlaceholderNext(pack.next) ? "Open" : pack.next,
           status: pack.status === "draft" ? "active" : pack.status
         })
   },
   {
     id: "onboarding",
     label: "Onboarding",
-    description: "Compact first-run sample set with clear labels and actions.",
+    description: "Compact first-run sample set with clear labels and Button-runs-next values.",
     profile: "climate",
     route: "home",
     filter: "all",
@@ -204,6 +220,28 @@ const DEMO_SCENARIOS = [
 ];
 
 const DEMO_SCENARIO_BY_ID = Object.fromEntries(DEMO_SCENARIOS.map((scenario) => [scenario.id, scenario]));
+
+function reviewScenarioPack(pack) {
+  if (pack.status === "done") {
+    return pack;
+  }
+
+  if (isMissingNextAction(pack)) {
+    return {
+      ...pack,
+      blocker: "missing Button runs next",
+      next: "",
+      status: "draft"
+    };
+  }
+
+  return {
+    ...pack,
+    blocker: isUnblockedBlockerValue(pack.blocker) ? "Needs review context" : pack.blocker,
+    next: "Review",
+    status: "blocked"
+  };
+}
 
 const el = (id) => document.getElementById(id);
 const launchParams = new URLSearchParams(location.search);
@@ -277,7 +315,6 @@ function bindShellControls() {
     queueFocus(focusKindForAction(event.currentTarget.dataset.action), event.currentTarget.dataset.pack || state.selectedId);
     runPrimaryAction(event.currentTarget);
   });
-  el("secondary-action").addEventListener("click", () => go("focus", state.selectedId, "where"));
   el("dock-next").addEventListener("click", (event) => {
     queueFocus(focusKindForAction(event.currentTarget.dataset.action), event.currentTarget.dataset.pack || state.selectedId);
     runPrimaryAction(event.currentTarget);
@@ -406,30 +443,51 @@ function resetState() {
 function profileStatus(profileKey, source = "Settings") {
   const value = copyProfiles[profileKey] || copyProfiles.general;
   const label = capitalize(copyProfiles[profileKey] ? profileKey : "general");
-  return `Where: ${source}. Blocker: none. Button runs next: use ${label} copy labels for ${value.work}.`;
+  return `Where: ${source}. Blocker: None. Button runs next: use ${label} copy labels for ${value.work}.`;
 }
 
 function scenarioStatus(scenario) {
   const current = DEMO_SCENARIO_BY_ID[scenario?.id] || DEMO_SCENARIO_BY_ID.default;
   const routeTitle = ROUTE_CONTRACT[current.route]?.title || "demo route";
-  return `Where: Scenario ${current.label}. Blocker: none. Button runs next: open ${routeTitle}.`;
+  return `Where: Scenario ${current.label}. Blocker: None. Button runs next: open ${routeTitle}.`;
 }
 
 function resetDemoStatus() {
-  return "Where: Settings. Blocker: none. Button runs next: review reset browser-only sample data.";
+  return "Where: Settings. Blocker: None. Button runs next: review reset sample data in this browser.";
 }
 
 function routeStatus(where, blocker, next) {
-  return `Where: ${where}. Blocker: ${blocker}. Button runs next: ${next}.`;
+  const visibleBlocker = blockerDisplayValue(blocker);
+  return `Where: ${where}. Blocker: ${visibleBlocker}. Button runs next: ${next}.`;
 }
 
 function renderNav() {
-  el("demo-nav").innerHTML = navItems.map(([route, key, label]) => `
+  el("demo-nav").innerHTML = NAV_ROUTE_GROUPS.map((group) => {
+    const isOpen = !group.collapsed || group.routes.includes(state.route);
+    return `
+      <details class="demo-nav-group" data-nav-group="${escapeAttribute(group.id)}"${isOpen ? " open" : ""}>
+        <summary class="demo-nav-group-label">${escapeHtml(group.label)}</summary>
+        <div class="demo-nav-group-items">
+          ${group.routes.map((route) => navItemMarkup(route)).join("")}
+        </div>
+      </details>
+    `;
+  }).join("");
+}
+
+function navItemMarkup(route) {
+  const contract = ROUTE_CONTRACT[route];
+  return `
     <a class="demo-nav-item nav-rail-btn" href="${escapeAttribute(formatRouteHash(route))}" data-route="${route}">
-      <span class="nav-rail-icon" aria-hidden="true">${escapeHtml(key)}</span>
-      <strong>${escapeHtml(label)}</strong>
+      <span class="nav-rail-icon" aria-hidden="true">${escapeHtml(contract.navKey)}</span>
+      <strong>${escapeHtml(contract.navLabel)}</strong>
     </a>
-  `).join("");
+  `;
+}
+
+function navGroupIdForRoute(route) {
+  const group = NAV_ROUTE_GROUPS.find((item) => item.routes.includes(route));
+  return group?.id || "";
 }
 
 function routeFromHash() {
@@ -536,8 +594,16 @@ function render() {
       item.removeAttribute("aria-current");
     }
   });
+  document.querySelectorAll(".demo-nav-group").forEach((item) => {
+    const group = NAV_ROUTE_GROUPS.find((candidate) => candidate.id === item.dataset.navGroup);
+    if (!group) {
+      return;
+    }
+    item.open = !group.collapsed || group.id === navGroupIdForRoute(state.route);
+  });
 
   const screenTitle = screenTitleForRoute();
+  document.documentElement.dataset.demoRoute = state.route;
   el("screen-title").textContent = screenTitle;
   renderCommand(currentPack());
 
@@ -645,92 +711,128 @@ function renderCommand(selected) {
 
 function commandForRoute(selected, visibleCount, reviewCount) {
   const triageCount = state.triageRows.length;
-  const triageBlockers = state.triageRows.filter((row) => row.blocker && row.blocker !== "none").length;
+  const triageBlockers = state.triageRows.filter((row) => !isUnblockedBlockerValue(row.blocker)).length;
   const triageAction = triageCount > 0 ? "copy-triage" : "parse-triage";
-  const triageNext = triageCount > 0 ? "Copy snapshot" : "Parse work";
+  const triageNext = triageCount > 0 ? "Copy Markdown" : "Parse work";
   const reviewSummary = reviewCount > 0
     ? `${reviewCount} sample item(s) need review`
-    : "none";
+    : DEMO_BLOCKER_NONE_LABEL;
   const reviewTarget = preferredReviewPack();
   const selectedWorkCommand = selectedPackCommand(selected);
-  const selectedWorkReadyCommand = {
-    ...selectedWorkCommand,
-    stateText: "Ready"
-  };
+  const searchQuery = normalizeCopy(state.query);
+  const searchNext = searchQuery ? "Refine search" : "Focus search";
+  const searchBlocker = searchQuery
+    ? `${visibleCount} match(es) for ${searchQuery}`
+    : "type title, owner, Button runs next, or due date";
+  const validateState = validateSampleState();
+  const hasSampleWork = state.packs.length > 0;
+  const noSampleWorkCommand = (title, where, stateHelp) => ({
+    title,
+    where,
+    blocker: "no sample work exists",
+    next: "Create sample",
+    stateText: "No work",
+    stateHelp,
+    action: "open-create",
+    targetPackId: ""
+  });
+  const checkCommand = validateState.canRun
+    ? { title: "Check", where: "Check", blocker: `${reviewCount} sample item(s) still need decisions`, next: "Validate sample", stateText: "Ready", action: "validate-sample", targetPackId: "" }
+    : noSampleWorkCommand("Check", "Check", validateState.help);
+  const homeCommand = hasSampleWork
+    ? { title: "Work overview", where: "Home", blocker: reviewSummary, next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
+    : noSampleWorkCommand("Work overview", "Home", "Create sample work or reset demo data before reviewing.");
+  const searchCommand = hasSampleWork
+    ? { title: "Search", where: "Search", blocker: searchBlocker, next: searchNext, stateText: searchQuery ? "Filtering" : "Ready", action: "search-demo", targetPackId: "" }
+    : noSampleWorkCommand("Search", "Search", "Create sample work or reset demo data before searching.");
+  const statsCommand = hasSampleWork
+    ? { title: "Stats", where: "Stats", blocker: "sample counts are calculated in this demo", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
+    : noSampleWorkCommand("Stats", "Stats", "Create sample work or reset demo data before reviewing stats.");
+  const notesCommand = selected
+    ? { title: "Notes", where: "Notes", blocker: "sample notes stay with this browser", next: "Open memory", stateText: "Ready", action: "memory", targetPackId: selectedWorkCommand.targetPackId }
+    : { title: "Notes", ...selectedWorkCommand };
+  const memoryCommand = selected
+    ? { title: "Memory", where: selectedWorkCommand.where, blocker: "sample notes stay with this browser", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId }
+    : { title: "Memory", ...selectedWorkCommand };
 
   const routeCommands = {
-    home: { title: "Command cockpit", where: "Home", blocker: reviewSummary, next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" },
-    triage: { title: "Triage tool command flow", where: "Triage tool", blocker: triageCount > 0 ? `${triageBlockers} blocker(s) visible in ${triageCount} row(s)` : "paste work to classify", next: triageNext, stateText: "Tool", action: triageAction, targetPackId: "" },
-    work: { title: "Work list command flow", ...selectedWorkCommand },
-    today: { title: "Today command flow", ...selectedWorkCommand },
-    board: { title: "Board command flow", ...selectedWorkCommand },
-    review: { title: "Review command flow", ...selectedWorkCommand },
-    focus: { title: "Focus command flow", ...selectedWorkCommand, stateText: "Focus" },
-    next: { title: "Next setup command flow", ...selectedWorkReadyCommand },
-    check: { title: "Check command flow", where: "Check", blocker: `${reviewCount} sample item(s) still need decisions`, next: "Validate sample", stateText: "Ready", action: "validate-sample", targetPackId: "" },
-    search: { title: "Search command flow", where: "Search", blocker: "type title, owner, next action, or due date", next: "Search", stateText: "Ready", action: "search-demo", targetPackId: "" },
-    stats: { title: "Stats command flow", where: "Stats", blocker: "sample counts are calculated in this demo", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" },
-    notes: { title: "Notes command flow", where: "Notes", blocker: "sample notes stay with this browser", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
-    timeline: { title: "Timeline command flow", where: "Timeline", blocker: "sample activity stays with this browser", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
-    files: { title: "Files command flow", where: "Files", blocker: "sample sources are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
-    calendar: { title: "Calendar command flow", ...selectedWorkCommand },
-    create: { title: "Create command flow", where: "Create", blocker: "required fields are title, owner, and Button runs next", next: "Save sample", stateText: "Draft", action: "create-sample", targetPackId: "" },
-    memory: { title: "Memory command flow", where: selectedWorkCommand.where, blocker: "sample notes stay with this browser", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId },
-    lab: { title: "Demo Lab command flow", ...selectedWorkCommand, stateText: "Lab" },
-    meta: { title: "Meta command flow", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
-    feedback: { title: "Feedback command flow", where: "Feedback", blocker: `Version ${stateVersionLabel()} is active`, next: "Report feedback", stateText: "Ready", action: "report-feedback", targetPackId: "" },
-    health: { title: "Health command flow", where: "Health", blocker: "route, storage, data, and metadata checks are running", next: "Refresh", stateText: "Ready", action: "refresh-health", targetPackId: "" },
-    settings: { title: "Settings command flow", where: "Settings", blocker: "copy profile changes labels only in this static demo", next: "Choose profile", stateText: "Ready", action: "choose-profile", targetPackId: "" },
-    pack: { title: "Work path command flow", ...selectedWorkCommand }
+    home: homeCommand,
+    triage: { title: "Triage tool", where: "Triage tool", blocker: triageCount > 0 ? `${triageBlockers} blocker(s) visible in ${triageCount} row(s)` : "paste work to classify", next: triageNext, stateText: "Tool", action: triageAction, targetPackId: "" },
+    work: { title: "Work list", ...selectedWorkCommand },
+    today: { title: "Today", ...selectedWorkCommand },
+    board: { title: "Board", ...selectedWorkCommand },
+    review: { title: "Review", ...selectedWorkCommand },
+    focus: { title: "Focus", ...selectedWorkCommand },
+    next: { title: "Next setup", ...selectedWorkCommand },
+    check: checkCommand,
+    search: searchCommand,
+    stats: statsCommand,
+    notes: notesCommand,
+    timeline: { title: "Timeline", where: "Timeline", blocker: "sample activity stays with this browser", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
+    files: { title: "Files", where: "Files", blocker: "sample sources are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
+    calendar: { title: "Calendar", ...selectedWorkCommand },
+    create: { title: "Create", where: "Create", blocker: "required fields are title, owner, and Button runs next", next: "Save sample", stateText: "Draft", action: "create-sample", targetPackId: "" },
+    memory: memoryCommand,
+    lab: { title: "Demo Lab", ...selectedWorkCommand },
+    meta: { title: "Meta", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
+    feedback: { title: "Feedback", where: "Feedback", blocker: `Version ${stateVersionLabel()} is active`, next: "Copy context", stateText: "Ready", action: "copy-feedback-context", targetPackId: "" },
+    health: { title: "Health", where: "Health", blocker: "route, storage, data, and build checks are running", next: "Refresh", stateText: "Ready", action: "refresh-health", targetPackId: "" },
+    settings: { title: "Settings", where: "Settings", blocker: "copy profile changes labels only in this static demo", next: "Choose copy profile", stateText: "Ready", action: "choose-profile", targetPackId: "" },
+    pack: { title: "Work path", ...selectedWorkCommand }
   };
 
-  const selectedFlow = selected ? `Flow: ${selected.title}` : "";
   const selectedBlocker = selected ? blockerTextForPack(selected) : "";
-  const selectedAction = selected ? resolvePrimaryCommandForPack(selected).label : "";
-  const selectedActionFlow = selectedFlow && selectedAction
-    ? `${selectedFlow} -> ${selectedBlocker || "clear"} -> ${selectedAction}.`
-    : "Flow: ";
+  const selectedActionCommand = selected ? resolvePrimaryCommandForPack(selected) : null;
+  const selectedAction = selectedActionCommand?.label || "";
+  const selectedActionFlow = selected
+    ? selectedFlowHintForPack(selected, selectedActionCommand, selectedBlocker)
+    : "";
 
   const routeCommandsHints = {
-    home: "Flow: review work, then run the action.",
-    work: selectedActionFlow ? `${selectedActionFlow}` : "Flow: choose work, then run action.",
-    today: selectedActionFlow ? `${selectedActionFlow}` : "Flow: due work, then action.",
-    board: selectedActionFlow ? `${selectedActionFlow}` : "Flow: status, work, action.",
+    home: hasSampleWork ? "Flow: review work, run next." : "Flow: create sample, review.",
+    triage: triageCount > 0
+      ? "Flow: edit rows, copy Markdown."
+      : "Flow: paste work, parse.",
+    work: selectedActionFlow ? `${selectedActionFlow}` : "Flow: choose work, run next.",
+    today: selectedActionFlow ? `${selectedActionFlow}` : "Flow: due work, run next.",
+    board: selectedActionFlow ? `${selectedActionFlow}` : "Flow: choose status, work, run next.",
     review: selectedActionFlow
-      ? `${selectedFlow} -> resolve blocker.`
+      ? `${selectedActionFlow}`
       : "Flow: resolve blockers first.",
     focus: selectedActionFlow
       ? `${selectedActionFlow}`
-      : "Flow: confirm forward path, then act.",
-    next: "Flow: set action, return, run.",
-    check: "Flow: validate sample, fix gaps.",
-    search: "Flow: search, open work, act.",
-    stats: "Flow: summary, then work.",
+      : "Flow: confirm work path, run next.",
+    next: "Flow: set button, return, run next.",
+    check: validateState.canRun ? "Flow: validate sample, fix gaps." : "Flow: create sample, validate.",
+    search: hasSampleWork
+      ? (searchQuery ? "Flow: refine search, open work." : "Flow: type search, open work.")
+      : "Flow: create sample, search.",
+    stats: hasSampleWork ? "Flow: review counts, choose work." : "Flow: create sample, review stats.",
     notes: selected
-      ? `${selectedActionFlow}`
-      : "Flow: note, then action.",
+      ? `Flow: ${selected.title} -> open memory.`
+      : (hasSampleWork ? "Flow: choose work, open memory." : "Flow: create sample, add memory."),
     timeline: selected
       ? `${selectedActionFlow}`
-      : "Flow: activity, then action.",
+      : "Flow: choose work, review activity, run next.",
     calendar: selected
       ? `${selectedActionFlow}`
-      : "Flow: due date, then action.",
+      : "Flow: set due date, run next.",
     files: selected
       ? `${selectedActionFlow}`
-      : "Flow: sources, then action.",
+      : "Flow: choose work, review sources, run next.",
     memory: selected
-      ? `${selectedActionFlow}`
-      : "Flow: memory, then action.",
+      ? `Flow: type memory note, add note.`
+      : (hasSampleWork ? "Flow: choose work, add memory." : "Flow: create sample, add memory."),
     lab: selected
       ? `${selectedActionFlow}`
-      : "Flow: compare, then action.",
-    pack: selected ? `${selectedActionFlow}` : "Flow: review, then action.",
-    create: "Flow: create, review, act.",
+      : "Flow: choose work, preview button, run next.",
+    pack: selected ? `${selectedActionFlow}` : "Flow: review work, run next.",
+    create: "Flow: create work, review, run next.",
     meta: "Flow: inspect, copy diagnostics.",
-    feedback: "Flow: copy context, report.",
+    feedback: "Flow: copy context, then open issue.",
     health: "Flow: verify, return to work.",
-    settings: "Flow: choose profile, apply.",
-    settingsProfile: "Flow: choose profile, apply.",
+    settings: "Flow: choose copy profile, apply.",
+    settingsProfile: "Flow: choose copy profile, apply.",
     settingsScenario: "Flow: choose scenario, continue."
   };
 
@@ -744,13 +846,34 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   };
 }
 
+function selectedFlowHintForPack(pack, command = resolvePrimaryCommandForPack(pack), blocker = blockerTextForPack(pack)) {
+  if (!pack) {
+    return "Flow: choose work, run next.";
+  }
+
+  if (isMissingNextAction(pack)) {
+    return `Flow: set Button runs next for ${pack.title}.`;
+  }
+
+  if (hasBlocker(pack)) {
+    return command?.action === "unblock"
+      ? `Flow: clear ${blocker || DEMO_BLOCKER_NONE_LABEL} on ${pack.title}.`
+      : `Flow: review ${blocker || DEMO_BLOCKER_NONE_LABEL} on ${pack.title}.`;
+  }
+
+  return `Flow: run ${command?.label || "Open"} for ${pack.title}.`;
+}
+
 function selectedPackCommand(selected) {
   const resolvedAction = resolvePrimaryCommandForPack(selected);
+  const workflow = workflowStateForPack(selected, resolvedAction);
+  const hasAnyWork = state.packs.length > 0;
   return {
-    where: selected?.title || "No sample work selected",
-    blocker: blockerTextForPack(selected),
+    where: selected?.title || (hasAnyWork ? "Choose sample work" : "No sample work"),
+    blocker: selected ? blockerTextForPack(selected) : (hasAnyWork ? "choose a sample work item" : "create or reset sample work"),
     next: resolvedAction.label,
-    stateText: selected?.status || "Ready",
+    stateText: workflow.label,
+    stateHelp: workflow.help,
     action: resolvedAction.action,
     targetPackId: resolvedAction.targetPackId,
     memory: latestRelevantMemory(selected)
@@ -759,6 +882,10 @@ function selectedPackCommand(selected) {
 
 function resolvePrimaryCommandForPack(selected) {
   if (!selected) {
+    if (state.packs.length === 0) {
+      return { label: "Create sample", action: "open-create", targetPackId: "" };
+    }
+
     return { label: "Open work list", action: "open-work-list", targetPackId: "" };
   }
 
@@ -769,7 +896,7 @@ function resolvePrimaryCommandForPack(selected) {
   const action = commandActionForLabel(selected.next || "Open");
   if (hasBlocker(selected)) {
     if (action.action === "unblock") {
-      return { label: "Unblock", action: "unblock", targetPackId: selected.id };
+      return { label: "Set Blocker: None", action: "unblock", targetPackId: selected.id };
     }
 
     return { label: "Review blocker", action: "review", targetPackId: selected.id };
@@ -778,45 +905,128 @@ function resolvePrimaryCommandForPack(selected) {
   return { ...action, targetPackId: selected.id };
 }
 
+function workflowStateForPack(pack, command = null) {
+  if (!pack) {
+    if (state.packs.length === 0) {
+      return {
+        id: "empty",
+        label: "No work",
+        path: "draft",
+        help: "Create or reset sample work to see its path."
+      };
+    }
+
+    return {
+      id: "none",
+      label: "Choose work",
+      path: "draft",
+      help: "Choose sample work to see its path."
+    };
+  }
+
+  const resolved = command || resolvePrimaryCommandForPack(pack);
+
+  if (pack.status === "done") {
+    return {
+      id: "done",
+      label: "Done",
+      path: "done",
+      help: `Proof is saved for ${pack.title}.`
+    };
+  }
+
+  if (isMissingNextAction(pack)) {
+    return {
+      id: "needs-action",
+      label: "Needs setup",
+      path: "draft",
+      help: "Button runs next is missing."
+    };
+  }
+
+  if (hasBlocker(pack)) {
+    return {
+      id: "blocked",
+      label: "Blocked",
+      path: "review",
+      help: `Blocker: ${blockerTextForPack(pack)}.`
+    };
+  }
+
+  if (resolved.action === "done") {
+    return {
+      id: "proof-ready",
+      label: "Proof ready",
+      path: "proof",
+      help: `Ready to finish with proof: ${proofTargetForPack(pack)}.`
+    };
+  }
+
+  if (pack.status === "draft") {
+    return {
+      id: "draft",
+      label: "Draft",
+      path: "draft",
+      help: "Work path is still being set."
+    };
+  }
+
+  return {
+    id: "ready",
+    label: "Ready",
+    path: "review",
+    help: `Button runs next: ${resolved.label}.`
+  };
+}
+
 function updateCommand(command) {
   el("command-title").textContent = command.title;
-  el("command-where").textContent = command.where;
-  el("command-blocker").textContent = command.blocker;
-  el("command-next").textContent = command.next;
+  setCopySurface(el("command-where"), command.where, "Where", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(el("command-blocker"), command.blocker, "Blocker", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(el("command-next"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   el("command-state").textContent = command.stateText;
+  el("command-state").title = command.stateHelp || `State: ${command.stateText}`;
+  el("command-state").setAttribute("aria-label", command.stateHelp || `State: ${command.stateText}`);
   el("command-scope").textContent = command.scope;
   if (el("command-flow")) {
-    const flowHint = command.flowHint || "Select work, then run action.";
+    const flowHint = commandFlowCopy(command.flowHint || "Flow: choose work, run next.");
     el("command-flow").textContent = visibleCopy(flowHint, DEMO_COPY_LIMITS.commandFlowVisible);
     el("command-flow").title = helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp);
     el("command-flow").setAttribute("aria-label", helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp));
   }
   updateCommandWorkPath(command);
   const commandMemory = normalizeCopy(command.memory);
+  const hasCommandMemoryContext = Boolean(commandMemory || currentPack());
+  const commandMemoryHelp = commandMemory
+    ? `Relevant Memory: ${commandMemory}`
+    : "Relevant Memory: none yet. Button runs next: add memory note from selected work.";
   const commandMemoryElement = el("command-memory");
   if (commandMemoryElement) {
-    commandMemoryElement.hidden = !commandMemory;
-    commandMemoryElement.title = commandMemory ? `Relevant Memory: ${commandMemory}` : "";
-    commandMemoryElement.setAttribute("aria-label", commandMemory ? `Relevant Memory: ${commandMemory}` : "No relevant memory for selected work.");
+    commandMemoryElement.hidden = !hasCommandMemoryContext;
+    commandMemoryElement.title = hasCommandMemoryContext ? commandMemoryHelp : "";
+    commandMemoryElement.setAttribute("aria-label", hasCommandMemoryContext ? commandMemoryHelp : "No selected work memory context.");
   }
   if (el("command-memory-text")) {
-    el("command-memory-text").textContent = commandMemory ? visibleCopy(commandMemory, DEMO_COPY_LIMITS.memoryVisible) : "No memory yet.";
+    el("command-memory-text").textContent = commandMemory ? visibleCopy(commandMemory, DEMO_COPY_LIMITS.memoryVisible) : "none yet - add memory note";
   }
-  el("primary-action").textContent = command.next;
+  setCopySurface(el("primary-action"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   el("primary-action").dataset.action = command.action || "";
   el("primary-action").dataset.pack = command.targetPackId || "";
   el("primary-action").setAttribute("aria-label", commandRunLabel(command));
   el("primary-action").title = commandRunLabel(command);
-  el("secondary-action").setAttribute("aria-label", secondaryRunLabel(command));
-  el("secondary-action").title = secondaryRunLabel(command);
-  el("dock-where").textContent = command.where;
-  el("dock-blocker").textContent = command.blocker;
-  el("dock-next-label").textContent = command.next;
+  setCopySurface(el("dock-where"), command.where, "Where", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(el("dock-blocker"), command.blocker, "Blocker", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(el("dock-next-label"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   el("dock-next").dataset.action = command.action || "";
   el("dock-next").dataset.pack = command.targetPackId || "";
   el("dock-next").setAttribute("aria-label", commandRunLabel(command));
   el("dock-next").title = commandRunLabel(command);
   updateActionReceipt();
+}
+
+function commandFlowCopy(flowHint) {
+  const hint = normalizeCopy(flowHint) || "Flow: choose work, run next.";
+  return hint.replace(/^Flow:\s*/iu, "Next step: ");
 }
 
 function updateCommandWorkPath(command) {
@@ -865,24 +1075,20 @@ function commandWorkPathSteps(command) {
 
 function commandWorkPathDetail(command, pack) {
   if (pack) {
-    return `Proof: ${visibleCopy(proofTargetForPack(pack), DEMO_COPY_LIMITS.commandFlowVisible)}`;
+    const workflow = workflowStateForPack(pack, { label: command.next, action: command.action, targetPackId: command.targetPackId });
+    return `${workflow.label}: ${visibleCopy(workflow.help, DEMO_COPY_LIMITS.commandFlowVisible)}`;
   }
 
-  return `Next: ${visibleCopy(command.next, DEMO_COPY_LIMITS.commandFlowVisible)}`;
+  return `Button runs next: ${visibleCopy(command.next, DEMO_COPY_LIMITS.commandFlowVisible)}`;
 }
 
 function commandRunLabel(command) {
   const memory = normalizeCopy(command.memory);
   const memoryCopy = memory ? ` Relevant Memory: ${memory}.` : "";
+  const runNote = normalizeCopy(command.runNote);
+  const runCopy = runNote ? ` ${runNote}.` : "";
   return helpCopy(
-    `Where: ${command.where}. Blocker: ${command.blocker}. Button runs next: ${command.next}.${memoryCopy}`,
-    DEMO_COPY_LIMITS.commandFlowHelp
-  );
-}
-
-function secondaryRunLabel(command) {
-  return helpCopy(
-    `Focus selected work. Where: ${command.where}. Blocker: ${command.blocker}.`,
+    `Where: ${command.where}. Blocker: ${command.blocker}. Button runs next: ${command.next}.${runCopy}${memoryCopy}`,
     DEMO_COPY_LIMITS.commandFlowHelp
   );
 }
@@ -910,7 +1116,19 @@ function focusCommandTarget(kind, packId = "") {
   const pack = findPack(packId) || currentPack();
   const id = pack?.id || packId || "";
   if (kind === "support-owner") {
-    document.querySelector('[data-support-details="pack-detail"]')?.setAttribute("open", "");
+    const details = document.querySelector('[data-support-details="pack-detail"]');
+    if (details) {
+      details.open = true;
+      details.dataset.openedBy = "focus";
+    }
+  }
+
+  if (kind === "feedback-context") {
+    const details = document.querySelector('[data-support-details="feedback-context"]');
+    if (details) {
+      details.open = true;
+      details.dataset.openedBy = "focus";
+    }
   }
 
   const selectors = focusSelectors(kind, id);
@@ -978,8 +1196,16 @@ function focusSelectors(kind, packId) {
     return [".demo-profile-card[aria-pressed=\"true\"]", ".demo-profile-card", "#reset-demo"];
   }
 
+  if (kind === "feedback-context") {
+    return ["#feedback-context", "#copy-feedback", "#open-feedback"];
+  }
+
   if (kind === "memory-note") {
     return ["#memory-note", "#memory-note-help", "#add-memory"];
+  }
+
+  if (kind === "create-title") {
+    return ["#new-title", "#create-save-help", "#create-sample"];
   }
 
   if (kind === "pack-edit") {
@@ -987,7 +1213,6 @@ function focusSelectors(kind, packId) {
       "#edit-title",
       "#pack-edit-form",
       "#edit-next",
-      "#edit-status",
       ".demo-edit-panel"
     ];
   }
@@ -1059,6 +1284,10 @@ function focusKindForAction(action) {
     return "memory-note";
   }
 
+  if (action === "copy-feedback-context") {
+    return "feedback-context";
+  }
+
   if (action === "edit") {
     return "pack-edit";
   }
@@ -1071,51 +1300,58 @@ function renderHome() {
   const doneCount = state.packs.filter((pack) => pack.status === "done").length;
   const scenario = DEMO_SCENARIO_BY_ID[state.scenarioId] || DEMO_SCENARIO_BY_ID.default;
   el("screen-content").innerHTML = `
-    <div class="kpi-strip demo-grid demo-summary-strip">
+    <div class="demo-grid demo-summary-strip">
       ${metricCard("Visible work", state.packs.length, "Sample packs in this demo.")}
-      ${metricCard("Review", reviewCount, "Items with blockers or missing next actions.")}
+      ${metricCard("Review", reviewCount, "Items with blockers or missing Button runs next.")}
       ${metricCard("Done", doneCount, "Finished sample work.")}
     </div>
     <section class="demo-panel">
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Start here</span>
-          <h2>Move from brief to action</h2>
+          <h2>Pick work, clear blocker, run next</h2>
         </div>
-        ${navButton("review", "Review work", "btn btn-primary")}
       </div>
-      <p>The demo shows the public-safe shape of Projects: pick work, read Where / Blocker / Button runs next, then run a simulated action.</p>
-      <div class="demo-quick-actions">
-        ${navButton("work", "Open work list")}
-        ${navButton("triage", "Open triage tool")}
-        ${navButton("today", "Open today")}
-        ${navButton("lab", "Open lab")}
-        ${navButton("meta", "Open meta")}
-        ${navButton("create", "Create sample")}
-        ${navButton("settings", "Change copy profile")}
-        ${navButton("feedback", "Report feedback")}
+      <p>The demo shows the public-safe shape of Projects: pick work, read Where / Blocker / Button runs next, then run Button runs next.</p>
+      <div class="demo-start-path" aria-label="Primary demo path">
+        <div class="demo-start-step">
+          <span>1</span>
+          <strong>Review</strong>
+          <small>Find blocked or unclear work.</small>
+          ${navButton("review", "Review work", "btn btn-primary")}
+        </div>
+        <div class="demo-start-step">
+          <span>2</span>
+          <strong>Work</strong>
+          <small>Check the current path fields.</small>
+          ${navButton("work", "Open work list")}
+        </div>
+        <div class="demo-start-step">
+          <span>3</span>
+          <strong>Create</strong>
+          <small>Add a browser-only sample pack.</small>
+          ${navButton("create", "Create sample")}
+        </div>
+      </div>
+      <div class="demo-quick-actions demo-secondary-paths" aria-label="Secondary demo views">
+        ${homeSecondaryAction("today", "Today", "See dated work without changing state.")}
+        ${homeSecondaryAction("triage", "Triage", "Turn rough notes into work fields.")}
+        ${homeSecondaryAction("memory", "Memory", "Add recall notes to selected work.")}
       </div>
       <div class="demo-meta-row" aria-label="Active scenario">
         <span>Active scenario: <strong>${escapeHtml(scenario.label)}</strong></span>
         <span>${escapeHtml(scenario.description)}</span>
       </div>
-    </section>
-    <section class="demo-panel">
-      <div class="demo-panel-head">
-        <div>
-          <span class="section-label">Scenarios</span>
-          <h2>Choose a quick start</h2>
+      ${optionalDetails("Scenarios", "Open for demo presets that replace the sample work state.", `
+        <div class="demo-scenario-grid">
+          ${DEMO_SCENARIOS.map((item) => `
+            <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}"${controlLabelAttributes(scenarioCardHelp(item, state.scenarioId === item.id))}>
+              <strong>${escapeHtml(item.label)}</strong>
+              <span>${escapeHtml(item.description)}</span>
+            </button>
+          `).join("")}
         </div>
-        <span class="demo-status">Scenario: ${escapeHtml(state.scenarioId)} / Profile: ${escapeHtml(state.copyProfile)}</span>
-      </div>
-      <div class="demo-scenario-grid">
-        ${DEMO_SCENARIOS.map((item) => `
-          <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}"${controlLabelAttributes(scenarioCardHelp(item, state.scenarioId === item.id))}>
-            <strong>${escapeHtml(item.label)}</strong>
-            <span>${escapeHtml(item.description)}</span>
-          </button>
-        `).join("")}
-      </div>
+      `)}
     </section>
     ${recentActivityPanel()}
   `;
@@ -1125,19 +1361,19 @@ function renderHome() {
 
 function renderTriage() {
   const rows = normalizedTriageRows();
-  const blockerCount = rows.filter((row) => row.blocker && row.blocker !== "none").length;
+  const blockerCount = rows.filter((row) => !isUnblockedBlockerValue(row.blocker)).length;
   const clearNextCount = rows.filter((row) => row.next && !isPlaceholderNext(row.next)).length;
-  const snapshot = collectTriageSnapshot(rows);
   const parseHelp = triageParseHelp(rows);
   const addRowHelp = triageAddRowHelp();
   const resetHelp = triageResetHelp();
   const copyMarkdownHelp = triageCopyMarkdownHelp(rows);
   const copyJsonHelp = triageCopyJsonHelp(rows);
+  const messyWorkHelp = triageInputHelp();
 
   el("screen-content").innerHTML = `
-    <div class="kpi-strip demo-grid demo-summary-strip">
+    <div class="demo-grid demo-summary-strip">
       ${metricCard("Rows", rows.length, "Work items shaped from pasted text.")}
-      ${metricCard("Blockers", blockerCount, "Rows that need review before action.")}
+      ${metricCard("Blockers", blockerCount, "Rows that need review before running next.")}
       ${metricCard("Clear next", clearNextCount, "Rows with a concrete Button runs next.")}
     </div>
     <section class="demo-panel demo-triage-panel">
@@ -1146,13 +1382,14 @@ function renderTriage() {
           <span class="section-label">Button Runs Next</span>
           <h2>Work triage tool</h2>
         </div>
-        <span class="demo-status">browser-local</span>
+        <span class="demo-status">browser-only data</span>
       </div>
       <div class="demo-triage-layout">
         <div class="demo-triage-input">
           <label class="demo-field demo-field-wide" for="triage-input">
             <span>Messy work</span>
-            <textarea id="triage-input" rows="10">${escapeHtml(state.triageInput || defaultTriageInput())}</textarea>
+            <textarea id="triage-input" rows="10"${fieldHelpAttributes("triage-input-help", messyWorkHelp)}>${escapeHtml(state.triageInput || defaultTriageInput())}</textarea>
+            ${fieldHelp("triage-input", messyWorkHelp)}
           </label>
           <div class="demo-card-actions">
             <span id="parse-triage-help" class="sr-only">${escapeHtml(parseHelp)}</span>
@@ -1166,7 +1403,7 @@ function renderTriage() {
         <div class="demo-command-lines compact">
           ${factLine("Where", "Work triage tool")}
           ${factLine("Blocker", rows.length ? `${blockerCount} blocker(s) to review` : "paste work to classify")}
-          ${factLine("Button runs next", rows.length ? "Copy snapshot" : "Parse work")}
+          ${factLine("Button runs next", rows.length ? "Copy Markdown" : "Parse work")}
         </div>
       </div>
     </section>
@@ -1174,47 +1411,37 @@ function renderTriage() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Triage rows</span>
-          <h2>${rows.length ? `${rows.length} work item(s)` : "No rows yet"}</h2>
+          <h2>${rows.length ? `${rows.length} work item(s)` : "Paste or add work"}</h2>
         </div>
         <span class="demo-status">${rows.length ? "editable" : "ready"}</span>
       </div>
       <div class="demo-triage-list">
-        ${rows.length ? rows.map(triageCard).join("") : emptyState("Paste work or add a row to create a command brief.", "Paste task text, then choose Parse work.")}
-      </div>
-    </section>
-    <section class="demo-panel">
-      <div class="demo-panel-head">
-        <div>
-          <span class="section-label">Readiness</span>
-          <h2>Employer-friendly proof points</h2>
-        </div>
-        <span class="demo-status">local only</span>
-      </div>
-      <div class="demo-check-list">
-        ${triageQualityChecks(rows).map(healthLine).join("")}
-      </div>
-    </section>
-    <section class="demo-panel">
-      <div class="demo-panel-head">
-        <div>
-          <span class="section-label">Snapshot</span>
-          <h2>Copy handoff</h2>
-        </div>
-        <span class="demo-status">${snapshot.rows.length} row(s)</span>
-      </div>
-      <div class="${copyPayloadClass("triage-snapshot")}">
-        <label class="sr-only" for="triage-snapshot">Triage snapshot markdown</label>
-        <textarea id="triage-snapshot" class="demo-search-input" rows="8" readonly>${escapeHtml(triageMarkdown(rows))}</textarea>
-      </div>
-      <div class="demo-card-actions">
-        <span id="copy-triage-markdown-help" class="sr-only">${escapeHtml(copyMarkdownHelp)}</span>
-        <span id="copy-triage-json-help" class="sr-only">${escapeHtml(copyJsonHelp)}</span>
-        ${copyButton("copy-triage-markdown", "Copy Markdown", "btn btn-primary", copyMarkdownHelp, "copy-triage-markdown-help")}
-        ${copyButton("copy-triage-json", "Copy JSON", "btn", copyJsonHelp, "copy-triage-json-help")}
-        ${navButton("work", "Open work list")}
+        ${rows.length ? rows.map(triageCard).join("") : emptyState("Paste work or add a row to build a work path.", "Paste task text, then choose Parse work.")}
       </div>
       ${clipboardNoticePanel("copy-triage-markdown")}
       ${clipboardNoticePanel("copy-triage-json")}
+      ${optionalDetails("Handoff", "Open for copyable Markdown, JSON, and readiness checks.", `
+        <div class="demo-detail-section">
+          <h3>Readiness</h3>
+          <div class="demo-check-list">
+            ${triageQualityChecks(rows).map(healthLine).join("")}
+          </div>
+        </div>
+        <div class="demo-detail-section">
+          <h3>Copy handoff</h3>
+          <div class="${copyPayloadClass("triage-snapshot")}">
+            <label class="sr-only" for="triage-snapshot">Triage snapshot markdown</label>
+            <textarea id="triage-snapshot" class="demo-search-input" rows="8" readonly>${escapeHtml(triageMarkdown(rows))}</textarea>
+          </div>
+          <div class="demo-card-actions">
+            <span id="copy-triage-markdown-help" class="sr-only">${escapeHtml(copyMarkdownHelp)}</span>
+            <span id="copy-triage-json-help" class="sr-only">${escapeHtml(copyJsonHelp)}</span>
+            ${copyButton("copy-triage-markdown", "Copy Markdown", "btn btn-primary", copyMarkdownHelp, "copy-triage-markdown-help")}
+            ${copyButton("copy-triage-json", "Copy JSON", "btn", copyJsonHelp, "copy-triage-json-help")}
+            ${navButton("work", "Open work list")}
+          </div>
+        </div>
+      `, "", detailsOpenAttribute("triage-snapshot"))}
     </section>
   `;
 
@@ -1235,11 +1462,15 @@ function triageResetHelp() {
 }
 
 function triageCopyMarkdownHelp(rows) {
-  return rows.length ? `Copy ${rows.length} triage row(s) as Markdown.` : "Copy the empty triage snapshot as Markdown.";
+  return rows.length ? `Copy ${rows.length} triage row(s) as Markdown.` : "Paste or add work before copying a Markdown handoff.";
 }
 
 function triageCopyJsonHelp(rows) {
-  return rows.length ? `Copy ${rows.length} triage row(s) as JSON.` : "Copy the empty triage snapshot as JSON.";
+  return rows.length ? `Copy ${rows.length} triage row(s) as JSON.` : "Paste or add work before copying a JSON snapshot.";
+}
+
+function triageInputHelp() {
+  return "Paste loose task lines; Parse work turns them into Where, Blocker, and Button runs next rows.";
 }
 
 function defaultTriageInput() {
@@ -1247,7 +1478,7 @@ function defaultTriageInput() {
     "Finalize mobile demo polish - blocked by unclear bottom bar focus - evidence: mobile smoke in dark mode",
     "Write README employer story - needs concrete tool positioning",
     "Ship GitHub Pages update - run static export and live smoke",
-    "Review issue backlog - choose next action for stale tasks"
+    "Review issue backlog - set Button runs next for stale tasks"
   ].join("\n");
 }
 
@@ -1261,7 +1492,7 @@ function normalizedTriageRows() {
 
 function normalizeTriageRow(row = {}) {
   const work = String(row.work || row.title || "").trim();
-  const blocker = String(row.blocker || "none").trim() || "none";
+  const blocker = blockerDisplayValue(row.blocker);
   const next = String(row.next || "Start").trim() || "Start";
   return {
     id: String(row.id || `triage-${Date.now()}-${Math.random().toString(16).slice(2)}`),
@@ -1340,13 +1571,13 @@ function inferBlocker(line) {
   if (/\?|decide|choose|unclear|unknown|stale/i.test(value)) return "decision needed";
   if (/fail|broken|bug|error|overflow|contrast|blank/i.test(value)) return "failure to investigate";
   if (/blocked|stuck|can't|cannot/i.test(value)) return "blocked";
-  return "none";
+  return DEMO_BLOCKER_NONE_LABEL;
 }
 
 function inferNextAction(line, blocker) {
   const value = String(line || "").toLowerCase();
-  if (blocker && blocker !== "none") {
-    return /unblock/.test(value) ? "Unblock" : "Review blocker";
+  if (!isUnblockedBlockerValue(blocker)) {
+    return /unblock/.test(value) ? "Set Blocker: None" : "Review blocker";
   }
 
   if (/ship|deploy|publish|release|push/.test(value)) return "Ship";
@@ -1370,25 +1601,28 @@ function inferEvidence(line, next) {
 }
 
 function inferDoneWhen(line, blocker, next) {
-  if (blocker && blocker !== "none") {
-    return "Blocker is named, reviewed, and the next action is safe to run.";
+  if (!isUnblockedBlockerValue(blocker)) {
+    return "Blocker is named, reviewed, and Button runs next is safe to run.";
   }
 
   if (next === "Ship") return "Published artifact is live and checked.";
   if (next === "Test") return "Relevant check passes with current output.";
   if (next === "Draft") return "Draft is ready for review or handoff.";
-  return "Next action has a visible result.";
+  return "Button result is visible.";
 }
 
 function triageCard(row) {
-  const status = row.blocker && row.blocker !== "none" ? "blocked" : "ready";
+  const status = isUnblockedBlockerValue(row.blocker) ? "ready" : "blocked";
   const removeHelp = triageRemoveHelp(row);
   const removeHelpId = `triage-remove-help-${row.id}`;
+  const workHelpId = `triage-work-${row.id}-help`;
+  const workHelp = triageFieldHelp("work");
   return `<article class="demo-triage-card" data-triage-id="${escapeAttribute(row.id)}">
     <div class="demo-card-head">
       <label class="demo-field demo-triage-title" for="triage-work-${escapeAttribute(row.id)}">
         <span>Work</span>
-        <input id="triage-work-${escapeAttribute(row.id)}" data-triage-field="work" type="text" value="${escapeAttribute(row.work)}">
+        <input id="triage-work-${escapeAttribute(row.id)}" data-triage-field="work" type="text" value="${escapeAttribute(row.work)}"${fieldHelpAttributes(workHelpId, workHelp)}>
+        <small id="${escapeAttribute(workHelpId)}" class="demo-field-help">${escapeHtml(workHelp)}</small>
       </label>
       <span class="demo-state-pill">${escapeHtml(status)}</span>
     </div>
@@ -1412,21 +1646,42 @@ function triageRemoveHelp(row) {
 
 function triageTextInput(row, field, label, wide = false) {
   const id = `triage-${field}-${row.id}`;
+  const helpId = `${id}-help`;
+  const help = triageFieldHelp(field);
   return `<label class="demo-field${wide ? " demo-field-wide" : ""}" for="${escapeAttribute(id)}">
     <span>${escapeHtml(label)}</span>
-    <input id="${escapeAttribute(id)}" data-triage-field="${escapeAttribute(field)}" type="text" value="${escapeAttribute(row[field] || "")}">
+    <input id="${escapeAttribute(id)}" data-triage-field="${escapeAttribute(field)}" type="text" value="${escapeAttribute(row[field] || "")}"${fieldHelpAttributes(helpId, help)}>
+    <small id="${escapeAttribute(helpId)}" class="demo-field-help">${escapeHtml(help)}</small>
   </label>`;
+}
+
+function triageFieldHelp(field) {
+  const help = {
+    work: "Name the work item before it enters the list.",
+    where: "Name where this work lives or what state it is in.",
+    blocker: "Name what blocks Button runs next; use None when clear.",
+    evidence: "Name the evidence needed before handoff.",
+    doneWhen: "Describe the proof target before this work is done."
+  };
+  return help[field] || "Explain what this field changes in the work path.";
 }
 
 function triageSelectInput(row, field, label) {
   const id = `triage-${field}-${row.id}`;
-  const options = ["Review blocker", "Start", "Open", "Focus", "Draft", "Fix", "Test", "Ship", "Contact", "Unblock", "Done"];
+  const helpId = `${id}-help`;
+  const help = triageSelectHelp();
+  const options = ["Review blocker", "Start", "Open", "Focus", "Draft", "Fix", "Test", "Ship", "Contact", "Set Blocker: None", "Done"];
   return `<label class="demo-field" for="${escapeAttribute(id)}">
     <span>${escapeHtml(label)}</span>
-    <select id="${escapeAttribute(id)}" data-triage-field="${escapeAttribute(field)}">
+    <select id="${escapeAttribute(id)}" data-triage-field="${escapeAttribute(field)}" aria-describedby="${escapeAttribute(helpId)}" title="${escapeAttribute(help)}">
       ${options.map((option) => `<option value="${escapeAttribute(option)}"${option === row[field] ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
     </select>
+    <small id="${escapeAttribute(helpId)}" class="demo-field-help">${escapeHtml(help)}</small>
   </label>`;
+}
+
+function triageSelectHelp() {
+  return "Pick what Button runs next stores for this row; use Review blocker when Blocker is named.";
 }
 
 function bindTriageControls() {
@@ -1449,12 +1704,12 @@ function bindTriageControls() {
     state.triageRows.push(normalizeTriageRow({
       work: "Untitled work",
       where: "Inbox",
-      blocker: "none",
+      blocker: DEMO_BLOCKER_NONE_LABEL,
       next: "Start",
       evidence: "Visible result or handoff note",
-      doneWhen: "Next action has a visible result."
+      doneWhen: "Button result is visible."
     }));
-    state.status = triageStatus("none", "edit the new row");
+    state.status = triageStatus(DEMO_BLOCKER_NONE, "edit the new row");
     queueFocus("triage-output");
     render();
   });
@@ -1504,19 +1759,20 @@ function bindTriageControls() {
     button.addEventListener("click", () => {
       syncTriageRowsFromDom();
       state.triageRows = state.triageRows.filter((row) => row.id !== button.dataset.triageRemove);
-      state.status = triageStatus("none", `review ${state.triageRows.length} parsed row(s)`);
+      state.status = triageStatus(DEMO_BLOCKER_NONE, `review ${state.triageRows.length} parsed row(s)`);
       render();
     });
   });
 }
 
 function triageStatus(blocker, next) {
-  return `Where: Triage. Blocker: ${blocker}. Button runs next: ${next}.`;
+  const visibleBlocker = blockerDisplayValue(blocker);
+  return `Where: Triage. Blocker: ${visibleBlocker}. Button runs next: ${next}.`;
 }
 
 function triageParsedStatus(rowCount) {
   return rowCount > 0
-    ? triageStatus("none", `review ${rowCount} parsed row(s)`)
+    ? triageStatus(DEMO_BLOCKER_NONE, `review ${rowCount} parsed row(s)`)
     : triageStatus("no rows parsed", "paste work and parse");
 }
 
@@ -1547,7 +1803,7 @@ function triageQualityChecks(rows) {
   const missingWork = rows.filter((row) => !row.work).length;
   const missingNext = rows.filter((row) => !row.next || isPlaceholderNext(row.next)).length;
   const missingEvidence = rows.filter((row) => !row.evidence).length;
-  const blockerRows = rows.filter((row) => row.blocker && row.blocker !== "none").length;
+  const blockerRows = rows.filter((row) => !isUnblockedBlockerValue(row.blocker)).length;
 
   return [
     {
@@ -1558,12 +1814,12 @@ function triageQualityChecks(rows) {
     {
       label: "Work named",
       status: rows.length > 0 && missingWork === 0,
-      detail: rows.length === 0 ? "No triage rows yet." : `${missingWork} row(s) missing work title.`
+      detail: rows.length === 0 ? "Paste or add work to create triage rows." : `${missingWork} row(s) missing work title.`
     },
     {
       label: "Button runs next",
       status: rows.length > 0 && missingNext === 0,
-      detail: rows.length === 0 ? "Parse work to generate actions." : `${missingNext} row(s) still need a clear action.`
+      detail: rows.length === 0 ? "Parse work to name Button runs next." : `${missingNext} row(s) still need a clear Button runs next.`
     },
     {
       label: "Blockers surfaced",
@@ -1573,7 +1829,7 @@ function triageQualityChecks(rows) {
     {
       label: "Evidence ready",
       status: rows.length > 0 && missingEvidence === 0,
-      detail: rows.length === 0 ? "No evidence fields yet." : `${missingEvidence} row(s) missing evidence.`
+      detail: rows.length === 0 ? "Paste or add work to name evidence before handoff." : `${missingEvidence} row(s) missing evidence.`
     }
   ];
 }
@@ -1586,7 +1842,7 @@ function collectTriageSnapshot(rows = normalizedTriageRows()) {
     rows: rows.map((row) => ({
       work: row.work,
       where: row.where,
-      blocker: row.blocker,
+      blocker: blockerDisplayValue(row.blocker),
       buttonRunsNext: row.next,
       evidenceNeeded: row.evidence,
       proofTarget: row.doneWhen
@@ -1597,7 +1853,7 @@ function collectTriageSnapshot(rows = normalizedTriageRows()) {
 
 function triageMarkdown(rows = normalizedTriageRows()) {
   if (!rows.length) {
-    return "# Button Runs Next Triage\n\nNo work rows yet.";
+    return "# Button Runs Next Triage\n\nPaste or add work to create triage rows before copying a handoff.";
   }
 
   const header = [
@@ -1609,7 +1865,7 @@ function triageMarkdown(rows = normalizedTriageRows()) {
   const body = rows.map((row) => [
     row.work,
     row.where,
-    row.blocker,
+    blockerDisplayValue(row.blocker),
     row.next,
     row.evidence,
     row.doneWhen
@@ -1618,11 +1874,14 @@ function triageMarkdown(rows = normalizedTriageRows()) {
 }
 
 function markdownCell(value) {
-  return String(value || "none").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
+  return String(value || DEMO_BLOCKER_NONE_LABEL).replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
 }
 
 function renderWork() {
   const visible = filteredPacks();
+  const emptyWork = state.packs.length === 0
+    ? emptyState("No sample work is available.", "Create sample work or reset demo data.", emptyStateContextFor("Work filters", "no sample work exists in this browser state", "create or reset sample work"))
+    : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.", emptyStateContextFor("Work filters", "current search or status filter hides every sample item", "clear search or choose another status filter"));
   el("screen-content").innerHTML = `
     ${workToolbar("Work filters")}
     <section class="demo-panel">
@@ -1634,7 +1893,7 @@ function renderWork() {
         ${navButton("create", profile().newWork, "btn btn-primary")}
       </div>
       ${routeActionReceiptPanel(visible, "Work filters")}
-      <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.", emptyStateContextFor("Work filters", "current search or status filter hides every sample item", "clear search or choose another status filter"))}</div>
+      <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyWork}</div>
     </section>
   `;
   bindToolbar();
@@ -1644,7 +1903,8 @@ function renderWork() {
 
 function renderToday() {
   const today = state.packs.filter((pack) => pack.due || pack.status === "active");
-  const dueHelp = setDueTodayHelp();
+  const dueState = setDueTodayState("Today");
+  const dueHelp = dueState.help;
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1652,10 +1912,16 @@ function renderToday() {
           <span class="section-label">Today</span>
           <h2>${today.length} sample item(s)</h2>
         </div>
-        <span id="today-set-due-help" class="sr-only">${escapeHtml(dueHelp)}</span>
-        <button class="btn" type="button" data-action="set-due-today"${controlHelpAttributes(false, dueHelp, "today-set-due-help")}>Set all due today</button>
+        <span class="demo-status">${today.length ? "work first" : "empty"}</span>
       </div>
-      <div class="demo-list">${today.length ? today.map(todayRow).join("") : emptyState("No sample work is due today.", "Use Set all due today or edit a work due date.", emptyStateContextFor("Today", "no active or dated sample work is visible", "set all due today or create work"))}</div>
+      <div class="demo-list">${today.length ? today.map(todayRow).join("") : emptyState("No sample work is due today.", "Use Set all due today, create work, or edit a due date.", emptyStateContextFor("Today", "no active or dated sample work is visible", "set all due today, create work, or edit a due date"))}</div>
+      ${optionalDetails("Date tools", "Open for bulk due-date cleanup.", `
+        ${disabledReasonNotice(!dueState.canRun, dueHelp)}
+        <div class="demo-card-actions">
+          <span id="today-set-due-help" class="sr-only">${escapeHtml(dueHelp)}</span>
+          <button class="btn" type="button" data-action="set-due-today"${controlHelpAttributes(!dueState.canRun, dueHelp, "today-set-due-help")}>Set all due today</button>
+        </div>
+      `)}
     </section>
   `;
   bindListActions();
@@ -1687,6 +1953,9 @@ function renderReview() {
   const firstReview = selected && review.some((pack) => pack.id === selected.id) ? selected : review[0] || null;
   const reviewButtonReason = "Where: Review. Blocker: no sample work needs review. Button runs next: create or edit work.";
   const reviewState = firstReview ? `${review.length} needs decision` : "clear";
+  const emptyReview = state.packs.length === 0
+    ? emptyState("No sample work is available.", "Create sample work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Review", "no sample work exists in this browser state", "create sample work, reset demo data, or choose a scenario with work"))
+    : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.", emptyStateContextFor("Review", "no blockers or missing Button-runs-next items are visible", "create or edit work"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1698,7 +1967,7 @@ function renderReview() {
       </div>
       ${disabledReasonNotice(!firstReview, reviewButtonReason)}
       ${routeActionReceiptPanel(review, "Review")}
-      <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.", emptyStateContextFor("Review", "no blockers or missing Button-runs-next items are visible", "create or edit work"))}</div>
+      <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyReview}</div>
     </section>
   `;
   bindListActions();
@@ -1707,7 +1976,7 @@ function renderReview() {
 function renderNext() {
   const pack = currentPack() || state.packs.find(isReview) || state.packs[0];
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("No sample work is available.", "Reset demo data or choose a scenario with sample work.", emptyStateContextFor("Next setup", "no sample work exists in this browser state", "reset demo data or choose a scenario with work"));
+    el("screen-content").innerHTML = emptyState("No sample work is available.", "Create sample work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Next setup", "no sample work exists in this browser state", "create sample work, reset demo data, or choose a scenario with work"));
     return;
   }
 
@@ -1715,6 +1984,7 @@ function renderNext() {
   const nextCommand = resolvePrimaryCommandForPack(pack);
   const saveNextHelp = saveNextChoiceHelp(pack);
   const nextPreviewHelp = nextChoicePreviewHelp(pack, nextCommand);
+  const nextSelectHelp = nextChoiceSelectHelp(pack, nextCommand);
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1724,19 +1994,24 @@ function renderNext() {
         </div>
         <span class="demo-status">${escapeHtml(pack.title)}</span>
       </div>
-      <p>Pick the action to store for this work. The preview shows the button that will actually run after blocker rules apply.</p>
+      <p>Pick what Button runs next stores for this work. The preview shows the button that will actually run after blocker rules apply.</p>
       <div class="demo-command-lines compact" data-next-preview>
         ${factLine("Where", pack.title)}
         ${factLine("Blocker", blockerTextForPack(pack))}
         ${factLine("Button runs next", nextCommand.label)}
       </div>
       <div class="demo-inline-form">
-        <label class="sr-only" for="next-action-choice">Choose next action</label>
-        <select id="next-action-choice" class="demo-search-input" aria-describedby="next-choice-preview-help">
-          ${["Review", "Open", "Focus", "Unblock", "Start", "Done"].map((option) => `<option value="${escapeAttribute(option)}"${option === pack.next ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
-        </select>
+        <label class="demo-field" for="next-action-choice">
+          <span>Button runs next</span>
+          <select id="next-action-choice" class="demo-search-input" aria-describedby="next-choice-preview-help" title="${escapeAttribute(nextSelectHelp)}">
+            ${["Review", "Open", "Focus", "Set Blocker: None", "Start", "Done"].map((option) => {
+              const selected = option === pack.next || (option === "Set Blocker: None" && commandActionForLabel(pack.next).action === "unblock");
+              return `<option value="${escapeAttribute(option)}"${selected ? " selected" : ""}>${escapeHtml(option)}</option>`;
+            }).join("")}
+          </select>
+          <small id="next-choice-preview-help" class="demo-field-help" aria-live="polite">${escapeHtml(nextPreviewHelp)}</small>
+        </label>
         <span id="apply-next-action-help" class="sr-only">${escapeHtml(saveNextHelp)}</span>
-        <p id="next-choice-preview-help" class="demo-field-help" aria-live="polite">${escapeHtml(nextPreviewHelp)}</p>
         <button id="apply-next-action" class="btn btn-primary" type="button"${controlHelpAttributes(false, saveNextHelp, "apply-next-action-help")}>Save Button runs next</button>
       </div>
     </section>
@@ -1758,7 +2033,8 @@ function renderNext() {
 
 function renderCheck() {
   const checks = sampleChecks();
-  const validateHelp = validateSampleHelp();
+  const validateState = validateSampleState();
+  const validateHelp = validateState.help;
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1767,8 +2043,9 @@ function renderCheck() {
           <h2>Sample readiness checks</h2>
         </div>
         <span id="validate-sample-help" class="sr-only">${escapeHtml(validateHelp)}</span>
-        <button class="btn btn-primary" type="button" data-action="validate-sample"${controlHelpAttributes(false, validateHelp, "validate-sample-help")}>Validate sample</button>
+        <button class="btn btn-primary" type="button" data-action="validate-sample"${controlHelpAttributes(!validateState.canRun, validateHelp, "validate-sample-help")}>Validate sample</button>
       </div>
+      ${disabledReasonNotice(!validateState.canRun, validateHelp)}
       <div class="demo-check-list">
         ${checks.map(checkRow).join("")}
       </div>
@@ -1777,8 +2054,26 @@ function renderCheck() {
   bindListActions();
 }
 
-function setDueTodayHelp() {
-  return "Set every unfinished sample work item due today in this browser.";
+function setDueTodayState(surface = "Today") {
+  const unfinished = state.packs.filter((pack) => pack.status !== "done").length;
+  if (state.packs.length === 0) {
+    return {
+      canRun: false,
+      help: `Where: ${surface}. Blocker: no sample work exists. Button runs next: create or reset sample work before setting due dates.`
+    };
+  }
+
+  if (unfinished === 0) {
+    return {
+      canRun: false,
+      help: `Where: ${surface}. Blocker: all sample work is done. Button runs next: create or reopen work before setting due dates.`
+    };
+  }
+
+  return {
+    canRun: true,
+    help: `Where: ${surface}. Blocker: None. Button runs next: set ${unfinished} unfinished sample work item(s) due today in this browser.`
+  };
 }
 
 function todayIsoDate(date = new Date()) {
@@ -1786,18 +2081,37 @@ function todayIsoDate(date = new Date()) {
   return new Date(localTime).toISOString().slice(0, 10);
 }
 
-function dueTodayStatus(date) {
-  return `Where: Today. Blocker: none. Button runs next: review work due ${date}.`;
+function dueTodayStatus(date, updatedCount) {
+  if (state.packs.length === 0) {
+    return "Where: Today. Blocker: no sample work exists. Button runs next: create or reset sample work before setting due dates.";
+  }
+
+  if (updatedCount === 0) {
+    return "Where: Today. Blocker: all sample work is done. Button runs next: create or reopen work before setting due dates.";
+  }
+
+  return `Where: Today. Blocker: None. Button runs next: review ${updatedCount} sample work item(s) due ${date}.`;
 }
 
 function validationStatus(attention) {
+  if (state.packs.length === 0) {
+    return "Where: Check. Blocker: no sample work exists. Button runs next: create or reset sample work before validating.";
+  }
+
   return attention === 0
-    ? "Where: Check. Blocker: none. Button runs next: keep sample ready."
+    ? "Where: Check. Blocker: None. Button runs next: keep sample ready."
     : `Where: Check. Blocker: ${attention} sample check item(s) need attention. Button runs next: fix check items.`;
 }
 
 function saveNextChoiceHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
-  return `Where: Next setup / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: save choice; preview resolves to ${command.label}.`;
+  return `Where: Next setup / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: save choice; preview shows ${command.label}.`;
+}
+
+function nextChoiceSelectHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
+  const blocker = hasBlocker(pack) && command.action !== "unblock"
+    ? "; blocker rules still require review"
+    : "";
+  return `Choose what Button runs next stores on this work${blocker}.`;
 }
 
 function syncNextChoicePreview(pack) {
@@ -1847,21 +2161,36 @@ function nextChoicePreviewHelp(pack, command = resolvePrimaryCommandForPack(pack
   return `After save, Button runs next shows ${command.label}${blocker}.`;
 }
 
+function validateSampleState() {
+  if (state.packs.length === 0) {
+    return {
+      canRun: false,
+      help: "Where: Check. Blocker: no sample work exists. Button runs next: create or reset sample work before validating."
+    };
+  }
+
+  return {
+    canRun: true,
+    help: "Where: Check. Blocker: None. Button runs next: run sample readiness checks and update demo status."
+  };
+}
+
 function validateSampleHelp() {
-  return "Run sample readiness checks and update demo status.";
+  return validateSampleState().help;
 }
 
 function resetDemoHelp() {
-  return "Reset sample work, profile, scenario, and browser-only edits.";
+  return "Reset sample work, profile, scenario, and edits in this browser.";
 }
 
 function renderFocus() {
   const pack = currentPack() || state.packs[0];
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("No sample work is available.", "Reset demo data or choose a scenario with sample work.", emptyStateContextFor("Focus", "no sample work exists in this browser state", "reset demo data or choose a scenario with work"));
+    el("screen-content").innerHTML = emptyState("No sample work is available.", "Create sample work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Focus", "no sample work exists in this browser state", "create sample work, reset demo data, or choose a scenario with work"));
     return;
   }
   const focusCommand = resolvePrimaryCommandForPack(pack);
+  const workflow = workflowStateForPack(pack, focusCommand);
   const doneAction = focusCommand.action === "done"
     ? supportActionButton("done", "Finish with proof", pack)
     : "";
@@ -1874,7 +2203,7 @@ function renderFocus() {
           <span class="section-label">Focused work</span>
           <h2>${escapeHtml(pack.title)}</h2>
         </div>
-        <span class="demo-state-pill">${escapeHtml(pack.status)}</span>
+        <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
       </div>
       <div class="demo-focus-grid">
         ${factBlock("Where", `${profile().work}: ${pack.type}`)}
@@ -1890,8 +2219,8 @@ function renderFocus() {
       </div>
       <details class="demo-card-support">
         <summary>
-          <span>Support setup</span>
-          <strong>Open, edit, or finish</strong>
+          <span>Details</span>
+          <strong>Open for inspect, edit, and proof actions</strong>
         </summary>
         <div class="demo-card-actions compact">
           ${supportActionButton("open", "Open", pack)}
@@ -1909,9 +2238,9 @@ function renderStats() {
   const counts = countByFilter();
   const total = Math.max(state.packs.length, 1);
   el("screen-content").innerHTML = `
-    <div class="kpi-strip demo-grid demo-summary-strip">
+    <div class="demo-grid demo-summary-strip">
       ${metricCard("Active", counts.active ?? 0, "Sample work currently moving.")}
-      ${metricCard("Review", counts.review ?? 0, "Sample work with blockers or missing next actions.")}
+      ${metricCard("Review", counts.review ?? 0, "Sample work with blockers or missing Button runs next.")}
       ${metricCard("Done", counts.done ?? 0, "Sample work marked complete.")}
     </div>
     <section class="demo-panel">
@@ -1931,6 +2260,9 @@ function renderStats() {
 
 function renderNotes() {
   const rows = state.packs.flatMap((pack) => pack.memory.map((note) => ({ pack, note })));
+  const emptyNotes = state.packs.length === 0
+    ? emptyState("No sample notes exist.", "Create sample work or reset demo data before adding memory.", emptyStateContextFor("Notes", "no sample work exists in this browser state", "create or reset sample work"))
+    : emptyState("No sample notes exist.", "Open Memory and add a note to selected work.", emptyStateContextFor("Notes", "no memory notes have been saved in this browser", "open Memory and add a note"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1938,10 +2270,10 @@ function renderNotes() {
           <span class="section-label">Notes</span>
           <h2>Sample notes across work</h2>
         </div>
-        ${navButton("memory", "Add note", "btn btn-primary")}
+        ${navButton("memory", "Open memory", "btn btn-primary")}
       </div>
       <div class="demo-list">
-        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyState("No sample notes exist.", "Open Memory and add a note to selected work.", emptyStateContextFor("Notes", "no memory notes have been saved in this browser", "open Memory and add a note"))}
+        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyNotes}
       </div>
     </section>
   `;
@@ -1950,6 +2282,9 @@ function renderNotes() {
 
 function renderTimeline() {
   const rows = state.packs.flatMap((pack) => pack.activity.map((item, index) => ({ pack, item, index })));
+  const emptyTimeline = state.packs.length === 0
+    ? emptyState("No sample activity exists.", "Create sample work or reset demo data before running Button runs next.", emptyStateContextFor("Timeline", "no sample work exists in this browser state", "create or reset sample work"))
+    : emptyState("No sample activity exists.", "Run Button runs next to add activity.", emptyStateContextFor("Timeline", "no Button-runs-next result has written activity yet", "run Button runs next"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1959,7 +2294,7 @@ function renderTimeline() {
         </div>
       </div>
       <div class="demo-list">
-        ${rows.map(timelineRow).join("") || emptyState("No sample activity exists.", "Run a sample action to add activity.", emptyStateContextFor("Timeline", "no sample action has written activity yet", "run a work action"))}
+        ${rows.map(timelineRow).join("") || emptyTimeline}
       </div>
     </section>
   `;
@@ -1974,7 +2309,7 @@ function renderFiles() {
           <span class="section-label">Files</span>
           <h2>Sample source references</h2>
         </div>
-        <span class="demo-status">No local files are opened in the demo</span>
+        <span class="demo-status">Source links are references in this static demo</span>
       </div>
       <div class="demo-source-list">
         ${rows.map(sourceRow).join("") || emptyState("No sample source references exist.", "Choose a scenario with sample source references.", emptyStateContextFor("Files", "this scenario has no source references", "choose a source-backed scenario"))}
@@ -1989,7 +2324,8 @@ function renderCalendar() {
     .filter((pack) => pack.due)
     .slice()
     .sort((left, right) => left.due.localeCompare(right.due));
-  const dueHelp = setDueTodayHelp();
+  const dueState = setDueTodayState("Calendar");
+  const dueHelp = dueState.help;
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1997,12 +2333,18 @@ function renderCalendar() {
           <span class="section-label">Calendar</span>
           <h2>Sample due dates</h2>
         </div>
-        <span id="calendar-set-due-help" class="sr-only">${escapeHtml(dueHelp)}</span>
-        <button class="btn" type="button" data-action="set-due-today"${controlHelpAttributes(false, dueHelp, "calendar-set-due-help")}>Set all due today</button>
+        <span class="demo-status">${rows.length} dated</span>
       </div>
       <div class="demo-calendar-grid">
-        ${rows.map(calendarCard).join("") || emptyState("No sample due dates exist.", "Use Set all due today or edit a work due date.", emptyStateContextFor("Calendar", "no sample work has a due date", "set all due today or edit a due date"))}
+        ${rows.map(calendarCard).join("") || emptyState("No sample due dates exist.", "Use Set all due today, create work, or edit a due date.", emptyStateContextFor("Calendar", "no sample work has a due date", "set all due today, create work, or edit a due date"))}
       </div>
+      ${optionalDetails("Date tools", "Open for bulk due-date cleanup.", `
+        ${disabledReasonNotice(!dueState.canRun, dueHelp)}
+        <div class="demo-card-actions">
+          <span id="calendar-set-due-help" class="sr-only">${escapeHtml(dueHelp)}</span>
+          <button class="btn" type="button" data-action="set-due-today"${controlHelpAttributes(!dueState.canRun, dueHelp, "calendar-set-due-help")}>Set all due today</button>
+        </div>
+      `)}
     </section>
   `;
   bindListActions();
@@ -2010,6 +2352,9 @@ function renderCalendar() {
 
 function renderSearch() {
   const visible = filteredPacks();
+  const emptySearch = state.packs.length === 0
+    ? emptyState("No sample work is available.", "Create sample work or reset demo data before searching.", emptyStateContextFor("Search", "no sample work exists in this browser state", "create or reset sample work"))
+    : emptyState("No sample work matches the search.", "Clear search or try title, owner, due date, or Button runs next.", emptyStateContextFor("Search", "search text hides every sample item", "clear search or try title, owner, due date, or Button runs next"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -2020,8 +2365,8 @@ function renderSearch() {
         <span class="demo-status">${visible.length} match(es)</span>
       </div>
       <label class="sr-only" for="screen-search">Search demo work</label>
-      <input id="screen-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search title, owner, next action, source, or due date">
-      <div class="demo-work-list demo-search-results">${visible.map(workCard).join("") || emptyState("No sample work matches the search.", "Clear search or try title, owner, due date, or next action.", emptyStateContextFor("Search", "search text hides every sample item", "clear search or try title, owner, due date, or next action"))}</div>
+      <input id="screen-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search title, owner, Button runs next, source, or due date">
+      <div class="demo-work-list demo-search-results">${visible.map(workCard).join("") || emptySearch}</div>
     </section>
   `;
   el("screen-search").addEventListener("input", (event) => {
@@ -2044,11 +2389,11 @@ function renderCreate() {
         <span class="demo-status">Browser state only</span>
       </div>
       <div class="demo-form-grid">
-        ${inputField("new-title", "Title", defaults.title)}
-        ${inputField("new-owner", "Owner", defaults.owner)}
-        ${inputField("new-next", "Button runs next", defaults.next)}
-        ${inputField("new-due", "Due", defaults.due)}
-        ${textField("new-purpose", "Why it matters", defaults.purpose)}
+        ${inputField("new-title", "Title", defaults.title, "Name the work item that should appear in the list.")}
+        ${inputField("new-owner", "Owner", defaults.owner, "Use a person, team, or role responsible for Button runs next.")}
+        ${inputField("new-next", "Button runs next", defaults.next, "Choose what Button runs next should run first.")}
+        ${inputField("new-due", "Due", defaults.due, "Optional date used by Today and Calendar views.")}
+        ${textField("new-purpose", "Why it matters", defaults.purpose, "Short context for why this sample work exists.")}
       </div>
       <p id="create-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(createState.help)}</p>
       <button id="create-sample" class="btn btn-primary" type="button" aria-describedby="create-save-help"${disabledReasonAttributes(!createState.canSave, createState.help)}>Save sample</button>
@@ -2061,14 +2406,16 @@ function renderCreate() {
 function renderPackDetail() {
   const pack = currentPack();
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("Choose sample work before opening the work path.", "Open Work or Review and choose a work card.", emptyStateContextFor("Work path", "no sample work is selected", "open Work or Review and choose a work card"));
+    el("screen-content").innerHTML = state.packs.length === 0
+      ? emptyState("No sample work is available.", "Create sample work or reset demo data.", emptyStateContextFor("Work path", "no sample work exists in this browser state", "create or reset sample work"))
+      : emptyState("Choose sample work before opening the work path.", "Open Work or Review and choose a work card.", emptyStateContextFor("Work path", "no sample work is selected", "open Work or Review and choose a work card"));
     return;
   }
   const packCommand = resolvePrimaryCommandForPack(pack);
-  const doneAction = packCommand.action === "done"
-    ? supportActionButton("done", "Finish with proof", pack)
-    : "";
+  const routeCommand = commandForRoute(pack, filteredPacks().length, state.packs.filter(isReview).length);
+  const workflow = workflowStateForPack(pack, packCommand);
   const saveState = packDetailSaveState(pack);
+  const showOwnerInline = ownerSupportNeededForPack(pack);
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-edit-panel" id="pack-edit-form" data-pack-id="${escapeAttribute(pack.id)}">
       <div class="demo-panel-head">
@@ -2076,47 +2423,46 @@ function renderPackDetail() {
           <span class="section-label">Selected work</span>
           <h2 id="pack-detail-title">${escapeHtml(pack.title)}</h2>
         </div>
-        <span class="demo-status">Edits are browser-only</span>
+        <span class="demo-status">Edits stay in this browser</span>
       </div>
       <div class="demo-forward-panel" data-forward-motion="pack-detail">
         <div class="demo-forward-head">
-          <span class="section-label">Forward path</span>
+          <span class="section-label">Work path</span>
           <strong>${escapeHtml(packCommand.label)}</strong>
         </div>
-        <div class="demo-command-lines compact">
-          ${factLine("Where", `${pack.title} / ${pack.status}`)}
-          ${factLine("Blocker", blockerTextForPack(pack))}
-          ${factLine("Button runs next", packCommand.label)}
-        </div>
-        ${workPathStrip(pack, packCommand)}
+        ${workPathSummary(pack, packCommand, workflow)}
         <div class="demo-form-grid demo-forward-fields">
-          ${selectField("edit-status", "Status", ["draft", "active", "blocked", "done"], pack.status)}
           ${blockerStateField(pack)}
-          ${inputField("edit-next", "Button runs next", pack.next)}
-          ${inputField("edit-done-when", "Proof target", pack.doneWhen)}
+          ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : ""}
+          ${inputField("edit-next", "Button runs next", editableButtonRunsNextValue(pack.next), "This controls what Button runs next does for the selected work.")}
+          ${inputField("edit-done-when", "Proof target", pack.doneWhen, "Describe the evidence needed before this work is done.")}
         </div>
       </div>
       <details class="demo-support-details" data-support-details="pack-detail">
         <summary>
-          <span>Support fields</span>
-          <strong>Open only to clarify owner, due date, or purpose</strong>
+          <span>More fields</span>
+          <strong>${escapeHtml(supportDetailsSummary(showOwnerInline))}</strong>
         </summary>
         <div class="demo-form-grid">
-        ${inputField("edit-title", "Title", pack.title)}
-          ${inputField("edit-owner", "Owner", pack.owner)}
-          ${inputField("edit-due", "Due", pack.due)}
-          ${textField("edit-purpose", "Purpose", pack.purpose)}
+          ${inputField("edit-title", "Title", pack.title, "Renames this sample work item.")}
+          ${showOwnerInline ? "" : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
+          ${inputField("edit-due", "Due", pack.due, "Optional date used by Today and Calendar views.")}
+          ${textField("edit-purpose", "Purpose", pack.purpose, "Extra context; keep the main work path above focused.")}
         </div>
       </details>
       ${relevantMemoryStrip(pack)}
-      <div class="demo-card-actions">
-        <button id="save-pack" class="btn btn-primary" type="button" aria-describedby="pack-save-help"${disabledReasonAttributes(!saveState.canSave, saveState.help)}>Save forward path</button>
-        ${doneAction}
+      <div class="demo-card-actions demo-forward-actions">
+        ${packPrimaryActionButton(routeCommand)}
+        <button id="save-pack" class="btn" type="button" aria-describedby="pack-save-help"${disabledReasonAttributes(!saveState.canSave, saveState.help)}>Save work path</button>
       </div>
       <p id="pack-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(saveState.help)}</p>
     </section>
     ${activityPanel(pack)}
   `;
+  el("pack-primary-action")?.addEventListener("click", (event) => {
+    queueFocus(focusKindForAction(event.currentTarget.dataset.action), event.currentTarget.dataset.pack || pack.id);
+    runPrimaryAction(event.currentTarget);
+  });
   el("save-pack").addEventListener("click", () => savePackDetail(pack.id));
   bindPackDetailValidation(pack);
   bindListActions();
@@ -2134,7 +2480,7 @@ function renderMemory() {
         </div>
         <span class="demo-status">Stored in this browser</span>
       </div>
-      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${pack.title}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Choose sample work before adding memory.", emptyStateContextFor("Memory", "no sample work is selected", "choose work before adding memory"))}</div>
+      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${pack.title}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create sample work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no sample work exists in this browser state", "create or reset sample work"))}</div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
         <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a sample memory note">
@@ -2159,15 +2505,16 @@ function renderMemory() {
 }
 
 function blockerStateField(pack) {
-  const hasBlocker = Boolean(pack && pack.blocker && pack.blocker !== "none");
-  const blocker = hasBlocker ? pack.blocker : "";
+  const blockerState = blockerStateForPack(pack);
+  const hasBlocker = blockerState.hasBlocker;
+  const blocker = hasBlocker ? blockerState.reason : "";
   return `
-    <fieldset class="demo-field demo-blocker-field" data-blocker-field>
-      <legend>Blocker state</legend>
-      <div class="demo-segmented-control" role="radiogroup" aria-label="Blocker state">
+      <fieldset class="demo-field demo-blocker-field" data-blocker-field>
+      <legend>Blocker</legend>
+      <div class="demo-segmented-control" role="radiogroup" aria-label="Blocker value">
         <label class="demo-segment${hasBlocker ? "" : " active"}" data-blocker-mode-label="clear" for="edit-blocker-clear">
           <input id="edit-blocker-clear" name="edit-blocker-mode" type="radio" value="clear" data-blocker-mode="clear"${hasBlocker ? "" : " checked"}>
-          <span>Unblocked</span>
+          <span>None</span>
         </label>
         <label class="demo-segment${hasBlocker ? " active" : ""}" data-blocker-mode-label="set" for="edit-blocker-set">
           <input id="edit-blocker-set" name="edit-blocker-mode" type="radio" value="set" data-blocker-mode="set"${hasBlocker ? " checked" : ""}>
@@ -2176,12 +2523,41 @@ function blockerStateField(pack) {
       </div>
       <div class="demo-blocker-reason" data-blocker-reason${hasBlocker ? "" : " hidden"}>
         <label for="edit-blocker">Why blocked?</label>
-        <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="missing owner, source, approval..."${hasBlocker ? "" : " disabled"}>
+        <small class="demo-field-help">Choose a common reason, or write the reason that must clear before the button can run.</small>
+        ${blockerPresetButtons(blocker)}
+        <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="missing owner, source, approval..." aria-describedby="edit-blocker-help"${hasBlocker ? "" : disabledReasonAttributes(true, blockerInputDisabledReason())}>
       </div>
-      <p class="demo-field-help" data-blocker-help>${hasBlocker ? "Describe what must be cleared before the next action." : "Unblocked stores Blocker: none automatically; no typing required."}</p>
-      <p class="demo-blocker-resolution" data-blocker-resolution hidden aria-live="polite"></p>
+      <p id="edit-blocker-help" class="demo-field-help" data-blocker-help>${hasBlocker ? "Blocked pauses Button runs next until this reason clears." : "None stores Blocker: None automatically; no typing required."}</p>
+      <div class="demo-blocker-resolution" data-blocker-resolution hidden aria-live="polite">
+        <span data-blocker-resolution-copy></span>
+        <button class="btn btn-sm" type="button" data-clear-owner-blocker>Set Blocker: None</button>
+      </div>
     </fieldset>
   `;
+}
+
+function blockerPresetButtons(currentBlocker = "") {
+  const current = normalizeCopy(currentBlocker).toLowerCase();
+  return `<div class="demo-blocker-presets" aria-label="Common blocker reasons">
+    ${BLOCKER_REASON_PRESETS.map((preset) => {
+      const active = normalizeCopy(preset).toLowerCase() === current;
+      return `<button class="demo-blocker-preset${active ? " active" : ""}" type="button" data-blocker-preset="${escapeAttribute(preset)}" aria-pressed="${active}">${escapeHtml(preset)}</button>`;
+    }).join("")}
+  </div>`;
+}
+
+function workflowStatePreviewField(workflow) {
+  const label = workflow?.label || "Choose work";
+  const help = workflow?.help || "Choose work before editing the work path.";
+  return `<div class="demo-field demo-state-preview" data-workflow-state-preview-field>
+    <span>State</span>
+    <strong data-workflow-state-preview title="${escapeAttribute(help)}">${escapeHtml(label)}</strong>
+    <small data-workflow-state-help>${escapeHtml(help)}</small>
+  </div>`;
+}
+
+function blockerInputDisabledReason() {
+  return "Where: Blocker. Blocker: None is selected. Button runs next: choose Blocked before typing a blocker reason.";
 }
 
 function renderSettings() {
@@ -2198,7 +2574,7 @@ function renderSettings() {
         <span id="reset-demo-help" class="sr-only">${escapeHtml(resetHelp)}</span>
         <button class="btn" type="button" id="reset-demo"${controlHelpAttributes(false, resetHelp, "reset-demo-help")}>Reset demo data</button>
       </div>
-      <p>Copy profile changes labels in this static demo. Sample edits stay in this browser only; ontology, local methods, and real pack storage are untouched.</p>
+      <p>Copy profile changes labels in this static demo. Sample edits stay in this browser only; real app data is untouched.</p>
       <p class="demo-status-line" title="${escapeAttribute(statusHelp)}" aria-label="${escapeAttribute(statusHelp)}">${escapeHtml(statusVisible)}</p>
       <h3>Profile</h3>
       <div class="demo-profile-grid">
@@ -2209,15 +2585,16 @@ function renderSettings() {
           </button>
         `).join("")}
       </div>
-      <h3>Scenario presets</h3>
-      <div class="demo-scenario-grid">
-        ${DEMO_SCENARIOS.map((item) => `
-          <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}"${controlLabelAttributes(scenarioCardHelp(item, state.scenarioId === item.id))}>
-            <strong>${escapeHtml(item.label)}</strong>
-            <span>${escapeHtml(item.description)}</span>
-          </button>
-        `).join("")}
-      </div>
+      ${optionalDetails("Scenarios", "Open for demo presets that replace the sample work state.", `
+        <div class="demo-scenario-grid">
+          ${DEMO_SCENARIOS.map((item) => `
+            <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}"${controlLabelAttributes(scenarioCardHelp(item, state.scenarioId === item.id))}>
+              <strong>${escapeHtml(item.label)}</strong>
+              <span>${escapeHtml(item.description)}</span>
+            </button>
+          `).join("")}
+        </div>
+      `)}
     </section>
   `;
   document.querySelectorAll(".demo-profile-card").forEach((button) => {
@@ -2249,24 +2626,26 @@ function renderHealth() {
       <div class="demo-check-list">
         ${checks.map(healthLine).join("")}
       </div>
+      ${optionalDetails("Counts", "Open for sample counts and current route facts.", `
+        <div class="demo-grid">
+          ${metricCard("Data", state.packs.length, "Loaded sample packs for this demo.")}
+          ${metricCard("Checks", checks.filter((check) => check.status).length, "Passing health checks.")}
+          ${metricCard("Total checks", checks.length, "All expected demo checks.")}
+          ${metricCard("Scenario", state.scenarioId, "Current scenario library preset.")}
+        </div>
+      `)}
       <p><small>Snapshot generated: ${escapeHtml(now)}</small></p>
     </section>
-    <div class="demo-grid">
-      ${metricCard("Data", state.packs.length, "Loaded sample packs for this demo.")}
-      ${metricCard("Checks", checks.filter((check) => check.status).length, "Passing health checks.")}
-      ${metricCard("Checks total", checks.length, "All expected telemetry checks.")}
-      ${metricCard("Scenario", state.scenarioId, "Current scenario library preset.")}
-    </div>
   `;
 }
 
 function renderFeedback() {
-  const context = collectDiagnosticContext();
   const issueTitle = `Projects static demo issue (${stateVersionLabel()})`;
-  const issueBody = `Context:\n\n${JSON.stringify(context, null, 2)}`;
+  const issueBody = feedbackIssueBody();
   const issueUrl = `${DEMO_ISSUE_URL}?title=${encodeURIComponent(issueTitle)}&labels=demo%2Cfeedback&body=${encodeURIComponent(issueBody)}`;
-  const copyFeedbackHelp = clipboardStatus("Feedback", "copy diagnostic context into issue body");
-  const openFeedbackHelp = routeStatus("Feedback", "none", "open the prefilled GitHub issue");
+  const copyFeedbackHelp = clipboardStatus("Feedback", "copy issue context into the issue body");
+  const openFeedbackHelp = routeStatus("Feedback", DEMO_BLOCKER_NONE, "open the prefilled GitHub issue");
+  const feedbackContextHelp = "Review or edit the issue context before copying it into a GitHub issue.";
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -2276,11 +2655,7 @@ function renderFeedback() {
         </div>
         <span class="demo-status">${escapeHtml(stateVersionLabel())}</span>
       </div>
-      <p>Attach pre-filled environment context, or copy it and paste into the issue body.</p>
-      <div class="${copyPayloadClass("feedback-context")}">
-        <label class="sr-only" for="feedback-context">Demo diagnostic context</label>
-        <textarea id="feedback-context" class="demo-search-input" rows="10">${escapeHtml(issueBody)}</textarea>
-      </div>
+      <p>Copy the current demo context or open a pre-filled GitHub issue. The raw issue text is available below if you want to inspect it first.</p>
       <div class="demo-card-actions">
         <span id="copy-feedback-help" class="sr-only">${escapeHtml(copyFeedbackHelp)}</span>
         <span id="open-feedback-help" class="sr-only">${escapeHtml(openFeedbackHelp)}</span>
@@ -2288,16 +2663,33 @@ function renderFeedback() {
         <a class="btn btn-primary" id="open-feedback" href="${escapeAttribute(issueUrl)}" rel="noopener noreferrer" target="_blank"${controlHelpAttributes(false, openFeedbackHelp, "open-feedback-help")}>Open GitHub issue</a>
       </div>
       ${clipboardNoticePanel("copy-feedback")}
+      ${optionalDetails("Issue text", "Open for copyable context before filing feedback.", `
+        <div class="${copyPayloadClass("feedback-context")}">
+          <label class="sr-only" for="feedback-context">Demo issue context</label>
+          <textarea id="feedback-context" class="demo-search-input" rows="10"${fieldHelpAttributes("feedback-context-help", feedbackContextHelp)}>${escapeHtml(issueBody)}</textarea>
+          ${fieldHelp("feedback-context", feedbackContextHelp)}
+        </div>
+      `, "", `data-support-details="feedback-context" ${detailsOpenAttribute("feedback-context")}`)}
     </section>
   `;
-  el("copy-feedback").addEventListener("click", () => copyToClipboard(issueBody, copyFeedbackHelp, {
+  el("copy-feedback").addEventListener("click", copyFeedbackContext);
+  el("open-feedback").addEventListener("click", () => {
+        state.status = routeStatus("Feedback", DEMO_BLOCKER_NONE, "review the prefilled GitHub issue");
+  });
+}
+
+function feedbackIssueBody() {
+  const context = collectDiagnosticContext();
+  return `Context:\n\n${JSON.stringify(context, null, 2)}`;
+}
+
+function copyFeedbackContext() {
+  const copyFeedbackHelp = clipboardStatus("Feedback", "copy issue context into the issue body");
+  copyToClipboard(valueOf("feedback-context") || feedbackIssueBody(), copyFeedbackHelp, {
     controlId: "copy-feedback",
     targetId: "feedback-context",
-    title: "Feedback context copied",
-    detail: "Diagnostic context is on the clipboard for the issue body."
-  }));
-  el("open-feedback").addEventListener("click", () => {
-    state.status = routeStatus("Feedback", "none", "review the prefilled GitHub issue");
+      title: "Issue context copied",
+      detail: "The issue context is on the clipboard."
   });
 }
 
@@ -2308,62 +2700,77 @@ function renderMeta() {
   const context = collectDiagnosticContext();
   const styleAudit = buildStyleAuditSnapshot();
   const now = new Date().toLocaleString();
-  const copyMetaHelp = clipboardStatus("Meta", "copy metadata and command context");
-  const copyStyleAuditHelp = clipboardStatus("Meta", "copy shipped asset style audit");
+  const copyMetaHelp = clipboardStatus("Meta", "copy build and current path context");
+  const copyStyleAuditHelp = clipboardStatus("Meta", "copy shipped file check");
+  const metaContextHelp = "Review or edit the current build snapshot before copying it for handoff.";
+  const styleAuditHelp = "Review or edit the shipped file check before copying it for review.";
 
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
         <div>
-          <span class="section-label">Product telemetry</span>
-          <h2>Demo meta dashboard</h2>
+          <span class="section-label">Demo checks</span>
+          <h2>Build snapshot</h2>
         </div>
         <span class="demo-status">${escapeHtml(context.version || stateVersionLabel())}</span>
       </div>
-      <p>A compact product-like summary from this browser's sample state and runtime checks.</p>
+      <p>A compact summary from this browser's sample work and live checks.</p>
       <div class="demo-grid">
-        ${metricCard("Version", context.version || stateVersionLabel(), "Build label from demo metadata.")}
+        ${metricCard("Version", context.version || stateVersionLabel(), "Build label from the exported demo.")}
         ${metricCard("Scenario", state.scenarioId, "Active demo preset.")}
         ${metricCard("Review", counts.review, "Needs follow-up in current demo state.")}
         ${metricCard("Health", `${passing}/${checks.length}`, "Checks passing now.")}
       </div>
-      <div class="demo-check-list">
-        ${checks.map(healthLine).join("")}
-      </div>
-      <div class="demo-panel-head">
-        <div>
-          <span class="section-label">Style audit</span>
-          <h2>Shipped asset budget</h2>
-        </div>
-        <span class="demo-status">${escapeHtml(styleAudit.status)}</span>
-      </div>
-      <div class="demo-grid">
-        ${metricCard("Demo CSS", styleAuditMetric("demoCss", "lines"), styleAuditDetail("demoCss"))}
-        ${metricCard("Product CSS", styleAuditMetric("productCss", "lines"), styleAuditDetail("productCss"))}
-        ${metricCard("CSS total", formatBytes(styleAudit.totals.cssBytes), `${styleAudit.totals.cssLines} CSS LOC shipped.`)}
-        ${metricCard("Routes", styleAudit.routeCount, `${navItems.length} nav routes plus work path.`)}
-      </div>
-      <div class="demo-check-list">
-        ${styleAuditChecks().map(healthLine).join("")}
-      </div>
-      <div class="demo-grid">
-        ${metricCard("Active packs", counts.active, "Packs ready to act on.")}
-        ${metricCard("Blocked packs", counts.blocked, "Packs requiring action or missing next step.")}
-        ${metricCard("Done packs", counts.done, "Completed sample packs.")}
-        ${metricCard("All packs", counts.all, "Total packs loaded.")}
-      </div>
-      <div class="${copyPayloadClass("meta-context")}">
-        <label class="sr-only" for="meta-context">Meta context payload</label>
-        <textarea id="meta-context" class="demo-search-input" rows="8">${escapeHtml(JSON.stringify(context, null, 2))}</textarea>
-      </div>
-      <div class="demo-card-actions">
-        <span id="copy-meta-context-help" class="sr-only">${escapeHtml(copyMetaHelp)}</span>
-        <span id="copy-style-audit-help" class="sr-only">${escapeHtml(copyStyleAuditHelp)}</span>
-        ${copyButton("copy-meta-context", "Copy meta snapshot", "btn", copyMetaHelp, "copy-meta-context-help")}
-        ${copyButton("copy-style-audit", "Copy style audit", "btn", copyStyleAuditHelp, "copy-style-audit-help")}
-      </div>
       ${clipboardNoticePanel("copy-meta-context")}
       ${clipboardNoticePanel("copy-style-audit")}
+      ${optionalDetails("Proof", "Open for live checks, shipped files, and copyable snapshots.", `
+        <div class="demo-detail-section">
+          <h3>Live checks</h3>
+          <div class="demo-check-list">
+            ${checks.map(healthLine).join("")}
+          </div>
+        </div>
+        <div class="demo-detail-section">
+          <h3>Static files</h3>
+          <div class="demo-grid">
+            ${metricCard("Demo CSS", styleAuditMetric("demoCss", "lines"), styleAuditDetail("demoCss"))}
+            ${metricCard("Product CSS", styleAuditMetric("productCss", "lines"), styleAuditDetail("productCss"))}
+            ${metricCard("CSS total", formatBytes(styleAudit.totals.cssBytes), `${styleAudit.totals.cssLines} CSS lines shipped.`)}
+            ${metricCard("Routes", styleAudit.routeCount, `${navItems.length} nav routes plus work path.`)}
+          </div>
+          <div class="demo-check-list">
+            ${styleAuditChecks().map(healthLine).join("")}
+          </div>
+        </div>
+        <div class="demo-detail-section">
+          <h3>Work counts</h3>
+          <div class="demo-grid">
+            ${metricCard("Active packs", counts.active, "Packs ready to act on.")}
+            ${metricCard("Blocked packs", counts.blocked, "Packs blocked or missing Button runs next.")}
+            ${metricCard("Done packs", counts.done, "Completed sample packs.")}
+            ${metricCard("All packs", counts.all, "Total packs loaded.")}
+          </div>
+        </div>
+        <div class="demo-detail-section">
+          <h3>Copy proof</h3>
+          <div class="${copyPayloadClass("meta-context")}">
+            <label class="sr-only" for="meta-context">Build snapshot text</label>
+            <textarea id="meta-context" class="demo-search-input" rows="8"${fieldHelpAttributes("meta-context-help", metaContextHelp)}>${escapeHtml(JSON.stringify(context, null, 2))}</textarea>
+            ${fieldHelp("meta-context", metaContextHelp)}
+          </div>
+          <div class="${copyPayloadClass("style-audit")}">
+            <label class="sr-only" for="style-audit">Shipped file check text</label>
+            <textarea id="style-audit" class="demo-search-input" rows="8"${fieldHelpAttributes("style-audit-help", styleAuditHelp)}>${escapeHtml(JSON.stringify(styleAudit, null, 2))}</textarea>
+            ${fieldHelp("style-audit", styleAuditHelp)}
+          </div>
+          <div class="demo-card-actions">
+            <span id="copy-meta-context-help" class="sr-only">${escapeHtml(copyMetaHelp)}</span>
+            <span id="copy-style-audit-help" class="sr-only">${escapeHtml(copyStyleAuditHelp)}</span>
+            ${copyButton("copy-meta-context", "Copy meta snapshot", "btn", copyMetaHelp, "copy-meta-context-help")}
+            ${copyButton("copy-style-audit", "Copy file check", "btn", copyStyleAuditHelp, "copy-style-audit-help")}
+          </div>
+        </div>
+      `, "", detailsOpenAttribute("meta-context", "style-audit"))}
       <p><small>Snapshot generated: ${escapeHtml(now)}</small></p>
     </section>
   `;
@@ -2372,15 +2779,15 @@ function renderMeta() {
       controlId: "copy-meta-context",
       targetId: "meta-context",
       title: "Meta snapshot copied",
-      detail: "The current route, command context, metadata, and style audit summary are on the clipboard."
+      detail: "The current route, Current path, build, and file summary are on the clipboard."
     });
   });
   el("copy-style-audit").addEventListener("click", () => {
-    copyToClipboard(JSON.stringify(styleAudit, null, 2), clipboardStatus("Meta", "share the style audit"), {
+    copyToClipboard(JSON.stringify(styleAudit, null, 2), clipboardStatus("Meta", "share the file check"), {
       controlId: "copy-style-audit",
-      targetId: "meta-context",
-      title: "Style audit copied",
-      detail: "The shipped asset audit is on the clipboard."
+      targetId: "style-audit",
+      title: "File check copied",
+      detail: "The shipped file check is on the clipboard."
     });
   });
 }
@@ -2388,6 +2795,7 @@ function renderMeta() {
 function renderLab() {
   const pack = currentPack() || preferredReviewPack();
   const action = resolvePrimaryCommandForPack(pack);
+  const workflow = workflowStateForPack(pack, action);
   const styleAudit = buildStyleAuditSnapshot();
   const initialChecks = labSmokeChecks(pack, styleAudit);
   const snapshot = collectLabSnapshot(pack, action, styleAudit, initialChecks);
@@ -2395,10 +2803,11 @@ function renderLab() {
   const labPackSelectHelp = labPackSelectReason(state.packs.length > 0);
   const labRunHelp = pack ? labRunActionHelp(pack, action) : noPackReason;
   const labSetNextHelp = pack ? labSetNextActionHelp(pack) : noPackReason;
-  const copyLabSnapshotHelp = clipboardStatus("Demo Lab", "copy lab snapshot JSON");
+  const copyLabSnapshotHelp = clipboardStatus("Demo Lab", "copy workflow snapshot");
+  const labSnapshotHelp = "Review or edit the workflow snapshot before copying it as evidence.";
   const labOptions = state.packs.length
     ? state.packs.map((item) => `<option value="${escapeAttribute(item.id)}"${item.id === pack?.id ? " selected" : ""}>${escapeHtml(item.title)} / ${escapeHtml(resolvePrimaryCommandForPack(item).label)}</option>`).join("")
-    : `<option value="" selected>No sample work: reset demo data or choose a scenario</option>`;
+    : `<option value="" selected>No sample work: create, reset, or choose scenario</option>`;
 
   if (pack && pack.id !== state.selectedId) {
     state.selectedId = pack.id;
@@ -2409,15 +2818,15 @@ function renderLab() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Demo Lab</span>
-          <h2>Command simulator</h2>
+          <h2>Button-runs-next test</h2>
         </div>
         <span class="demo-status">${escapeHtml(action.label)}</span>
       </div>
-      <p>Pick sample work, inspect the blocker, then run the same Button-runs-next action shown in the command brief.</p>
+      <p>Pick sample work, inspect the blocker, then run the same Button runs next shown in Current path.</p>
       <div class="demo-grid">
-        ${metricCard("Selected", pack?.title || "none", pack ? `${pack.status} / ${pack.owner}` : "No sample work selected.")}
+    ${metricCard("Selected", pack?.title || "Choose sample work", pack ? `${workflow.label} / ${pack.owner}` : "Choose sample work to inspect its path.")}
         ${metricCard("Blocker", blockerTextForPack(pack), "The reason the work needs attention.")}
-        ${metricCard("Runs next", action.label, "The primary action is resolved from selected work.")}
+        ${metricCard("Runs next", action.label, "Selected work shows this Button-runs-next value.")}
       </div>
       <div class="demo-inline-form">
         <label class="sr-only" for="lab-pack-select">Choose work for demo lab</label>
@@ -2432,53 +2841,38 @@ function renderLab() {
         ${disabledReasonNotice(!pack, noPackReason)}
       </div>
       <div class="demo-command-lines compact">
-        ${factLine("Where", pack?.title || "No sample work selected")}
+        ${factLine("Where", pack?.title || "Choose sample work")}
         ${factLine("Blocker", blockerTextForPack(pack))}
         ${factLine("Button runs next", action.label)}
       </div>
-    </section>
-    <section class="demo-panel">
-      <div class="demo-panel-head">
-        <div>
-          <span class="section-label">Budget graph</span>
-          <h2>Static asset weight</h2>
+      ${optionalDetails("Proof", "Open for route checks, file sizes, and copyable workflow snapshot.", `
+        <div class="demo-detail-section">
+          <h3>Route checks</h3>
+          <div id="lab-smoke-checks" class="demo-check-list">
+            ${initialChecks.map(healthLine).join("")}
+          </div>
         </div>
-        <span class="demo-status">${escapeHtml(styleAudit.status)}</span>
-      </div>
-      <div class="demo-stat-list">
-        ${styleAudit.assets.map((asset) => assetBudgetRow(asset, styleAudit.totals.bytes)).join("")}
-      </div>
-    </section>
-    <section class="demo-panel">
-      <div class="demo-panel-head">
-        <div>
-          <span class="section-label">Smoke replay</span>
-          <h2>What the demo proves now</h2>
+        <div class="demo-detail-section">
+          <h3>Static files</h3>
+          <div class="demo-stat-list">
+            ${styleAudit.assets.map((asset) => assetBudgetRow(asset, styleAudit.totals.bytes)).join("")}
+          </div>
         </div>
-        <span class="demo-status">${escapeHtml(styleAudit.currentRoute)}</span>
-      </div>
-      <div id="lab-smoke-checks" class="demo-check-list">
-        ${initialChecks.map(healthLine).join("")}
-      </div>
-    </section>
-    <section class="demo-panel">
-      <div class="demo-panel-head">
-        <div>
-          <span class="section-label">Debug packet</span>
-          <h2>Lab snapshot</h2>
+        <div class="demo-detail-section">
+          <h3>Workflow snapshot</h3>
+          <div class="${copyPayloadClass("lab-snapshot")}">
+            <label class="sr-only" for="lab-snapshot">Workflow snapshot text</label>
+            <textarea id="lab-snapshot" class="demo-search-input" rows="10"${fieldHelpAttributes("lab-snapshot-help", labSnapshotHelp)}>${escapeHtml(JSON.stringify(snapshot, null, 2))}</textarea>
+            ${fieldHelp("lab-snapshot", labSnapshotHelp)}
+          </div>
+          <div class="demo-card-actions">
+            <span id="copy-lab-snapshot-help" class="sr-only">${escapeHtml(copyLabSnapshotHelp)}</span>
+            ${copyButton("copy-lab-snapshot", "Copy workflow snapshot", "btn btn-primary", copyLabSnapshotHelp, "copy-lab-snapshot-help")}
+            ${navButton("meta", "Open meta")}
+          </div>
+          ${clipboardNoticePanel("copy-lab-snapshot")}
         </div>
-        <span class="demo-status">copyable</span>
-      </div>
-      <div class="${copyPayloadClass("lab-snapshot")}">
-        <label class="sr-only" for="lab-snapshot">Lab snapshot payload</label>
-        <textarea id="lab-snapshot" class="demo-search-input" rows="10">${escapeHtml(JSON.stringify(snapshot, null, 2))}</textarea>
-      </div>
-      <div class="demo-card-actions">
-        <span id="copy-lab-snapshot-help" class="sr-only">${escapeHtml(copyLabSnapshotHelp)}</span>
-        ${copyButton("copy-lab-snapshot", "Copy lab snapshot", "btn btn-primary", copyLabSnapshotHelp, "copy-lab-snapshot-help")}
-        ${navButton("meta", "Open meta")}
-      </div>
-      ${clipboardNoticePanel("copy-lab-snapshot")}
+      `, "", detailsOpenAttribute("lab-snapshot"))}
     </section>
   `;
 
@@ -2502,12 +2896,14 @@ function syncLabRenderedSmokeChecks(pack, action, styleAudit) {
 
 function labPackSelectReason(hasWork) {
   return hasWork
-    ? "Where: Demo Lab. Blocker: none. Button runs next: choose sample work to preview its next action."
-    : "Where: Demo Lab. Blocker: no sample work is available. Button runs next: reset demo data or choose a scenario with work.";
+    ? "Where: Demo Lab. Blocker: None. Button runs next: choose sample work to preview Button runs next."
+    : "Where: Demo Lab. Blocker: no sample work is available. Button runs next: create sample work, reset demo data, or choose a scenario with work.";
 }
 
 function labNoPackReason() {
-  return "Where: Demo Lab. Blocker: no sample work is selected. Button runs next: reset demo data or choose a scenario with work.";
+  return state.packs.length === 0
+    ? "Where: Demo Lab. Blocker: no sample work exists. Button runs next: create sample work, reset demo data, or choose a scenario with work."
+    : "Where: Demo Lab. Blocker: no sample work is selected. Button runs next: choose sample work.";
 }
 
 function labRunActionHelp(pack, action) {
@@ -2557,7 +2953,12 @@ function filterLabel(filterKey) {
 }
 
 function noSelectedWorkStatus(next = "choose work") {
-  return `Where: none. Blocker: no sample work selected. Button runs next: ${next}.`;
+  if (state.packs.length === 0) {
+    const emptyNext = next === "choose work" ? "create or reset sample work" : next;
+    return `Where: No work loaded. Blocker: no sample work exists. Button runs next: ${emptyNext}.`;
+  }
+
+  return `Where: No work selected. Blocker: choose a sample work item. Button runs next: ${next}.`;
 }
 
 function selectedWorkStatus(surface, pack, next = resolvePrimaryCommandForPack(pack).label) {
@@ -2576,13 +2977,16 @@ function scenarioCardHelp(scenario, active) {
 
 function boardColumn(status) {
   const packs = state.packs.filter((pack) => pack.status === status);
+  const emptyBoard = state.packs.length === 0
+    ? emptyState(`No ${status} sample work.`, "Create sample work, reset demo data, or choose a scenario with work.", emptyStateContextFor(`${capitalize(status)} lane`, "no sample work exists in this browser state", "create sample work, reset demo data, or choose a scenario with work"))
+    : emptyState(`No ${status} sample work.`, "Change filters, choose another scenario, or edit work status.", emptyStateContextFor(`${capitalize(status)} lane`, `no sample work is marked ${status}`, "edit work status or choose another scenario"));
   return `<section class="demo-board-column">
     <div class="demo-board-head">
       <strong>${escapeHtml(capitalize(status))}</strong>
       <span>${packs.length}</span>
     </div>
     <div class="demo-list">
-      ${packs.map(boardMiniCard).join("") || emptyState(`No ${status} sample work.`, "Change filters, choose another scenario, or edit work status.", emptyStateContextFor(`${capitalize(status)} lane`, `no sample work is marked ${status}`, "edit work status or choose another scenario"))}
+      ${packs.map(boardMiniCard).join("") || emptyBoard}
     </div>
   </section>`;
 }
@@ -2591,31 +2995,61 @@ function boardMiniCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   return `<article class="demo-mini-card">
     <button type="button" class="demo-card-title" data-action="focus" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(pack.title)}</button>
-    <span>${escapeHtml(pack.blocker === "none" ? command.label : pack.blocker)}</span>
+    <span>${escapeHtml(isUnblockedBlockerValue(pack.blocker) ? command.label : blockerDisplayValue(pack.blocker))}</span>
   </article>`;
 }
 
 function nextCandidateRow(pack) {
-  return `<div class="demo-row" data-pack-id="${escapeAttribute(pack.id)}">
+  return `<div class="demo-row has-row-support" data-pack-id="${escapeAttribute(pack.id)}">
     <div>
       <strong>${escapeHtml(pack.title)}</strong>
-      <span>${escapeHtml(pack.blocker === "none" ? "Ready for a clearer next action." : pack.blocker)}</span>
+      <span>${escapeHtml(isUnblockedBlockerValue(pack.blocker) ? "Ready for a clearer Button runs next." : blockerDisplayValue(pack.blocker))}</span>
     </div>
     <div class="demo-row-actions">
-      ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
-      ${supportActionButton("set-next", "Set Button runs next", pack, "btn btn-sm")}
+      ${supportActionButton("set-next", "Set Button runs next", pack, "btn btn-sm btn-primary")}
     </div>
+    ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </div>`;
+}
+
+function compactRowSupport(summary, content) {
+  return `<details class="demo-row-support">
+    <summary>
+      <span>Details</span>
+      <strong>${escapeHtml(summary)}</strong>
+    </summary>
+    <div class="demo-row-actions compact">
+      ${content}
+    </div>
+  </details>`;
+}
+
+function optionalDetails(label, summary, content, className = "", attributes = "") {
+  const extraClass = className ? ` ${className}` : "";
+  const extraAttributes = attributes ? ` ${attributes}` : "";
+  return `<details class="demo-support-details demo-site-details${extraClass}"${extraAttributes}>
+    <summary>
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(summary)}</strong>
+    </summary>
+    <div class="demo-detail-body">
+      ${content}
+    </div>
+  </details>`;
+}
+
+function detailsOpenAttribute(...targetIds) {
+  return targetIds.some((targetId) => clipboardTargetIsActive(targetId)) ? "open" : "";
 }
 
 function sampleChecks() {
   const missingOwner = state.packs.filter((pack) => !pack.owner || pack.owner === "No owner" || pack.owner === "unassigned").length;
-  const missingNext = state.packs.filter((pack) => !pack.next || pack.next === "Choose next action").length;
+  const missingNext = state.packs.filter(isMissingNextAction).length;
   const blocked = state.packs.filter((pack) => pack.status === "blocked").length;
   const missingDue = state.packs.filter((pack) => !pack.due && pack.status !== "done").length;
   return [
     ["Owners", missingOwner, "Every moving sample item should name an owner."],
-    ["Button runs next", missingNext, "Each sample item needs a clear main button action."],
+    ["Button runs next", missingNext, "Each sample item needs a clear Button-runs-next value."],
     ["Blocked", blocked, "Blocked sample work should say what is blocking it."],
     ["Due dates", missingDue, "Unfinished sample work can optionally carry a date."]
   ];
@@ -2667,21 +3101,26 @@ function timelineRow({ pack, item, index }) {
 }
 
 function sourceRow({ pack, source }) {
-  return `<div class="demo-row">
+  return `<div class="demo-row has-row-support" data-pack-id="${escapeAttribute(pack.id)}">
     <div>
       <strong>${escapeHtml(source)}</strong>
       <span>${escapeHtml(pack.title)} / ${escapeHtml(pack.type)}</span>
     </div>
-    ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
+    <div class="demo-row-actions">
+      ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
+    </div>
+    ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </div>`;
 }
 
 function calendarCard(pack) {
-  return `<article class="demo-calendar-card">
+  const workflow = workflowStateForPack(pack);
+  return `<article class="demo-calendar-card" data-pack-id="${escapeAttribute(pack.id)}">
     <span>${escapeHtml(pack.due)}</span>
     <strong>${escapeHtml(pack.title)}</strong>
-    <small>${escapeHtml(pack.status)} / ${escapeHtml(pack.owner)}</small>
-    ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
+    <small>${escapeHtml(workflow.label)} / ${escapeHtml(pack.owner)}</small>
+    ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
+    ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </article>`;
 }
 
@@ -2734,11 +3173,11 @@ function bindLabControls() {
 
   const copy = el("copy-lab-snapshot");
   if (copy) {
-    copy.addEventListener("click", () => copyToClipboard(valueOf("lab-snapshot"), clipboardStatus("Demo Lab", "share the lab snapshot"), {
+    copy.addEventListener("click", () => copyToClipboard(valueOf("lab-snapshot"), clipboardStatus("Demo Lab", "share the workflow snapshot"), {
       controlId: "copy-lab-snapshot",
       targetId: "lab-snapshot",
-      title: "Lab snapshot copied",
-      detail: "The command simulator snapshot is on the clipboard."
+      title: "Workflow snapshot copied",
+      detail: "The Button-runs-next workflow snapshot is on the clipboard."
     }));
   }
 }
@@ -2746,13 +3185,14 @@ function bindLabControls() {
 function workCard(pack) {
   const selected = pack.id === state.selectedId ? " selected" : "";
   const command = resolvePrimaryCommandForPack(pack);
+  const workflow = workflowStateForPack(pack, command);
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack, "btn btn-sm")
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
   return `<article class="demo-work-card${selected}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select">${escapeHtml(pack.title)}</button>
-      <span class="demo-state-pill">${escapeHtml(pack.status)}</span>
+      <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
     <div class="demo-command-row">
       <div>
@@ -2762,7 +3202,7 @@ function workCard(pack) {
       ${primaryCommandButton(pack)}
     </div>
     <div class="demo-card-meta">
-      <span>${escapeHtml(pack.blocker === "none" ? "Blocker: none" : pack.blocker)}</span>
+      <span>${escapeHtml(`Blocker: ${blockerDisplayValue(pack.blocker)}`)}</span>
       <span>${escapeHtml(formatDue(pack))}</span>
       <span>${escapeHtml(pack.owner)}</span>
     </div>
@@ -2770,8 +3210,8 @@ function workCard(pack) {
     ${actionReceiptCard(pack)}
     <details class="demo-card-support" data-support-actions="work-card">
       <summary>
-        <span>Support actions</span>
-        <strong>Inspect or change path without replacing Button runs next</strong>
+        <span>Details</span>
+        <strong>Open for inspect, edit, and proof actions</strong>
       </summary>
       <div class="demo-card-actions">
         ${supportActionButton("open", "Open", pack, "btn btn-sm")}
@@ -2784,63 +3224,72 @@ function workCard(pack) {
 }
 
 function todayRow(pack) {
-  return `<div class="demo-row">
+  return `<div class="demo-row has-row-support">
     <div>
       <strong>${escapeHtml(pack.title)}</strong>
       <span>${escapeHtml(formatDue(pack))} / ${escapeHtml(pack.owner)}</span>
     </div>
     <div class="demo-row-actions">
       ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
-      ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
     </div>
+    ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </div>`;
 }
 
 function reviewCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
-  const doneAction = command.action === "done"
-    ? supportActionButton("done", "Finish with proof", pack)
-    : "";
+  const workflow = workflowStateForPack(pack, command);
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack)
     : supportActionButton("block", "Mark blocked", pack);
+  const nextHelpId = `next-${pack.id}-help`;
+  const nextHelp = `Set the exact Button-runs-next value for ${pack.title}.`;
 
   return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
+    <div class="demo-card-head demo-review-card-head">
+      <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(pack.title)}</button>
+      <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
+    </div>
     <div class="demo-review-card-main">
-      <div class="demo-command-lines compact">
-        ${factLine("Where", pack.title)}
-        ${factLine("Blocker", blockerTextForPack(pack))}
-        ${factLine("Button runs next", command.label)}
+      <div class="demo-card-facts">
+        ${cardFact("Blocker", blockerTextForPack(pack))}
+        ${cardFact("Button runs next", command.label)}
       </div>
       <div class="demo-review-card-actions">
         ${primaryCommandButton(pack)}
-        ${supportActionButton("focus", "Focus", pack)}
-        ${supportActionButton("edit", "Edit", pack)}
-        ${doneAction}
       </div>
     </div>
     <div class="demo-card-meta">
-      <span>${escapeHtml(pack.status)}</span>
       <span>${escapeHtml(formatDue(pack))}</span>
       <span>${escapeHtml(pack.owner)}</span>
     </div>
     ${relevantMemoryCardStrip(pack)}
     ${actionReceiptCard(pack)}
-    <details class="demo-card-support">
+    <details class="demo-card-support" data-support-actions="review-card">
       <summary>
-        <span>Support setup</span>
-        <strong>Clear blocker or set Button runs next</strong>
+        <span>Details</span>
+        <strong>Open for edit, blocker, and Button-runs-next setup</strong>
       </summary>
       <div class="demo-card-actions">
+        ${supportActionButton("focus", "Focus", pack)}
+        ${supportActionButton("edit", "Edit", pack)}
         ${blockerAction}
       </div>
       <div class="demo-inline-form">
         <label class="sr-only" for="next-${escapeAttribute(pack.id)}">Button runs next</label>
-        <input id="next-${escapeAttribute(pack.id)}" class="demo-search-input" type="text" value="${escapeAttribute(pack.next)}">
+        <input id="next-${escapeAttribute(pack.id)}" class="demo-search-input" type="text" value="${escapeAttribute(editableButtonRunsNextValue(pack.next))}" placeholder="Open, Focus, Start, Done..."${fieldHelpAttributes(nextHelpId, nextHelp)}>
+        <small id="${escapeAttribute(nextHelpId)}" class="demo-field-help">${escapeHtml(nextHelp)}</small>
         ${supportActionButton("set-next", "Save Button runs next", pack)}
       </div>
     </details>
   </article>`;
+}
+
+function cardFact(label, value) {
+  return `<div class="demo-card-fact">
+    <span>${escapeHtml(label)}</span>
+    <strong>${escapeHtml(value)}</strong>
+  </div>`;
 }
 
 function primaryCommandButton(pack, className = "btn btn-primary") {
@@ -2851,6 +3300,25 @@ function primaryCommandButton(pack, className = "btn btn-primary") {
 
 function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)) {
   return `Where: ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`;
+}
+
+function packPrimaryActionButton(command) {
+  const copy = commandRunLabel(command);
+  const label = command.next || "Open work list";
+  return `<button id="pack-primary-action" class="btn btn-primary demo-pack-primary-action" type="button" data-action="${escapeAttribute(command.action || "")}" data-pack="${escapeAttribute(command.targetPackId || "")}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
+}
+
+function syncPackPrimaryAction(command) {
+  const button = el("pack-primary-action");
+  if (!button) {
+    return;
+  }
+
+  setCopySurface(button, command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  button.dataset.action = command.action || "";
+  button.dataset.pack = command.targetPackId || "";
+  button.setAttribute("aria-label", commandRunLabel(command));
+  button.title = commandRunLabel(command);
 }
 
 function supportActionButton(action, label, pack, className = "btn") {
@@ -2864,7 +3332,7 @@ function supportActionButton(action, label, pack, className = "btn") {
   const stateAttributes = disabledReason
     ? `${disabledReasonAttributes(true, disabledReason)} aria-label="${escapeAttribute(copy)}"`
     : ` title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}"`;
-  return `<button class="${escapeAttribute(buttonClass)}" type="button" data-action="${escapeAttribute(action)}" data-pack="${escapeAttribute(pack.id)}" data-support-reason="${escapeAttribute(visibleReason)}"${stateAttributes}><span class="demo-support-label">${escapeHtml(label)}</span><small class="demo-support-reason">${escapeHtml(visibleReason)}</small></button>`;
+  return `<button class="${escapeAttribute(buttonClass)}" type="button" data-action="${escapeAttribute(action)}" data-pack="${escapeAttribute(pack.id)}" data-support-reason="${escapeAttribute(visibleReason)}"${stateAttributes}><span class="demo-support-label">${escapeHtml(label)}</span><small class="demo-support-reason" aria-hidden="true">${escapeHtml(visibleReason)}</small></button>`;
 }
 
 function supportActionReason(action, pack) {
@@ -2873,29 +3341,67 @@ function supportActionReason(action, pack) {
     open: `Open the work path for ${where} without running the main button.`,
     focus: `Show ${where} in the Focus view without changing status.`,
     block: `Mark ${where} blocked for this sample.`,
-    unblock: `Clear the blocker for ${where}; the demo stores Blocker: none automatically.`,
+    unblock: `Clear the blocker for ${where}; the demo stores Blocker: None.`,
     done: `Finish ${where} and keep the proof target in the receipt.`,
     edit: `Open the work path fields for ${where}.`,
-    "set-next": `Choose the exact Button runs next action for ${where}.`
+    "set-next": `Choose the exact Button-runs-next value for ${where}.`
   };
   return reasons[action] || `Run ${actionLabelFromKey(action)} for ${where}.`;
 }
 
 function supportActionDisabledReason(action, pack) {
   const where = pack?.title || "selected work";
-  if (action === "done" && pack?.status === "done") {
+  if (action !== "done") {
+    return "";
+  }
+
+  if (pack?.status === "done") {
     return `Where: ${where} / done. Blocker: proof is already saved. Button runs next: Open to inspect this work.`;
   }
 
-  return "";
+  const command = resolvePrimaryCommandForPack(pack);
+  if (command.action === "done") {
+    if (!normalizeCopy(pack?.doneWhen)) {
+      return `Where: ${where}. Blocker: proof target is missing. Button runs next: add proof target before finishing with proof.`;
+    }
+
+    return "";
+  }
+
+  if (isMissingNextAction(pack)) {
+    return `Where: ${where}. Blocker: Button runs next is missing. Button runs next: set Button runs next before finishing with proof.`;
+  }
+
+  if (hasBlocker(pack)) {
+    return `Where: ${where}. Blocker: ${blockerTextForPack(pack)}. Button runs next: clear blocker before finishing with proof.`;
+  }
+
+  return `Where: ${where}. Blocker: Button runs next is ${command.label}. Button runs next: choose Done as Button runs next before saving proof.`;
 }
 
 function supportActionDisabledVisibleReason(action, pack) {
-  if (action === "done" && pack?.status === "done") {
+  if (action !== "done") {
+    return "No disabled reason; this button should stay enabled.";
+  }
+
+  if (pack?.status === "done") {
     return "Already done; Open inspects it.";
   }
 
-  return "Action is unavailable.";
+  if (isMissingNextAction(pack)) {
+    return "Set Button runs next first.";
+  }
+
+  if (hasBlocker(pack)) {
+    return "Clear blocker first.";
+  }
+
+  const command = resolvePrimaryCommandForPack(pack);
+  if (command.action === "done" && !normalizeCopy(pack?.doneWhen)) {
+    return "Add proof target first.";
+  }
+
+  return "Choose Done as Button runs next.";
 }
 
 function supportActionVisibleReason(action) {
@@ -2903,12 +3409,12 @@ function supportActionVisibleReason(action) {
     open: "Open fields without running next.",
     focus: "Inspect without changing status.",
     block: "Add a blocker for review.",
-    unblock: "Stores Blocker: none.",
+    unblock: "Stores Blocker: None.",
     done: "Finish with proof visible.",
-    edit: "Edit forward path fields.",
-    "set-next": "Choose the exact next button."
+    edit: "Edit work path fields.",
+    "set-next": "Choose the exact Button-runs-next value."
   };
-  return reasons[action] || "Secondary action.";
+  return reasons[action] || "Other button.";
 }
 
 function bindWorkCards() {
@@ -2929,10 +3435,23 @@ function bindListActions() {
     button.addEventListener("click", () => {
       const action = button.dataset.action;
       if (action === "set-due-today") {
+        const dueState = setDueTodayState(screenTitleForRoute());
+        if (!dueState.canRun) {
+          state.status = dueState.help;
+          render();
+          return;
+        }
         const today = todayIsoDate();
-        state.packs.forEach((pack) => { if (pack.status !== "done") pack.due = today; });
-        state.status = dueTodayStatus(today);
+        const updated = state.packs.filter((pack) => pack.status !== "done");
+        updated.forEach((pack) => { pack.due = today; });
+        state.status = dueTodayStatus(today, updated.length);
       } else if (action === "validate-sample") {
+        const validateState = validateSampleState();
+        if (!validateState.canRun) {
+          state.status = validateState.help;
+          render();
+          return;
+        }
         const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
         state.status = validationStatus(attention);
       } else if (action === "set-next") {
@@ -2948,6 +3467,8 @@ function bindListActions() {
             go("next", pack.id);
             return;
           }
+        } else {
+          state.status = noSelectedWorkStatus("choose work before setting Button runs next");
         }
       } else {
         handlePackAction(button.dataset.pack, action);
@@ -2965,7 +3486,7 @@ function actionLabelFromKey(action) {
     review: "Review",
     "set-next": "Set Button runs next",
     start: "Start",
-    unblock: "Unblock",
+    unblock: "Set Blocker: None",
     block: "Block",
     done: "Finish with proof",
     focus: "Focus",
@@ -2973,7 +3494,7 @@ function actionLabelFromKey(action) {
     open: "Open"
   };
 
-  return labels[action] || (typeof action === "string" ? capitalize(action) : "Action");
+  return labels[action] || (typeof action === "string" ? capitalize(action) : "Button");
 }
 
 function setActionConfirmation(pack, action) {
@@ -2983,7 +3504,7 @@ function setActionConfirmation(pack, action) {
   const actionLabel = actionLabelFromKey(action);
   setActionReceipt(
     pack,
-    `${actionLabel} finished for ${pack.title}.`,
+    routeActionSummary(pack, action, actionLabel),
     next
   );
 }
@@ -3004,21 +3525,57 @@ function packActionSummary(pack, action, actionLabel, changed) {
   if (action === "done") {
     const proof = proofTargetSentence(pack);
     return changed
-      ? `Done for ${pack.title}. ${proof}`
-      : `No done change for ${pack.title}. ${proof}`;
+      ? `Proof saved for ${pack.title}. ${proof}`
+      : `Proof already saved for ${pack.title}. ${proof}`;
+  }
+
+  if (action === "open") {
+    return changed
+      ? `Work path opened for ${pack.title}.`
+      : `Work path already open for ${pack.title}.`;
+  }
+
+  if (action === "start") {
+    return changed
+      ? `Started ${pack.title}.`
+      : `${pack.title} is already active.`;
+  }
+
+  if (action === "unblock") {
+    return changed
+      ? `Blocker cleared for ${pack.title}.`
+      : `Blocker already clear for ${pack.title}.`;
+  }
+
+  if (action === "block") {
+    return changed
+      ? `Blocker added for ${pack.title}.`
+      : `${pack.title} is already blocked.`;
   }
 
   return changed
-    ? `${actionLabel} updated ${pack.title}.`
-    : `No ${actionLabel.toLowerCase()} change for ${pack.title}.`;
+    ? `Button result saved for ${pack.title}: ${actionLabel}.`
+    : `Button result already saved for ${pack.title}: ${actionLabel}.`;
 }
 
-function setSaveConfirmation(pack, changed) {
+function routeActionSummary(pack, action, actionLabel) {
+  if (action === "focus") {
+    return `Focus opened for ${pack.title}.`;
+  }
+
+  if (action === "edit") {
+    return `Work path opened for ${pack.title}.`;
+  }
+
+  return `Button ran for ${pack.title}: ${actionLabel}.`;
+}
+
+function setSaveConfirmation(pack, result) {
   if (!pack) return;
 
   const proof = proofTargetSentence(pack);
-  const summary = changed
-    ? `Work path saved for ${pack.title}. ${proof}`
+  const summary = result?.changed
+    ? `Work path saved for ${pack.title}. ${result.summary}. ${proof}`
     : `No work path changes for ${pack.title}. ${proof}`;
   setActionReceipt(
     pack,
@@ -3044,9 +3601,10 @@ function setCreateConfirmation(pack) {
   if (!pack) return;
 
   const next = resolvePrimaryCommandForPack(pack);
+  const workflow = workflowStateForPack(pack, next);
   setActionReceipt(
     pack,
-    `Created ${pack.title}. Where: ${pack.status}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`,
+    `Created ${pack.title}. State: ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`,
     next
   );
 }
@@ -3065,13 +3623,14 @@ function setMemoryConfirmation(pack, result) {
 }
 
 function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pack)) {
+  const workflow = workflowStateForPack(pack, next);
   const outcomeSummary = normalizeCopy(summary);
   const fullSummary = actionReceiptSummary(outcomeSummary, pack, next);
   const receipt = {
     packId: pack.id,
     summary: fullSummary,
     visibleSummary: visibleCopy(outcomeSummary || fullSummary, DEMO_COPY_LIMITS.receiptVisible),
-    where: `${pack.title} / ${pack.status}`,
+    where: `${pack.title} / ${workflow.label}`,
     blocker: blockerTextForPack(pack),
     next: next.label,
     proof: proofTargetForPack(pack)
@@ -3087,10 +3646,11 @@ function actionReceiptSummary(summary, pack, next) {
 }
 
 function actionReceiptContext(pack, next, summary = "") {
+  const workflow = workflowStateForPack(pack, next);
   const proof = /(^|\s)Proof target:/iu.test(summary)
     ? ""
     : ` Proof target: ${proofTargetForPack(pack)}.`;
-  return `Where: ${pack.title} / ${pack.status}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.${proof}`;
+  return `Where: ${pack.title} / ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.${proof}`;
 }
 
 function updateActionReceipt() {
@@ -3103,10 +3663,12 @@ function updateActionReceipt() {
     receiptElement.innerHTML = "";
     delete receiptElement.dataset.receiptKind;
     delete receiptElement.dataset.receiptTone;
+    delete receiptElement.dataset.receiptSurface;
     return;
   }
 
   receiptElement.hidden = false;
+  receiptElement.dataset.receiptSurface = receipt.kind === "clipboard" ? "clipboard" : "command";
   receiptElement.dataset.receiptKind = receipt.kind || "action";
   receiptElement.dataset.receiptTone = receipt.tone || "success";
   const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
@@ -3135,8 +3697,8 @@ function actionReceiptCard(pack) {
 
   const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
-  const nextLine = visibleCopy(`Now: Blocker ${receipt.blocker}. Button runs next ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
-  return `<div class="demo-card-receipt" data-card-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
+  const nextLine = visibleCopy(`Where: ${receipt.where}. Blocker: ${receipt.blocker}. Button runs next: ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
+  return `<div class="demo-card-receipt" data-receipt-surface="card" data-card-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
     <small>${escapeHtml(nextLine)}</small>
@@ -3157,8 +3719,8 @@ function routeActionReceiptPanel(visiblePacks, routeLabel) {
 
   const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
-  const nextLine = visibleCopy(`Out of ${routeLabel}. Blocker ${receipt.blocker}. Next ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
-  return `<div class="demo-card-receipt demo-route-receipt" data-route-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
+  const nextLine = visibleCopy(`Where: ${routeLabel} / ${pack.title}. Blocker: ${receipt.blocker}. Button runs next: ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
+  return `<div class="demo-card-receipt demo-route-receipt" data-receipt-surface="route" data-route-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
     <small>${escapeHtml(nextLine)}</small>
@@ -3166,9 +3728,10 @@ function routeActionReceiptPanel(visiblePacks, routeLabel) {
 }
 
 function receiptLine(label, value) {
+  const copy = copySurface(value || DEMO_BLOCKER_NONE_LABEL, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   return `<div>
     <span>${escapeHtml(label)}</span>
-    <strong>${escapeHtml(value)}</strong>
+    <strong${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
   </div>`;
 }
 
@@ -3187,7 +3750,7 @@ function normalizeActionReceipt(receipt) {
   const where = normalizeCopy(receipt.where);
   const blocker = normalizeCopy(receipt.blocker);
   const next = normalizeCopy(receipt.next);
-  const proof = normalizeCopy(receipt.proof) || normalizeCopy(receipt.doneWhen) || "No proof target set.";
+  const proof = normalizeCopy(receipt.proof) || normalizeCopy(receipt.doneWhen) || DEMO_PROOF_TARGET_MISSING;
   if (!summary || !where || !blocker || !next) {
     return null;
   }
@@ -3206,15 +3769,19 @@ function normalizeActionReceipt(receipt) {
 }
 
 function proofTargetForPack(pack) {
-  return normalizeCopy(pack?.doneWhen) || "No proof target set.";
+  return normalizeCopy(pack?.doneWhen) || DEMO_PROOF_TARGET_MISSING;
 }
 
 function proofTargetSentence(pack) {
   return `Proof target: ${sentenceValue(proofTargetForPack(pack))}.`;
 }
 
+function proofSavedActivity(pack) {
+  return `Proof saved: ${sentenceValue(proofTargetForPack(pack))}.`;
+}
+
 function sentenceValue(value) {
-  return (normalizeCopy(value) || "No proof target set").replace(/[.!?]+$/u, "");
+  return (normalizeCopy(value) || DEMO_PROOF_TARGET_MISSING).replace(/[.!?]+$/u, "");
 }
 
 function addPackActivity(pack, message) {
@@ -3260,7 +3827,7 @@ function setPackNextAction(pack, value) {
 
   pack.next = next;
   if (pack.blocker === "missing Button runs next") {
-    pack.blocker = "none";
+    pack.blocker = DEMO_BLOCKER_NONE;
   }
 
   const changed = beforeNext !== next || beforeBlocker !== normalizeCopy(pack.blocker);
@@ -3318,8 +3885,8 @@ function handlePackAction(id, action) {
   } else if (action === "start") {
     const before = packActionSignature(pack);
     pack.status = "active";
-    pack.blocker = pack.blocker === "missing setup" ? "none" : pack.blocker;
-    pack.next = pack.next === "Choose next action" ? "Open" : pack.next;
+    pack.blocker = pack.blocker === "missing setup" ? DEMO_BLOCKER_NONE : pack.blocker;
+    pack.next = isPlaceholderNext(pack.next) ? "Open" : pack.next;
     const changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, "Started.");
@@ -3328,18 +3895,18 @@ function handlePackAction(id, action) {
   } else if (action === "unblock") {
     const before = packActionSignature(pack);
     pack.status = "active";
-    pack.blocker = "none";
+    pack.blocker = DEMO_BLOCKER_NONE;
     pack.next = "Open";
     const changed = packActionSignature(pack) !== before;
     if (changed) {
-      addPackActivity(pack, "Unblocked.");
+      addPackActivity(pack, "Blocker set to None.");
     }
     setPackActionConfirmation(pack, "unblock", changed);
   } else if (action === "block") {
     const before = packActionSignature(pack);
     pack.status = "blocked";
     pack.blocker = "blocked in this sample";
-    pack.next = "Unblock";
+    pack.next = "Set Blocker: None";
     const changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, "Blocked.");
@@ -3348,11 +3915,11 @@ function handlePackAction(id, action) {
   } else if (action === "done") {
     const before = packActionSignature(pack);
     pack.status = "done";
-    pack.blocker = "none";
+    pack.blocker = DEMO_BLOCKER_NONE;
     pack.next = "Open";
     const changed = packActionSignature(pack) !== before;
     if (changed) {
-      addPackActivity(pack, "Marked done.");
+      addPackActivity(pack, proofSavedActivity(pack));
     }
     setPackActionConfirmation(pack, "done", changed);
   } else if (action === "focus") {
@@ -3388,6 +3955,11 @@ function runPrimaryAction(control = el("primary-action")) {
   const targetPackId = control?.dataset.pack || el("primary-action").dataset.pack;
   if (pendingForwardPathBlocksAction(targetPackId)) {
     return;
+  }
+  if (action === "clear-owner-blocker") {
+    if (runRouteAction(action, targetPackId)) {
+      return;
+    }
   }
   applyPendingForwardPathForAction(targetPackId);
   if (action === "run-next") {
@@ -3440,14 +4012,14 @@ function openReviewFixPath(pack) {
 function reviewFixNextForPack(pack) {
   const focusKind = reviewFocusKindForPack(pack);
   if (focusKind === "support-owner") {
-    return "fill support owner";
+    return "fill owner";
   }
 
   if (focusKind === "next") {
     return "set Button runs next";
   }
 
-  return "edit blocker fields";
+  return "choose None or describe blocker";
 }
 
 function pendingPackForAction(targetPackId) {
@@ -3486,18 +4058,30 @@ function pendingForwardPathBlocksAction(targetPackId) {
     return false;
   }
 
-  state.status = `Where: Forward path. Blocker: ${issue} Button runs next: choose Unblocked or enter a blocker reason.`;
+  state.status = `Where: Work path. Blocker: ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`;
   syncPackDetailValidation(pack);
-  requestAnimationFrame(() => focusCommandTarget("pack-blocker", pack.id));
+  requestAnimationFrame(() => focusCommandTarget(blockerModeFocusKind(issue), pack.id));
   return true;
 }
 
 function runRouteAction(action, targetPackId) {
+  if (action === "clear-owner-blocker") {
+    const selected = findPack(targetPackId) || currentPack();
+    if (selected) {
+      setBlockerMode(false);
+      syncPackDetailValidation(selected);
+      state.status = `Where: Work path. Blocker: None. Button runs next: save work path for ${selected.title}.`;
+      focusAndPulse(el("save-pack") || el("primary-action"));
+    }
+    return true;
+  }
+
   if (action === "fix-blocker-mode") {
     const selected = findPack(targetPackId) || currentPack();
     if (selected) {
-      queueFocus("pack-blocker", selected.id);
-      state.status = "Where: Forward path. Blocker: blocked mode needs a real blocker. Button runs next: choose Unblocked or enter a blocker reason.";
+      const issue = blockerModeIssue() || "blocked mode needs a real blocker";
+      queueFocus(blockerModeFocusKind(issue), selected.id);
+      state.status = `Where: Work path. Blocker: ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`;
       render();
     }
     return true;
@@ -3516,6 +4100,12 @@ function runRouteAction(action, targetPackId) {
 
   if (action === "open-work-list") {
     go("work", targetPackId || "");
+    return true;
+  }
+
+  if (action === "open-create") {
+    queueFocus("create-title");
+    go("create");
     return true;
   }
 
@@ -3623,21 +4213,39 @@ function runRouteAction(action, targetPackId) {
   if (action === "search-demo") {
     if (state.route !== "search") {
       queueFocus("search-input");
-      state.status = routeStatus("Search", "search field is not open", "type search text");
+      state.status = routeStatus("Search", "search field is not open", "focus search");
       go("search");
       return true;
     }
 
     queueFocus("search-input");
-    state.status = routeStatus("Search", "none", "type search text");
+    state.status = routeStatus("Search", state.query ? `${filteredPacks().length} match(es) visible` : "no search text yet", state.query ? "refine search" : "type search text");
     render();
     return true;
   }
 
   if (action === "validate-sample") {
+    const validateState = validateSampleState();
+    if (!validateState.canRun) {
+      state.status = validateState.help;
+      render();
+      return true;
+    }
     const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
     state.status = validationStatus(attention);
     render();
+    return true;
+  }
+
+  if (action === "memory") {
+    const pack = findPack(targetPackId) || currentPack();
+    if (pack) {
+      state.selectedId = pack.id;
+    }
+
+    queueFocus("memory-note", pack?.id || "");
+    state.status = memoryRouteStatus(pack);
+    go("memory", pack?.id || "");
     return true;
   }
 
@@ -3663,30 +4271,31 @@ function runRouteAction(action, targetPackId) {
   if (action === "choose-profile") {
     if (state.route !== "settings") {
       queueFocus("settings-profile");
-      state.status = routeStatus("Settings", "copy profile chooser is not open", "choose profile");
+      state.status = routeStatus("Settings", "copy profile chooser is not open", "choose copy profile");
       go("settings");
       return true;
     }
 
     queueFocus("settings-profile");
-    state.status = routeStatus("Settings", "choose one profile card", "use selected profile labels");
+    state.status = routeStatus("Settings", "choose one copy profile card", "use selected profile labels");
     render();
     return true;
   }
 
   if (action === "refresh-health") {
-    state.status = routeStatus("Health", "none", "review current demo checks");
+      state.status = routeStatus("Health", DEMO_BLOCKER_NONE, "review current demo checks");
     render();
     return true;
   }
 
-  if (action === "report-feedback") {
+  if (action === "copy-feedback-context") {
     if (state.route !== "feedback") {
+      queueFocus("feedback-context");
+      state.status = routeStatus("Feedback", "feedback context is not open", "copy context");
       go("feedback");
       return true;
     }
-    state.status = routeStatus("Feedback", "none", "copy context or open issue");
-    render();
+    copyFeedbackContext();
     return true;
   }
 
@@ -3731,8 +4340,8 @@ function commandActionForLabel(label) {
     return { label, action: "focus" };
   }
 
-  if (normalized === "unblock") {
-    return { label, action: "unblock" };
+  if (normalized === "unblock" || normalized === "set blocker: none" || normalized === "set blocker none") {
+    return { label: "Set Blocker: None", action: "unblock" };
   }
 
   if (normalized === "start") {
@@ -3768,13 +4377,13 @@ function createFormValues() {
 
 function createSaveState(values) {
   const workflow = initialWorkflowForCreatedPack(values.title, values.owner, values.next);
-  const canSave = workflow.blocker === "none";
+  const canSave = isUnblockedBlockerValue(workflow.blocker);
   const next = canSave ? "Save sample" : createActionForBlocker(workflow.blocker);
 
   return {
     ...workflow,
     canSave,
-    help: `Where: Create. Blocker: ${workflow.blocker}. Button runs next: ${next}.`
+    help: `Where: Create. Blocker: ${blockerDisplayValue(workflow.blocker)}. Button runs next: ${next}.`
   };
 }
 
@@ -3817,7 +4426,9 @@ function memoryNoteSaveState(pack, note) {
   if (!pack) {
     return {
       canSave: false,
-      help: "Where: Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory."
+      help: state.packs.length === 0
+        ? "Where: Memory. Blocker: no sample work exists. Button runs next: create or reset sample work before adding memory."
+        : "Where: Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory."
     };
   }
 
@@ -3830,13 +4441,17 @@ function memoryNoteSaveState(pack, note) {
 
   return {
     canSave: true,
-    help: `Where: Memory. Blocker: none. Button runs next: add memory note to ${pack.title}.`
+    help: `Where: Memory. Blocker: None. Button runs next: add memory note to ${pack.title}.`
   };
 }
 
 function memoryRouteStatus(pack) {
-  return pack
-    ? `Where: Memory / ${pack.title}. Blocker: memory note is empty. Button runs next: type a note for ${pack.title}.`
+  if (pack) {
+    return `Where: Memory / ${pack.title}. Blocker: memory note is empty. Button runs next: type a note for ${pack.title}.`;
+  }
+
+  return state.packs.length === 0
+    ? "Where: Memory. Blocker: no sample work exists. Button runs next: create or reset sample work before adding memory."
     : "Where: Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory.";
 }
 
@@ -3861,7 +4476,9 @@ function packDetailSaveState(pack) {
   if (!pack) {
     return {
       canSave: false,
-      help: "Where: Forward path. Blocker: no sample work is selected. Button runs next: choose work before saving."
+      help: state.packs.length === 0
+        ? "Where: Work path. Blocker: no sample work exists. Button runs next: create or reset sample work before saving."
+        : "Where: Work path. Blocker: no sample work is selected. Button runs next: choose work before saving."
     };
   }
 
@@ -3869,7 +4486,14 @@ function packDetailSaveState(pack) {
   if (blockerIssue) {
     return {
       canSave: false,
-      help: `Where: Forward path. Blocker: ${blockerIssue} Button runs next: choose Unblocked or enter a blocker reason.`
+      help: `Where: Work path. Blocker: ${blockerIssue}. Button runs next: ${blockerModeFixNext(blockerIssue)}.`
+    };
+  }
+
+  if (ownerBlockerNeedsClear()) {
+    return {
+      canSave: false,
+      help: "Where: Work path. Blocker: owner is filled but Blocker is still set. Button runs next: Set Blocker: None."
     };
   }
 
@@ -3877,19 +4501,19 @@ function packDetailSaveState(pack) {
   if (!changed) {
     return {
       canSave: false,
-      help: "Where: Forward path. Blocker: no changes to save. Button runs next: edit a field first."
+      help: "Where: Work path. Blocker: no changes to save. Button runs next: edit a field first."
     };
   }
 
   const pending = pendingPackFromForwardPathForm(pack);
   return {
     canSave: true,
-    help: `Where: Forward path. Blocker: ${blockerTextForPack(pending)}. Button runs next: save forward path for ${pending.title}.`
+    help: `Where: Work path. Blocker: ${blockerTextForPack(pending)}. Button runs next: save work path for ${pending.title}.`
   };
 }
 
 function bindPackDetailValidation(pack) {
-  ["edit-title", "edit-status", "edit-blocker", "edit-owner", "edit-due", "edit-next", "edit-done-when", "edit-purpose"].forEach((id) => {
+  ["edit-title", "edit-blocker", "edit-owner", "edit-due", "edit-next", "edit-done-when", "edit-purpose"].forEach((id) => {
     const input = el(id);
     input?.addEventListener("input", () => {
       if (id === "edit-owner") {
@@ -3898,9 +4522,6 @@ function bindPackDetailValidation(pack) {
       syncPackDetailValidation(pack);
     });
     input?.addEventListener("change", () => {
-      if (id === "edit-status") {
-        syncBlockerModeFromStatus();
-      }
       if (id === "edit-owner") {
         syncOwnerBlockerResolutionPreview();
       }
@@ -3913,25 +4534,27 @@ function bindPackDetailValidation(pack) {
       syncPackDetailValidation(pack);
     });
   });
+  document.querySelectorAll("[data-blocker-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setBlockerMode(true);
+      const input = el("edit-blocker");
+      if (input) {
+        input.value = button.dataset.blockerPreset || "";
+      }
+      syncPackDetailValidation(pack);
+      input?.focus();
+    });
+  });
+  document.querySelector("[data-clear-owner-blocker]")?.addEventListener("click", () => {
+    runRouteAction("clear-owner-blocker", pack.id);
+  });
   syncPackDetailValidation(pack);
-}
-
-function syncBlockerModeFromStatus() {
-  const status = valueOf("edit-status");
-  if (status === "blocked") {
-    setBlockerMode(true);
-    return;
-  }
-  if (status === "active" || status === "done") {
-    setBlockerMode(false);
-  }
 }
 
 function setBlockerMode(hasBlocker) {
   const clear = el("edit-blocker-clear");
   const set = el("edit-blocker-set");
   const input = el("edit-blocker");
-  const status = el("edit-status");
   const next = el("edit-next");
   const help = document.querySelector("[data-blocker-help]");
   const reason = document.querySelector("[data-blocker-reason]");
@@ -3941,17 +4564,12 @@ function setBlockerMode(hasBlocker) {
   if (set) set.checked = hasBlocker;
   clearLabel?.classList.toggle("active", !hasBlocker);
   setLabel?.classList.toggle("active", hasBlocker);
-  if (status && hasBlocker && valueOf("edit-status") !== "blocked") {
-    status.value = "blocked";
-  }
-  if (status && !hasBlocker && valueOf("edit-status") === "blocked") {
-    status.value = "active";
-  }
   if (!hasBlocker && next && isBlockerReviewAction(next.value)) {
     next.value = "Open";
   }
   if (input) {
     input.disabled = !hasBlocker;
+    syncDisabledReasonMetadata(input, !hasBlocker, blockerInputDisabledReason());
     if (hasBlocker && !normalizeCopy(input.value)) {
       input.value = "needs review";
     }
@@ -3963,6 +4581,7 @@ function setBlockerMode(hasBlocker) {
     reason.hidden = !hasBlocker;
   }
   syncBlockerFieldHelp();
+  focusBlockingSupportFieldIfNeeded();
 }
 
 function isBlockerReviewAction(value) {
@@ -3979,6 +4598,11 @@ function syncOwnerBlockerResolutionPreview() {
 
 function ownerFixClearsBlocker(blocker, owner) {
   return normalizeCopy(blocker).toLowerCase().includes("owner") && !isMissingOwnerValue(owner);
+}
+
+function ownerBlockerNeedsClear() {
+  const selected = document.querySelector('input[name="edit-blocker-mode"]:checked');
+  return selected?.value === "set" && ownerFixClearsBlocker(el("edit-blocker")?.value, valueOf("edit-owner"));
 }
 
 function isMissingOwnerValue(owner) {
@@ -4004,11 +4628,40 @@ function blockerModeIssue() {
   const field = document.querySelector("[data-blocker-field]");
   const selected = document.querySelector('input[name="edit-blocker-mode"]:checked');
   const blocker = normalizeCopy(el("edit-blocker")?.value).toLowerCase();
-  if (!field || selected?.value !== "set" || blocker !== "none") {
+  if (!field) {
     return "";
   }
 
-  return "Blocked mode needs a real blocker; use Unblocked to store Blocker: none.";
+  if (selected?.value === "set" && isUnblockedBlockerValue(blocker)) {
+    return "Blocked needs a reason; choose None to store Blocker: None";
+  }
+
+  if (selected?.value === "clear" && blocker.includes("owner") && isMissingOwnerValue(valueOf("edit-owner"))) {
+    return "Owner is still unassigned; fill Owner before clearing this blocker";
+  }
+
+  return "";
+}
+
+function blockerModeFixNext(issue) {
+  return normalizeCopy(issue).toLowerCase().includes("owner")
+    ? "fill owner"
+    : "choose None or enter a blocker reason";
+}
+
+function blockerModeFocusKind(issue) {
+  return normalizeCopy(issue).toLowerCase().includes("owner")
+    ? "support-owner"
+    : "pack-blocker";
+}
+
+function focusBlockingSupportFieldIfNeeded() {
+  const issue = blockerModeIssue();
+  if (!issue || blockerModeFocusKind(issue) !== "support-owner") {
+    return;
+  }
+
+  requestAnimationFrame(() => focusCommandTarget("support-owner", currentPack()?.id || ""));
 }
 
 function syncBlockerFieldHelp() {
@@ -4016,10 +4669,13 @@ function syncBlockerFieldHelp() {
   const input = el("edit-blocker");
   const help = document.querySelector("[data-blocker-help]");
   const resolution = document.querySelector("[data-blocker-resolution]");
+  const resolutionCopy = document.querySelector("[data-blocker-resolution-copy]");
+  const resolutionButton = document.querySelector("[data-clear-owner-blocker]");
   const selected = document.querySelector('input[name="edit-blocker-mode"]:checked');
   const hasBlocker = selected?.value === "set";
   const issue = blockerModeIssue();
-  const ownerResolvedBlocker = ownerFixClearsBlocker(input?.value, valueOf("edit-owner"));
+  const ownerResolvedBlocker = hasBlocker && ownerFixClearsBlocker(input?.value, valueOf("edit-owner"));
+  syncBlockerPresetButtons();
   field?.classList.toggle("invalid", Boolean(issue));
   if (input) {
     if (issue) {
@@ -4030,20 +4686,36 @@ function syncBlockerFieldHelp() {
   }
   if (resolution) {
     resolution.hidden = !ownerResolvedBlocker;
-    resolution.textContent = ownerResolvedBlocker
-      ? ownerBlockerResolutionHelp()
+  }
+  if (resolutionCopy) {
+    resolutionCopy.textContent = ownerResolvedBlocker ? ownerBlockerResolutionHelp() : "";
+  }
+  if (resolutionButton) {
+    resolutionButton.hidden = !ownerResolvedBlocker;
+    resolutionButton.disabled = !ownerResolvedBlocker;
+    resolutionButton.title = ownerResolvedBlocker
+      ? "Choose None so Save stores Blocker: None."
       : "";
   }
   if (help) {
     const clearHelp = ownerResolvedBlocker
-      ? "Owner filled; choose Unblocked to store Blocker: none."
-      : "Unblocked stores Blocker: none automatically; no typing required.";
-    help.textContent = issue || (hasBlocker && !ownerResolvedBlocker ? "Describe what must be cleared before the next action." : clearHelp);
+      ? "Owner filled; choose None to store Blocker: None."
+      : "None stores Blocker: None automatically; no typing required.";
+    help.textContent = issue || (hasBlocker && !ownerResolvedBlocker ? "Blocked pauses Button runs next until this reason clears." : clearHelp);
   }
 }
 
+function syncBlockerPresetButtons() {
+  const current = normalizeCopy(el("edit-blocker")?.value).toLowerCase();
+  document.querySelectorAll("[data-blocker-preset]").forEach((button) => {
+    const active = normalizeCopy(button.dataset.blockerPreset).toLowerCase() === current;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
 function ownerBlockerResolutionHelp() {
-  return "Owner filled. To clear this blocker, choose Unblocked, then save.";
+  return "Owner filled. Set Blocker: None, then save.";
 }
 
 function syncPackDetailForwardPanel(pack) {
@@ -4052,33 +4724,77 @@ function syncPackDetailForwardPanel(pack) {
   }
 
   const pending = pendingPackFromForwardPathForm(pack);
-  const command = resolvePrimaryCommandForPack(pending);
+  const actionCommand = resolvePrimaryCommandForPack(pending);
+  const command = commandForRoute(pending, filteredPacks().length, state.packs.filter(isReview).length);
+  const workflow = workflowStateForPack(pending, actionCommand);
   const issue = blockerModeIssue();
   const panel = document.querySelector('[data-forward-motion="pack-detail"]');
   const head = panel?.querySelector(".demo-forward-head strong");
-  const where = panel?.querySelector('[data-command-field="where"] strong');
-  const blocker = panel?.querySelector('[data-command-field="blocker"] strong');
-  const next = panel?.querySelector('[data-command-field="button-runs-next"] strong');
-  if (where) where.textContent = `${pending.title} / ${pending.status}`;
+  const stateLabel = panel?.querySelector("[data-workflow-state-preview]");
+  const stateHelp = panel?.querySelector("[data-workflow-state-help]");
+  setWorkPathSummary(panel, workPathSummaryText(pending, actionCommand, workflow), workPathSummaryHelp(pending, actionCommand, workflow));
+  if (stateLabel) {
+    stateLabel.textContent = workflow.label;
+    stateLabel.title = workflow.help;
+  }
+  if (stateHelp) {
+    stateHelp.textContent = workflow.help;
+  }
   if (issue) {
-    if (head) head.textContent = "Choose Unblocked";
-    if (blocker) blocker.textContent = issue;
-    if (next) next.textContent = "Choose Unblocked";
+    if (head) head.textContent = blockerModeFixNext(issue);
+    setWorkPathSummary(
+      panel,
+      `Fix blocker: ${issue} -> ${blockerModeFixNext(issue)}`,
+      `Where: ${pending.title}. Blocker: ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`
+    );
+    if (stateLabel) stateLabel.textContent = "Fix blocker";
+    if (stateHelp) stateHelp.textContent = issue;
     const invalidCommand = commandForRoute(pending, filteredPacks().length, state.packs.filter(isReview).length);
     invalidCommand.blocker = issue;
-    invalidCommand.next = "Choose Unblocked";
+    invalidCommand.next = blockerModeFixNext(issue);
     invalidCommand.action = "fix-blocker-mode";
     invalidCommand.targetPackId = pending.id;
     invalidCommand.stateText = "Fix blocker";
-    invalidCommand.flowHint = "Flow: fix blocker state, then save.";
+    invalidCommand.flowHint = normalizeCopy(issue).toLowerCase().includes("owner")
+      ? "Flow: fill owner, then save."
+      : "Flow: fix blocker state, then save.";
     updateCommand(invalidCommand);
+    syncPackPrimaryAction(invalidCommand);
     return;
   }
 
-  if (head) head.textContent = command.label;
-  if (blocker) blocker.textContent = blockerTextForPack(pending);
-  if (next) next.textContent = command.label;
-  updateCommand(commandForRoute(pending, filteredPacks().length, state.packs.filter(isReview).length));
+  if (ownerBlockerNeedsClear()) {
+    if (head) head.textContent = "Set Blocker: None";
+    setWorkPathSummary(
+      panel,
+      "Fix blocker: owner filled -> Set Blocker: None",
+      `Where: ${pending.title}. Blocker: owner is filled but still marked blocked. Button runs next: Set Blocker: None.`
+    );
+    if (stateLabel) stateLabel.textContent = "Fix blocker";
+    if (stateHelp) stateHelp.textContent = "Owner is filled; set Blocker to None before saving.";
+    command.next = "Set Blocker: None";
+    command.action = "clear-owner-blocker";
+    command.targetPackId = pending.id;
+    command.stateText = "Fix blocker";
+    command.stateHelp = "Owner is filled; set Blocker to None before saving.";
+    command.flowHint = "Flow: set Blocker: None, then save.";
+    command.runNote = "Sets Blocker to None so the work path can be saved.";
+    updateCommand(command);
+    syncPackPrimaryAction(command);
+    return;
+  }
+
+  const hasPendingChanges = packForwardPathFormSignature(pack) !== packForwardPathSignature(pack);
+  if (hasPendingChanges) {
+    command.stateText = "Edited";
+    command.stateHelp = `Unsaved work path changes. Button runs next saves them first, then ${command.next}.`;
+    command.flowHint = `Flow: save work path, then ${command.next}.`;
+    command.runNote = `Saves pending work path changes first, then ${command.next}.`;
+  }
+
+  if (head) head.textContent = actionCommand.label;
+  updateCommand(command);
+  syncPackPrimaryAction(command);
 }
 
 function pendingPackFromForwardPathForm(pack) {
@@ -4129,7 +4845,7 @@ function createSamplePack() {
     doneWhen: "Sample result is described.",
     sources: ["browser-state"],
     memory: [],
-    activity: ["Created in this browser-only demo."]
+    activity: ["Created in this browser."]
   };
   state.packs.unshift(pack);
   state.selectedId = pack.id;
@@ -4150,7 +4866,7 @@ function initialWorkflowForCreatedPack(title, owner, next) {
     return { status: "draft", blocker: "missing owner" };
   }
 
-  return { status: "active", blocker: "none" };
+  return { status: "active", blocker: DEMO_BLOCKER_NONE };
 }
 
 function uniquePackId(baseId) {
@@ -4174,8 +4890,13 @@ function savePackDetail(id) {
     render();
     return;
   }
+  const before = packForwardPathSnapshot(pack);
   const changed = applyPackForwardPathFormValues(pack);
-  setSaveConfirmation(pack, changed);
+  const after = packForwardPathSnapshot(pack);
+  setSaveConfirmation(pack, {
+    changed,
+    summary: forwardPathChangeSummary(before, after)
+  });
   render();
 }
 
@@ -4190,28 +4911,56 @@ function applyPackForwardPathFormValues(pack) {
   pack.next = values.next || pack.next;
   pack.doneWhen = values.doneWhen || pack.doneWhen;
   pack.purpose = values.purpose || pack.purpose;
-  pack.blocker = pack.status === "done" ? "none" : pack.blocker;
-  if (pack.status === "blocked" && pack.blocker === "none") {
+  pack.blocker = pack.status === "done" ? DEMO_BLOCKER_NONE : pack.blocker;
+  if (pack.status === "blocked" && isUnblockedBlockerValue(pack.blocker)) {
     pack.status = "active";
   }
   const changed = packForwardPathSignature(pack) !== before;
   if (changed) {
-    addPackActivity(pack, "Forward path changed.");
+    addPackActivity(pack, "Work path changed.");
   }
   return changed;
 }
 
+function packForwardPathSnapshot(pack) {
+  return {
+    title: normalizeCopy(pack?.title),
+    status: normalizeCopy(pack?.status),
+    blocker: normalizeCopy(pack?.blocker),
+    owner: normalizeCopy(pack?.owner),
+    due: normalizeCopy(pack?.due),
+    next: normalizeCopy(pack?.next),
+    doneWhen: normalizeCopy(pack?.doneWhen),
+    purpose: normalizeCopy(pack?.purpose)
+  };
+}
+
+function forwardPathChangeSummary(before, after) {
+  const changes = FORWARD_PATH_CHANGE_FIELDS
+    .map(([field, label]) => {
+      const oldValue = normalizeCopy(before?.[field]);
+      const newValue = normalizeCopy(after?.[field]);
+      if (oldValue === newValue) {
+        return "";
+      }
+
+      return `${label} to ${sentenceValue(newValue || "blank")}`;
+    })
+    .filter(Boolean);
+
+  if (changes.length === 0) {
+    return "Edit a work path field before saving";
+  }
+
+  const visible = changes.slice(0, 3).join("; ");
+  const remaining = changes.length - 3;
+  return remaining > 0
+    ? `Changed ${visible}; ${remaining} more`
+    : `Changed ${visible}`;
+}
+
 function packForwardPathSignature(pack) {
-  return JSON.stringify({
-    title: pack.title || "",
-    status: pack.status || "",
-    blocker: pack.blocker || "",
-    owner: pack.owner || "",
-    due: pack.due || "",
-    next: pack.next || "",
-    doneWhen: pack.doneWhen || "",
-    purpose: pack.purpose || ""
-  });
+  return JSON.stringify(packForwardPathSnapshot(pack));
 }
 
 function packForwardPathFormSignature(pack) {
@@ -4224,15 +4973,18 @@ function packForwardPathFormValues(pack) {
     return input ? valueOf(id) : (fallback || "");
   };
   const blockerInput = el("edit-blocker");
-  const rawStatus = fieldValue("edit-status", pack.status) || pack.status || "";
+  const currentStatus = pack.status || "";
   const owner = fieldValue("edit-owner", pack.owner) || pack.owner || "";
   const requestedNext = fieldValue("edit-next", pack.next) || pack.next || "";
-  const blockerMode = document.querySelector('input[name="edit-blocker-mode"]:checked')?.value === "set" ? "set" : "clear";
+  const selectedBlockerMode = document.querySelector('input[name="edit-blocker-mode"]:checked');
+  const blockerMode = selectedBlockerMode
+    ? (selectedBlockerMode.value === "set" ? "set" : "clear")
+    : (isUnblockedBlockerValue(pack.blocker) ? "clear" : "set");
   const rawBlocker = blockerMode === "set"
-    ? normalizeCopy(blockerInput?.value || "") || "needs review"
-    : "none";
-  const blocker = rawStatus === "done" ? "none" : rawBlocker;
-  const status = forwardPathStatusForBlocker(rawStatus, blocker);
+    ? normalizeCopy(blockerInput ? blockerInput.value : pack.blocker) || "needs review"
+    : DEMO_BLOCKER_NONE;
+  const blocker = currentStatus === "done" ? DEMO_BLOCKER_NONE : rawBlocker;
+  const status = forwardPathStatusForBlocker(currentStatus, blocker, requestedNext);
 
   return {
     title: fieldValue("edit-title", pack.title) || pack.title || "",
@@ -4246,21 +4998,18 @@ function packForwardPathFormValues(pack) {
   };
 }
 
-function forwardPathStatusForBlocker(status, blocker) {
+function forwardPathStatusForBlocker(status, blocker, next = "") {
   const normalizedStatus = normalizeCopy(status) || "active";
   if (normalizedStatus === "done") {
     return "done";
   }
-  if (normalizedStatus === "draft") {
+  if (isPlaceholderNext(next)) {
     return "draft";
   }
-  if (blocker && blocker !== "none") {
+  if (!isUnblockedBlockerValue(blocker)) {
     return "blocked";
   }
-  if (normalizedStatus === "blocked") {
-    return "active";
-  }
-  return normalizedStatus;
+  return "active";
 }
 
 function filteredPacks() {
@@ -4307,8 +5056,53 @@ function isPlaceholderNext(label) {
   return !value || value === "choose next action" || value === "set button runs next" || value === "set next";
 }
 
+function editableButtonRunsNextValue(value) {
+  return isPlaceholderNext(value) ? "" : normalizeCopy(value);
+}
+
 function hasBlocker(pack) {
-  return Boolean(pack && (pack.status === "blocked" || (pack.blocker && pack.blocker !== "none")));
+  return blockerStateForPack(pack).hasBlocker;
+}
+
+function isUnblockedBlockerValue(value) {
+  return normalizeStoredBlocker(value) === DEMO_BLOCKER_NONE;
+}
+
+function normalizeStoredBlocker(value) {
+  const blocker = normalizeCopy(value);
+  return blocker && blocker.toLowerCase() !== DEMO_BLOCKER_NONE
+    ? blocker
+    : DEMO_BLOCKER_NONE;
+}
+
+function blockerDisplayValue(value) {
+  const blocker = normalizeStoredBlocker(value);
+  return blocker === DEMO_BLOCKER_NONE ? DEMO_BLOCKER_NONE_LABEL : blocker;
+}
+
+function blockerStateForPack(pack) {
+  if (!pack) {
+    return {
+      hasBlocker: false,
+      mode: "none",
+      storage: "",
+      label: "choose sample work",
+      reason: ""
+    };
+  }
+
+  const storage = normalizeStoredBlocker(pack.blocker);
+  const statusBlocked = normalizeCopy(pack.status).toLowerCase() === "blocked";
+  const hasStoredBlocker = storage !== DEMO_BLOCKER_NONE;
+  const reason = hasStoredBlocker ? storage : (statusBlocked ? "blocked" : "");
+
+  return {
+    hasBlocker: Boolean(reason),
+    mode: reason ? "set" : "clear",
+    storage,
+    label: reason || DEMO_BLOCKER_NONE_LABEL,
+    reason
+  };
 }
 
 function blockerTextForPack(pack) {
@@ -4316,19 +5110,16 @@ function blockerTextForPack(pack) {
     return "choose sample work";
   }
 
-  if (pack.blocker && pack.blocker !== "none") {
-    return pack.blocker;
+  const blockerState = blockerStateForPack(pack);
+  if (blockerState.reason) {
+    return blockerState.reason;
   }
 
   if (isMissingNextAction(pack)) {
     return "missing Button runs next";
   }
 
-  if (pack.status === "blocked") {
-    return "blocked";
-  }
-
-  return "none";
+  return blockerState.label;
 }
 
 function preferredReviewPack() {
@@ -4353,8 +5144,8 @@ function profile() {
 
 function metricCard(label, value, note) {
   return `<section class="demo-metric">
-    <span class="kpi-label">${escapeHtml(label)}</span>
-    <strong class="kpi-value">${escapeHtml(value)}</strong>
+    <span class="demo-summary-label">${escapeHtml(label)}</span>
+    <strong class="demo-summary-value">${escapeHtml(value)}</strong>
     <p>${escapeHtml(note)}</p>
   </section>`;
 }
@@ -4365,16 +5156,33 @@ function navButton(route, label, className = "btn") {
   return `<button class="${escapeAttribute(className)}" type="button" data-go="${escapeAttribute(route)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
 }
 
+function homeSecondaryAction(route, label, reason) {
+  return `<div class="demo-home-action">
+    ${navButton(route, label)}
+    <small>${escapeHtml(reason)}</small>
+  </div>`;
+}
+
 function routeButtonReason(route, label) {
   const reasons = {
+    home: "Return to the simplified demo start.",
     work: "Open the work list to choose one sample pack.",
     triage: "Open triage to turn pasted work into Where, Blocker, and Button runs next.",
-    today: "Open dated work and run the next action from due items.",
+    today: "Open dated work and run Button runs next from due items.",
+    board: "Open the status board to compare sample work lanes.",
     review: "Open review work and resolve the next blocker.",
     next: "Open Button runs next setup for review work.",
-    lab: "Open Demo Lab to inspect the selected command state.",
-    meta: "Open Meta to inspect routes, assets, and build metadata.",
-    create: "Create sample work with required forward-motion fields.",
+    check: "Open demo checks for route and action coverage.",
+    health: "Open demo health for route, asset, and state checks.",
+    search: "Open search to find sample work by title, owner, due date, or next action.",
+    stats: "Open sample counts for visible work, review, and done states.",
+    notes: "Open notes for selected work.",
+    timeline: "Open browser-only activity written by demo actions.",
+    files: "Open source references used by the sample packs.",
+    calendar: "Open due-date work and date-based actions.",
+    lab: "Open Demo Lab to inspect the selected work state.",
+    meta: "Open Meta to inspect routes, assets, and build info.",
+    create: "Create sample work with title, owner, and Button runs next.",
     memory: "Open Memory to add recall notes to selected work.",
     settings: "Change the static demo copy profile.",
     feedback: "Open feedback with the current demo context."
@@ -4383,17 +5191,62 @@ function routeButtonReason(route, label) {
 }
 
 function factBlock(label, value) {
+  const copy = copySurface(value || DEMO_BLOCKER_NONE_LABEL, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   return `<div class="demo-fact">
     <span>${escapeHtml(label)}</span>
-    <strong>${escapeHtml(value || "none")}</strong>
+    <strong${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
   </div>`;
 }
 
 function factLine(label, value) {
+  const copy = copySurface(value || DEMO_BLOCKER_NONE_LABEL, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   return `<div class="demo-command-line" data-command-field="${escapeAttribute(fieldKey(label))}">
     <span>${escapeHtml(label)}</span>
-    <strong>${escapeHtml(value || "none")}</strong>
+    <strong${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
   </div>`;
+}
+
+function workPathSummary(pack, command = resolvePrimaryCommandForPack(pack), workflow = workflowStateForPack(pack, command)) {
+  const summary = workPathSummaryText(pack, command, workflow);
+  const help = workPathSummaryHelp(pack, command, workflow);
+  const copy = copySurface(summary, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<div class="demo-path-summary" data-path-summary="pack-detail" title="${escapeAttribute(helpCopy(help, DEMO_COPY_LIMITS.commandFlowHelp))}" aria-label="${escapeAttribute(helpCopy(help, DEMO_COPY_LIMITS.commandFlowHelp))}">
+    <span>Path now</span>
+    <strong data-path-summary-text${copySurfaceAttributes("Work path", copy)}>${escapeHtml(copy.visible)}</strong>
+  </div>`;
+}
+
+function workPathSummaryText(pack, command = resolvePrimaryCommandForPack(pack), workflow = workflowStateForPack(pack, command)) {
+  return `${workflow.label}: ${blockerTextForPack(pack)} -> ${command.label}`;
+}
+
+function workPathSummaryHelp(pack, command = resolvePrimaryCommandForPack(pack), workflow = workflowStateForPack(pack, command)) {
+  return `Where: ${pack?.title || "Choose work"}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}. Work state: ${workflow.label}.`;
+}
+
+function setWorkPathSummary(panel, summary, help) {
+  const summaryElement = panel?.querySelector("[data-path-summary-text]");
+  const row = panel?.querySelector("[data-path-summary]");
+  if (!summaryElement) {
+    return;
+  }
+
+  setCopySurface(summaryElement, summary, "Work path", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  const helpText = helpCopy(help, DEMO_COPY_LIMITS.commandFlowHelp);
+  if (row) {
+    row.title = helpText;
+    row.setAttribute("aria-label", helpText);
+  }
+}
+
+function ownerSupportNeededForPack(pack) {
+  return normalizeCopy(pack?.blocker).toLowerCase().includes("owner") && isMissingOwnerValue(pack?.owner);
+}
+
+function supportDetailsSummary(ownerIsInline) {
+  return ownerIsInline
+    ? "Title, due date, and purpose only"
+    : "Owner, due date, and purpose only";
 }
 
 function relevantMemoryStrip(pack) {
@@ -4403,8 +5256,8 @@ function relevantMemoryStrip(pack) {
     ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
     : "none yet";
   const help = latest
-    ? `Relevant Memory: ${latest}`
-    : "Relevant Memory: none yet. How to fill: add a memory note from the Memory route.";
+    ? `Relevant Memory: ${sentenceValue(latest)}. ${memoryStripNextLine(pack)}.`
+    : `Relevant Memory: none yet. How to fill: add a memory note from the Memory route. ${memoryStripNextLine(pack)}.`;
   const actionLabel = memoryStripActionLabel(pack, latest);
   const actionHelp = memoryStripActionHelp(pack, latest);
 
@@ -4412,6 +5265,7 @@ function relevantMemoryStrip(pack) {
     <div class="demo-memory-copy">
       <span>Relevant Memory</span>
       <strong>${escapeHtml(visible)}</strong>
+      <small class="demo-memory-next">${escapeHtml(memoryStripNextLine(pack))}</small>
       ${latest ? "" : `<small>How to fill: add a memory note from here or from the Memory route.</small>`}
     </div>
     <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack?.id || "")}"${controlLabelAttributes(actionHelp)}>${escapeHtml(actionLabel)}</button>
@@ -4429,8 +5283,8 @@ function relevantMemoryCardStrip(pack) {
     ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
     : "none yet";
   const help = latest
-    ? `Relevant Memory: ${latest}`
-    : "Relevant Memory: none yet. Add a memory note from the selected work path.";
+    ? `Relevant Memory: ${sentenceValue(latest)}. ${memoryStripNextLine(pack)}.`
+    : `Relevant Memory: none yet. Add a memory note from the selected work path. ${memoryStripNextLine(pack)}.`;
   const actionLabel = memoryStripActionLabel(pack, latest);
   const actionHelp = memoryStripActionHelp(pack, latest);
 
@@ -4438,6 +5292,7 @@ function relevantMemoryCardStrip(pack) {
     <div class="demo-memory-copy">
       <span>Relevant Memory</span>
       <strong>${escapeHtml(visible)}</strong>
+      <small class="demo-memory-next">${escapeHtml(memoryStripNextLine(pack))}</small>
       ${latest ? "" : `<small>How to fill: open Memory or selected work to add recall.</small>`}
     </div>
     <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(actionHelp)}>${escapeHtml(actionLabel)}</button>
@@ -4452,93 +5307,128 @@ function memoryStripActionLabel(pack, latest = latestRelevantMemory(pack)) {
   return latest ? "Open memory" : "Add memory";
 }
 
+function memoryStripNextLine(pack) {
+  if (!pack) {
+    return state.packs.length === 0
+      ? "Button runs next: create or reset sample work"
+      : "Button runs next: choose work";
+  }
+
+  return `Button runs next: ${resolvePrimaryCommandForPack(pack).label}`;
+}
+
 function memoryStripActionHelp(pack, latest = latestRelevantMemory(pack)) {
   if (!pack) {
-    return "Where: Relevant Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory.";
+    return state.packs.length === 0
+      ? "Where: Relevant Memory. Blocker: no sample work exists. Button runs next: create or reset sample work before adding memory."
+      : "Where: Relevant Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory.";
   }
 
   return latest
-    ? `Where: Relevant Memory / ${pack.title}. Blocker: none. Button runs next: open saved memory for this work.`
+    ? `Where: Relevant Memory / ${pack.title}. Blocker: None. Button runs next: open saved memory for this work.`
     : `Where: Relevant Memory / ${pack.title}. Blocker: no saved memory note yet. Button runs next: add memory note.`;
 }
 
 function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
-  const current = workPathStage(pack, command);
+  const workflow = workflowStateForPack(pack, command);
+  const current = workflow.path;
   const steps = workPathSteps();
+  const pathCopy = copySurface(
+    `${workflow.label} -> ${command.label}`,
+    DEMO_COPY_LIMITS.commandFieldVisible,
+    DEMO_COPY_LIMITS.commandFlowHelp
+  );
 
-  return `<div class="demo-work-path" data-work-path="selected-work" aria-label="${escapeAttribute(`Work path: ${current}. Next: ${command.label}.`)}">
+  return `<div class="demo-work-path" data-work-path="selected-work" aria-label="${escapeAttribute(`Work state: ${workflow.label}. Work path: ${current}. Button runs next: ${command.label}.`)}">
     <span class="section-label">Work path</span>
     <div class="demo-work-path-steps">
       ${steps.map((step) => `<span class="demo-work-path-step${step.id === current ? " active" : ""}" title="${escapeAttribute(step.help)}" aria-current="${step.id === current ? "step" : "false"}">${escapeHtml(step.label)}</span>`).join("")}
     </div>
-    <strong>Next: ${escapeHtml(command.label)}</strong>
+    <strong${copySurfaceAttributes("Work path", pathCopy)}>${escapeHtml(pathCopy.visible)}</strong>
   </div>`;
 }
 
 function workPathSteps() {
   return [
-    { id: "draft", label: "Draft", help: "Set the forward path." },
-    { id: "review", label: "Review", help: "Clear the blocker or run the next action." },
-    { id: "proof", label: "Proof", help: "Run the next action and keep the proof target visible." },
+    { id: "draft", label: "Draft", help: "Set the work path." },
+    { id: "review", label: "Review", help: "Clear the blocker or run Button runs next." },
+    { id: "proof", label: "Proof", help: "Run Button runs next and keep the proof target visible." },
     { id: "done", label: "Done", help: "Finish when proof is ready." }
   ];
 }
 
 function workPathStage(pack, command = resolvePrimaryCommandForPack(pack)) {
-  if (!pack) {
-    return "draft";
-  }
-
-  if (pack.status === "done") {
-    return "done";
-  }
-
-  if (pack.status === "draft" || isMissingNextAction(pack)) {
-    return "draft";
-  }
-
-  if (hasBlocker(pack)) {
-    return "review";
-  }
-
-  return command.action === "done" ? "proof" : "review";
+  return workflowStateForPack(pack, command).path;
 }
 
-function inputField(id, label, value) {
+function inputField(id, label, value, help = "") {
+  const describedBy = help ? `${id}-help` : "";
   return `<label class="demo-field" for="${escapeAttribute(id)}">
     <span>${escapeHtml(label)}</span>
-    <input id="${escapeAttribute(id)}" type="text" value="${escapeAttribute(value || "")}">
+    <input id="${escapeAttribute(id)}" type="text" value="${escapeAttribute(value || "")}"${fieldHelpAttributes(describedBy, help)}>
+    ${fieldHelp(id, help)}
   </label>`;
 }
 
-function textField(id, label, value) {
+function textField(id, label, value, help = "") {
+  const describedBy = help ? `${id}-help` : "";
   return `<label class="demo-field demo-field-wide" for="${escapeAttribute(id)}">
     <span>${escapeHtml(label)}</span>
-    <textarea id="${escapeAttribute(id)}" rows="4">${escapeHtml(value || "")}</textarea>
+    <textarea id="${escapeAttribute(id)}" rows="4"${fieldHelpAttributes(describedBy, help)}>${escapeHtml(value || "")}</textarea>
+    ${fieldHelp(id, help)}
   </label>`;
 }
 
-function selectField(id, label, options, selected) {
-  return `<label class="demo-field" for="${escapeAttribute(id)}">
-    <span>${escapeHtml(label)}</span>
-    <select id="${escapeAttribute(id)}">
-      ${options.map((option) => `<option value="${escapeAttribute(option)}"${option === selected ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
-    </select>
-  </label>`;
+function fieldHelpAttributes(describedBy, help) {
+  if (!help) {
+    return "";
+  }
+
+  return ` aria-describedby="${escapeAttribute(describedBy)}" title="${escapeAttribute(help)}"`;
 }
 
-function disabledReasonAttributes(disabled, reason) {
+function fieldHelp(id, help) {
+  if (!help) {
+    return "";
+  }
+
+  return `<small id="${escapeAttribute(id)}-help" class="demo-field-help">${escapeHtml(help)}</small>`;
+}
+
+function disabledReasonAttributes(disabled, reason, describedById = "") {
   if (!disabled) {
     return "";
   }
 
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
-  return ` disabled title="${escapeAttribute(copy)}" aria-description="${escapeAttribute(copy)}" data-disabled-reason="${escapeAttribute(copy)}"`;
+  const describedBy = normalizeCopy(describedById);
+  const describedByAttribute = describedBy
+    ? ` aria-describedby="${escapeAttribute(describedBy)}"`
+    : "";
+  return ` disabled title="${escapeAttribute(copy)}" aria-description="${escapeAttribute(copy)}"${describedByAttribute} data-disabled-reason="${escapeAttribute(copy)}"`;
+}
+
+function syncDisabledReasonMetadata(control, disabled, reason) {
+  if (!control) {
+    return;
+  }
+
+  if (!disabled) {
+    control.removeAttribute("title");
+    control.removeAttribute("aria-description");
+    delete control.dataset.disabledReason;
+    return;
+  }
+
+  const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
+  control.title = copy;
+  control.setAttribute("aria-description", copy);
+  control.dataset.disabledReason = copy;
 }
 
 function controlHelpAttributes(disabled, reason, describedById) {
   if (disabled) {
-    return disabledReasonAttributes(true, reason);
+    return disabledReasonAttributes(true, reason, describedById);
   }
 
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
@@ -4557,7 +5447,7 @@ function disabledReasonNotice(disabled, reason) {
 
   const copy = visibleCopy(reason, DEMO_COPY_LIMITS.commandFlowVisible);
   const help = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
-  return `<p class="demo-disabled-reason" title="${escapeAttribute(help)}">Blocked: ${escapeHtml(copy)}</p>`;
+  return `<p class="demo-disabled-reason" role="note" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(`Disabled reason: ${help}`)}">Why disabled: ${escapeHtml(copy)}</p>`;
 }
 
 function recentActivityPanel() {
@@ -4638,7 +5528,7 @@ function refreshMetaDiagnostics() {
   render();
   collectStyleAudit().then((styleAudit) => {
     state.styleAudit = styleAudit;
-    state.status = routeStatus("Meta", "none", "review recomputed diagnostics");
+      state.status = routeStatus("Meta", DEMO_BLOCKER_NONE, "review recomputed diagnostics");
     if (state.route === "meta") {
       render();
     }
@@ -4701,11 +5591,22 @@ function syncSearchParam(key, value) {
 function buildHealthChecks() {
   const routeContract = routeContractStatus();
   const disabledReasons = disabledReasonCoverageStatus();
+  const supportReasons = supportActionReasonCoverageStatus();
+  const emptyStates = emptyStateCoverageStatus();
+  const receipts = receiptCoverageStatus();
+  const selectGuidance = selectGuidanceCoverageStatus();
+  const memoryGuidance = memoryGuidanceCoverageStatus();
+  const fieldGuidance = fieldGuidanceCoverageStatus();
+  const plainLanguage = plainLanguageCoverageStatus();
+  const detailsOptIn = detailsOptInCoverageStatus();
+  const copySurfaces = copySurfaceCoverageStatus();
+  const compactLabels = compactLabelCoverageStatus();
+  const northStar = northStarCoverageStatus();
   const checks = [
     {
-      label: "Demo metadata loaded",
+      label: "Build info loaded",
       status: Boolean(state.metadata && state.metadata.version),
-      detail: state.metadata?.version ? `Version ${state.metadata.version}` : "Metadata not available."
+      detail: state.metadata?.version ? `Version ${state.metadata.version}` : "Build info not available."
     },
     {
       label: "Theme system",
@@ -4715,7 +5616,7 @@ function buildHealthChecks() {
     {
       label: "Local storage state",
       status: canUseLocalStorage(DEMO_STORAGE_KEY),
-      detail: "localStorage state persisted for demo actions."
+      detail: "localStorage state persisted for button results."
     },
     {
       label: "Scenario selected",
@@ -4723,14 +5624,19 @@ function buildHealthChecks() {
       detail: `Scenario ${state.scenarioId} applied.`
     },
     {
-      label: "Route resolved",
+      label: "Route fallback",
       status: isKnownRoute(state.route),
       detail: `Current route: ${state.route}.`
     },
     {
-      label: "Route contract",
+      label: "Route links",
       status: routeContract.status,
       detail: routeContract.detail
+    },
+    {
+      label: "North Star coverage",
+      status: northStar.status,
+      detail: northStar.detail
     },
     {
       label: "Disabled control reasons",
@@ -4738,12 +5644,62 @@ function buildHealthChecks() {
       detail: disabledReasons.detail
     },
     {
+      label: "Support action reasons",
+      status: supportReasons.status,
+      detail: supportReasons.detail
+    },
+    {
+      label: "Empty state guidance",
+      status: emptyStates.status,
+      detail: emptyStates.detail
+    },
+    {
+      label: "Receipt guidance",
+      status: receipts.status,
+      detail: receipts.detail
+    },
+    {
+      label: "Select guidance",
+      status: selectGuidance.status,
+      detail: selectGuidance.detail
+    },
+    {
+      label: "Memory guidance",
+      status: memoryGuidance.status,
+      detail: memoryGuidance.detail
+    },
+    {
+      label: "Field guidance",
+      status: fieldGuidance.status,
+      detail: fieldGuidance.detail
+    },
+    {
+      label: "Plain language",
+      status: plainLanguage.status,
+      detail: plainLanguage.detail
+    },
+    {
+      label: "Details opt-in",
+      status: detailsOptIn.status,
+      detail: detailsOptIn.detail
+    },
+    {
+      label: "Copy labels",
+      status: copySurfaces.status,
+      detail: copySurfaces.detail
+    },
+    {
+      label: "Compact label limits",
+      status: compactLabels.status,
+      detail: compactLabels.detail
+    },
+    {
       label: "Pack list loaded",
       status: Array.isArray(state.packs) && state.packs.length > 0,
       detail: `${state.packs.length} sample packs available.`
     },
     {
-      label: "Style audit assets",
+      label: "Shipped files",
       status: state.styleAudit?.status === "ready",
       detail: styleAuditSummary()
     }
@@ -4754,34 +5710,61 @@ function buildHealthChecks() {
 function styleAuditSummary() {
   const audit = state.styleAudit;
   if (!audit) {
-    return "Asset budget is still loading.";
+    return "File sizes are still loading.";
   }
 
   const failed = audit.assets.filter((asset) => !asset.status);
   if (failed.length > 0) {
-    return `${failed.length} style audit asset(s) could not be measured.`;
+    return `${failed.length} shipped file(s) could not be measured.`;
   }
 
-  return `${audit.totals.cssLines} CSS LOC and ${formatBytes(audit.totals.cssBytes)} measured.`;
+  return `${audit.totals.cssLines} CSS lines and ${formatBytes(audit.totals.cssBytes)} measured.`;
 }
 
 function copyLimitStatus() {
   const limits = copyLimitsSnapshot();
-  const status = limits.commandFlow.visible > 0
+  const status = limits.commandField.visible > 0
+    && limits.commandButton.visible > 0
+    && limits.commandFlow.visible > 0
+    && limits.commandField.help >= limits.commandField.visible
+    && limits.commandButton.help >= limits.commandButton.visible
     && limits.commandFlow.help >= limits.commandFlow.visible
+    && limits.compactButton.help >= limits.compactButton.visible
+    && limits.compactBadge.help >= limits.compactBadge.visible
+    && limits.compactNav.help >= limits.compactNav.visible
     && limits.receipt.help >= limits.receipt.visible
     && limits.status.help >= limits.status.visible;
   return {
     status,
-    detail: `Visible/help budgets: command ${limits.commandFlow.visible}/${limits.commandFlow.help}, receipt ${limits.receipt.visible}/${limits.receipt.help}, status ${limits.status.visible}/${limits.status.help}.`
+    detail: `Visible/help budgets: fields ${limits.commandField.visible}/${limits.commandField.help}, buttons ${limits.commandButton.visible}/${limits.commandButton.help}, compact buttons ${limits.compactButton.visible}/${limits.compactButton.help}, flow ${limits.commandFlow.visible}/${limits.commandFlow.help}, receipt ${limits.receipt.visible}/${limits.receipt.help}, status ${limits.status.visible}/${limits.status.help}.`
   };
 }
 
 function copyLimitsSnapshot() {
   return {
+    commandField: {
+      visible: DEMO_COPY_LIMITS.commandFieldVisible,
+      help: DEMO_COPY_LIMITS.commandFlowHelp
+    },
+    commandButton: {
+      visible: DEMO_COPY_LIMITS.commandButtonVisible,
+      help: DEMO_COPY_LIMITS.commandFlowHelp
+    },
     commandFlow: {
       visible: DEMO_COPY_LIMITS.commandFlowVisible,
       help: DEMO_COPY_LIMITS.commandFlowHelp
+    },
+    compactButton: {
+      visible: DEMO_COPY_LIMITS.compactButtonVisible,
+      help: DEMO_COPY_LIMITS.compactHelp
+    },
+    compactBadge: {
+      visible: DEMO_COPY_LIMITS.compactBadgeVisible,
+      help: DEMO_COPY_LIMITS.compactHelp
+    },
+    compactNav: {
+      visible: DEMO_COPY_LIMITS.compactNavVisible,
+      help: DEMO_COPY_LIMITS.compactHelp
     },
     memory: {
       visible: DEMO_COPY_LIMITS.memoryVisible
@@ -4798,7 +5781,7 @@ function copyLimitsSnapshot() {
 }
 
 function routeContractStatus() {
-  const navRouteIds = navItems.map(([id]) => id);
+  const navRouteIds = navItems.map((item) => item.route);
   const routeIds = Object.keys(ROUTE_CONTRACT);
   const missingContracts = navRouteIds.filter((route) => !ROUTE_CONTRACT[route]);
   const missingNavEntries = routeIds.filter((route) => route !== "pack" && !navRouteIds.includes(route));
@@ -4818,9 +5801,9 @@ function routeContractStatus() {
 
   if (!status) {
     const issues = [
-      missingContracts.length ? `missing contracts: ${missingContracts.join(", ")}` : "",
+      missingContracts.length ? `missing route links: ${missingContracts.join(", ")}` : "",
       missingNavEntries.length ? `missing nav: ${missingNavEntries.join(", ")}` : "",
-      invalidPackPatterns.length ? `invalid pack patterns: ${invalidPackPatterns.join(", ")}` : "",
+      invalidPackPatterns.length ? `route id mismatch: ${invalidPackPatterns.join(", ")}` : "",
       unknownPackId ? `unknown pack id: ${parsed.packId}` : "",
       parsed.malformedPackId ? "malformed pack id fragment" : "",
       parsed.unexpectedPackId ? `unexpected pack id for ${parsed.route}` : "",
@@ -4842,14 +5825,25 @@ function routeContractStatus() {
     currentRoute: parsed.route,
     currentPattern: parsed.pattern,
     detail: parsed.fallback
-      ? `${routeIds.length} hash route contract(s) aligned; unknown route ${parsed.requestedRoute} resolved to #/home.`
-      : `${routeIds.length} hash route contract(s) aligned; current pattern ${parsed.pattern}.`
+      ? `${routeIds.length} hash route link(s) aligned; unknown route ${parsed.requestedRoute} opened #/home.`
+      : `${routeIds.length} hash route link(s) aligned; current pattern ${parsed.pattern}.`
   };
 }
 
 function buildStyleAuditSnapshot() {
   const audit = state.styleAudit || emptyStyleAudit();
   const routeContract = routeContractStatus();
+  const copySurfaces = copySurfaceCoverageStatus();
+  const northStar = northStarCoverageStatus();
+  const supportReasons = supportActionReasonCoverageStatus();
+  const emptyStates = emptyStateCoverageStatus();
+  const receipts = receiptCoverageStatus();
+  const selectGuidance = selectGuidanceCoverageStatus();
+  const memoryGuidance = memoryGuidanceCoverageStatus();
+  const fieldGuidance = fieldGuidanceCoverageStatus();
+  const plainLanguage = plainLanguageCoverageStatus();
+  const detailsOptIn = detailsOptInCoverageStatus();
+  const compactLabels = compactLabelCoverageStatus();
   return {
     status: audit.status,
     generatedAt: audit.generatedAt,
@@ -4859,9 +5853,20 @@ function buildStyleAuditSnapshot() {
     routeContract,
     theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
     copyLimits: copyLimitsSnapshot(),
+    northStarCoverage: northStar,
     commandSync: commandSyncStatus(),
     currentOverflow: currentOverflowStatus(),
     disabledReasonCoverage: disabledReasonCoverageStatus(),
+    supportActionReasonCoverage: supportReasons,
+    emptyStateCoverage: emptyStates,
+    receiptCoverage: receipts,
+    selectGuidanceCoverage: selectGuidance,
+    memoryGuidanceCoverage: memoryGuidance,
+    fieldGuidanceCoverage: fieldGuidance,
+    plainLanguageCoverage: plainLanguage,
+    detailsOptInCoverage: detailsOptIn,
+    copySurfaceCoverage: copySurfaces,
+    compactLabelCoverage: compactLabels,
     metadata: {
       version: state.metadata?.version || DEMO_DEFAULT_VERSION,
       commit: state.metadata?.commit || "unknown",
@@ -4918,7 +5923,7 @@ function styleAuditChecks() {
         : asset.error || "Could not measure asset."
     })),
     {
-      label: "Demo JS measured",
+      label: "Demo script measured",
       status: Boolean(jsAsset?.status),
       detail: jsAsset?.status
         ? `${jsAsset.lines} LOC, ${formatBytes(jsAsset.bytes)}.`
@@ -4930,12 +5935,17 @@ function styleAuditChecks() {
       detail: DEMO_STORAGE_KEY
     },
     {
-      label: "Route contract",
+      label: "Route links",
       status: audit.routeContract.status,
       detail: audit.routeContract.detail
     },
     {
-      label: "Command controls sync",
+      label: "North Star coverage",
+      status: audit.northStarCoverage.status,
+      detail: audit.northStarCoverage.detail
+    },
+    {
+      label: "Current path controls sync",
       status: audit.commandSync.status,
       detail: audit.commandSync.detail
     },
@@ -4950,12 +5960,62 @@ function styleAuditChecks() {
       detail: audit.disabledReasonCoverage.detail
     },
     {
-      label: "Copy budgets",
+      label: "Support action reasons",
+      status: audit.supportActionReasonCoverage.status,
+      detail: audit.supportActionReasonCoverage.detail
+    },
+    {
+      label: "Empty state guidance",
+      status: audit.emptyStateCoverage.status,
+      detail: audit.emptyStateCoverage.detail
+    },
+    {
+      label: "Receipt guidance",
+      status: audit.receiptCoverage.status,
+      detail: audit.receiptCoverage.detail
+    },
+    {
+      label: "Select guidance",
+      status: audit.selectGuidanceCoverage.status,
+      detail: audit.selectGuidanceCoverage.detail
+    },
+    {
+      label: "Memory guidance",
+      status: audit.memoryGuidanceCoverage.status,
+      detail: audit.memoryGuidanceCoverage.detail
+    },
+    {
+      label: "Field guidance",
+      status: audit.fieldGuidanceCoverage.status,
+      detail: audit.fieldGuidanceCoverage.detail
+    },
+    {
+      label: "Plain language",
+      status: audit.plainLanguageCoverage.status,
+      detail: audit.plainLanguageCoverage.detail
+    },
+    {
+      label: "Details opt-in",
+      status: audit.detailsOptInCoverage.status,
+      detail: audit.detailsOptInCoverage.detail
+    },
+    {
+      label: "Copy labels",
+      status: audit.copySurfaceCoverage.status,
+      detail: audit.copySurfaceCoverage.detail
+    },
+    {
+      label: "Compact label limits",
+      status: audit.compactLabelCoverage.status,
+      detail: audit.compactLabelCoverage.detail
+    },
+    {
+      label: "Copy length limits",
       status: copyLimitStatus().status,
       detail: copyLimitStatus().detail
     },
     {
-      label: "Export metadata",
+      label: "Build timestamp",
       status: Boolean(state.metadata?.generatedAt),
       detail: state.metadata?.generatedAt
         ? `Generated ${new Date(state.metadata.generatedAt).toLocaleString()}.`
@@ -4965,6 +6025,7 @@ function styleAuditChecks() {
 }
 
 function collectLabSnapshot(pack, action, styleAudit, smokeChecks = labSmokeChecks(pack, styleAudit)) {
+  const workflow = workflowStateForPack(pack, action);
   return {
     route: state.route,
     routeHash: location.hash,
@@ -4973,29 +6034,33 @@ function collectLabSnapshot(pack, action, styleAudit, smokeChecks = labSmokeChec
           id: pack.id,
           title: pack.title,
           status: pack.status,
+          workflowState: workflow.label,
           blocker: blockerTextForPack(pack),
           buttonRunsNext: pack.next,
-          resolvedLabel: action.label,
-          resolvedAction: action.action
+          buttonRunsNextLabel: action.label,
+          buttonRunsNextRouteAction: action.action
         }
       : null,
-    commandBrief: {
+    currentPath: {
       where: el("command-where")?.textContent.trim() || "",
       blocker: el("command-blocker")?.textContent.trim() || "",
       buttonRunsNext: el("command-next")?.textContent.trim() || "",
-      primaryAction: el("primary-action")?.dataset.action || "",
-      primaryPack: el("primary-action")?.dataset.pack || ""
+      buttonRunsNextAction: el("primary-action")?.dataset.action || "",
+      buttonRunsNextPack: el("primary-action")?.dataset.pack || ""
     },
     focusTargets: {
       where: formatRouteHash("work", pack?.id || ""),
       blocker: pack && isReview(pack) ? formatRouteHash("review", pack.id) : formatRouteHash("review"),
-      buttonRunsNext: pack && isMissingNextAction(pack) ? formatRouteHash("next", pack.id) : "current command action"
+      buttonRunsNext: pack && isMissingNextAction(pack) ? formatRouteHash("next", pack.id) : "current Button runs next"
     },
     styleAudit: {
       status: styleAudit.status,
       cssLines: styleAudit.totals.cssLines,
       cssBytes: styleAudit.totals.cssBytes,
-      routeCount: styleAudit.routeCount
+      routeCount: styleAudit.routeCount,
+      northStarCoverage: northStarCoverageStatus(),
+      copySurfaceCoverage: copySurfaceCoverageStatus(),
+      compactLabelCoverage: compactLabelCoverageStatus()
     },
     smokeReplay: smokeChecks.map((check) => ({
       label: check.label,
@@ -5010,6 +6075,17 @@ function labSmokeChecks(pack, styleAudit, disabledReasons = null) {
   const action = resolvePrimaryCommandForPack(pack);
   const sync = commandSyncStatus();
   const overflow = currentOverflowStatus();
+  const northStar = northStarCoverageStatus();
+  const copySurfaces = copySurfaceCoverageStatus();
+  const supportReasons = supportActionReasonCoverageStatus();
+  const emptyStates = emptyStateCoverageStatus();
+  const receipts = receiptCoverageStatus();
+  const selectGuidance = selectGuidanceCoverageStatus();
+  const memoryGuidance = memoryGuidanceCoverageStatus();
+  const fieldGuidance = fieldGuidanceCoverageStatus();
+  const plainLanguage = plainLanguageCoverageStatus();
+  const detailsOptIn = detailsOptInCoverageStatus();
+  const compactLabels = compactLabelCoverageStatus();
   const disabledReasonCheck = disabledReasons ? [{
     label: "Disabled control reasons",
     status: disabledReasons.status,
@@ -5020,7 +6096,7 @@ function labSmokeChecks(pack, styleAudit, disabledReasons = null) {
     {
       label: "Selected work",
       status: Boolean(pack),
-      detail: pack ? `${pack.title} is loaded into the lab.` : "No sample work is selected."
+      detail: pack ? `${pack.title} is loaded into the lab.` : "Choose sample work to load it into the lab."
     },
     {
       label: "Blocker visible",
@@ -5028,14 +6104,19 @@ function labSmokeChecks(pack, styleAudit, disabledReasons = null) {
       detail: blockerTextForPack(pack)
     },
     {
-      label: "Button resolves",
+      label: "Button preview",
       status: Boolean(pack && action.action),
-      detail: pack ? `${action.label} resolves to ${action.action}.` : "No action resolved."
+      detail: pack ? `Button runs next shows ${action.label}.` : "Choose sample work so the Lab can preview Button runs next."
     },
     {
       label: "Bottom bar focus",
       status: true,
       detail: "Where, Blocker, and Button runs next scroll to active targets."
+    },
+    {
+      label: "North Star coverage",
+      status: northStar.status,
+      detail: northStar.detail
     },
     {
       label: "Header and dock sync",
@@ -5047,11 +6128,61 @@ function labSmokeChecks(pack, styleAudit, disabledReasons = null) {
       status: overflow.status,
       detail: overflow.detail
     },
+    {
+      label: "Copy labels",
+      status: copySurfaces.status,
+      detail: copySurfaces.detail
+    },
+    {
+      label: "Compact label limits",
+      status: compactLabels.status,
+      detail: compactLabels.detail
+    },
+    {
+      label: "Support action reasons",
+      status: supportReasons.status,
+      detail: supportReasons.detail
+    },
+    {
+      label: "Empty state guidance",
+      status: emptyStates.status,
+      detail: emptyStates.detail
+    },
+    {
+      label: "Receipt guidance",
+      status: receipts.status,
+      detail: receipts.detail
+    },
+    {
+      label: "Select guidance",
+      status: selectGuidance.status,
+      detail: selectGuidance.detail
+    },
+    {
+      label: "Memory guidance",
+      status: memoryGuidance.status,
+      detail: memoryGuidance.detail
+    },
+    {
+      label: "Field guidance",
+      status: fieldGuidance.status,
+      detail: fieldGuidance.detail
+    },
+    {
+      label: "Plain language",
+      status: plainLanguage.status,
+      detail: plainLanguage.detail
+    },
+    {
+      label: "Details opt-in",
+      status: detailsOptIn.status,
+      detail: detailsOptIn.detail
+    },
     ...disabledReasonCheck,
     {
-      label: "Style audit ready",
+      label: "File check ready",
       status: styleAudit.status === "ready",
-      detail: `${styleAudit.totals.cssLines} CSS LOC measured.`
+      detail: `${styleAudit.totals.cssLines} CSS lines measured.`
     }
   ];
 }
@@ -5083,14 +6214,27 @@ function commandSyncStatus() {
   const labelsMatch = primaryLabel === bottomLabel;
   const actionMatches = (primary?.dataset.action || "") === (dock?.dataset.action || "");
   const packMatches = (primary?.dataset.pack || "") === (dock?.dataset.pack || "");
-  const status = Boolean(primary && dock && labelsMatch && actionMatches && packMatches);
+  const fieldPairs = [
+    ["Where", el("command-where"), el("dock-where")],
+    ["Blocker", el("command-blocker"), el("dock-blocker")],
+    ["Button runs next", el("command-next"), dockLabel]
+  ];
+  const mismatchedFields = fieldPairs
+    .filter(([, commandField, dockField]) => copySurfaceAuditText(commandField) !== copySurfaceAuditText(dockField))
+    .map(([label]) => label);
+  const status = Boolean(primary && dock && labelsMatch && actionMatches && packMatches && mismatchedFields.length === 0);
 
   return {
     status,
+    mismatchedFields,
     detail: status
-      ? `${primaryLabel} is wired to the same action in header and dock.`
-      : "Header and dock action wiring do not match."
+      ? `${primaryLabel} is wired to the same Where, Blocker, and Button runs next in Current path and dock.`
+      : `Current path and dock differ: ${mismatchedFields.concat(labelsMatch ? [] : ["label"], actionMatches ? [] : ["action"], packMatches ? [] : ["pack"]).join(", ") || "unknown wiring"}.`
   };
+}
+
+function copySurfaceAuditText(element) {
+  return normalizeCopy(element?.getAttribute("aria-label") || element?.textContent || "");
 }
 
 function currentOverflowStatus() {
@@ -5105,6 +6249,135 @@ function currentOverflowStatus() {
       ? "No current horizontal overflow."
       : `${overflow}px horizontal overflow on this route.`
   };
+}
+
+function northStarCoverageStatus() {
+  const requiredFields = [
+    { id: "command-where", label: "Current path Where" },
+    { id: "command-blocker", label: "Current path Blocker" },
+    { id: "command-next", label: "Current path Button runs next" },
+    { id: "dock-where", label: "dock Where" },
+    { id: "dock-blocker", label: "dock Blocker" },
+    { id: "dock-next-label", label: "dock Button runs next" }
+  ];
+  const missing = requiredFields
+    .filter((field) => !northStarReadableElement(document.getElementById(field.id)))
+    .map((field) => field.label);
+  const primary = document.getElementById("primary-action");
+  const dock = document.getElementById("dock-next");
+
+  if (!northStarReadableElement(primary) || !normalizeCopy(primary?.dataset.action)) {
+    missing.push("header Button-runs-next wiring");
+  }
+
+  if (!northStarReadableElement(dock) || !normalizeCopy(dock?.dataset.action)) {
+    missing.push("dock Button-runs-next wiring");
+  }
+
+  if (document.querySelector('[data-forward-motion="pack-detail"]')) {
+    const selectedRequirements = [
+      { selector: '[data-work-path="selected-work"]', label: "selected work path" },
+      { selector: '[data-memory-strip="selected-work"]', label: "selected Relevant Memory" },
+      { selector: '[data-forward-motion="pack-detail"] [data-command-field="where"]', label: "selected Where" },
+      { selector: '[data-forward-motion="pack-detail"] [data-command-field="blocker"]', label: "selected Blocker" },
+      { selector: '[data-forward-motion="pack-detail"] [data-command-field="button-runs-next"]', label: "selected Button runs next" }
+    ];
+    missing.push(...selectedRequirements
+      .filter((item) => !northStarReadableElement(document.querySelector(item.selector)))
+      .map((item) => item.label));
+  }
+
+  const selectedCardCount = Array.from(document.querySelectorAll(".demo-work-card.selected"))
+    .filter(northStarReadableElement).length;
+  const memoryCardCount = Array.from(document.querySelectorAll('[data-memory-strip="selected-card"]'))
+    .filter(northStarReadableElement).length;
+  if (selectedCardCount > 0 && memoryCardCount < selectedCardCount) {
+    missing.push("selected-card Relevant Memory");
+  }
+
+  const disabledReasons = disabledReasonCoverageStatus();
+  if (!disabledReasons.status) {
+    missing.push("disabled button reasons");
+  }
+  const supportReasons = supportActionReasonCoverageStatus();
+  if (!supportReasons.status) {
+    missing.push("support action reasons");
+  }
+  const emptyStates = emptyStateCoverageStatus();
+  if (!emptyStates.status) {
+    missing.push("empty state guidance");
+  }
+  const receipts = receiptCoverageStatus();
+  if (!receipts.status) {
+    missing.push("receipt guidance");
+  }
+  const selectGuidance = selectGuidanceCoverageStatus();
+  if (!selectGuidance.status) {
+    missing.push("select guidance");
+  }
+  const memoryGuidance = memoryGuidanceCoverageStatus();
+  if (!memoryGuidance.status) {
+    missing.push("memory guidance");
+  }
+  const fieldGuidance = fieldGuidanceCoverageStatus();
+  if (!fieldGuidance.status) {
+    missing.push("field guidance");
+  }
+  const plainLanguage = plainLanguageCoverageStatus();
+  if (!plainLanguage.status) {
+    missing.push("plain language");
+  }
+  const detailsOptIn = detailsOptInCoverageStatus();
+  if (!detailsOptIn.status) {
+    missing.push("details opt-in");
+  }
+  const compactLabels = compactLabelCoverageStatus();
+  if (!compactLabels.status) {
+    missing.push("compact label limits");
+  }
+
+  const status = missing.length === 0;
+  const detailParts = [
+    "Where, Blocker, and Button runs next are present in Current path and dock.",
+    document.querySelector('[data-forward-motion="pack-detail"]')
+      ? "Selected work exposes path, memory, and work fields."
+      : "No selected-work edit surface is rendered on this route.",
+    selectedCardCount > 0 ? `${memoryCardCount}/${selectedCardCount} selected-card memory strip(s) visible.` : "",
+    disabledReasons.detail,
+    supportReasons.detail,
+    emptyStates.detail,
+    receipts.detail,
+    selectGuidance.detail,
+    memoryGuidance.detail,
+    fieldGuidance.detail,
+    plainLanguage.detail,
+    detailsOptIn.detail,
+    compactLabels.detail
+  ].filter(Boolean);
+
+  return {
+    status,
+    missing: missing.slice(0, 8),
+    commandFields: requiredFields.length,
+    selectedCardCount,
+    memoryCardCount,
+    detail: status
+      ? detailParts.join(" ")
+      : `${missing.length} North Star gap(s): ${missing.slice(0, 3).join(", ")}.`
+  };
+}
+
+function northStarReadableElement(element) {
+  if (!element || element.hidden || element.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return element.getClientRects().length > 0 && Boolean(normalizeCopy(element.textContent));
 }
 
 function disabledReasonCoverageStatus() {
@@ -5122,6 +6395,325 @@ function disabledReasonCoverageStatus() {
   };
 }
 
+function supportActionReasonCoverageStatus() {
+  const controls = Array.from(document.querySelectorAll(".demo-support-action"))
+    .filter(isSupportActionAuditCandidate);
+  const missing = controls.filter((control) => !supportActionReasonForControl(control));
+
+  return {
+    status: missing.length === 0,
+    count: controls.length,
+    missing: missing.map(supportActionAuditLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${controls.length} support action button(s) explain why they exist.`
+      : `${missing.length} support action button(s) need a reason: ${missing.map(supportActionAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function emptyStateCoverageStatus() {
+  const states = Array.from(document.querySelectorAll(".demo-empty"))
+    .filter(isEmptyStateAuditCandidate);
+  const missing = states.filter((stateElement) => !emptyStateExplainsContext(stateElement));
+
+  return {
+    status: missing.length === 0,
+    count: states.length,
+    missing: missing.map(emptyStateAuditLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${states.length} empty state(s) explain how to fill, where, blocker, and Button runs next.`
+      : `${missing.length} empty state(s) need context: ${missing.map(emptyStateAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function receiptCoverageStatus() {
+  const receipts = Array.from(document.querySelectorAll("[data-receipt-surface]"))
+    .filter(isReceiptAuditCandidate);
+  const missing = receipts.filter((receipt) => !receiptExplainsContext(receipt));
+
+  return {
+    status: missing.length === 0,
+    count: receipts.length,
+    missing: missing.map(receiptAuditLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${receipts.length} receipt surface(s) explain where, blocker, Button runs next, and proof target.`
+      : `${missing.length} receipt surface(s) need context: ${missing.map(receiptAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function selectGuidanceCoverageStatus() {
+  const controls = Array.from(document.querySelectorAll("select"))
+    .filter(isSelectGuidanceAuditCandidate);
+  const missing = controls.filter((control) => !selectGuidanceForControl(control));
+
+  return {
+    status: missing.length === 0,
+    count: controls.length,
+    missing: missing.map(selectGuidanceAuditLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${controls.length} select control(s) explain what to choose and how to recover when empty.`
+      : `${missing.length} select control(s) need guidance: ${missing.map(selectGuidanceAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function memoryGuidanceCoverageStatus() {
+  const strips = Array.from(document.querySelectorAll("[data-memory-strip]"))
+    .filter(isMemoryGuidanceAuditCandidate);
+  const missing = strips.filter((strip) => !memoryStripExplainsGuidance(strip));
+
+  return {
+    status: missing.length === 0,
+    count: strips.length,
+    missing: missing.map(memoryGuidanceAuditLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${strips.length} memory strip(s) explain recall state, how to fill when empty, and Button runs next.`
+      : `${missing.length} memory strip(s) need guidance: ${missing.map(memoryGuidanceAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function fieldGuidanceCoverageStatus() {
+  const controls = Array.from(document.querySelectorAll("input:not([type='hidden']):not([type='radio']), textarea"))
+    .filter(isFieldGuidanceAuditCandidate);
+  const missing = controls.filter((control) => !fieldGuidanceForControl(control));
+
+  return {
+    status: missing.length === 0,
+    count: controls.length,
+    missing: missing.map(fieldGuidanceAuditLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${controls.length} editable text field(s) explain what to enter and why.`
+      : `${missing.length} editable text field(s) need guidance: ${missing.map(fieldGuidanceAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function plainLanguageCoverageStatus() {
+  const blockedTerms = ["debug packet", "payload", "telemetry", "route contract", "style audit", "copy surface", "metadata"];
+  const root = document.getElementById("screen-content");
+  if (!root) {
+    return {
+      status: true,
+      count: 0,
+      missing: [],
+      detail: "No visible demo copy is rendered yet."
+    };
+  }
+
+  const findings = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const text = normalizeCopy(node.nodeValue);
+    if (!text || !isPlainLanguageAuditCandidate(node.parentElement)) {
+      continue;
+    }
+
+    const lower = text.toLowerCase();
+    const term = blockedTerms.find((item) => lower.includes(item));
+    if (term) {
+      findings.push({ term, text, element: node.parentElement });
+    }
+  }
+
+  return {
+    status: findings.length === 0,
+    count: findings.length,
+    missing: findings.map(plainLanguageAuditLabel).slice(0, 8),
+    detail: findings.length === 0
+      ? "Visible demo copy uses viewer-facing labels."
+      : `${findings.length} visible copy item(s) use internal wording: ${findings.map(plainLanguageAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function detailsOptInCoverageStatus() {
+  const details = Array.from(document.querySelectorAll("details.demo-card-support, details.demo-support-details, details.demo-row-support, details.demo-site-details"))
+    .filter(isDetailsOptInAuditCandidate);
+  const missing = details.filter((item) => !detailsOptInSummaryExplainsScope(item));
+
+  return {
+    status: missing.length === 0,
+    count: details.length,
+    missing: missing.map(detailsOptInAuditLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${details.length} optional detail panel(s) explain why to open them.`
+      : `${missing.length} optional detail panel(s) need a reason: ${missing.map(detailsOptInAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function copySurfaceCoverageStatus() {
+  const surfaces = Array.from(document.querySelectorAll("[data-copy-surface]"))
+    .filter(isCopySurfaceAuditCandidate);
+  const requiredIds = [
+    "command-where",
+    "command-blocker",
+    "command-next",
+    "primary-action",
+    "dock-where",
+    "dock-blocker",
+    "dock-next-label"
+  ];
+  const missingRequired = requiredIds.filter((id) => !document.getElementById(id)?.getAttribute("data-copy-surface"));
+  const missingMetadata = surfaces.filter((surface) => !copySurfaceMetadataIsComplete(surface));
+  const overVisibleLimit = surfaces.filter((surface) => copySurfaceTextOverLimit(surface));
+  const issues = [
+    ...missingRequired.map((id) => `${id} missing copy-surface`),
+    ...missingMetadata.map(copySurfaceAuditLabel).map((label) => `${label} missing limits`),
+    ...overVisibleLimit.map(copySurfaceAuditLabel).map((label) => `${label} over visible limit`)
+  ];
+  const status = issues.length === 0;
+
+  return {
+    status,
+    count: surfaces.length,
+    missingRequired,
+    missingMetadata: missingMetadata.map(copySurfaceAuditLabel).slice(0, 8),
+    overVisibleLimit: overVisibleLimit.map(copySurfaceAuditLabel).slice(0, 8),
+    truncated: surfaces.filter((surface) => surface.getAttribute("data-copy-truncated") === "true").length,
+    detail: status
+      ? `${surfaces.length} copy label(s) publish visible/help limits.`
+      : `${issues.length} copy label issue(s): ${issues.slice(0, 3).join(", ")}.`
+  };
+}
+
+function isCopySurfaceAuditCandidate(surface) {
+  if (surface.hidden || surface.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(surface);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return surface.getClientRects().length > 0;
+}
+
+function copySurfaceMetadataIsComplete(surface) {
+  const visibleLimit = Number(surface.getAttribute("data-copy-visible-limit"));
+  const helpLimit = Number(surface.getAttribute("data-copy-help-limit"));
+  return Boolean(surface.getAttribute("data-copy-surface"))
+    && Number.isFinite(visibleLimit)
+    && visibleLimit > 0
+    && Number.isFinite(helpLimit)
+    && helpLimit >= visibleLimit
+    && surface.hasAttribute("data-copy-truncated")
+    && Boolean(normalizeCopy(surface.getAttribute("title")))
+    && Boolean(normalizeCopy(surface.getAttribute("aria-label")));
+}
+
+function copySurfaceTextOverLimit(surface) {
+  const visibleLimit = Number(surface.getAttribute("data-copy-visible-limit"));
+  if (!Number.isFinite(visibleLimit) || visibleLimit <= 0) {
+    return true;
+  }
+
+  return normalizeCopy(surface.textContent).length > visibleLimit;
+}
+
+function copySurfaceAuditLabel(surface) {
+  return surface.id
+    || surface.getAttribute("data-copy-surface")
+    || normalizeCopy(surface.textContent).slice(0, 48)
+    || surface.tagName.toLowerCase();
+}
+
+function compactLabelCoverageStatus() {
+  const entries = compactLabelAuditEntries();
+  const overLimit = entries.filter((entry) => entry.text.length > entry.limit);
+  const missingHelp = entries.filter((entry) => entry.helpRequired && !compactLabelHasHelp(entry.element));
+  const issues = [
+    ...overLimit.map((entry) => `${compactLabelAuditLabel(entry)} over ${entry.limit}`),
+    ...missingHelp.map((entry) => `${compactLabelAuditLabel(entry)} missing help`)
+  ];
+
+  return {
+    status: issues.length === 0,
+    count: entries.length,
+    overLimit: overLimit.map(compactLabelAuditLabel).slice(0, 8),
+    missingHelp: missingHelp.map(compactLabelAuditLabel).slice(0, 8),
+    detail: issues.length === 0
+      ? `${entries.length} compact label(s) stay inside visible/help limits.`
+      : `${issues.length} compact label issue(s): ${issues.slice(0, 3).join(", ")}.`
+  };
+}
+
+function compactLabelAuditEntries() {
+  const specs = [
+    {
+      selector: ".demo-shell button.btn, .demo-shell a.btn",
+      kind: "button",
+      limit: DEMO_COPY_LIMITS.compactButtonVisible,
+      helpRequiredAt: Math.floor(DEMO_COPY_LIMITS.compactButtonVisible * 0.7)
+    },
+    {
+      selector: ".demo-nav-item strong",
+      kind: "nav",
+      limit: DEMO_COPY_LIMITS.compactNavVisible
+    },
+    {
+      selector: ".demo-chip",
+      kind: "chip",
+      limit: DEMO_COPY_LIMITS.compactBadgeVisible,
+      helpRequiredAt: Math.floor(DEMO_COPY_LIMITS.compactBadgeVisible * 0.75)
+    },
+    {
+      selector: ".demo-status, .demo-state-pill, .demo-work-path-step",
+      kind: "badge",
+      limit: DEMO_COPY_LIMITS.compactBadgeVisible
+    }
+  ];
+
+  return specs.flatMap((spec) => Array.from(document.querySelectorAll(spec.selector))
+    .filter(compactLabelAuditCandidate)
+    .map((element) => {
+      const text = compactLabelVisibleText(element);
+      return {
+        element,
+        kind: spec.kind,
+        limit: spec.limit,
+        text,
+        helpRequired: Boolean(spec.helpRequiredAt && text.length >= spec.helpRequiredAt)
+      };
+    })
+    .filter((entry) => entry.text));
+}
+
+function compactLabelAuditCandidate(element) {
+  if (element.hidden || element.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return element.getClientRects().length > 0;
+}
+
+function compactLabelVisibleText(element) {
+  const directLabel = Array.from(element.children || [])
+    .find((child) => child.classList?.contains("demo-support-label")
+      || child.classList?.contains("demo-copy-button-label"));
+  if (directLabel) {
+    return normalizeCopy(directLabel.textContent);
+  }
+
+  const clone = element.cloneNode(true);
+  clone.querySelectorAll(".demo-support-reason, .demo-chip-count, .sr-only, [aria-hidden='true']")
+    .forEach((child) => child.remove());
+  return normalizeCopy(clone.textContent);
+}
+
+function compactLabelHasHelp(element) {
+  return Boolean(normalizeCopy(element.getAttribute("title"))
+    || normalizeCopy(element.getAttribute("aria-label"))
+    || normalizeCopy(element.getAttribute("aria-description"))
+    || normalizeCopy(element.getAttribute("data-disabled-reason")));
+}
+
+function compactLabelAuditLabel(entry) {
+  return `${entry.kind}:${entry.text || entry.element.id || entry.element.tagName.toLowerCase()}`;
+}
+
 function isDisabledAuditCandidate(control) {
   if (control.hidden || control.closest("[hidden], [aria-hidden='true']")) {
     return false;
@@ -5133,6 +6725,110 @@ function isDisabledAuditCandidate(control) {
   }
 
   return control.getClientRects().length > 0;
+}
+
+function isSupportActionAuditCandidate(control) {
+  if (control.hidden || control.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(control);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return control.getClientRects().length > 0;
+}
+
+function isEmptyStateAuditCandidate(stateElement) {
+  if (stateElement.hidden || stateElement.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(stateElement);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return stateElement.getClientRects().length > 0;
+}
+
+function isReceiptAuditCandidate(receipt) {
+  if (receipt.hidden || receipt.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(receipt);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return receipt.getClientRects().length > 0;
+}
+
+function isSelectGuidanceAuditCandidate(control) {
+  if (control.hidden || control.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(control);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return control.getClientRects().length > 0;
+}
+
+function isMemoryGuidanceAuditCandidate(strip) {
+  if (strip.hidden || strip.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(strip);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return strip.getClientRects().length > 0;
+}
+
+function isFieldGuidanceAuditCandidate(control) {
+  if (control.readOnly || control.hidden || control.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(control);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return control.getClientRects().length > 0;
+}
+
+function isPlainLanguageAuditCandidate(element) {
+  if (!element || element.hidden || element.closest("[hidden], [aria-hidden='true'], .sr-only, .demo-copy-payload, .demo-clipboard-payload, textarea, script, style")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return element.getClientRects().length > 0;
+}
+
+function isDetailsOptInAuditCandidate(details) {
+  if (details.hidden || details.closest("[hidden], [aria-hidden='true']")) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(details);
+  if (style.visibility === "hidden" || style.display === "none") {
+    return false;
+  }
+
+  return details.getClientRects().length > 0;
 }
 
 function disabledControlReason(control) {
@@ -5159,12 +6855,216 @@ function disabledControlReason(control) {
   return normalizeCopy(nearby) ? nearby : "";
 }
 
+function supportActionReasonForControl(control) {
+  const reason = [
+    control.getAttribute("data-support-reason"),
+    control.querySelector(".demo-support-reason")?.textContent,
+    control.getAttribute("title"),
+    control.getAttribute("aria-label")
+  ].find((value) => normalizeCopy(value));
+
+  return reason || "";
+}
+
+function emptyStateExplainsContext(stateElement) {
+  const text = normalizeCopy(stateElement.textContent);
+  return ["How to fill:", "Where:", "Blocker:", "Button runs next:"]
+    .every((label) => emptyStateHasLabelValue(text, label));
+}
+
+function emptyStateHasLabelValue(text, label) {
+  const labels = ["How to fill:", "Where:", "Blocker:", "Button runs next:"];
+  const index = text.indexOf(label);
+  if (index < 0) {
+    return false;
+  }
+
+  const valueStart = index + label.length;
+  const nextLabelIndex = labels
+    .filter((item) => item !== label)
+    .map((item) => text.indexOf(item, valueStart))
+    .filter((itemIndex) => itemIndex >= 0)
+    .sort((left, right) => left - right)[0];
+  const value = text.slice(valueStart, nextLabelIndex ?? text.length).trim();
+  return Boolean(value);
+}
+
+function receiptExplainsContext(receipt) {
+  const text = normalizeCopy([
+    receipt.textContent,
+    receipt.getAttribute("aria-label"),
+    receipt.getAttribute("title")
+  ].join(" "));
+  return ["Where", "Blocker", "Button runs next", "Proof target"]
+    .every((label) => receiptHasLabelValue(text, label));
+}
+
+function receiptHasLabelValue(text, label) {
+  const labels = ["Where", "Blocker", "Button runs next", "Proof target"];
+  const index = text.indexOf(label);
+  if (index < 0) {
+    return false;
+  }
+
+  const valueStart = index + label.length;
+  const nextLabelIndex = labels
+    .filter((item) => item !== label)
+    .map((item) => text.indexOf(item, valueStart))
+    .filter((itemIndex) => itemIndex >= 0)
+    .sort((left, right) => left - right)[0];
+  const value = text.slice(valueStart, nextLabelIndex ?? text.length)
+    .replace(/^:/u, "")
+    .trim();
+  return Boolean(value);
+}
+
+function selectGuidanceForControl(control) {
+  const direct = [
+    control.getAttribute("aria-description"),
+    control.getAttribute("title"),
+    control.getAttribute("aria-label")
+  ].find((value) => normalizeCopy(value));
+  if (direct) {
+    return direct;
+  }
+
+  const describedBy = (control.getAttribute("aria-describedby") || "")
+    .split(/\s+/u)
+    .map((id) => document.getElementById(id)?.textContent || "")
+    .find((value) => normalizeCopy(value));
+  if (describedBy) {
+    return describedBy;
+  }
+
+  const nearbyHelp = control.closest(".demo-field, .demo-inline-form")
+    ?.querySelector(".demo-field-help")?.textContent;
+  return normalizeCopy(nearbyHelp) ? nearbyHelp : "";
+}
+
+function fieldGuidanceForControl(control) {
+  const direct = [
+    control.getAttribute("data-disabled-reason"),
+    control.getAttribute("aria-description"),
+    control.getAttribute("title"),
+    control.getAttribute("aria-label"),
+    control.getAttribute("placeholder")
+  ].find((value) => normalizeCopy(value));
+  if (direct) {
+    return direct;
+  }
+
+  const describedBy = (control.getAttribute("aria-describedby") || "")
+    .split(/\s+/u)
+    .map((id) => document.getElementById(id)?.textContent || "")
+    .find((value) => normalizeCopy(value));
+  if (describedBy) {
+    return describedBy;
+  }
+
+  const nearbyHelp = control.closest(".demo-field, .demo-inline-form, .demo-copy-payload, .demo-triage-card, .demo-blocker-field")
+    ?.querySelector(".demo-field-help, [data-blocker-help]")?.textContent;
+  return normalizeCopy(nearbyHelp) ? nearbyHelp : "";
+}
+
+function detailsOptInSummaryExplainsScope(details) {
+  const summary = details.querySelector("summary");
+  if (!summary) {
+    return false;
+  }
+
+  const label = normalizeCopy(summary.querySelector("span")?.textContent);
+  const reason = normalizeCopy(summary.querySelector("strong")?.textContent);
+  const reasonLower = reason.toLowerCase();
+  return Boolean(label)
+    && Boolean(reason)
+    && (
+      reasonLower.includes("open only")
+      || reasonLower.includes("open for")
+      || reasonLower.includes("without changing button runs next")
+      || reasonLower.includes("clear blocker or set button runs next")
+      || reasonLower.includes("focus, edit, clear blocker")
+    );
+}
+
+function memoryStripExplainsGuidance(strip) {
+  const action = strip.querySelector(".demo-memory-action");
+  const text = normalizeCopy([
+    strip.textContent,
+    strip.getAttribute("aria-label"),
+    strip.getAttribute("title"),
+    action?.getAttribute("aria-label"),
+    action?.getAttribute("title")
+  ].join(" "));
+  const hasMemory = !strip.classList.contains("is-empty");
+  const hasRecallState = text.includes("Relevant Memory") && (hasMemory || text.includes("none yet"));
+  const hasFillGuidance = hasMemory || text.includes("How to fill");
+  const hasActionGuidance = text.includes("Button runs next");
+  return hasRecallState && hasFillGuidance && hasActionGuidance;
+}
+
 function disabledControlLabel(control) {
   return control.id
     || control.getAttribute("data-action")
     || control.getAttribute("data-go")
     || control.textContent.trim()
     || control.tagName.toLowerCase();
+}
+
+function supportActionAuditLabel(control) {
+  return control.getAttribute("data-action")
+    || control.querySelector(".demo-support-label")?.textContent?.trim()
+    || control.textContent.trim()
+    || "support action";
+}
+
+function emptyStateAuditLabel(stateElement) {
+  return stateElement.querySelector("strong")?.textContent?.trim()
+    || normalizeCopy(stateElement.textContent).slice(0, DEMO_COPY_LIMITS.statusVisible)
+    || "empty state";
+}
+
+function receiptAuditLabel(receipt) {
+  return receipt.getAttribute("data-receipt-surface")
+    || receipt.querySelector("span")?.textContent?.trim()
+    || normalizeCopy(receipt.textContent).slice(0, DEMO_COPY_LIMITS.statusVisible)
+    || "receipt";
+}
+
+function selectGuidanceAuditLabel(control) {
+  return control.id
+    || control.closest("label")?.querySelector("span")?.textContent?.trim()
+    || control.getAttribute("aria-label")
+    || "select";
+}
+
+function memoryGuidanceAuditLabel(strip) {
+  return strip.getAttribute("data-memory-strip")
+    || strip.querySelector("span")?.textContent?.trim()
+    || normalizeCopy(strip.textContent).slice(0, DEMO_COPY_LIMITS.statusVisible)
+    || "memory strip";
+}
+
+function fieldGuidanceAuditLabel(control) {
+  return control.id
+    || control.getAttribute("data-triage-field")
+    || control.closest("label")?.querySelector("span")?.textContent?.trim()
+    || control.getAttribute("aria-label")
+    || control.getAttribute("placeholder")
+    || control.tagName.toLowerCase();
+}
+
+function plainLanguageAuditLabel(finding) {
+  const label = finding.element?.id
+    || finding.element?.closest("section")?.querySelector("h2")?.textContent?.trim()
+    || finding.element?.tagName?.toLowerCase()
+    || "visible copy";
+  return `${label}: ${finding.term}`;
+}
+
+function detailsOptInAuditLabel(details) {
+  return normalizeCopy(details.querySelector("summary span")?.textContent)
+    || normalizeCopy(details.querySelector("summary")?.textContent).slice(0, DEMO_COPY_LIMITS.statusVisible)
+    || "details panel";
 }
 
 function healthLine(check) {
@@ -5304,8 +7204,8 @@ function setClipboardReceipt(kind, options = {}) {
     : "Browser clipboard access was blocked. Select the visible text and copy it manually.");
   const next = options.next || (success ? "Paste where needed" : "Copy visible text manually");
   const proof = options.proof || (success
-    ? "Clipboard contains the copied demo payload."
-    : "The visible payload remains available for manual selection.");
+    ? "Clipboard contains the copied text."
+    : "The visible text remains available for manual selection.");
   const targetLabel = options.targetLabel || clipboardTargetLabel(options.targetId);
   const payloadPreview = normalizeClipboardPayload(options.payloadPreview);
   state.clipboardReceipt = {
@@ -5330,11 +7230,11 @@ function setClipboardCommandReceipt(receipt) {
   const success = receipt.kind === "success";
   const summary = normalizeCopy(`${receipt.title}. ${receipt.detail}`);
   const where = `${routeCommand.where || screenTitleForRoute()} / clipboard`;
-  const blocker = success ? "none" : "browser blocked clipboard access";
+  const blocker = success ? DEMO_BLOCKER_NONE_LABEL : "browser blocked clipboard access";
   const next = receipt.next || (success ? "Paste where needed" : "Copy visible text manually");
   const proof = receipt.proof || (success
-    ? "Clipboard contains the copied demo payload."
-    : "The visible payload remains available for manual selection.");
+    ? "Clipboard contains the copied text."
+    : "The visible text remains available for manual selection.");
   state.actionReceipt = {
     kind: "clipboard",
     tone: receipt.kind,
@@ -5380,6 +7280,11 @@ function selectClipboardTarget(targetId) {
     return;
   }
 
+  const details = target.closest("details");
+  if (details) {
+    details.open = true;
+  }
+
   const payload = target.closest(".demo-copy-payload");
   if (payload) {
     payload.classList.remove("is-pulsing");
@@ -5399,11 +7304,11 @@ function selectClipboardTarget(targetId) {
   }
 }
 
-function copyToClipboard(value, successMessage = clipboardStatus("Feedback", "paste diagnostic context into issue"), options = {}) {
-  const targetMatchesPayload = clipboardTargetMatchesValue(value, options.targetId);
+function copyToClipboard(value, successMessage = clipboardStatus("Feedback", "paste issue context into issue"), options = {}) {
+  const targetMatchesText = clipboardTargetMatchesValue(value, options.targetId);
   const receiptOptions = {
     ...options,
-    targetId: targetMatchesPayload ? options.targetId : "",
+    targetId: targetMatchesText ? options.targetId : "",
     targetLabel: options.targetLabel || clipboardTargetLabel(options.targetId),
     ...clipboardPreviewOptions(value)
   };
@@ -5449,11 +7354,12 @@ function clipboardTargetMatchesValue(value, targetId = "") {
 function clipboardTargetLabel(targetId = "") {
   const labels = {
     "feedback-context": "Feedback context",
-    "lab-snapshot": "Lab snapshot",
-    "meta-context": "Meta snapshot",
+    "lab-snapshot": "Workflow snapshot",
+    "meta-context": "Build snapshot",
+    "style-audit": "File check",
     "triage-snapshot": "Triage snapshot"
   };
-  return labels[targetId] || "Copied payload";
+  return labels[targetId] || "Copied text";
 }
 
 function clipboardPreviewOptions(value) {
@@ -5522,7 +7428,7 @@ function copyWithSelectionFallback(value, targetId = "") {
 }
 
 function clipboardStatus(where, next) {
-  return `Where: ${where}. Blocker: none. Button runs next: ${next}.`;
+  return `Where: ${where}. Blocker: None. Button runs next: ${next}.`;
 }
 
 function clipboardBlockedStatus() {
@@ -5571,6 +7477,44 @@ function visibleCopy(value, limit) {
 
 function helpCopy(value, limit) {
   return visibleCopy(value, limit);
+}
+
+function copySurface(value, visibleLimit, helpLimit = visibleLimit) {
+  const full = normalizeCopy(value) || DEMO_BLOCKER_NONE_LABEL;
+  const visible = visibleCopy(full, visibleLimit);
+  const help = helpCopy(full, helpLimit);
+  return {
+    full,
+    visible,
+    help,
+    visibleLimit,
+    helpLimit,
+    truncated: visible !== full || help !== full
+  };
+}
+
+function setCopySurface(element, value, label, visibleLimit, helpLimit = visibleLimit) {
+  if (!element) {
+    return;
+  }
+
+  const copy = copySurface(value, visibleLimit, helpLimit);
+  element.textContent = copy.visible;
+  element.title = copySurfaceLabel(label, copy.help);
+  element.setAttribute("aria-label", copySurfaceLabel(label, copy.help));
+  element.dataset.copySurface = fieldKey(label || element.id || "copy");
+  element.dataset.copyVisibleLimit = String(copy.visibleLimit);
+  element.dataset.copyHelpLimit = String(copy.helpLimit);
+  element.dataset.copyTruncated = String(copy.truncated);
+}
+
+function copySurfaceAttributes(label, copy) {
+  return ` title="${escapeAttribute(copySurfaceLabel(label, copy.help))}" aria-label="${escapeAttribute(copySurfaceLabel(label, copy.help))}" data-copy-surface="${escapeAttribute(fieldKey(label))}" data-copy-visible-limit="${escapeAttribute(String(copy.visibleLimit))}" data-copy-help-limit="${escapeAttribute(String(copy.helpLimit))}" data-copy-truncated="${escapeAttribute(String(copy.truncated))}"`;
+}
+
+function copySurfaceLabel(label, value) {
+  const copy = normalizeCopy(value) || DEMO_BLOCKER_NONE_LABEL;
+  return label ? `${label}: ${copy}` : copy;
 }
 
 function normalizeCopy(value) {
