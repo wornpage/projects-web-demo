@@ -3183,13 +3183,13 @@ function bindLabControls() {
 }
 
 function workCard(pack) {
-  const selected = pack.id === state.selectedId ? " selected" : "";
   const command = resolvePrimaryCommandForPack(pack);
   const workflow = workflowStateForPack(pack, command);
+  const cardClass = workflowCardClass("demo-work-card", pack, workflow, pack.id === state.selectedId);
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack, "btn btn-sm")
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
-  return `<article class="demo-work-card${selected}" data-pack-id="${escapeAttribute(pack.id)}">
+  return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select">${escapeHtml(workTitle(pack))}</button>
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
@@ -3239,13 +3239,14 @@ function todayRow(pack) {
 function reviewCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const workflow = workflowStateForPack(pack, command);
+  const cardClass = workflowCardClass("demo-review-card", pack, workflow, pack.id === state.selectedId);
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack)
     : supportActionButton("block", "Mark blocked", pack);
   const nextHelpId = `next-${pack.id}-help`;
   const nextHelp = `Set the exact Button-runs-next value for ${workTitle(pack)}.`;
 
-  return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
+  return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head demo-review-card-head">
       <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
@@ -3283,6 +3284,14 @@ function reviewCard(pack) {
       </div>
     </details>
   </article>`;
+}
+
+function workflowCardClass(baseClass, pack, workflow, selected = false) {
+  const classes = [baseClass, `is-${workflow.id}`];
+  if (selected) classes.push("selected");
+  if (hasBlocker(pack)) classes.push("has-blocker");
+  if (isMissingNextAction(pack)) classes.push("needs-next");
+  return classes.join(" ");
 }
 
 function cardFact(label, value) {

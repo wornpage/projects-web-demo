@@ -59,6 +59,21 @@ body {
   --demo-card-selected-shadow: none;
   --demo-card-head-bg: transparent;
   --demo-card-banner-bg: var(--cockpit-nav-bg);
+  --demo-work-card-bg: #fffaf2;
+  --demo-work-card-border: #8c9a84;
+  --demo-work-card-shadow: 0 8px 18px rgba(35, 29, 18, 0.08), 0 1px 0 rgba(255, 255, 255, 0.85);
+  --demo-work-card-hover-shadow: 0 10px 22px rgba(35, 29, 18, 0.12), 0 1px 0 rgba(255, 255, 255, 0.9);
+  --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.28), var(--demo-work-card-hover-shadow);
+  --demo-work-card-alert-border: #4f9a88;
+  --demo-card-inner-bg: #faf5ed;
+  --demo-card-inner-border: #d3c8b8;
+  --demo-card-divider: #d2c7b7;
+  --demo-card-command-bg: #d9eee7;
+  --demo-card-memory-bg: #e3f3ee;
+  --demo-card-memory-border: #9fc6b8;
+  --demo-card-meta-bg: #faf4eb;
+  --demo-card-status-bg: #e7f5ec;
+  --demo-card-status-border: #a8c8b9;
   --demo-focus-ring: var(--cockpit-accent);
   --demo-command-accent: var(--cockpit-selected-bg);
   --demo-command-line-accent: var(--cockpit-border-strong);
@@ -97,11 +112,26 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-card-banner-bg: var(--cockpit-nav-bg);
   --demo-command-accent: var(--cockpit-selected-bg);
   --demo-focus-ring: var(--cockpit-accent);
-  --demo-primary-on-accent: var(--cockpit-accent-text);
+  --demo-primary-on-accent: #0d1512;
   --demo-command-line-accent: var(--cockpit-border-strong);
   --demo-command-line-border: var(--cockpit-border);
   --demo-command-bg: var(--cockpit-surface);
   --demo-meta-bg: var(--cockpit-nav-bg);
+  --demo-work-card-bg: #24302b;
+  --demo-work-card-border: #70877d;
+  --demo-work-card-shadow: 0 10px 22px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --demo-work-card-hover-shadow: 0 12px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --demo-work-card-selected-shadow: 0 0 0 2px rgba(76, 164, 143, 0.42), var(--demo-work-card-hover-shadow);
+  --demo-work-card-alert-border: #5cae9b;
+  --demo-card-inner-bg: #101916;
+  --demo-card-inner-border: #75847b;
+  --demo-card-divider: #4f5e56;
+  --demo-card-command-bg: #18372f;
+  --demo-card-memory-bg: #19332d;
+  --demo-card-memory-border: #4f8d7d;
+  --demo-card-meta-bg: #101815;
+  --demo-card-status-bg: #163830;
+  --demo-card-status-border: #4ca48f;
 }
 
 html.dark .demo-app-shell,
@@ -1640,8 +1670,13 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-review-list,
 .demo-list {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
+}
+
+.demo-work-list,
+.demo-review-list {
+  gap: 16px;
 }
 
 .demo-metric,
@@ -1679,8 +1714,8 @@ html[data-theme="dark"] .demo-meta-row {
 
 .demo-review-card {
   display: grid;
-  gap: 9px;
-  padding: 12px;
+  gap: 12px;
+  padding: 16px;
 }
 
 .demo-review-card-head {
@@ -1690,28 +1725,35 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-review-card-main {
   align-items: start;
   display: grid;
-  gap: 10px;
+  gap: 14px;
   grid-template-columns: minmax(0, 1fr) minmax(156px, 0.22fr);
 }
 
 .demo-card-facts {
-  border-top: 1px solid var(--cockpit-border);
+  background: var(--demo-card-inner-bg);
+  border: 1px solid var(--demo-card-inner-border);
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .demo-card-fact {
   align-items: baseline;
-  border-bottom: 1px solid var(--cockpit-border);
+  border-bottom: 1px solid var(--demo-card-divider);
   display: grid;
   gap: 8px;
   grid-template-columns: minmax(112px, 0.32fr) minmax(0, 1fr);
-  padding: 8px 0;
+  padding: 10px 12px;
+}
+
+.demo-card-fact:last-child {
+  border-bottom: 0;
 }
 
 .demo-card-fact span {
-  color: var(--cockpit-text-muted);
+  color: var(--cockpit-text-secondary);
   font-size: 11px;
   font-weight: 760;
   line-height: 1.2;
@@ -1854,23 +1896,25 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
 
 .demo-card-meta {
   color: var(--cockpit-text-muted);
-  border-top: 1px solid var(--cockpit-border);
+  border-top: 1px solid var(--demo-card-divider);
   flex-wrap: wrap;
   font-size: 13px;
   font-weight: var(--demo-card-meta-weight);
-  margin-top: 12px;
-  padding-top: 10px;
+  margin-top: 2px;
+  padding-top: 12px;
   gap: 6px 10px;
 }
 
 .demo-card-meta span {
   align-items: center;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
+  background: var(--demo-card-meta-bg);
+  border: 1px solid var(--demo-card-inner-border);
+  border-radius: var(--cockpit-radius-sm);
   color: var(--cockpit-text-secondary);
   display: inline-flex;
-  padding: 0;
+  line-height: 1.2;
+  min-height: 28px;
+  padding: 4px 8px;
 }
 
 .demo-card-actions {
@@ -2048,8 +2092,8 @@ html[data-theme="dark"] .demo-disabled-reason {
 
 .demo-state-pill {
   align-items: center;
-  background: var(--cockpit-selected-bg);
-  border: 1px solid var(--cockpit-border);
+  background: var(--demo-card-status-bg);
+  border: 1px solid var(--demo-card-status-border);
   border-radius: var(--cockpit-radius-sm);
   color: var(--cockpit-text);
   display: inline-flex;
@@ -2061,14 +2105,15 @@ html[data-theme="dark"] .demo-disabled-reason {
 
 html.dark .demo-state-pill,
 html[data-theme="dark"] .demo-state-pill {
-  background: var(--cockpit-selected-bg);
-  border-color: var(--cockpit-border);
+  background: var(--demo-card-status-bg);
+  border-color: var(--demo-card-status-border);
   color: var(--cockpit-text);
 }
 
 .demo-command-row {
   align-items: center;
-  border: 1px solid var(--demo-command-line-border);
+  background: var(--demo-card-command-bg);
+  border: 1px solid var(--demo-card-inner-border);
   border-radius: var(--cockpit-radius);
   display: grid;
   gap: 10px;
@@ -2987,8 +3032,16 @@ html[data-theme="dark"] .demo-theme-toggle:focus-visible {
   -webkit-text-fill-color: var(--cockpit-text);
 }
 
-html.dark .demo-app-shell :is(.btn-primary, .demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]),
-html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]) {
+html.dark .demo-app-shell .btn-primary,
+html[data-theme="dark"] .demo-app-shell .btn-primary {
+  background: var(--cockpit-accent) !important;
+  border-color: var(--cockpit-accent) !important;
+  color: var(--demo-primary-on-accent) !important;
+  -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
+}
+
+html.dark .demo-app-shell :is(.demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]),
+html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]) {
   color: var(--demo-primary-on-accent) !important;
   -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
 }
@@ -4050,8 +4103,6 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
 
 .demo-panel,
 .demo-toolbar,
-.demo-work-card,
-.demo-review-card,
 .demo-row,
 .demo-note,
 .demo-scenario-card,
@@ -4064,10 +4115,19 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   box-shadow: none;
 }
 
+.demo-work-card,
+.demo-review-card {
+  background: var(--demo-work-card-bg);
+  background-color: var(--demo-work-card-bg);
+  border: 1px solid var(--demo-work-card-border);
+  border-radius: var(--cockpit-radius);
+  box-shadow: var(--demo-work-card-shadow);
+  color: var(--cockpit-text);
+  transition: border-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
+}
+
 .demo-panel:hover,
 .demo-toolbar:hover,
-.demo-work-card:hover,
-.demo-review-card:hover,
 .demo-row:hover,
 .demo-note:hover,
 .demo-scenario-card:hover,
@@ -4077,20 +4137,52 @@ html[data-theme="dark"] .demo-app-shell :is(.btn-primary, .demo-chip[aria-presse
   box-shadow: none;
 }
 
-.demo-work-card,
-.demo-review-card,
+.demo-work-card:hover,
+.demo-review-card:hover {
+  border-color: var(--cockpit-border-strong);
+  box-shadow: var(--demo-work-card-hover-shadow);
+}
+
 .demo-row {
   border-left: 1px solid var(--cockpit-border);
 }
 
+.demo-work-card,
+.demo-review-card {
+  border-left: 1px solid var(--demo-work-card-border);
+}
+
 .demo-work-card.selected,
-.demo-review-card:focus-within,
+.demo-review-card:focus-within {
+  background: var(--demo-work-card-bg);
+  border-color: var(--cockpit-accent);
+  box-shadow: var(--demo-work-card-selected-shadow);
+}
+
 .demo-profile-card[aria-pressed="true"] {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border-strong);
   border-left-width: 3px;
   border-left-color: var(--cockpit-accent);
   box-shadow: none;
+}
+
+.demo-work-card.has-blocker,
+.demo-review-card.has-blocker {
+  border-color: var(--demo-work-card-alert-border);
+}
+
+.demo-work-card.needs-next,
+.demo-review-card.needs-next {
+  border-color: var(--demo-work-card-alert-border);
+}
+
+.demo-work-card.has-blocker .demo-state-pill,
+.demo-review-card.has-blocker .demo-state-pill,
+.demo-work-card.needs-next .demo-state-pill,
+.demo-review-card.needs-next .demo-state-pill {
+  background: var(--demo-card-status-bg);
+  border-color: var(--cockpit-accent);
 }
 
 .demo-scenario-grid {
@@ -4188,9 +4280,15 @@ html[data-theme="dark"] .demo-command-work-path {
   box-shadow: none;
 }
 
+.demo-memory-strip {
+  background: var(--demo-card-memory-bg);
+  border-color: var(--demo-card-inner-border);
+  box-shadow: inset 0 0 0 1px rgba(29, 111, 100, 0.12);
+}
+
 .demo-memory-strip.has-memory {
-  background: var(--cockpit-surface);
-  border-color: var(--cockpit-border);
+  background: var(--demo-card-memory-bg);
+  border-color: var(--demo-card-memory-border);
   border-left-color: var(--cockpit-accent);
 }
 
@@ -4233,6 +4331,11 @@ html[data-theme="dark"] .demo-command-work-path {
 }
 
 @media (max-width: 700px) {
+  .demo-work-list,
+  .demo-review-list {
+    gap: 12px;
+  }
+
   .demo-command-brief.sidecar {
     gap: 6px;
     margin-bottom: 10px;
@@ -4252,6 +4355,16 @@ html[data-theme="dark"] .demo-command-work-path {
 
   .demo-command-line strong {
     text-align: left;
+  }
+
+  .demo-card-fact {
+    align-items: start;
+    gap: 4px;
+    grid-template-columns: 1fr;
+  }
+
+  .demo-card-meta span {
+    width: 100%;
   }
 
   .demo-command-footer {
