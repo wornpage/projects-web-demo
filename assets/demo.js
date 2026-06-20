@@ -3597,8 +3597,8 @@ function packActionSummary(pack, action, actionLabel, changed) {
   if (action === "done") {
     const proof = proofTargetSentence(pack);
     return changed
-      ? `Proof saved for ${title}. ${proof}`
-      : `Proof already saved for ${title}. ${proof}`;
+      ? `Done saved for ${title}. ${proof}`
+      : `Done already saved for ${title}. ${proof}`;
   }
 
   if (action === "open") {
@@ -3872,7 +3872,7 @@ function proofTargetSentence(pack) {
 }
 
 function proofSavedActivity(pack) {
-  return `Proof saved: ${sentenceValue(proofTargetForPack(pack))}.`;
+  return `Done saved with proof target: ${sentenceValue(proofTargetForPack(pack))}.`;
 }
 
 function sentenceValue(value) {
