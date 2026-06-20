@@ -2451,6 +2451,7 @@ function renderPackDetail() {
   const routeCommand = commandForRoute(pack, filteredPacks().length, state.packs.filter(isReview).length);
   const workflow = workflowStateForPack(pack, packCommand);
   const saveState = packDetailSaveState(pack);
+  const saveNote = packDetailSaveNote(saveState);
   const showOwnerInline = ownerSupportNeededForPack(pack);
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-edit-panel" id="pack-edit-form" data-pack-id="${escapeAttribute(pack.id)}">
@@ -2491,9 +2492,8 @@ function renderPackDetail() {
       ${relevantMemoryStrip(pack)}
       <div class="demo-card-actions demo-forward-actions">
         ${packPrimaryActionButton(routeCommand)}
-        <button id="save-pack" class="btn" type="button" aria-describedby="pack-save-help"${disabledReasonAttributes(!saveState.canSave, saveState.help)}>Save work path</button>
+        <p id="pack-save-help" class="demo-field-help demo-forward-save-note" aria-live="polite"${saveNote ? "" : " hidden"}>${escapeHtml(saveNote)}</p>
       </div>
-      <p id="pack-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(saveState.help)}</p>
       ${actionReceiptCard(pack)}
     </section>
     ${activityPanel(pack)}
@@ -2502,7 +2502,6 @@ function renderPackDetail() {
     queueFocus(focusKindForAction(event.currentTarget.dataset.action), event.currentTarget.dataset.pack || pack.id);
     runPrimaryAction(event.currentTarget);
   });
-  el("save-pack").addEventListener("click", () => savePackDetail(pack.id));
   bindPackDetailValidation(pack);
   bindListActions();
 }
@@ -4233,7 +4232,7 @@ function runRouteAction(action, targetPackId) {
       setBlockerMode(false);
       syncPackDetailValidation(selected);
       state.status = `Where: Work path. Blocker: None. Button runs next: save work path for ${workTitle(selected)}.`;
-      focusAndPulse(el("save-pack") || el("primary-action"));
+      focusAndPulse(el("pack-primary-action") || el("primary-action"));
     }
     return true;
   }
@@ -4662,6 +4661,27 @@ function packDetailSaveState(pack) {
   };
 }
 
+function packDetailSaveNote(stateForSave) {
+  const help = normalizeCopy(stateForSave?.help);
+  if (!help) {
+    return "";
+  }
+
+  if (stateForSave.canSave) {
+    return "Unsaved work-path changes. Button runs next saves them first.";
+  }
+
+  if (help.includes("no changes to save")) {
+    return "";
+  }
+
+  if (help.includes("owner is filled but Blocker is still set")) {
+    return "Owner is filled. Button runs next sets Blocker: None before saving.";
+  }
+
+  return help.replace(/^Where: Work path\. /, "");
+}
+
 function bindPackDetailValidation(pack) {
   ["edit-title", "edit-blocker", "edit-owner", "edit-due", "edit-next", "edit-done-when", "edit-purpose"].forEach((id) => {
     const input = el(id);
@@ -4761,17 +4781,17 @@ function isMissingOwnerValue(owner) {
 }
 
 function syncPackDetailValidation(pack) {
-  const button = el("save-pack");
   const help = el("pack-save-help");
-  if (!button || !help) {
+  if (!help) {
     return;
   }
 
   const stateForSave = packDetailSaveState(pack);
   syncBlockerFieldHelp();
   syncPackDetailForwardPanel(pack);
-  help.textContent = stateForSave.help;
-  syncValidatedActionButton(button, stateForSave);
+  const saveNote = packDetailSaveNote(stateForSave);
+  help.textContent = saveNote;
+  help.hidden = !saveNote;
 }
 
 function blockerModeIssue() {
@@ -5139,19 +5159,6 @@ function uniquePackId(baseId) {
   }
 
   return id;
-}
-
-function savePackDetail(id) {
-  const pack = findPack(id);
-  if (!pack) return;
-  const stateForSave = packDetailSaveState(pack);
-  if (!stateForSave.canSave) {
-    state.status = stateForSave.help;
-    render();
-    return;
-  }
-  savePackForwardPathFromForm(pack);
-  render();
 }
 
 function savePackForwardPathFromForm(pack) {

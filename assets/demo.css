@@ -1235,22 +1235,25 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-forward-actions {
-  align-items: stretch;
+  align-items: center;
   border-top: 1px solid var(--cockpit-border);
   margin-top: 12px;
   padding-top: 12px;
 }
 
 .demo-forward-actions .demo-pack-primary-action {
-  flex: 1 1 220px;
+  flex: 0 1 280px;
   justify-content: center;
   min-width: min(100%, 220px);
 }
 
-.demo-forward-actions #save-pack {
-  flex: 0 1 180px;
-  justify-content: center;
-  min-width: min(100%, 160px);
+.demo-forward-save-note {
+  color: var(--cockpit-muted);
+  flex: 1 1 280px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0;
+  min-width: min(100%, 220px);
 }
 
 .demo-start-path {
@@ -4564,11 +4567,15 @@ html[data-theme="dark"] .demo-command-work-path {
     grid-template-columns: 1fr;
   }
 
-  .demo-forward-actions .demo-pack-primary-action,
-  .demo-forward-actions #save-pack {
+  .demo-forward-actions .demo-pack-primary-action {
     flex: none;
     justify-content: center;
     min-height: 44px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .demo-forward-save-note {
     min-width: 0;
     width: 100%;
   }
