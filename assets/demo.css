@@ -2417,6 +2417,24 @@ html[data-theme="dark"] .demo-state-pill {
   border-color: var(--cockpit-border-strong);
 }
 
+.demo-forward-triad {
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.demo-forward-triad .demo-command-line {
+  align-content: start;
+  gap: 5px;
+  grid-template-columns: 1fr;
+  min-height: 78px;
+  padding: 10px 12px;
+}
+
+.demo-forward-triad .demo-command-line strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
 .demo-blocker-field {
   background: var(--demo-form-field-bg);
   border: 1px solid var(--cockpit-border-strong);
@@ -4407,6 +4425,14 @@ html[data-theme="dark"] .demo-command-work-path {
 
   .demo-command-lines {
     gap: 8px;
+  }
+
+  .demo-forward-triad {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-forward-triad .demo-command-line {
+    min-height: 0;
   }
 
   .demo-command-lines .demo-command-line:first-child {

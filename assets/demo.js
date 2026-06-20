@@ -2224,7 +2224,7 @@ function renderFocus() {
         </summary>
         <div class="demo-card-actions compact">
           ${supportActionButton("open", "Open", pack)}
-          ${supportActionButton("edit", "Edit sample", pack)}
+          ${supportActionButton("edit", "Edit path", pack)}
           ${doneAction}
         </div>
       </details>
@@ -2423,7 +2423,7 @@ function renderPackDetail() {
           <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
           <p class="demo-pack-subtitle">${escapeHtml(workDetailSubtitle(pack, packCommand))}</p>
         </div>
-        <span class="demo-status">Static preview</span>
+        <span class="demo-status">Edits stay in this browser</span>
       </div>
       <div class="demo-forward-panel" data-forward-motion="pack-detail">
         <div class="demo-forward-head">
@@ -2431,6 +2431,7 @@ function renderPackDetail() {
           <strong>${escapeHtml(packCommand.label)}</strong>
         </div>
         ${workPathSummary(pack, packCommand, workflow)}
+        ${selectedWorkTriad(pack, packCommand)}
         <div class="demo-form-grid demo-forward-fields">
           ${blockerStateField(pack)}
           ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : ""}
@@ -3349,7 +3350,7 @@ function supportActionReason(action, pack) {
   const reasons = {
     open: `Open the work path for ${where} without running the main button.`,
     focus: `Show ${where} in the Focus view without changing status.`,
-    block: `Mark ${where} blocked for this sample.`,
+    block: `Mark ${where} blocked for this work.`,
     unblock: `Clear the blocker for ${where}; the demo stores Blocker: None.`,
     done: `Finish ${where} and keep the proof target in the receipt.`,
     edit: `Open the work path fields for ${where}.`,
@@ -4745,6 +4746,7 @@ function syncPackDetailForwardPanel(pack) {
   const stateLabel = panel?.querySelector("[data-workflow-state-preview]");
   const stateHelp = panel?.querySelector("[data-workflow-state-help]");
   setWorkPathSummary(panel, workPathSummaryText(pending, actionCommand, workflow), workPathSummaryHelp(pending, actionCommand, workflow));
+  syncSelectedWorkTriad(panel, pending, actionCommand);
   if (stateLabel) {
     stateLabel.textContent = workflow.label;
     stateLabel.title = workflow.help;
@@ -4759,6 +4761,7 @@ function syncPackDetailForwardPanel(pack) {
       `Fix ${issue}. Next: ${blockerModeFixNext(issue)}.`,
       `Where: ${workTitle(pending)}. Blocker: ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`
     );
+    syncSelectedWorkTriad(panel, pending, { label: blockerModeFixNext(issue) });
     if (stateLabel) stateLabel.textContent = "Fix blocker";
     if (stateHelp) stateHelp.textContent = issue;
     const invalidCommand = commandForRoute(pending, filteredPacks().length, state.packs.filter(isReview).length);
@@ -4782,6 +4785,7 @@ function syncPackDetailForwardPanel(pack) {
       "Owner filled. Next: Set Blocker: None.",
       `Where: ${workTitle(pending)}. Blocker: owner is filled but still marked blocked. Button runs next: Set Blocker: None.`
     );
+    syncSelectedWorkTriad(panel, pending, { label: "Set Blocker: None" });
     if (stateLabel) stateLabel.textContent = "Fix blocker";
     if (stateHelp) stateHelp.textContent = "Owner is filled; set Blocker to None before saving.";
     command.next = "Set Blocker: None";
@@ -5228,6 +5232,35 @@ function workPathSummary(pack, command = resolvePrimaryCommandForPack(pack), wor
   </div>`;
 }
 
+function selectedWorkTriad(pack, command = resolvePrimaryCommandForPack(pack)) {
+  return `<div class="demo-command-lines compact demo-forward-triad" data-selected-work-triad>
+    ${selectedWorkTriadLine("Where", workTitle(pack), "where")}
+    ${selectedWorkTriadLine("Blocker", blockerTextForPack(pack), "blocker")}
+    ${selectedWorkTriadLine("Button runs next", command.label, "next")}
+  </div>`;
+}
+
+function selectedWorkTriadLine(label, value, key) {
+  const copy = copySurface(value || DEMO_BLOCKER_NONE_LABEL, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<div class="demo-command-line" data-selected-work-field="${escapeAttribute(key)}" data-command-field="${escapeAttribute(fieldKey(label))}">
+    <span>${escapeHtml(label)}</span>
+    <strong${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
+  </div>`;
+}
+
+function syncSelectedWorkTriad(panel, pack, command = resolvePrimaryCommandForPack(pack)) {
+  const fields = {
+    where: workTitle(pack),
+    blocker: blockerTextForPack(pack),
+    next: command.label
+  };
+  Object.entries(fields).forEach(([key, value]) => {
+    const field = panel?.querySelector(`[data-selected-work-field="${key}"] strong`);
+    const label = key === "next" ? "Button runs next" : capitalize(key);
+    setCopySurface(field, value, label, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  });
+}
+
 function workDetailSubtitle(pack, command = resolvePrimaryCommandForPack(pack)) {
   const blocker = blockerTextForPack(pack);
   if (isMissingNextAction(pack)) {
@@ -5277,8 +5310,8 @@ function ownerSupportNeededForPack(pack) {
 
 function supportDetailsSummary(ownerIsInline) {
   return ownerIsInline
-    ? "Title, due date, and purpose only"
-    : "Owner, due date, and purpose only";
+    ? "Optional title, due date, and purpose fields."
+    : "Optional owner, due date, and purpose fields.";
 }
 
 function relevantMemoryStrip(pack) {
@@ -6372,7 +6405,7 @@ function northStarCoverageStatus() {
   const detailParts = [
     "Where, Blocker, and Button runs next are present in Current path and dock.",
     document.querySelector('[data-forward-motion="pack-detail"]')
-      ? "Selected work exposes path, memory, and work fields."
+      ? "Selected work exposes where, blocker, Button runs next, memory, and work fields."
       : "No selected-work edit surface is rendered on this route.",
     selectedCardCount > 0 ? `${memoryCardCount}/${selectedCardCount} selected-card memory strip(s) visible.` : "",
     disabledReasons.detail,
