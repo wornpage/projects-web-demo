@@ -2303,9 +2303,10 @@ function syncNextChoicePreview(pack) {
 }
 
 function nextChoicePreviewPack(pack) {
+  const forwardPath = nextChoiceForwardPath(pack, valueOf("next-action-choice") || pack.next);
   return {
     ...pack,
-    next: valueOf("next-action-choice") || pack.next
+    ...forwardPath
   };
 }
 
@@ -4095,20 +4096,31 @@ function setPackNextAction(pack, value) {
     return { changed: false, next };
   }
 
-  pack.next = next;
-  if (pack.blocker === "missing Button runs next") {
-    pack.blocker = DEMO_BLOCKER_NONE;
-  }
-  pack.status = forwardPathStatusForBlocker(pack.status, pack.blocker, pack.next);
+  const forwardPath = nextChoiceForwardPath(pack, next);
+  pack.next = forwardPath.next;
+  pack.blocker = forwardPath.blocker;
+  pack.status = forwardPath.status;
 
   const changed = beforeStatus !== normalizeCopy(pack.status)
-    || beforeNext !== next
+    || beforeNext !== normalizeCopy(pack.next)
     || beforeBlocker !== normalizeCopy(pack.blocker);
   if (changed) {
-    addPackActivity(pack, `Button runs next changed to ${next}.`);
+    addPackActivity(pack, `Button runs next changed to ${pack.next}.`);
   }
 
-  return { changed, next };
+  return { changed, next: pack.next };
+}
+
+function nextChoiceForwardPath(pack, value) {
+  const next = normalizeCopy(value) || "Open";
+  const blocker = normalizeCopy(pack?.blocker) === "missing Button runs next"
+    ? DEMO_BLOCKER_NONE
+    : normalizeStoredBlocker(pack?.blocker);
+  return {
+    next,
+    blocker,
+    status: forwardPathStatusForBlocker(pack?.status, blocker, next)
+  };
 }
 
 function packActionSignature(pack) {
