@@ -3964,6 +3964,7 @@ function addPackMemoryNote(pack, note) {
 
 function setPackNextAction(pack, value) {
   const next = normalizeCopy(value) || "Open";
+  const beforeStatus = normalizeCopy(pack?.status);
   const beforeNext = normalizeCopy(pack?.next);
   const beforeBlocker = normalizeCopy(pack?.blocker);
 
@@ -3975,8 +3976,11 @@ function setPackNextAction(pack, value) {
   if (pack.blocker === "missing Button runs next") {
     pack.blocker = DEMO_BLOCKER_NONE;
   }
+  pack.status = forwardPathStatusForBlocker(pack.status, pack.blocker, pack.next);
 
-  const changed = beforeNext !== next || beforeBlocker !== normalizeCopy(pack.blocker);
+  const changed = beforeStatus !== normalizeCopy(pack.status)
+    || beforeNext !== next
+    || beforeBlocker !== normalizeCopy(pack.blocker);
   if (changed) {
     addPackActivity(pack, `Button runs next changed to ${next}.`);
   }
