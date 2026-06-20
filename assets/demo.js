@@ -3659,6 +3659,7 @@ function actionLabelFromKey(action) {
     "run-next": "Run next",
     review: "Review",
     "set-next": "Set Button runs next",
+    "review-work": "Review work",
     start: "Start",
     unblock: "Set Blocker: None",
     block: "Block",
@@ -3737,6 +3738,10 @@ function routeActionSummary(pack, action, actionLabel) {
   const title = workTitle(pack);
   if (action === "focus") {
     return `Focus opened for ${title}.`;
+  }
+
+  if (action === "review-work") {
+    return `Review work opened for ${title}.`;
   }
 
   if (action === "edit") {
@@ -4366,6 +4371,29 @@ function runRouteAction(action, targetPackId) {
     return openReviewFixPath(selected);
   }
 
+  if (action === "review-work") {
+    const selected = findPack(targetPackId) || currentPack();
+    if (!selected) {
+      const review = preferredReviewPack();
+      if (review) {
+        state.selectedId = review.id;
+        go("focus", review.id);
+      } else {
+        go("work");
+      }
+      return true;
+    }
+
+    if (hasBlocker(selected) || isMissingNextAction(selected)) {
+      return openReviewFixPath(selected);
+    }
+
+    state.selectedId = selected.id;
+    setActionConfirmation(selected, "review-work");
+    go("focus", selected.id);
+    return true;
+  }
+
   if (action === "parse-triage") {
     if (state.route !== "triage") {
       go("triage");
@@ -4544,8 +4572,12 @@ function commandActionForLabel(label) {
   label = (label || "Open").trim() || "Open";
   const normalized = label.toLowerCase();
 
-  if (normalized === "review" || normalized === "review work" || normalized === "review blocker") {
-    return { label: normalized === "review blocker" ? "Review blocker" : "Review work", action: "review" };
+  if (normalized === "review blocker") {
+    return { label: "Review blocker", action: "review" };
+  }
+
+  if (normalized === "review" || normalized === "review work") {
+    return { label: "Review work", action: "review-work" };
   }
 
   if (normalized === "set next" || normalized === "set button runs next" || normalized === "choose next action") {
