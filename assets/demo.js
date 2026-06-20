@@ -6347,14 +6347,18 @@ function currentOverflowStatus() {
 }
 
 function northStarCoverageStatus() {
-  const requiredFields = [
+  const commandFields = [
     { id: "command-where", label: "Current path Where" },
     { id: "command-blocker", label: "Current path Blocker" },
-    { id: "command-next", label: "Current path Button runs next" },
+    { id: "command-next", label: "Current path Button runs next" }
+  ];
+  const dockFields = [
     { id: "dock-where", label: "dock Where" },
     { id: "dock-blocker", label: "dock Blocker" },
     { id: "dock-next-label", label: "dock Button runs next" }
   ];
+  const dockVisible = northStarReadableElement(document.querySelector(".demo-bottom-brief"));
+  const requiredFields = dockVisible ? commandFields.concat(dockFields) : commandFields;
   const missing = requiredFields
     .filter((field) => !northStarReadableElement(document.getElementById(field.id)))
     .map((field) => field.label);
@@ -6365,7 +6369,7 @@ function northStarCoverageStatus() {
     missing.push("header Button-runs-next wiring");
   }
 
-  if (!northStarReadableElement(dock) || !normalizeCopy(dock?.dataset.action)) {
+  if (dockVisible && (!northStarReadableElement(dock) || !normalizeCopy(dock?.dataset.action))) {
     missing.push("dock Button-runs-next wiring");
   }
 
@@ -6437,7 +6441,9 @@ function northStarCoverageStatus() {
 
   const status = missing.length === 0;
   const detailParts = [
-    "Where, Blocker, and Button runs next are present in Current path and dock.",
+    dockVisible
+      ? "Where, Blocker, and Button runs next are present in Current path and dock."
+      : "Where, Blocker, and Button runs next are present in Current path; dock is hidden on this viewport.",
     document.querySelector('[data-forward-motion="pack-detail"]')
       ? "Selected work exposes where, blocker, Button runs next, memory, and work fields."
       : "No selected-work edit surface is rendered on this route.",
