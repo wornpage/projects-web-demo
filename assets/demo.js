@@ -3201,6 +3201,7 @@ function workCard(pack) {
         <strong>${escapeHtml(command.label)}</strong>
       </div>
       ${primaryCommandButton(pack)}
+      ${primaryCommandReasonNote(pack, command)}
     </div>
     <div class="demo-card-meta">
       <span>${escapeHtml(`Blocker: ${blockerDisplayValue(pack.blocker)}`)}</span>
@@ -3259,6 +3260,7 @@ function reviewCard(pack) {
       </div>
       <div class="demo-review-card-actions">
         ${primaryCommandButton(pack)}
+        ${primaryCommandReasonNote(pack, command)}
       </div>
     </div>
     <div class="demo-card-meta">
@@ -3310,6 +3312,28 @@ function primaryCommandButton(pack, className = "btn btn-primary") {
 
 function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)) {
   return `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`;
+}
+
+function primaryCommandReasonNote(pack, command = resolvePrimaryCommandForPack(pack)) {
+  const reason = primaryCommandVisibleReason(pack, command);
+  const copy = copySurface(reason, DEMO_COPY_LIMITS.commandFlowVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<small class="demo-primary-reason" data-primary-action-reason title="${escapeAttribute(copy.help)}" aria-label="${escapeAttribute(copy.help)}">${escapeHtml(copy.visible)}</small>`;
+}
+
+function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPack(pack)) {
+  if (isMissingNextAction(pack)) {
+    return "Why: setup comes first.";
+  }
+
+  if (hasBlocker(pack)) {
+    return `Why: ${blockerTextForPack(pack)} blocks it.`;
+  }
+
+  if (command.action === "done") {
+    return "Why: proof is ready.";
+  }
+
+  return `Why: no blocker; ${command.label} can run.`;
 }
 
 function packPrimaryActionButton(command) {
@@ -5657,6 +5681,7 @@ function buildHealthChecks() {
   const routeContract = routeContractStatus();
   const disabledReasons = disabledReasonCoverageStatus();
   const supportReasons = supportActionReasonCoverageStatus();
+  const primaryReasons = primaryActionReasonCoverageStatus();
   const emptyStates = emptyStateCoverageStatus();
   const receipts = receiptCoverageStatus();
   const selectGuidance = selectGuidanceCoverageStatus();
@@ -5712,6 +5737,11 @@ function buildHealthChecks() {
       label: "Support action reasons",
       status: supportReasons.status,
       detail: supportReasons.detail
+    },
+    {
+      label: "Primary action reasons",
+      status: primaryReasons.status,
+      detail: primaryReasons.detail
     },
     {
       label: "Empty state guidance",
@@ -6368,6 +6398,10 @@ function northStarCoverageStatus() {
   if (!supportReasons.status) {
     missing.push("support action reasons");
   }
+  const primaryReasons = primaryActionReasonCoverageStatus();
+  if (!primaryReasons.status) {
+    missing.push("primary action reasons");
+  }
   const emptyStates = emptyStateCoverageStatus();
   if (!emptyStates.status) {
     missing.push("empty state guidance");
@@ -6410,6 +6444,7 @@ function northStarCoverageStatus() {
     selectedCardCount > 0 ? `${memoryCardCount}/${selectedCardCount} selected-card memory strip(s) visible.` : "",
     disabledReasons.detail,
     supportReasons.detail,
+    primaryReasons.detail,
     emptyStates.detail,
     receipts.detail,
     selectGuidance.detail,
@@ -6472,6 +6507,21 @@ function supportActionReasonCoverageStatus() {
     detail: missing.length === 0
       ? `${controls.length} support action button(s) explain why they exist.`
       : `${missing.length} support action button(s) need a reason: ${missing.map(supportActionAuditLabel).slice(0, 3).join(", ")}.`
+  };
+}
+
+function primaryActionReasonCoverageStatus() {
+  const cards = Array.from(document.querySelectorAll(".demo-work-card, .demo-review-card"))
+    .filter(northStarReadableElement);
+  const missing = cards.filter((card) => !normalizeCopy(card.querySelector("[data-primary-action-reason]")?.textContent));
+
+  return {
+    status: missing.length === 0,
+    count: cards.length,
+    missing: missing.map(primaryActionReasonAuditLabel).slice(0, 8),
+    detail: missing.length === 0
+      ? `${cards.length} work card primary action(s) explain why the button runs.`
+      : `${missing.length} work card primary action(s) need a visible reason: ${missing.map(primaryActionReasonAuditLabel).slice(0, 3).join(", ")}.`
   };
 }
 
@@ -7080,6 +7130,12 @@ function supportActionAuditLabel(control) {
     || control.querySelector(".demo-support-label")?.textContent?.trim()
     || control.textContent.trim()
     || "support action";
+}
+
+function primaryActionReasonAuditLabel(card) {
+  return card.querySelector(".demo-card-title")?.textContent?.trim()
+    || card.getAttribute("data-pack-id")
+    || "work card";
 }
 
 function emptyStateAuditLabel(stateElement) {
