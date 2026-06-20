@@ -767,7 +767,8 @@ html[data-theme="dark"] .demo-header-metadata {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.demo-command-receipt-lines div {
+.demo-command-receipt-lines div,
+.demo-card-receipt-lines div {
   border-top: 1px solid var(--cockpit-border);
   display: grid;
   gap: 3px;
@@ -775,7 +776,8 @@ html[data-theme="dark"] .demo-header-metadata {
   padding-top: 8px;
 }
 
-.demo-command-receipt-lines strong {
+.demo-command-receipt-lines strong,
+.demo-card-receipt-lines strong {
   color: var(--cockpit-text);
   font-size: 13px;
   line-height: 1.25;
@@ -817,6 +819,12 @@ html[data-theme="dark"] .demo-header-metadata {
   font-weight: 700;
   line-height: 1.3;
   overflow-wrap: anywhere;
+}
+
+.demo-card-receipt-lines {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .demo-card-receipt:focus-visible {

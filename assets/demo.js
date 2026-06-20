@@ -3735,11 +3735,10 @@ function actionReceiptCard(pack) {
 
   const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
-  const nextLine = visibleCopy(`Where: ${receipt.where}. Blocker: ${receipt.blocker}. Button runs next: ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
   return `<div class="demo-card-receipt" data-receipt-surface="card" data-card-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
-    <small>${escapeHtml(nextLine)}</small>
+    ${receiptCardLines(receipt)}
   </div>`;
 }
 
@@ -3757,11 +3756,23 @@ function routeActionReceiptPanel(visiblePacks, routeLabel) {
 
   const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
-  const nextLine = visibleCopy(`Where: ${routeLabel} / ${workTitle(pack)}. Blocker: ${receipt.blocker}. Button runs next: ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
+  const routeReceipt = {
+    ...receipt,
+    where: `${routeLabel} / ${workTitle(pack)}`
+  };
   return `<div class="demo-card-receipt demo-route-receipt" data-receipt-surface="route" data-route-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
-    <small>${escapeHtml(nextLine)}</small>
+    ${receiptCardLines(routeReceipt)}
+  </div>`;
+}
+
+function receiptCardLines(receipt) {
+  return `<div class="demo-card-receipt-lines">
+    ${receiptLine("Where", receipt.where)}
+    ${receiptLine("Blocker", receipt.blocker)}
+    ${receiptLine("Button runs next", receipt.next)}
+    ${receiptLine("Proof target", receipt.proof)}
   </div>`;
 }
 
@@ -4188,18 +4199,6 @@ function runRouteAction(action, targetPackId) {
     }
 
     return openReviewFixPath(selected);
-  }
-
-  if (action === "open" && state.route === "pack") {
-    const pack = findPack(targetPackId) || currentPack();
-    go("work", pack?.id || "");
-    return true;
-  }
-
-  if (action === "focus" && state.route === "focus") {
-    const pack = findPack(targetPackId) || currentPack();
-    go("work", pack?.id || "");
-    return true;
   }
 
   if (action === "parse-triage") {
