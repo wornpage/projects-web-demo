@@ -2573,12 +2573,13 @@ function renderPackDetail() {
   const saveState = packDetailSaveState(pack);
   const saveNote = packDetailSaveNote(saveState);
   const showOwnerInline = ownerSupportNeededForPack(pack);
+  const detailSubtitle = copySurface(workDetailSubtitle(pack, packCommand), DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-edit-panel" id="pack-edit-form" data-pack-id="${escapeAttribute(pack.id)}">
       <div class="demo-panel-head">
         <div>
           <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
-          <p class="demo-pack-subtitle">${escapeHtml(workDetailSubtitle(pack, packCommand))}</p>
+          <p class="demo-pack-subtitle"${copySurfaceAttributes("Work path summary", detailSubtitle)}>${escapeHtml(detailSubtitle.visible)}</p>
         </div>
         <span class="demo-status">Edits stay in this browser</span>
       </div>
@@ -5178,6 +5179,7 @@ function syncPackDetailForwardPanel(pack) {
   const head = panel?.querySelector(".demo-forward-head strong");
   const stateLabel = panel?.querySelector("[data-workflow-state-preview]");
   const stateHelp = panel?.querySelector("[data-workflow-state-help]");
+  setWorkDetailSubtitle(workDetailSubtitle(pending, actionCommand));
   setWorkPathSummary(panel, workPathSummaryText(pending, actionCommand, workflow), workPathSummaryHelp(pending, actionCommand, workflow));
   syncSelectedWorkTriad(panel, pending, actionCommand);
   if (stateLabel) {
@@ -5190,6 +5192,7 @@ function syncPackDetailForwardPanel(pack) {
   syncWorkPathStrip(panel, pending, actionCommand, workflow);
   if (issue) {
     if (head) head.textContent = blockerModeFixNext(issue);
+    setWorkDetailSubtitle(`Fix ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`);
     setWorkPathSummary(
       panel,
       `Fix ${issue}. Next: ${blockerModeFixNext(issue)}.`,
@@ -5214,6 +5217,7 @@ function syncPackDetailForwardPanel(pack) {
 
   if (ownerBlockerNeedsClear()) {
     if (head) head.textContent = "Set Blocker: None";
+    setWorkDetailSubtitle("Owner filled. Button runs next: Set Blocker: None.");
     setWorkPathSummary(
       panel,
       "Owner filled. Next: Set Blocker: None.",
@@ -5247,6 +5251,7 @@ function syncPackDetailForwardPanel(pack) {
     command.flowHint = `Flow: save work path, then ${nextAfterSave}.`;
     command.runNote = `Saves pending work path changes. After save, ${nextAfterSave} is visible.`;
     if (head) head.textContent = saveAction;
+    setWorkDetailSubtitle(`Unsaved changes. Button runs next: ${saveAction}.`);
     setWorkPathSummary(
       panel,
       `Unsaved changes. Next: ${saveAction}.`,
@@ -5753,6 +5758,22 @@ function workDetailSubtitle(pack, command = resolvePrimaryCommandForPack(pack)) 
   return hasBlocker(pack)
     ? `Blocked by ${blocker}. Button runs next: ${command.label}.`
     : `Ready. Button runs next: ${command.label}.`;
+}
+
+function setWorkDetailSubtitle(value) {
+  const subtitle = document.querySelector(".demo-pack-subtitle");
+  if (!subtitle) {
+    return;
+  }
+
+  const copy = copySurface(value, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  subtitle.textContent = copy.visible;
+  subtitle.title = copy.help;
+  subtitle.setAttribute("aria-label", copy.help);
+  subtitle.dataset.copySurface = fieldKey("Work path summary");
+  subtitle.dataset.copyVisibleLimit = String(copy.visibleLimit);
+  subtitle.dataset.copyHelpLimit = String(copy.helpLimit);
+  subtitle.dataset.copyTruncated = String(copy.truncated);
 }
 
 function workPathSummaryText(pack, command = resolvePrimaryCommandForPack(pack), workflow = workflowStateForPack(pack, command)) {
