@@ -211,7 +211,7 @@ const DEMO_SCENARIOS = [
   {
     id: "empty",
     label: "Empty state",
-    description: "Show how disabled controls explain what to do when no sample work is loaded.",
+    description: "Show how disabled controls explain what to do when no work is loaded.",
     profile: "general",
     route: "review",
     filter: "all",
@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       blocker: "static JSON could not load",
       next: "Refresh",
       stateText: "Offline",
-      scope: "Scope: no sample work is visible."
+      scope: "Scope: no work is visible."
     });
     el("screen-content").innerHTML = `<div class="demo-empty">${escapeHtml(error.message)}</div>`;
   }
@@ -716,7 +716,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   const triageAction = triageCount > 0 ? "copy-triage" : "parse-triage";
   const triageNext = triageCount > 0 ? "Copy Markdown" : "Parse work";
   const reviewSummary = reviewCount > 0
-    ? `${reviewCount} sample item(s) need review`
+    ? `${reviewCount} work item(s) need review`
     : DEMO_BLOCKER_NONE_LABEL;
   const reviewTarget = preferredReviewPack();
   const selectedWorkCommand = selectedPackCommand(selected);
@@ -730,25 +730,25 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   const noSampleWorkCommand = (title, where, stateHelp) => ({
     title,
     where,
-    blocker: "no sample work exists",
-    next: "Create sample",
+    blocker: "no work exists",
+    next: "Create work",
     stateText: "No work",
     stateHelp,
     action: "open-create",
     targetPackId: ""
   });
   const checkCommand = validateState.canRun
-    ? { title: "Check", where: "Check", blocker: `${reviewCount} sample item(s) still need decisions`, next: "Validate sample", stateText: "Ready", action: "validate-sample", targetPackId: "" }
+    ? { title: "Check", where: "Check", blocker: `${reviewCount} work item(s) still need decisions`, next: "Check work", stateText: "Ready", action: "validate-sample", targetPackId: "" }
     : noSampleWorkCommand("Check", "Check", validateState.help);
   const homeCommand = hasSampleWork
     ? { title: "Work overview", where: "Home", blocker: reviewSummary, next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
-    : noSampleWorkCommand("Work overview", "Home", "Create sample work or reset demo data before reviewing.");
+    : noSampleWorkCommand("Work overview", "Home", "Create work or reset demo data before reviewing.");
   const searchCommand = hasSampleWork
     ? { title: "Search", where: "Search", blocker: searchBlocker, next: searchNext, stateText: searchQuery ? "Filtering" : "Ready", action: "search-demo", targetPackId: "" }
-    : noSampleWorkCommand("Search", "Search", "Create sample work or reset demo data before searching.");
+    : noSampleWorkCommand("Search", "Search", "Create work or reset demo data before searching.");
   const statsCommand = hasSampleWork
     ? { title: "Stats", where: "Stats", blocker: "sample counts are calculated in this demo", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
-    : noSampleWorkCommand("Stats", "Stats", "Create sample work or reset demo data before reviewing stats.");
+    : noSampleWorkCommand("Stats", "Stats", "Create work or reset demo data before reviewing stats.");
   const notesCommand = selected
     ? { title: "Notes", where: "Notes", blocker: "sample notes stay with this browser", next: "Open memory", stateText: "Ready", action: "memory", targetPackId: selectedWorkCommand.targetPackId }
     : { title: "Notes", ...selectedWorkCommand };
@@ -772,7 +772,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     timeline: { title: "Timeline", where: "Timeline", blocker: "sample activity stays with this browser", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     files: { title: "Files", where: "Files", blocker: "sample sources are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     calendar: { title: "Calendar", ...selectedWorkCommand },
-    create: { title: "Create", where: "Create", blocker: "required fields are title, owner, and Button runs next", next: "Save sample", stateText: "Draft", action: "create-sample", targetPackId: "" },
+    create: { title: "Create", where: "Create", blocker: "required fields are title, owner, and Button runs next", next: "Save work", stateText: "Draft", action: "create-sample", targetPackId: "" },
     memory: memoryCommand,
     lab: { title: "Demo Lab", ...selectedWorkCommand },
     meta: { title: "Meta", where: "Meta", blocker: "product view and diagnostics are computed locally", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
@@ -789,7 +789,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     : "";
 
   const routeCommandsHints = {
-    home: hasSampleWork ? "Flow: review work, run next." : "Flow: create sample, review.",
+    home: hasSampleWork ? "Flow: review work, run next." : "Flow: create work, review.",
     triage: triageCount > 0
       ? "Flow: edit rows, copy Markdown."
       : "Flow: paste work, parse.",
@@ -803,14 +803,14 @@ function commandForRoute(selected, visibleCount, reviewCount) {
       ? `${selectedActionFlow}`
       : "Flow: confirm work path, run next.",
     next: "Flow: set button, return, run next.",
-    check: validateState.canRun ? "Flow: validate sample, fix gaps." : "Flow: create sample, validate.",
+    check: validateState.canRun ? "Flow: check work, fix gaps." : "Flow: create work, check.",
     search: hasSampleWork
       ? (searchQuery ? "Flow: refine search, open work." : "Flow: type search, open work.")
-      : "Flow: create sample, search.",
-    stats: hasSampleWork ? "Flow: review counts, choose work." : "Flow: create sample, review stats.",
+      : "Flow: create work, search.",
+    stats: hasSampleWork ? "Flow: review counts, choose work." : "Flow: create work, review stats.",
     notes: selected
       ? `Flow: open memory for ${workTitle(selected)}.`
-      : (hasSampleWork ? "Flow: choose work, open memory." : "Flow: create sample, add memory."),
+      : (hasSampleWork ? "Flow: choose work, open memory." : "Flow: create work, add memory."),
     timeline: selected
       ? `${selectedActionFlow}`
       : "Flow: choose work, review activity, run next.",
@@ -822,7 +822,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
       : "Flow: choose work, review sources, run next.",
     memory: selected
       ? `Flow: type memory note, add note.`
-      : (hasSampleWork ? "Flow: choose work, add memory." : "Flow: create sample, add memory."),
+      : (hasSampleWork ? "Flow: choose work, add memory." : "Flow: create work, add memory."),
     lab: selected
       ? `${selectedActionFlow}`
       : "Flow: choose work, preview button, run next.",
@@ -840,7 +840,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   return {
     ...routeCommand,
     stateText: capitalize(routeCommand.stateText),
-    scope: `Scope: ${visibleCount} of ${state.packs.length} sample work items visible.`,
+    scope: `Scope: ${visibleCount} of ${state.packs.length} work item(s) visible.`,
     targetPackId: routeCommand.targetPackId || "",
     flowHint: routeCommandsHints[state.route] || routeCommandsHints.work
   };
@@ -871,7 +871,7 @@ function selectedPackCommand(selected) {
   const hasAnyWork = state.packs.length > 0;
   return {
     where: selected ? workTitle(selected) : (hasAnyWork ? "Choose work" : "No work"),
-    blocker: selected ? blockerTextForPack(selected) : (hasAnyWork ? "choose a sample work item" : "create or reset sample work"),
+    blocker: selected ? blockerTextForPack(selected) : (hasAnyWork ? "choose a work item" : "create or reset work"),
     next: resolvedAction.label,
     stateText: workflow.label,
     stateHelp: workflow.help,
@@ -884,7 +884,7 @@ function selectedPackCommand(selected) {
 function resolvePrimaryCommandForPack(selected) {
   if (!selected) {
     if (state.packs.length === 0) {
-      return { label: "Create sample", action: "open-create", targetPackId: "" };
+      return { label: "Create work", action: "open-create", targetPackId: "" };
     }
 
     return { label: "Open work list", action: "open-work-list", targetPackId: "" };
@@ -913,7 +913,7 @@ function workflowStateForPack(pack, command = null) {
         id: "empty",
         label: "No work",
         path: "draft",
-        help: "Create or reset sample work to see its path."
+        help: "Create or reset work to see its path."
       };
     }
 
@@ -921,7 +921,7 @@ function workflowStateForPack(pack, command = null) {
       id: "none",
       label: "Choose work",
       path: "draft",
-      help: "Choose sample work to see its path."
+      help: "Choose work to see its path."
     };
   }
 
@@ -1335,9 +1335,9 @@ function renderHome() {
   const scenario = DEMO_SCENARIO_BY_ID[state.scenarioId] || DEMO_SCENARIO_BY_ID.default;
   el("screen-content").innerHTML = `
     <div class="demo-grid demo-summary-strip">
-      ${metricCard("Visible work", state.packs.length, "Sample packs in this demo.")}
+      ${metricCard("Visible work", state.packs.length, "Work items in this demo.")}
       ${metricCard("Review", reviewCount, "Items with blockers or missing Button runs next.")}
-      ${metricCard("Done", doneCount, "Finished sample work.")}
+      ${metricCard("Done", doneCount, "Finished work.")}
     </div>
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -1363,8 +1363,8 @@ function renderHome() {
         <div class="demo-start-step">
           <span>3</span>
           <strong>Create</strong>
-          <small>Add a browser-only sample pack.</small>
-          ${navButton("create", "Create sample")}
+          <small>Add browser-only work.</small>
+          ${navButton("create", "Create work")}
         </div>
       </div>
       <div class="demo-quick-actions demo-secondary-paths" aria-label="Secondary demo views">
@@ -1915,8 +1915,8 @@ function renderWork() {
   const visible = filteredPacks();
   const orderedVisible = selectedFirstPacks(visible);
   const emptyWork = state.packs.length === 0
-    ? emptyState("No sample work is available.", "Create sample work or reset demo data.", emptyStateContextFor("Work filters", "no sample work exists in this browser state", "create or reset sample work"))
-    : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.", emptyStateContextFor("Work filters", "current search or status filter hides every sample item", "clear search or choose another status filter"));
+    ? emptyState("No work is available.", "Create work or reset demo data.", emptyStateContextFor("Work filters", "no work exists in this browser state", "create or reset work"))
+    : emptyState("No work matches this filter.", "Clear search or choose another status filter.", emptyStateContextFor("Work filters", "current search or status filter hides every work item", "clear search or choose another status filter"));
   el("screen-content").innerHTML = `
     ${workToolbar("Work filters")}
     <section class="demo-panel">
@@ -1945,11 +1945,11 @@ function renderToday() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Today</span>
-          <h2>${today.length} sample item(s)</h2>
+          <h2>${today.length} work item(s)</h2>
         </div>
         <span class="demo-status">${today.length ? "work first" : "empty"}</span>
       </div>
-      <div class="demo-list">${today.length ? today.map(todayRow).join("") : emptyState("No sample work is due today.", "Use Set all due today, create work, or edit a due date.", emptyStateContextFor("Today", "no active or dated sample work is visible", "set all due today, create work, or edit a due date"))}</div>
+      <div class="demo-list">${today.length ? today.map(todayRow).join("") : emptyState("No work is due today.", "Use Set all due today, create work, or edit a due date.", emptyStateContextFor("Today", "no active or dated work is visible", "set all due today, create work, or edit a due date"))}</div>
       ${optionalDetails("Date tools", "Open for bulk due-date cleanup.", `
         ${disabledReasonNotice(!dueState.canRun, dueHelp)}
         <div class="demo-card-actions">
@@ -1987,11 +1987,11 @@ function renderReview() {
   const orderedReview = selectedFirstPacks(review);
   const selected = currentPack();
   const firstReview = selected && review.some((pack) => pack.id === selected.id) ? selected : review[0] || null;
-  const reviewButtonReason = "Where: Review. Blocker: no sample work needs review. Button runs next: create or edit work.";
+  const reviewButtonReason = "Where: Review. Blocker: no work needs review. Button runs next: create or edit work.";
   const reviewState = firstReview ? `${review.length} needs decision` : "clear";
   const emptyReview = state.packs.length === 0
-    ? emptyState("No sample work is available.", "Create sample work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Review", "no sample work exists in this browser state", "create sample work, reset demo data, or choose a scenario with work"))
-    : emptyState("No sample work needs review.", "Choose a different scenario or add a blocker to sample work.", emptyStateContextFor("Review", "no blockers or missing Button-runs-next items are visible", "create or edit work"));
+    ? emptyState("No work is available.", "Create work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Review", "no work exists in this browser state", "create work, reset demo data, or choose a scenario with work"))
+    : emptyState("No work needs review.", "Choose a different scenario or add a blocker to work.", emptyStateContextFor("Review", "no blockers or missing Button-runs-next items are visible", "create or edit work"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -2012,7 +2012,7 @@ function renderReview() {
 function renderNext() {
   const pack = currentPack() || state.packs.find(isReview) || state.packs[0];
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("No sample work is available.", "Create sample work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Next setup", "no sample work exists in this browser state", "create sample work, reset demo data, or choose a scenario with work"));
+    el("screen-content").innerHTML = emptyState("No work is available.", "Create work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Next setup", "no work exists in this browser state", "create work, reset demo data, or choose a scenario with work"));
     return;
   }
 
@@ -2058,7 +2058,7 @@ function renderNext() {
           <h2>Work that needs a clearer button</h2>
         </div>
       </div>
-      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No sample work needs next setup.", "Open work, add a blocker, or clear Button runs next to create a candidate.", emptyStateContextFor("Next setup", "every visible work item already has a clear Button-runs-next path", "open work or create a review candidate"))}</div>
+      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No work needs next setup.", "Open work, add a blocker, or clear Button runs next to create a candidate.", emptyStateContextFor("Next setup", "every visible work item already has a clear Button-runs-next path", "open work or create a review candidate"))}</div>
     </section>
   `;
   el("next-action-choice").addEventListener("change", () => syncNextChoicePreview(pack));
@@ -2076,10 +2076,10 @@ function renderCheck() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Check</span>
-          <h2>Sample readiness checks</h2>
+          <h2>Work readiness checks</h2>
         </div>
         <span id="validate-sample-help" class="sr-only">${escapeHtml(validateHelp)}</span>
-        <button class="btn btn-primary" type="button" data-action="validate-sample"${controlHelpAttributes(!validateState.canRun, validateHelp, "validate-sample-help")}>Validate sample</button>
+        <button class="btn btn-primary" type="button" data-action="validate-sample"${controlHelpAttributes(!validateState.canRun, validateHelp, "validate-sample-help")}>Check work</button>
       </div>
       ${disabledReasonNotice(!validateState.canRun, validateHelp)}
       <div class="demo-check-list">
@@ -2095,20 +2095,20 @@ function setDueTodayState(surface = "Today") {
   if (state.packs.length === 0) {
     return {
       canRun: false,
-      help: `Where: ${surface}. Blocker: no sample work exists. Button runs next: create or reset sample work before setting due dates.`
+      help: `Where: ${surface}. Blocker: no work exists. Button runs next: create or reset work before setting due dates.`
     };
   }
 
   if (unfinished === 0) {
     return {
       canRun: false,
-      help: `Where: ${surface}. Blocker: all sample work is done. Button runs next: create or reopen work before setting due dates.`
+      help: `Where: ${surface}. Blocker: all work is done. Button runs next: create or reopen work before setting due dates.`
     };
   }
 
   return {
     canRun: true,
-    help: `Where: ${surface}. Blocker: None. Button runs next: set ${unfinished} unfinished sample work item(s) due today in this browser.`
+    help: `Where: ${surface}. Blocker: None. Button runs next: set ${unfinished} unfinished work item(s) due today in this browser.`
   };
 }
 
@@ -2119,24 +2119,24 @@ function todayIsoDate(date = new Date()) {
 
 function dueTodayStatus(date, updatedCount) {
   if (state.packs.length === 0) {
-    return "Where: Today. Blocker: no sample work exists. Button runs next: create or reset sample work before setting due dates.";
+    return "Where: Today. Blocker: no work exists. Button runs next: create or reset work before setting due dates.";
   }
 
   if (updatedCount === 0) {
-    return "Where: Today. Blocker: all sample work is done. Button runs next: create or reopen work before setting due dates.";
+    return "Where: Today. Blocker: all work is done. Button runs next: create or reopen work before setting due dates.";
   }
 
-  return `Where: Today. Blocker: None. Button runs next: review ${updatedCount} sample work item(s) due ${date}.`;
+  return `Where: Today. Blocker: None. Button runs next: review ${updatedCount} work item(s) due ${date}.`;
 }
 
 function validationStatus(attention) {
   if (state.packs.length === 0) {
-    return "Where: Check. Blocker: no sample work exists. Button runs next: create or reset sample work before validating.";
+    return "Where: Check. Blocker: no work exists. Button runs next: create or reset work before checking.";
   }
 
   return attention === 0
     ? "Where: Check. Blocker: None. Button runs next: keep sample ready."
-    : `Where: Check. Blocker: ${attention} sample check item(s) need attention. Button runs next: fix check items.`;
+    : `Where: Check. Blocker: ${attention} check item(s) need attention. Button runs next: fix check items.`;
 }
 
 function saveNextChoiceHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
@@ -2201,13 +2201,13 @@ function validateSampleState() {
   if (state.packs.length === 0) {
     return {
       canRun: false,
-      help: "Where: Check. Blocker: no sample work exists. Button runs next: create or reset sample work before validating."
+      help: "Where: Check. Blocker: no work exists. Button runs next: create or reset work before checking."
     };
   }
 
   return {
     canRun: true,
-    help: "Where: Check. Blocker: None. Button runs next: run sample readiness checks and update demo status."
+    help: "Where: Check. Blocker: None. Button runs next: run work readiness checks and update demo status."
   };
 }
 
@@ -2222,7 +2222,7 @@ function resetDemoHelp() {
 function renderFocus() {
   const pack = currentPack() || state.packs[0];
   if (!pack) {
-    el("screen-content").innerHTML = emptyState("No sample work is available.", "Create sample work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Focus", "no sample work exists in this browser state", "create sample work, reset demo data, or choose a scenario with work"));
+    el("screen-content").innerHTML = emptyState("No work is available.", "Create work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Focus", "no work exists in this browser state", "create work, reset demo data, or choose a scenario with work"));
     return;
   }
   const focusCommand = resolvePrimaryCommandForPack(pack);
@@ -2285,7 +2285,7 @@ function renderStats() {
           <span class="section-label">Stats</span>
           <h2>Browser-state counts</h2>
         </div>
-        <span class="demo-status">${state.packs.length} sample item(s)</span>
+        <span class="demo-status">${state.packs.length} work item(s)</span>
       </div>
       <div class="demo-stat-list">
         ${["active", "blocked", "draft", "done", "review"].map((key) => statBar(key, counts[key] ?? 0, total)).join("")}
@@ -2297,7 +2297,7 @@ function renderStats() {
 function renderNotes() {
   const rows = state.packs.flatMap((pack) => pack.memory.map((note) => ({ pack, note })));
   const emptyNotes = state.packs.length === 0
-    ? emptyState("No sample notes exist.", "Create sample work or reset demo data before adding memory.", emptyStateContextFor("Notes", "no sample work exists in this browser state", "create or reset sample work"))
+    ? emptyState("No notes exist.", "Create work or reset demo data before adding memory.", emptyStateContextFor("Notes", "no work exists in this browser state", "create or reset work"))
     : emptyState("No sample notes exist.", "Open Memory and add a note to selected work.", emptyStateContextFor("Notes", "no memory notes have been saved in this browser", "open Memory and add a note"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
@@ -2319,7 +2319,7 @@ function renderNotes() {
 function renderTimeline() {
   const rows = state.packs.flatMap((pack) => pack.activity.map((item, index) => ({ pack, item, index })));
   const emptyTimeline = state.packs.length === 0
-    ? emptyState("No sample activity exists.", "Create sample work or reset demo data before running Button runs next.", emptyStateContextFor("Timeline", "no sample work exists in this browser state", "create or reset sample work"))
+    ? emptyState("No activity exists.", "Create work or reset demo data before running Button runs next.", emptyStateContextFor("Timeline", "no work exists in this browser state", "create or reset work"))
     : emptyState("No sample activity exists.", "Run Button runs next to add activity.", emptyStateContextFor("Timeline", "no Button-runs-next result has written activity yet", "run Button runs next"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
@@ -2372,7 +2372,7 @@ function renderCalendar() {
         <span class="demo-status">${rows.length} dated</span>
       </div>
       <div class="demo-calendar-grid">
-        ${rows.map(calendarCard).join("") || emptyState("No sample due dates exist.", "Use Set all due today, create work, or edit a due date.", emptyStateContextFor("Calendar", "no sample work has a due date", "set all due today, create work, or edit a due date"))}
+        ${rows.map(calendarCard).join("") || emptyState("No due dates exist.", "Use Set all due today, create work, or edit a due date.", emptyStateContextFor("Calendar", "no work has a due date", "set all due today, create work, or edit a due date"))}
       </div>
       ${optionalDetails("Date tools", "Open for bulk due-date cleanup.", `
         ${disabledReasonNotice(!dueState.canRun, dueHelp)}
@@ -2389,14 +2389,14 @@ function renderCalendar() {
 function renderSearch() {
   const visible = filteredPacks();
   const emptySearch = state.packs.length === 0
-    ? emptyState("No sample work is available.", "Create sample work or reset demo data before searching.", emptyStateContextFor("Search", "no sample work exists in this browser state", "create or reset sample work"))
-    : emptyState("No sample work matches the search.", "Clear search or try title, owner, due date, or Button runs next.", emptyStateContextFor("Search", "search text hides every sample item", "clear search or try title, owner, due date, or Button runs next"));
+    ? emptyState("No work is available.", "Create work or reset demo data before searching.", emptyStateContextFor("Search", "no work exists in this browser state", "create or reset work"))
+    : emptyState("No work matches the search.", "Clear search or try title, owner, due date, or Button runs next.", emptyStateContextFor("Search", "search text hides every work item", "clear search or try title, owner, due date, or Button runs next"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Search</span>
-          <h2>Search every sample work item</h2>
+          <h2>Search every work item</h2>
         </div>
         <span class="demo-status">${visible.length} match(es)</span>
       </div>
@@ -2429,10 +2429,10 @@ function renderCreate() {
         ${inputField("new-owner", "Owner", defaults.owner, "Use a person, team, or role responsible for Button runs next.")}
         ${inputField("new-next", "Button runs next", defaults.next, "Choose what Button runs next should run first.")}
         ${inputField("new-due", "Due", defaults.due, "Optional date used by Today and Calendar views.")}
-        ${textField("new-purpose", "Why it matters", defaults.purpose, "Short context for why this sample work exists.")}
+        ${textField("new-purpose", "Why it matters", defaults.purpose, "Short context for why this work exists.")}
       </div>
       <p id="create-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(createState.help)}</p>
-      <button id="create-sample" class="btn btn-primary" type="button" aria-describedby="create-save-help"${disabledReasonAttributes(!createState.canSave, createState.help)}>Save sample</button>
+      <button id="create-sample" class="btn btn-primary" type="button" aria-describedby="create-save-help"${disabledReasonAttributes(!createState.canSave, createState.help)}>Save work</button>
     </section>
   `;
   el("create-sample").addEventListener("click", createSamplePack);
@@ -2443,8 +2443,8 @@ function renderPackDetail() {
   const pack = currentPack();
   if (!pack) {
     el("screen-content").innerHTML = state.packs.length === 0
-      ? emptyState("No sample work is available.", "Create sample work or reset demo data.", emptyStateContextFor("Work path", "no sample work exists in this browser state", "create or reset sample work"))
-      : emptyState("Choose sample work before opening the work path.", "Open Work or Review and choose a work card.", emptyStateContextFor("Work path", "no sample work is selected", "open Work or Review and choose a work card"));
+      ? emptyState("No work is available.", "Create work or reset demo data.", emptyStateContextFor("Work path", "no work exists in this browser state", "create or reset work"))
+      : emptyState("Choose work before opening the work path.", "Open Work or Review and choose a work card.", emptyStateContextFor("Work path", "no work is selected", "open Work or Review and choose a work card"));
     return;
   }
   const packCommand = resolvePrimaryCommandForPack(pack);
@@ -2482,7 +2482,7 @@ function renderPackDetail() {
           <strong>${escapeHtml(supportDetailsSummary(showOwnerInline))}</strong>
         </summary>
         <div class="demo-form-grid">
-          ${inputField("edit-title", "Title", pack.title, "Renames this sample work item.")}
+          ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
           ${showOwnerInline ? "" : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
           ${inputField("edit-due", "Due", pack.due, "Optional date used by Today and Calendar views.")}
           ${textField("edit-purpose", "Purpose", pack.purpose, "Extra context; keep the main work path above focused.")}
@@ -2518,7 +2518,7 @@ function renderMemory() {
         </div>
         <span class="demo-status">Stored in this browser</span>
       </div>
-      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${workTitle(pack)}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create sample work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no sample work exists in this browser state", "create or reset sample work"))}</div>
+      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${workTitle(pack)}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no work exists in this browser state", "create or reset work"))}</div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
         <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a sample memory note">
@@ -2845,7 +2845,7 @@ function renderLab() {
   const labSnapshotHelp = "Review or edit the workflow snapshot before copying it as evidence.";
   const labOptions = state.packs.length
     ? state.packs.map((item) => `<option value="${escapeAttribute(item.id)}"${item.id === pack?.id ? " selected" : ""}>${escapeHtml(workTitle(item))} / ${escapeHtml(resolvePrimaryCommandForPack(item).label)}</option>`).join("")
-    : `<option value="" selected>No sample work: create, reset, or choose scenario</option>`;
+    : `<option value="" selected>No work: create, reset, or choose scenario</option>`;
 
   if (pack && pack.id !== state.selectedId) {
     state.selectedId = pack.id;
@@ -2935,13 +2935,13 @@ function syncLabRenderedSmokeChecks(pack, action, styleAudit) {
 function labPackSelectReason(hasWork) {
   return hasWork
     ? "Where: Demo Lab. Blocker: None. Button runs next: choose sample work to preview Button runs next."
-    : "Where: Demo Lab. Blocker: no sample work is available. Button runs next: create sample work, reset demo data, or choose a scenario with work.";
+    : "Where: Demo Lab. Blocker: no work is available. Button runs next: create work, reset demo data, or choose a scenario with work.";
 }
 
 function labNoPackReason() {
   return state.packs.length === 0
-    ? "Where: Demo Lab. Blocker: no sample work exists. Button runs next: create sample work, reset demo data, or choose a scenario with work."
-    : "Where: Demo Lab. Blocker: no sample work is selected. Button runs next: choose sample work.";
+    ? "Where: Demo Lab. Blocker: no work exists. Button runs next: create work, reset demo data, or choose a scenario with work."
+    : "Where: Demo Lab. Blocker: no work is selected. Button runs next: choose work.";
 }
 
 function labRunActionHelp(pack, action) {
@@ -2979,11 +2979,11 @@ function renderFilterChips() {
 
 function filterChipHelp(label, count, active) {
   const prefix = active ? "Current filter" : "Apply filter";
-  return `${prefix}: show ${count} ${label.toLowerCase()} sample work item(s).`;
+  return `${prefix}: show ${count} ${label.toLowerCase()} work item(s).`;
 }
 
 function filterStatusMessage(filterKey) {
-  return `${filterLabel(filterKey)} filter applied: ${filteredPacks().length} sample work item(s) visible.`;
+  return `${filterLabel(filterKey)} filter applied: ${filteredPacks().length} work item(s) visible.`;
 }
 
 function filterLabel(filterKey) {
@@ -2992,11 +2992,11 @@ function filterLabel(filterKey) {
 
 function noSelectedWorkStatus(next = "choose work") {
   if (state.packs.length === 0) {
-    const emptyNext = next === "choose work" ? "create or reset sample work" : next;
-    return `Where: No work loaded. Blocker: no sample work exists. Button runs next: ${emptyNext}.`;
+    const emptyNext = next === "choose work" ? "create or reset work" : next;
+    return `Where: No work loaded. Blocker: no work exists. Button runs next: ${emptyNext}.`;
   }
 
-  return `Where: No work selected. Blocker: choose a sample work item. Button runs next: ${next}.`;
+  return `Where: No work selected. Blocker: choose a work item. Button runs next: ${next}.`;
 }
 
 function selectedWorkStatus(surface, pack, next = resolvePrimaryCommandForPack(pack).label) {
@@ -3016,8 +3016,8 @@ function scenarioCardHelp(scenario, active) {
 function boardColumn(status) {
   const packs = state.packs.filter((pack) => pack.status === status);
   const emptyBoard = state.packs.length === 0
-    ? emptyState(`No ${status} sample work.`, "Create sample work, reset demo data, or choose a scenario with work.", emptyStateContextFor(`${capitalize(status)} lane`, "no sample work exists in this browser state", "create sample work, reset demo data, or choose a scenario with work"))
-    : emptyState(`No ${status} sample work.`, "Change filters, choose another scenario, or edit work status.", emptyStateContextFor(`${capitalize(status)} lane`, `no sample work is marked ${status}`, "edit work status or choose another scenario"));
+    ? emptyState(`No ${status} work.`, "Create work, reset demo data, or choose a scenario with work.", emptyStateContextFor(`${capitalize(status)} lane`, "no work exists in this browser state", "create work, reset demo data, or choose a scenario with work"))
+    : emptyState(`No ${status} work.`, "Change filters, choose another scenario, or edit work status.", emptyStateContextFor(`${capitalize(status)} lane`, `no work is marked ${status}`, "edit work status or choose another scenario"));
   return `<section class="demo-board-column">
     <div class="demo-board-head">
       <strong>${escapeHtml(capitalize(status))}</strong>
@@ -4440,11 +4440,11 @@ function commandActionForLabel(label) {
 
 function defaultCreateValues() {
   return {
-    title: "New sample work",
+    title: "New work",
     owner: "Sample owner",
     next: "Open",
     due: "2026-06-30",
-    purpose: "Describe why this sample work matters."
+    purpose: "Describe why this work matters."
   };
 }
 
@@ -4461,7 +4461,7 @@ function createFormValues() {
 function createSaveState(values) {
   const workflow = initialWorkflowForCreatedPack(values.title, values.owner, values.next);
   const canSave = isUnblockedBlockerValue(workflow.blocker);
-  const next = canSave ? "Save sample" : createActionForBlocker(workflow.blocker);
+  const next = canSave ? "Save work" : createActionForBlocker(workflow.blocker);
 
   return {
     ...workflow,
@@ -4483,7 +4483,7 @@ function createActionForBlocker(blocker) {
     return "fill Button runs next";
   }
 
-  return "Save sample";
+  return "Save work";
 }
 
 function bindCreateValidation() {
@@ -4510,8 +4510,8 @@ function memoryNoteSaveState(pack, note) {
     return {
       canSave: false,
       help: state.packs.length === 0
-        ? "Where: Memory. Blocker: no sample work exists. Button runs next: create or reset sample work before adding memory."
-        : "Where: Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory."
+        ? "Where: Memory. Blocker: no work exists. Button runs next: create or reset work before adding memory."
+        : "Where: Memory. Blocker: no work is selected. Button runs next: choose work before adding memory."
     };
   }
 
@@ -4534,8 +4534,8 @@ function memoryRouteStatus(pack) {
   }
 
   return state.packs.length === 0
-    ? "Where: Memory. Blocker: no sample work exists. Button runs next: create or reset sample work before adding memory."
-    : "Where: Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory.";
+    ? "Where: Memory. Blocker: no work exists. Button runs next: create or reset work before adding memory."
+    : "Where: Memory. Blocker: no work is selected. Button runs next: choose work before adding memory.";
 }
 
 function bindMemoryValidation(pack) {
@@ -4560,8 +4560,8 @@ function packDetailSaveState(pack) {
     return {
       canSave: false,
       help: state.packs.length === 0
-        ? "Where: Work path. Blocker: no sample work exists. Button runs next: create or reset sample work before saving."
-        : "Where: Work path. Blocker: no sample work is selected. Button runs next: choose work before saving."
+        ? "Where: Work path. Blocker: no work exists. Button runs next: create or reset work before saving."
+        : "Where: Work path. Blocker: no work is selected. Button runs next: choose work before saving."
     };
   }
 
@@ -5329,7 +5329,7 @@ function routeButtonReason(route, label) {
     calendar: "Open due-date work and date-based actions.",
     lab: "Open Demo Lab to inspect the selected work state.",
     meta: "Open Meta to inspect routes, assets, and build info.",
-    create: "Create sample work with title, owner, and Button runs next.",
+    create: "Create work with title, owner, and Button runs next.",
     memory: "Open Memory to add recall notes to selected work.",
     settings: "Change the static demo copy profile.",
     feedback: "Open feedback with the current demo context."
@@ -5506,7 +5506,7 @@ function memoryStripActionLabel(pack, latest = latestRelevantMemory(pack)) {
 function memoryStripNextLine(pack) {
   if (!pack) {
     return state.packs.length === 0
-      ? "Button runs next: create or reset sample work"
+      ? "Button runs next: create or reset work"
       : "Button runs next: choose work";
   }
 
@@ -5516,8 +5516,8 @@ function memoryStripNextLine(pack) {
 function memoryStripActionHelp(pack, latest = latestRelevantMemory(pack)) {
   if (!pack) {
     return state.packs.length === 0
-      ? "Where: Relevant Memory. Blocker: no sample work exists. Button runs next: create or reset sample work before adding memory."
-      : "Where: Relevant Memory. Blocker: no sample work is selected. Button runs next: choose work before adding memory.";
+      ? "Where: Relevant Memory. Blocker: no work exists. Button runs next: create or reset work before adding memory."
+      : "Where: Relevant Memory. Blocker: no work is selected. Button runs next: choose work before adding memory.";
   }
 
   return latest
