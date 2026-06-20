@@ -752,9 +752,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   const notesCommand = selected
     ? { title: "Notes", ...selectedWorkCommand, blocker: "notes stay with this browser", next: "Open memory", stateText: "Ready", stateHelp: `Saved notes for ${workTitle(selected)} stay in this browser.`, action: "memory", targetPackId: selectedWorkCommand.targetPackId }
     : { title: "Notes", ...selectedWorkCommand };
-  const memoryCommand = selected
-    ? { title: "Memory", ...selectedWorkCommand, blocker: "notes stay with this browser", next: "Add note", stateText: "Ready", stateHelp: `Add recall for ${workTitle(selected)}.`, action: "add-note", targetPackId: selectedWorkCommand.targetPackId }
-    : { title: "Memory", ...selectedWorkCommand };
+  const memoryCommand = memoryRouteCommand(selected, selectedWorkCommand);
 
   const routeCommands = {
     home: homeCommand,
@@ -821,7 +819,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
       ? `${selectedActionFlow}`
       : "Flow: choose work, review sources, run next.",
     memory: selected
-      ? `Flow: type memory note, add note.`
+      ? memoryRouteFlowHint(selected)
       : (hasSampleWork ? "Flow: choose work, add memory." : "Flow: create work, add memory."),
     lab: selected
       ? `${selectedActionFlow}`
@@ -844,6 +842,44 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     targetPackId: routeCommand.targetPackId || "",
     flowHint: routeCommandsHints[state.route] || routeCommandsHints.work
   };
+}
+
+function memoryRouteCommand(selected, selectedWorkCommand) {
+  if (!selected) {
+    return { title: "Memory", ...selectedWorkCommand };
+  }
+
+  const memoryState = memoryNoteSaveState(selected, valueOf("memory-note"));
+  if (memoryState.canSave) {
+    return {
+      title: "Memory",
+      ...selectedWorkCommand,
+      blocker: DEMO_BLOCKER_NONE_LABEL,
+      next: "Add note",
+      stateText: "Ready",
+      stateHelp: memoryState.help,
+      action: "add-note",
+      targetPackId: selectedWorkCommand.targetPackId
+    };
+  }
+
+  return {
+    title: "Memory",
+    ...selectedWorkCommand,
+    blocker: "memory note is empty",
+    next: "Type memory note",
+    stateText: "Needs note",
+    stateHelp: memoryState.help,
+    action: "type-memory-note",
+    targetPackId: selectedWorkCommand.targetPackId
+  };
+}
+
+function memoryRouteFlowHint(selected) {
+  const memoryState = memoryNoteSaveState(selected, valueOf("memory-note"));
+  return memoryState.canSave
+    ? "Flow: add memory note."
+    : "Flow: type memory note, then add note.";
 }
 
 function selectedFlowHintForPack(pack, command = resolvePrimaryCommandForPack(pack), blocker = blockerTextForPack(pack)) {
@@ -1032,7 +1068,7 @@ function commandFlowCopy(flowHint) {
 function commandMemoryHelpText(command, commandMemory) {
   const next = normalizeCopy(command?.next) || "choose work";
   if (commandMemory) {
-    return `Relevant Memory: ${commandMemory}. Button runs next: ${next}.`;
+    return `Relevant Memory: ${sentenceValue(commandMemory)}. Button runs next: ${next}.`;
   }
 
   if (!currentPack()) {
@@ -1331,7 +1367,7 @@ function focusKindForAction(action) {
     return "blocker";
   }
 
-  if (action === "add-note") {
+  if (action === "add-note" || action === "type-memory-note") {
     return "memory-note";
   }
 
@@ -4434,6 +4470,24 @@ function runRouteAction(action, targetPackId) {
     return true;
   }
 
+  if (action === "type-memory-note") {
+    const pack = findPack(targetPackId) || currentPack();
+    if (pack) {
+      state.selectedId = pack.id;
+    }
+
+    state.status = memoryRouteStatus(pack);
+    if (state.route !== "memory") {
+      queueFocus("memory-note", pack?.id || "");
+      go("memory", pack?.id || "");
+      return true;
+    }
+
+    syncMemoryValidation(pack);
+    focusCommandTarget("memory-note", pack?.id || "");
+    return true;
+  }
+
   if (action === "choose-profile") {
     if (state.route !== "settings") {
       queueFocus("settings-profile");
@@ -4636,6 +4690,15 @@ function syncMemoryValidation(pack) {
   const stateForSave = memoryNoteSaveState(pack, valueOf("memory-note"));
   help.textContent = stateForSave.help;
   syncValidatedActionButton(button, stateForSave);
+  syncMemoryRouteCommand(pack);
+}
+
+function syncMemoryRouteCommand(pack) {
+  if (state.route !== "memory") {
+    return;
+  }
+
+  updateCommand(commandForRoute(pack || currentPack(), filteredPacks().length, state.packs.filter(isReview).length));
 }
 
 function packDetailSaveState(pack) {
