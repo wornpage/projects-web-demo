@@ -4824,6 +4824,7 @@ function syncPackDetailForwardPanel(pack) {
   if (stateHelp) {
     stateHelp.textContent = workflow.help;
   }
+  syncWorkPathStrip(panel, pending, actionCommand, workflow);
   if (issue) {
     if (head) head.textContent = blockerModeFixNext(issue);
     setWorkPathSummary(
@@ -4872,15 +4873,60 @@ function syncPackDetailForwardPanel(pack) {
 
   const hasPendingChanges = packForwardPathFormSignature(pack) !== packForwardPathSignature(pack);
   if (hasPendingChanges) {
+    const nextAfterSave = command.next;
+    const saveThenNext = saveThenActionLabel(nextAfterSave);
+    command.next = saveThenNext;
+    const editedWorkflow = { ...workflow, label: "Edited", help: "Unsaved work path changes." };
     command.stateText = "Edited";
-    command.stateHelp = `Unsaved work path changes. Button runs next saves them first, then ${command.next}.`;
-    command.flowHint = `Flow: save work path, then ${command.next}.`;
-    command.runNote = `Saves pending work path changes first, then ${command.next}.`;
+    command.stateHelp = `Unsaved work path changes. Button runs next saves them first, then ${nextAfterSave}.`;
+    command.flowHint = `Flow: save work path, then ${nextAfterSave}.`;
+    command.runNote = `Saves pending work path changes first, then ${nextAfterSave}.`;
+    if (head) head.textContent = saveThenNext;
+    setWorkPathSummary(
+      panel,
+      `Unsaved changes. Next: ${saveThenNext}.`,
+      `Where: ${workTitle(pending)}. Blocker: ${blockerTextForPack(pending)}. Button runs next: ${saveThenNext}.`
+    );
+    syncSelectedWorkTriad(panel, pending, { label: saveThenNext });
+    syncWorkPathStrip(panel, pending, { label: saveThenNext }, editedWorkflow);
+  } else if (head) {
+    head.textContent = actionCommand.label;
   }
 
-  if (head) head.textContent = actionCommand.label;
   updateCommand(command);
   syncPackPrimaryAction(command);
+}
+
+function saveThenActionLabel(label) {
+  const next = normalizeCopy(label) || "run next";
+  return /^save then\b/i.test(next) ? next : `Save then ${next}`;
+}
+
+function syncWorkPathStrip(panel, pack, command = resolvePrimaryCommandForPack(pack), workflow = workflowStateForPack(pack, command)) {
+  const strip = panel?.querySelector('[data-work-path="selected-work"]');
+  if (!strip || !pack) {
+    return;
+  }
+
+  const label = command?.label || command?.next || "Open";
+  const current = workflow?.path || workPathStage(pack, { label });
+  const stateLabel = workflow?.label || "Ready";
+  const pathCopy = copySurface(
+    `${stateLabel}. Next: ${label}.`,
+    DEMO_COPY_LIMITS.commandFieldVisible,
+    DEMO_COPY_LIMITS.commandFlowHelp
+  );
+  const aria = helpCopy(
+    `Work state: ${stateLabel}. Work path: ${current}. Button runs next: ${label}.`,
+    DEMO_COPY_LIMITS.commandFlowHelp
+  );
+  strip.setAttribute("aria-label", aria);
+  strip.innerHTML = `
+    <span class="section-label">Work path</span>
+    <div class="demo-work-path-steps">
+      ${workPathSteps().map((step) => `<span class="demo-work-path-step${step.id === current ? " active" : ""}" title="${escapeAttribute(step.help)}" aria-current="${step.id === current ? "step" : "false"}">${escapeHtml(step.label)}</span>`).join("")}
+    </div>
+    <strong${copySurfaceAttributes("Work path", pathCopy)}>${escapeHtml(pathCopy.visible)}</strong>`;
 }
 
 function pendingPackFromForwardPathForm(pack) {
