@@ -998,9 +998,7 @@ function updateCommand(command) {
   updateCommandWorkPath(command);
   const commandMemory = normalizeCopy(command.memory);
   const hasCommandMemoryContext = Boolean(commandMemory || currentPack());
-  const commandMemoryHelp = commandMemory
-    ? `Relevant Memory: ${commandMemory}`
-    : "Relevant Memory: none yet. Button runs next: add memory note from selected work.";
+  const commandMemoryHelp = commandMemoryHelpText(command, commandMemory);
   const commandMemoryElement = el("command-memory");
   if (commandMemoryElement) {
     commandMemoryElement.hidden = !hasCommandMemoryContext;
@@ -1008,7 +1006,7 @@ function updateCommand(command) {
     commandMemoryElement.setAttribute("aria-label", hasCommandMemoryContext ? commandMemoryHelp : "No selected work memory context.");
   }
   if (el("command-memory-text")) {
-    el("command-memory-text").textContent = commandMemory ? visibleCopy(commandMemory, DEMO_COPY_LIMITS.memoryVisible) : "none yet - add memory note";
+    el("command-memory-text").textContent = commandMemoryVisibleText(commandMemory);
   }
   setCopySurface(el("primary-action"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   el("primary-action").dataset.action = command.action || "";
@@ -1029,6 +1027,25 @@ function updateCommand(command) {
 function commandFlowCopy(flowHint) {
   const hint = normalizeCopy(flowHint) || "Flow: choose work, run next.";
   return hint.replace(/^Flow:\s*/iu, "Next step: ");
+}
+
+function commandMemoryHelpText(command, commandMemory) {
+  const next = normalizeCopy(command?.next) || "choose work";
+  if (commandMemory) {
+    return `Relevant Memory: ${commandMemory}. Button runs next: ${next}.`;
+  }
+
+  if (!currentPack()) {
+    return "No selected work memory context.";
+  }
+
+  return `Relevant Memory: none yet. How to fill: use Add memory on selected work or Memory route. Button runs next: ${next}.`;
+}
+
+function commandMemoryVisibleText(commandMemory) {
+  return commandMemory
+    ? visibleCopy(commandMemory, DEMO_COPY_LIMITS.memoryVisible)
+    : "none yet";
 }
 
 function bindBottomDockVisibility() {
