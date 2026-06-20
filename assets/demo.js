@@ -2431,6 +2431,7 @@ function renderPackDetail() {
           <strong>${escapeHtml(packCommand.label)}</strong>
         </div>
         ${workPathSummary(pack, packCommand, workflow)}
+        ${workPathStrip(pack, packCommand)}
         ${selectedWorkTriad(pack, packCommand)}
         <div class="demo-form-grid demo-forward-fields">
           ${blockerStateField(pack)}
@@ -5334,8 +5335,8 @@ function ownerSupportNeededForPack(pack) {
 
 function supportDetailsSummary(ownerIsInline) {
   return ownerIsInline
-    ? "Optional title, due date, and purpose fields."
-    : "Optional owner, due date, and purpose fields.";
+    ? "Open for optional title, due date, and purpose fields."
+    : "Open for optional owner, due date, and purpose fields.";
 }
 
 function relevantMemoryStrip(pack) {
@@ -6386,7 +6387,7 @@ function northStarCoverageStatus() {
       .map((item) => item.label));
   }
 
-  const selectedCardCount = Array.from(document.querySelectorAll(".demo-work-card.selected"))
+  const selectedCardCount = Array.from(document.querySelectorAll(".demo-work-card.selected, .demo-review-card.selected"))
     .filter(northStarReadableElement).length;
   const memoryCardCount = Array.from(document.querySelectorAll('[data-memory-strip="selected-card"]'))
     .filter(northStarReadableElement).length;

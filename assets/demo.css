@@ -4461,3 +4461,82 @@ html[data-theme="dark"] .demo-command-work-path {
   }
 
 }
+
+/* ===== North Star card and dock separation pass ===== */
+.demo-app-shell {
+  --demo-work-card-bg: #fffdf8;
+  --demo-work-card-border: #b6aa97;
+  --demo-work-card-shadow: 0 10px 22px rgba(35, 29, 18, 0.1), 0 1px 0 rgba(255, 255, 255, 0.9);
+  --demo-work-card-hover-shadow: 0 12px 24px rgba(35, 29, 18, 0.14), 0 1px 0 rgba(255, 255, 255, 0.95);
+  --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.3), 0 12px 24px rgba(35, 29, 18, 0.14);
+  --demo-card-inner-bg: #fbf7ef;
+  --demo-card-inner-border: #cabcaa;
+  --demo-card-divider: #d7c9b8;
+}
+
+html.dark .demo-app-shell,
+html[data-theme="dark"] .demo-app-shell {
+  --demo-work-card-bg: #1d2925;
+  --demo-work-card-border: #697a72;
+  --demo-work-card-shadow: 0 10px 22px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --demo-work-card-hover-shadow: 0 12px 24px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --demo-work-card-selected-shadow: 0 0 0 2px rgba(103, 197, 177, 0.5), 0 12px 24px rgba(0, 0, 0, 0.42);
+  --demo-card-inner-bg: #111b18;
+  --demo-card-inner-border: #52635c;
+  --demo-card-divider: #405149;
+}
+
+.demo-work-list,
+.demo-review-list {
+  gap: 18px;
+}
+
+.demo-work-card,
+.demo-review-card,
+.demo-work-card.has-blocker,
+.demo-review-card.has-blocker,
+.demo-work-card.needs-next,
+.demo-review-card.needs-next {
+  border-color: var(--demo-work-card-border);
+}
+
+.demo-work-card > .demo-card-head,
+.demo-review-card > .demo-card-head {
+  border-bottom: 1px solid var(--demo-card-divider);
+  padding-bottom: 12px;
+}
+
+.demo-work-card.has-blocker .demo-card-facts,
+.demo-review-card.has-blocker .demo-card-facts,
+.demo-work-card.needs-next .demo-card-facts,
+.demo-review-card.needs-next .demo-card-facts {
+  border-left: 3px solid var(--demo-work-card-alert-border);
+}
+
+.demo-work-card.has-blocker .demo-state-pill,
+.demo-review-card.has-blocker .demo-state-pill,
+.demo-work-card.needs-next .demo-state-pill,
+.demo-review-card.needs-next .demo-state-pill {
+  color: var(--cockpit-text);
+}
+
+.demo-card-meta {
+  border-top-color: var(--demo-card-divider);
+}
+
+@media (max-width: 700px) {
+  .demo-work-list,
+  .demo-review-list {
+    gap: 14px;
+  }
+
+  .demo-bottom-brief {
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    left: 8px;
+    margin: 0;
+    max-width: none;
+    position: fixed;
+    right: 8px;
+    width: auto;
+  }
+}
