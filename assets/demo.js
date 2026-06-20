@@ -783,7 +783,6 @@ function commandForRoute(selected, visibleCount, reviewCount) {
 
   const selectedBlocker = selected ? blockerTextForPack(selected) : "";
   const selectedActionCommand = selected ? resolvePrimaryCommandForPack(selected) : null;
-  const selectedAction = selectedActionCommand?.label || "";
   const selectedActionFlow = selected
     ? selectedFlowHintForPack(selected, selectedActionCommand, selectedBlocker)
     : "";
@@ -809,7 +808,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
       : "Flow: create sample, search.",
     stats: hasSampleWork ? "Flow: review counts, choose work." : "Flow: create sample, review stats.",
     notes: selected
-      ? `Flow: ${selected.title} -> open memory.`
+      ? `Flow: open memory for ${workTitle(selected)}.`
       : (hasSampleWork ? "Flow: choose work, open memory." : "Flow: create sample, add memory."),
     timeline: selected
       ? `${selectedActionFlow}`
@@ -851,17 +850,18 @@ function selectedFlowHintForPack(pack, command = resolvePrimaryCommandForPack(pa
     return "Flow: choose work, run next.";
   }
 
+  const title = workTitle(pack);
   if (isMissingNextAction(pack)) {
-    return `Flow: set Button runs next for ${pack.title}.`;
+    return `Flow: set Button runs next for ${title}.`;
   }
 
   if (hasBlocker(pack)) {
     return command?.action === "unblock"
-      ? `Flow: clear ${blocker || DEMO_BLOCKER_NONE_LABEL} on ${pack.title}.`
-      : `Flow: review ${blocker || DEMO_BLOCKER_NONE_LABEL} on ${pack.title}.`;
+      ? `Flow: clear ${blocker || DEMO_BLOCKER_NONE_LABEL} on ${title}.`
+      : `Flow: review ${blocker || DEMO_BLOCKER_NONE_LABEL} on ${title}.`;
   }
 
-  return `Flow: run ${command?.label || "Open"} for ${pack.title}.`;
+  return `Flow: run ${command?.label || "Open"} for ${title}.`;
 }
 
 function selectedPackCommand(selected) {
@@ -869,7 +869,7 @@ function selectedPackCommand(selected) {
   const workflow = workflowStateForPack(selected, resolvedAction);
   const hasAnyWork = state.packs.length > 0;
   return {
-    where: selected?.title || (hasAnyWork ? "Choose sample work" : "No sample work"),
+    where: selected ? workTitle(selected) : (hasAnyWork ? "Choose work" : "No work"),
     blocker: selected ? blockerTextForPack(selected) : (hasAnyWork ? "choose a sample work item" : "create or reset sample work"),
     next: resolvedAction.label,
     stateText: workflow.label,
@@ -931,7 +931,7 @@ function workflowStateForPack(pack, command = null) {
       id: "done",
       label: "Done",
       path: "done",
-      help: `Proof is saved for ${pack.title}.`
+      help: `Proof is saved for ${workTitle(pack)}.`
     };
   }
 
@@ -1042,14 +1042,14 @@ function updateCommandWorkPath(command) {
 
   const detail = commandWorkPathDetail(command, findPack(command.targetPackId) || currentPack());
   const aria = helpCopy(
-    `Path now: ${steps.map((step) => `${step.label}${step.active ? " current" : ""}`).join(", ")}. ${detail}`,
+    `Current path: ${steps.map((step) => `${step.label}${step.active ? " current" : ""}`).join(", ")}. ${detail}`,
     DEMO_COPY_LIMITS.commandFlowHelp
   );
   path.hidden = false;
   path.title = aria;
   path.setAttribute("aria-label", aria);
   path.innerHTML = `
-    <span class="section-label">Path now</span>
+    <span class="section-label">Current path</span>
     <div class="demo-work-path-steps">
       ${steps.map((step) => `<span class="demo-work-path-step${step.active ? " active" : ""}" title="${escapeAttribute(step.help)}" aria-current="${step.active ? "step" : "false"}">${escapeHtml(step.label)}</span>`).join("")}
     </div>
@@ -1992,11 +1992,11 @@ function renderNext() {
           <span class="section-label">Next setup</span>
           <h2>Choose what the main button runs</h2>
         </div>
-        <span class="demo-status">${escapeHtml(pack.title)}</span>
+        <span class="demo-status">${escapeHtml(workTitle(pack))}</span>
       </div>
       <p>Pick what Button runs next stores for this work. The preview shows the button that will actually run after blocker rules apply.</p>
       <div class="demo-command-lines compact" data-next-preview>
-        ${factLine("Where", pack.title)}
+        ${factLine("Where", workTitle(pack))}
         ${factLine("Blocker", blockerTextForPack(pack))}
         ${factLine("Button runs next", nextCommand.label)}
       </div>
@@ -2104,7 +2104,7 @@ function validationStatus(attention) {
 }
 
 function saveNextChoiceHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
-  return `Where: Next setup / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: save choice; preview shows ${command.label}.`;
+  return `Where: Next setup / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: save choice; preview shows ${command.label}.`;
 }
 
 function nextChoiceSelectHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
@@ -2125,7 +2125,7 @@ function syncNextChoicePreview(pack) {
   const where = preview?.querySelector('[data-command-field="where"] strong');
   const blocker = preview?.querySelector('[data-command-field="blocker"] strong');
   const next = preview?.querySelector('[data-command-field="button-runs-next"] strong');
-  if (where) where.textContent = pending.title;
+  if (where) where.textContent = workTitle(pending);
   if (blocker) blocker.textContent = blockerTextForPack(pending);
   if (next) next.textContent = command.label;
 
@@ -2201,7 +2201,7 @@ function renderFocus() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Focused work</span>
-          <h2>${escapeHtml(pack.title)}</h2>
+          <h2>${escapeHtml(workTitle(pack))}</h2>
         </div>
         <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
       </div>
@@ -2273,7 +2273,7 @@ function renderNotes() {
         ${navButton("memory", "Open memory", "btn btn-primary")}
       </div>
       <div class="demo-list">
-        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(pack.title)}</strong>${escapeHtml(note)}</div>`).join("") || emptyNotes}
+        ${rows.map(({ pack, note }) => `<div class="demo-note"><strong>${escapeHtml(workTitle(pack))}</strong>${escapeHtml(note)}</div>`).join("") || emptyNotes}
       </div>
     </section>
   `;
@@ -2420,14 +2420,14 @@ function renderPackDetail() {
     <section class="demo-panel demo-edit-panel" id="pack-edit-form" data-pack-id="${escapeAttribute(pack.id)}">
       <div class="demo-panel-head">
         <div>
-          <span class="section-label">Selected work</span>
-          <h2 id="pack-detail-title">${escapeHtml(pack.title)}</h2>
+          <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
+          <p class="demo-pack-subtitle">${escapeHtml(workDetailSubtitle(pack, packCommand))}</p>
         </div>
-        <span class="demo-status">Edits stay in this browser</span>
+        <span class="demo-status">Static preview</span>
       </div>
       <div class="demo-forward-panel" data-forward-motion="pack-detail">
         <div class="demo-forward-head">
-          <span class="section-label">Work path</span>
+          <span class="section-label">Next step</span>
           <strong>${escapeHtml(packCommand.label)}</strong>
         </div>
         ${workPathSummary(pack, packCommand, workflow)}
@@ -2476,11 +2476,11 @@ function renderMemory() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Memory</span>
-          <h2>${pack ? escapeHtml(pack.title) : "Sample memory"}</h2>
+          <h2>${pack ? escapeHtml(workTitle(pack)) : "Sample memory"}</h2>
         </div>
         <span class="demo-status">Stored in this browser</span>
       </div>
-      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${pack.title}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create sample work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no sample work exists in this browser state", "create or reset sample work"))}</div>
+      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${workTitle(pack)}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create sample work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no sample work exists in this browser state", "create or reset sample work"))}</div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
         <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a sample memory note">
@@ -2806,7 +2806,7 @@ function renderLab() {
   const copyLabSnapshotHelp = clipboardStatus("Demo Lab", "copy workflow snapshot");
   const labSnapshotHelp = "Review or edit the workflow snapshot before copying it as evidence.";
   const labOptions = state.packs.length
-    ? state.packs.map((item) => `<option value="${escapeAttribute(item.id)}"${item.id === pack?.id ? " selected" : ""}>${escapeHtml(item.title)} / ${escapeHtml(resolvePrimaryCommandForPack(item).label)}</option>`).join("")
+    ? state.packs.map((item) => `<option value="${escapeAttribute(item.id)}"${item.id === pack?.id ? " selected" : ""}>${escapeHtml(workTitle(item))} / ${escapeHtml(resolvePrimaryCommandForPack(item).label)}</option>`).join("")
     : `<option value="" selected>No sample work: create, reset, or choose scenario</option>`;
 
   if (pack && pack.id !== state.selectedId) {
@@ -2824,7 +2824,7 @@ function renderLab() {
       </div>
       <p>Pick sample work, inspect the blocker, then run the same Button runs next shown in Current path.</p>
       <div class="demo-grid">
-    ${metricCard("Selected", pack?.title || "Choose sample work", pack ? `${workflow.label} / ${pack.owner}` : "Choose sample work to inspect its path.")}
+        ${metricCard("Selected", pack ? workTitle(pack) : "Choose sample work", pack ? `${workflow.label} / ${pack.owner}` : "Choose sample work to inspect its path.")}
         ${metricCard("Blocker", blockerTextForPack(pack), "The reason the work needs attention.")}
         ${metricCard("Runs next", action.label, "Selected work shows this Button-runs-next value.")}
       </div>
@@ -2841,7 +2841,7 @@ function renderLab() {
         ${disabledReasonNotice(!pack, noPackReason)}
       </div>
       <div class="demo-command-lines compact">
-        ${factLine("Where", pack?.title || "Choose sample work")}
+        ${factLine("Where", pack ? workTitle(pack) : "Choose sample work")}
         ${factLine("Blocker", blockerTextForPack(pack))}
         ${factLine("Button runs next", action.label)}
       </div>
@@ -2907,11 +2907,11 @@ function labNoPackReason() {
 }
 
 function labRunActionHelp(pack, action) {
-  return `Where: Demo Lab / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: run ${action.label}.`;
+  return `Where: Demo Lab / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: run ${action.label}.`;
 }
 
 function labSetNextActionHelp(pack) {
-  return `Where: Demo Lab / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: set Button runs next.`;
+  return `Where: Demo Lab / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: set Button runs next.`;
 }
 
 function workToolbar(label) {
@@ -2962,7 +2962,7 @@ function noSelectedWorkStatus(next = "choose work") {
 }
 
 function selectedWorkStatus(surface, pack, next = resolvePrimaryCommandForPack(pack).label) {
-  return `Where: ${surface} / ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next}.`;
+  return `Where: ${surface} / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next}.`;
 }
 
 function profileCardHelp(key, value, active) {
@@ -2994,7 +2994,7 @@ function boardColumn(status) {
 function boardMiniCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   return `<article class="demo-mini-card">
-    <button type="button" class="demo-card-title" data-action="focus" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(pack.title)}</button>
+    <button type="button" class="demo-card-title" data-action="focus" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
     <span>${escapeHtml(isUnblockedBlockerValue(pack.blocker) ? command.label : blockerDisplayValue(pack.blocker))}</span>
   </article>`;
 }
@@ -3002,7 +3002,7 @@ function boardMiniCard(pack) {
 function nextCandidateRow(pack) {
   return `<div class="demo-row has-row-support" data-pack-id="${escapeAttribute(pack.id)}">
     <div>
-      <strong>${escapeHtml(pack.title)}</strong>
+      <strong>${escapeHtml(workTitle(pack))}</strong>
       <span>${escapeHtml(isUnblockedBlockerValue(pack.blocker) ? "Ready for a clearer Button runs next." : blockerDisplayValue(pack.blocker))}</span>
     </div>
     <div class="demo-row-actions">
@@ -3093,7 +3093,7 @@ function assetBudgetRow(asset, totalBytes) {
 function timelineRow({ pack, item, index }) {
   return `<div class="demo-row">
     <div>
-      <strong>${escapeHtml(pack.title)}</strong>
+      <strong>${escapeHtml(workTitle(pack))}</strong>
       <span>${escapeHtml(item)}</span>
     </div>
     <span class="demo-state-pill">${index === 0 ? "latest" : "earlier"}</span>
@@ -3104,7 +3104,7 @@ function sourceRow({ pack, source }) {
   return `<div class="demo-row has-row-support" data-pack-id="${escapeAttribute(pack.id)}">
     <div>
       <strong>${escapeHtml(source)}</strong>
-      <span>${escapeHtml(pack.title)} / ${escapeHtml(pack.type)}</span>
+      <span>${escapeHtml(workTitle(pack))} / ${escapeHtml(pack.type)}</span>
     </div>
     <div class="demo-row-actions">
       ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
@@ -3117,7 +3117,7 @@ function calendarCard(pack) {
   const workflow = workflowStateForPack(pack);
   return `<article class="demo-calendar-card" data-pack-id="${escapeAttribute(pack.id)}">
     <span>${escapeHtml(pack.due)}</span>
-    <strong>${escapeHtml(pack.title)}</strong>
+    <strong>${escapeHtml(workTitle(pack))}</strong>
     <small>${escapeHtml(workflow.label)} / ${escapeHtml(pack.owner)}</small>
     ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
     ${compactRowSupport("Focus without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
@@ -3191,7 +3191,7 @@ function workCard(pack) {
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
   return `<article class="demo-work-card${selected}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
-      <button type="button" class="demo-card-title" data-action="select">${escapeHtml(pack.title)}</button>
+      <button type="button" class="demo-card-title" data-action="select">${escapeHtml(workTitle(pack))}</button>
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
     <div class="demo-command-row">
@@ -3226,7 +3226,7 @@ function workCard(pack) {
 function todayRow(pack) {
   return `<div class="demo-row has-row-support">
     <div>
-      <strong>${escapeHtml(pack.title)}</strong>
+      <strong>${escapeHtml(workTitle(pack))}</strong>
       <span>${escapeHtml(formatDue(pack))} / ${escapeHtml(pack.owner)}</span>
     </div>
     <div class="demo-row-actions">
@@ -3243,11 +3243,11 @@ function reviewCard(pack) {
     ? supportActionButton("unblock", "Clear blocker", pack)
     : supportActionButton("block", "Mark blocked", pack);
   const nextHelpId = `next-${pack.id}-help`;
-  const nextHelp = `Set the exact Button-runs-next value for ${pack.title}.`;
+  const nextHelp = `Set the exact Button-runs-next value for ${workTitle(pack)}.`;
 
   return `<article class="demo-review-card" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head demo-review-card-head">
-      <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(pack.title)}</button>
+      <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
     <div class="demo-review-card-main">
@@ -3299,7 +3299,7 @@ function primaryCommandButton(pack, className = "btn btn-primary") {
 }
 
 function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)) {
-  return `Where: ${pack.title}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`;
+  return `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`;
 }
 
 function packPrimaryActionButton(command) {
@@ -3522,61 +3522,64 @@ function setPackActionConfirmation(pack, action, changed) {
 }
 
 function packActionSummary(pack, action, actionLabel, changed) {
+  const title = workTitle(pack);
   if (action === "done") {
     const proof = proofTargetSentence(pack);
     return changed
-      ? `Proof saved for ${pack.title}. ${proof}`
-      : `Proof already saved for ${pack.title}. ${proof}`;
+      ? `Proof saved for ${title}. ${proof}`
+      : `Proof already saved for ${title}. ${proof}`;
   }
 
   if (action === "open") {
     return changed
-      ? `Work path opened for ${pack.title}.`
-      : `Work path already open for ${pack.title}.`;
+      ? `Work path opened for ${title}.`
+      : `Work path already open for ${title}.`;
   }
 
   if (action === "start") {
     return changed
-      ? `Started ${pack.title}.`
-      : `${pack.title} is already active.`;
+      ? `Started ${title}.`
+      : `${title} is already active.`;
   }
 
   if (action === "unblock") {
     return changed
-      ? `Blocker cleared for ${pack.title}.`
-      : `Blocker already clear for ${pack.title}.`;
+      ? `Blocker cleared for ${title}.`
+      : `Blocker already clear for ${title}.`;
   }
 
   if (action === "block") {
     return changed
-      ? `Blocker added for ${pack.title}.`
-      : `${pack.title} is already blocked.`;
+      ? `Blocker added for ${title}.`
+      : `${title} is already blocked.`;
   }
 
   return changed
-    ? `Button result saved for ${pack.title}: ${actionLabel}.`
-    : `Button result already saved for ${pack.title}: ${actionLabel}.`;
+    ? `Button result saved for ${title}: ${actionLabel}.`
+    : `Button result already saved for ${title}: ${actionLabel}.`;
 }
 
 function routeActionSummary(pack, action, actionLabel) {
+  const title = workTitle(pack);
   if (action === "focus") {
-    return `Focus opened for ${pack.title}.`;
+    return `Focus opened for ${title}.`;
   }
 
   if (action === "edit") {
-    return `Work path opened for ${pack.title}.`;
+    return `Work path opened for ${title}.`;
   }
 
-  return `Button ran for ${pack.title}: ${actionLabel}.`;
+  return `Button ran for ${title}: ${actionLabel}.`;
 }
 
 function setSaveConfirmation(pack, result) {
   if (!pack) return;
 
   const proof = proofTargetSentence(pack);
+  const title = workTitle(pack);
   const summary = result?.changed
-    ? `Work path saved for ${pack.title}. ${result.summary}. ${proof}`
-    : `No work path changes for ${pack.title}. ${proof}`;
+    ? `Work path saved for ${title}. ${result.summary}. ${proof}`
+    : `No work path changes for ${title}. ${proof}`;
   setActionReceipt(
     pack,
     summary,
@@ -3588,8 +3591,8 @@ function setNextConfirmation(pack, result) {
   if (!pack) return;
 
   const summary = result.changed
-    ? `Button runs next set to ${result.next} for ${pack.title}.`
-    : `Button already runs ${result.next} for ${pack.title}.`;
+    ? `Button runs next set to ${result.next} for ${workTitle(pack)}.`
+    : `Button already runs ${result.next} for ${workTitle(pack)}.`;
   setActionReceipt(
     pack,
     summary,
@@ -3604,7 +3607,7 @@ function setCreateConfirmation(pack) {
   const workflow = workflowStateForPack(pack, next);
   setActionReceipt(
     pack,
-    `Created ${pack.title}. State: ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`,
+    `Created ${workTitle(pack)}. State: ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`,
     next
   );
 }
@@ -3613,8 +3616,8 @@ function setMemoryConfirmation(pack, result) {
   if (!pack) return;
 
   const summary = result.added
-    ? `Memory note added for ${pack.title}.`
-    : `Memory note already exists for ${pack.title}.`;
+    ? `Memory note added for ${workTitle(pack)}.`
+    : `Memory note already exists for ${workTitle(pack)}.`;
   setActionReceipt(
     pack,
     summary,
@@ -3630,7 +3633,7 @@ function setActionReceipt(pack, summary, next = resolvePrimaryCommandForPack(pac
     packId: pack.id,
     summary: fullSummary,
     visibleSummary: visibleCopy(outcomeSummary || fullSummary, DEMO_COPY_LIMITS.receiptVisible),
-    where: `${pack.title} / ${workflow.label}`,
+    where: `${workTitle(pack)} / ${workflow.label}`,
     blocker: blockerTextForPack(pack),
     next: next.label,
     proof: proofTargetForPack(pack)
@@ -3650,7 +3653,7 @@ function actionReceiptContext(pack, next, summary = "") {
   const proof = /(^|\s)Proof target:/iu.test(summary)
     ? ""
     : ` Proof target: ${proofTargetForPack(pack)}.`;
-  return `Where: ${pack.title} / ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.${proof}`;
+  return `Where: ${workTitle(pack)} / ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.${proof}`;
 }
 
 function updateActionReceipt() {
@@ -3719,7 +3722,7 @@ function routeActionReceiptPanel(visiblePacks, routeLabel) {
 
   const fullSummary = helpCopy(receipt.summary, DEMO_COPY_LIMITS.receiptHelp);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
-  const nextLine = visibleCopy(`Where: ${routeLabel} / ${pack.title}. Blocker: ${receipt.blocker}. Button runs next: ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
+  const nextLine = visibleCopy(`Where: ${routeLabel} / ${workTitle(pack)}. Blocker: ${receipt.blocker}. Button runs next: ${receipt.next}.`, DEMO_COPY_LIMITS.commandFlowVisible);
   return `<div class="demo-card-receipt demo-route-receipt" data-receipt-surface="route" data-route-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
@@ -4070,7 +4073,7 @@ function runRouteAction(action, targetPackId) {
     if (selected) {
       setBlockerMode(false);
       syncPackDetailValidation(selected);
-      state.status = `Where: Work path. Blocker: None. Button runs next: save work path for ${selected.title}.`;
+      state.status = `Where: Work path. Blocker: None. Button runs next: save work path for ${workTitle(selected)}.`;
       focusAndPulse(el("save-pack") || el("primary-action"));
     }
     return true;
@@ -4435,19 +4438,19 @@ function memoryNoteSaveState(pack, note) {
   if (!String(note || "").trim()) {
     return {
       canSave: false,
-      help: `Where: Memory. Blocker: memory note is empty. Button runs next: type a note for ${pack.title}.`
+      help: `Where: Memory. Blocker: memory note is empty. Button runs next: type a note for ${workTitle(pack)}.`
     };
   }
 
   return {
     canSave: true,
-    help: `Where: Memory. Blocker: None. Button runs next: add memory note to ${pack.title}.`
+    help: `Where: Memory. Blocker: None. Button runs next: add memory note to ${workTitle(pack)}.`
   };
 }
 
 function memoryRouteStatus(pack) {
   if (pack) {
-    return `Where: Memory / ${pack.title}. Blocker: memory note is empty. Button runs next: type a note for ${pack.title}.`;
+    return `Where: Memory / ${workTitle(pack)}. Blocker: memory note is empty. Button runs next: type a note for ${workTitle(pack)}.`;
   }
 
   return state.packs.length === 0
@@ -4508,7 +4511,7 @@ function packDetailSaveState(pack) {
   const pending = pendingPackFromForwardPathForm(pack);
   return {
     canSave: true,
-    help: `Where: Work path. Blocker: ${blockerTextForPack(pending)}. Button runs next: save work path for ${pending.title}.`
+    help: `Where: Work path. Blocker: ${blockerTextForPack(pending)}. Button runs next: save work path for ${workTitle(pending)}.`
   };
 }
 
@@ -4744,8 +4747,8 @@ function syncPackDetailForwardPanel(pack) {
     if (head) head.textContent = blockerModeFixNext(issue);
     setWorkPathSummary(
       panel,
-      `Fix blocker: ${issue} -> ${blockerModeFixNext(issue)}`,
-      `Where: ${pending.title}. Blocker: ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`
+      `Fix ${issue}. Next: ${blockerModeFixNext(issue)}.`,
+      `Where: ${workTitle(pending)}. Blocker: ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`
     );
     if (stateLabel) stateLabel.textContent = "Fix blocker";
     if (stateHelp) stateHelp.textContent = issue;
@@ -4767,8 +4770,8 @@ function syncPackDetailForwardPanel(pack) {
     if (head) head.textContent = "Set Blocker: None";
     setWorkPathSummary(
       panel,
-      "Fix blocker: owner filled -> Set Blocker: None",
-      `Where: ${pending.title}. Blocker: owner is filled but still marked blocked. Button runs next: Set Blocker: None.`
+      "Owner filled. Next: Set Blocker: None.",
+      `Where: ${workTitle(pending)}. Blocker: owner is filled but still marked blocked. Button runs next: Set Blocker: None.`
     );
     if (stateLabel) stateLabel.textContent = "Fix blocker";
     if (stateHelp) stateHelp.textContent = "Owner is filled; set Blocker to None before saving.";
@@ -5211,17 +5214,37 @@ function workPathSummary(pack, command = resolvePrimaryCommandForPack(pack), wor
   const help = workPathSummaryHelp(pack, command, workflow);
   const copy = copySurface(summary, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   return `<div class="demo-path-summary" data-path-summary="pack-detail" title="${escapeAttribute(helpCopy(help, DEMO_COPY_LIMITS.commandFlowHelp))}" aria-label="${escapeAttribute(helpCopy(help, DEMO_COPY_LIMITS.commandFlowHelp))}">
-    <span>Path now</span>
-    <strong data-path-summary-text${copySurfaceAttributes("Work path", copy)}>${escapeHtml(copy.visible)}</strong>
+    <span>Now</span>
+    <strong data-path-summary-text${copySurfaceAttributes("Next step", copy)}>${escapeHtml(copy.visible)}</strong>
   </div>`;
 }
 
+function workDetailSubtitle(pack, command = resolvePrimaryCommandForPack(pack)) {
+  const blocker = blockerTextForPack(pack);
+  if (isMissingNextAction(pack)) {
+    return "Needs Button runs next. Choose what the main button should do.";
+  }
+
+  return hasBlocker(pack)
+    ? `Blocked by ${blocker}. Button runs next: ${command.label}.`
+    : `Ready. Button runs next: ${command.label}.`;
+}
+
 function workPathSummaryText(pack, command = resolvePrimaryCommandForPack(pack), workflow = workflowStateForPack(pack, command)) {
-  return `${workflow.label}: ${blockerTextForPack(pack)} -> ${command.label}`;
+  const blocker = blockerTextForPack(pack);
+  if (isMissingNextAction(pack)) {
+    return "Choose what Button runs next should do.";
+  }
+
+  if (hasBlocker(pack)) {
+    return `Blocked by ${blocker}. Next: ${command.label}.`;
+  }
+
+  return `${workflow.label}. Next: ${command.label}.`;
 }
 
 function workPathSummaryHelp(pack, command = resolvePrimaryCommandForPack(pack), workflow = workflowStateForPack(pack, command)) {
-  return `Where: ${pack?.title || "Choose work"}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}. Work state: ${workflow.label}.`;
+  return `Where: ${workTitle(pack) || "Choose work"}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}. Work state: ${workflow.label}.`;
 }
 
 function setWorkPathSummary(panel, summary, help) {
@@ -5231,7 +5254,7 @@ function setWorkPathSummary(panel, summary, help) {
     return;
   }
 
-  setCopySurface(summaryElement, summary, "Work path", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(summaryElement, summary, "Next step", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   const helpText = helpCopy(help, DEMO_COPY_LIMITS.commandFlowHelp);
   if (row) {
     row.title = helpText;
@@ -5325,8 +5348,8 @@ function memoryStripActionHelp(pack, latest = latestRelevantMemory(pack)) {
   }
 
   return latest
-    ? `Where: Relevant Memory / ${pack.title}. Blocker: None. Button runs next: open saved memory for this work.`
-    : `Where: Relevant Memory / ${pack.title}. Blocker: no saved memory note yet. Button runs next: add memory note.`;
+    ? `Where: Relevant Memory / ${workTitle(pack)}. Blocker: None. Button runs next: open saved memory for this work.`
+    : `Where: Relevant Memory / ${workTitle(pack)}. Blocker: no saved memory note yet. Button runs next: add memory note.`;
 }
 
 function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
@@ -5334,7 +5357,7 @@ function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
   const current = workflow.path;
   const steps = workPathSteps();
   const pathCopy = copySurface(
-    `${workflow.label} -> ${command.label}`,
+    `${workflow.label}. Next: ${command.label}.`,
     DEMO_COPY_LIMITS.commandFieldVisible,
     DEMO_COPY_LIMITS.commandFlowHelp
   );
@@ -5459,7 +5482,7 @@ function recentActivityPanel() {
         <h2>Recent simulated changes</h2>
       </div>
     </div>
-    <div class="demo-list">${rows.map(({ pack, item }) => `<div class="demo-row"><div><strong>${escapeHtml(pack.title)}</strong><span>${escapeHtml(item)}</span></div></div>`).join("")}</div>
+    <div class="demo-list">${rows.map(({ pack, item }) => `<div class="demo-row"><div><strong>${escapeHtml(workTitle(pack))}</strong><span>${escapeHtml(item)}</span></div></div>`).join("")}</div>
   </section>`;
 }
 
@@ -6032,7 +6055,7 @@ function collectLabSnapshot(pack, action, styleAudit, smokeChecks = labSmokeChec
     selectedWork: pack
       ? {
           id: pack.id,
-          title: pack.title,
+          title: workTitle(pack),
           status: pack.status,
           workflowState: workflow.label,
           blocker: blockerTextForPack(pack),
@@ -6096,7 +6119,7 @@ function labSmokeChecks(pack, styleAudit, disabledReasons = null) {
     {
       label: "Selected work",
       status: Boolean(pack),
-      detail: pack ? `${pack.title} is loaded into the lab.` : "Choose sample work to load it into the lab."
+      detail: pack ? `${workTitle(pack)} is loaded into the lab.` : "Choose sample work to load it into the lab."
     },
     {
       label: "Blocker visible",
@@ -7519,6 +7542,44 @@ function copySurfaceLabel(label, value) {
 
 function normalizeCopy(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function workTitle(packOrTitle) {
+  const raw = typeof packOrTitle === "string"
+    ? packOrTitle
+    : packOrTitle?.title;
+  const text = normalizeCopy(raw).replace(/[-_]+/g, " ");
+  if (!text) {
+    return "";
+  }
+
+  return text
+    .split(" ")
+    .filter(Boolean)
+    .map((token, index) => workTitleToken(token, index))
+    .join(" ");
+}
+
+function workTitleToken(token, index) {
+  const lower = token.toLowerCase();
+  const acronyms = {
+    api: "API",
+    css: "CSS",
+    gh: "GitHub",
+    github: "GitHub",
+    html: "HTML",
+    iso: "ISO",
+    js: "JS",
+    pdf: "PDF",
+    ui: "UI",
+    ux: "UX"
+  };
+
+  if (acronyms[lower]) {
+    return acronyms[lower];
+  }
+
+  return index === 0 ? capitalize(lower) : lower;
 }
 
 function safeJson(value) {
