@@ -2619,6 +2619,101 @@ html[data-theme="dark"] .demo-state-pill {
   display: none;
 }
 
+.demo-owner-blocker-guide {
+  background: var(--cockpit-selected-bg);
+  border: 1px solid var(--cockpit-border);
+  border-left: 3px solid var(--cockpit-accent);
+  border-radius: var(--cockpit-radius);
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.demo-owner-blocker-guide > strong {
+  color: var(--cockpit-text);
+  font-size: 13px;
+  font-weight: 780;
+  line-height: 1.25;
+}
+
+.demo-owner-blocker-guide ol {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.demo-owner-blocker-step {
+  align-items: start;
+  background: var(--cockpit-surface);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius-sm);
+  color: var(--cockpit-text-secondary);
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 8px;
+}
+
+.demo-owner-step-index {
+  align-items: center;
+  background: var(--cockpit-nav-bg);
+  border: 1px solid var(--cockpit-border);
+  border-radius: 999px;
+  color: var(--cockpit-text-secondary);
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 820;
+  height: 24px;
+  justify-content: center;
+  line-height: 1;
+  width: 24px;
+}
+
+.demo-owner-step-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.demo-owner-step-copy strong {
+  color: var(--cockpit-text);
+  font-size: 13px;
+  font-weight: 780;
+  line-height: 1.2;
+}
+
+.demo-owner-step-copy small {
+  color: var(--cockpit-text-secondary);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.demo-owner-blocker-step.active {
+  background: var(--cockpit-surface);
+  border-color: var(--cockpit-accent);
+  box-shadow: inset 3px 0 0 var(--cockpit-accent);
+  color: var(--cockpit-text);
+}
+
+.demo-owner-blocker-step.active .demo-owner-step-index {
+  background: var(--cockpit-accent);
+  border-color: var(--cockpit-accent);
+  color: var(--cockpit-accent-text);
+}
+
+.demo-owner-blocker-step.done {
+  background: var(--demo-card-memory-bg);
+  border-color: var(--demo-card-memory-border);
+}
+
+.demo-owner-blocker-step.done .demo-owner-step-index {
+  background: var(--cockpit-selected-bg);
+  border-color: var(--cockpit-accent);
+  color: var(--cockpit-text);
+}
+
 .demo-blocker-presets {
   display: flex;
   flex-wrap: wrap;
@@ -4461,6 +4556,21 @@ html[data-theme="dark"] .demo-command-work-path {
 
   .demo-forward-triad .demo-command-line {
     min-height: 0;
+  }
+
+  .demo-forward-actions {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr;
+  }
+
+  .demo-forward-actions .demo-pack-primary-action,
+  .demo-forward-actions #save-pack {
+    flex: none;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 0;
+    width: 100%;
   }
 
   .demo-command-lines .demo-command-line:first-child {

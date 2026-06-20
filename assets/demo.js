@@ -1302,7 +1302,7 @@ function focusKindForAction(action) {
     return "triage-output";
   }
 
-  if (action === "set-next" || action === "focus" || action === "start" || action === "done" || action === "unblock") {
+  if (action === "set-next" || action === "focus" || action === "start" || action === "done" || action === "unblock" || action === "clear-owner-blocker" || action === "save-work-path") {
     return "next";
   }
 
@@ -2560,6 +2560,7 @@ function blockerStateField(pack) {
           <span>Blocked</span>
         </label>
       </div>
+      ${ownerBlockerGuide(pack)}
       <div class="demo-blocker-reason" data-blocker-reason${hasBlocker ? "" : " hidden"}>
         <label for="edit-blocker">Why blocked?</label>
         <small class="demo-field-help">Choose a common reason, or write the reason that must clear before the button can run.</small>
@@ -2573,6 +2574,55 @@ function blockerStateField(pack) {
       </div>
     </fieldset>
   `;
+}
+
+function ownerBlockerGuide(pack) {
+  if (!normalizeCopy(pack?.blocker).toLowerCase().includes("owner")) {
+    return "";
+  }
+
+  const ownerFilled = !isMissingOwnerValue(pack?.owner);
+  const blockerClear = isUnblockedBlockerValue(pack?.blocker);
+  const summary = ownerBlockerGuideSummary(ownerFilled, blockerClear);
+  return `<div class="demo-owner-blocker-guide" data-owner-blocker-guide data-state="${escapeAttribute(ownerBlockerGuideState(ownerFilled, blockerClear))}" aria-label="${escapeAttribute(summary)}">
+    <span class="section-label">Owner blocker path</span>
+    <strong data-owner-blocker-summary>${escapeHtml(summary)}</strong>
+    <ol>
+      ${ownerBlockerGuideStep("owner", "1", "Fill Owner", ownerFilled ? "Owner filled." : "Owner is unassigned.", ownerFilled ? "done" : "active")}
+      ${ownerBlockerGuideStep("clear", "2", "Set Blocker: None", blockerClear ? "Blocker is None." : "Clear the blocker after Owner is filled.", ownerFilled ? (blockerClear ? "done" : "active") : "waiting")}
+      ${ownerBlockerGuideStep("save", "3", "Save work path", blockerClear ? "Save to enable the next action." : "Available after Blocker is None.", ownerFilled && blockerClear ? "active" : "waiting")}
+    </ol>
+  </div>`;
+}
+
+function ownerBlockerGuideStep(id, index, label, copy, stateName) {
+  return `<li class="demo-owner-blocker-step ${escapeAttribute(stateName)}" data-owner-step="${escapeAttribute(id)}">
+    <span class="demo-owner-step-index">${escapeHtml(index)}</span>
+    <span class="demo-owner-step-copy">
+      <strong>${escapeHtml(label)}</strong>
+      <small data-owner-step-copy="${escapeAttribute(id)}">${escapeHtml(copy)}</small>
+    </span>
+  </li>`;
+}
+
+function ownerBlockerGuideSummary(ownerFilled, blockerClear) {
+  if (!ownerFilled) {
+    return "Fill Owner to clear this owner blocker.";
+  }
+
+  if (!blockerClear) {
+    return "Owner filled. Next: Set Blocker: None.";
+  }
+
+  return "Blocker is None. Next: Save work path.";
+}
+
+function ownerBlockerGuideState(ownerFilled, blockerClear) {
+  if (!ownerFilled) {
+    return "fill-owner";
+  }
+
+  return blockerClear ? "save" : "clear-blocker";
 }
 
 function blockerPresetButtons(currentBlocker = "") {
@@ -3500,7 +3550,7 @@ function bindWorkCards() {
 
 function bindListActions() {
   el("screen-content").querySelectorAll("[data-action]").forEach((button) => {
-    if (button.closest(".demo-work-card")) {
+    if (button.closest(".demo-work-card") || button.id === "pack-primary-action") {
       return;
     }
 
@@ -4804,6 +4854,52 @@ function syncBlockerFieldHelp() {
       ? "Owner filled; choose None to store Blocker: None."
       : "None stores Blocker: None automatically; no typing required.";
     help.textContent = issue || (hasBlocker && !ownerResolvedBlocker ? "Blocked pauses Button runs next until this reason clears." : clearHelp);
+  }
+  syncOwnerBlockerGuide();
+}
+
+function syncOwnerBlockerGuide() {
+  const guide = document.querySelector("[data-owner-blocker-guide]");
+  if (!guide) {
+    return;
+  }
+
+  const ownerFilled = !isMissingOwnerValue(valueOf("edit-owner"));
+  const selected = document.querySelector('input[name="edit-blocker-mode"]:checked');
+  const blockerClear = selected?.value === "clear";
+  const summary = ownerBlockerGuideSummary(ownerFilled, blockerClear);
+  guide.dataset.state = ownerBlockerGuideState(ownerFilled, blockerClear);
+  guide.setAttribute("aria-label", summary);
+  const summaryElement = guide.querySelector("[data-owner-blocker-summary]");
+  if (summaryElement) {
+    summaryElement.textContent = summary;
+  }
+
+  syncOwnerBlockerGuideStep("owner", ownerFilled ? "done" : "active", ownerFilled ? "Owner filled." : "Owner is unassigned.");
+  syncOwnerBlockerGuideStep(
+    "clear",
+    ownerFilled ? (blockerClear ? "done" : "active") : "waiting",
+    blockerClear ? "Blocker is None." : (ownerFilled ? "Next: Set Blocker: None." : "Wait until Owner is filled.")
+  );
+  syncOwnerBlockerGuideStep(
+    "save",
+    ownerFilled && blockerClear ? "active" : "waiting",
+    ownerFilled && blockerClear ? "Save to enable the next action." : "Available after Blocker is None."
+  );
+}
+
+function syncOwnerBlockerGuideStep(id, stateName, copy) {
+  const step = document.querySelector(`[data-owner-step="${id}"]`);
+  const copyElement = document.querySelector(`[data-owner-step-copy="${id}"]`);
+  if (!step) {
+    return;
+  }
+
+  step.classList.toggle("active", stateName === "active");
+  step.classList.toggle("done", stateName === "done");
+  step.classList.toggle("waiting", stateName === "waiting");
+  if (copyElement) {
+    copyElement.textContent = copy;
   }
 }
 

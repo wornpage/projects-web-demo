@@ -1,10 +1,10 @@
 {
-  "releaseNotesUrl": "https://github.com/jared-bidlow/projects-web-demo/releases",
-  "version": "v3.3.3",
   "profileApplied": "general",
-  "scenario": "default",
-  "commit": "f248374cc",
-  "generatedAt": "2026-06-20T05:34:26.3361765Z",
+  "repository": "https://github.com/jared-bidlow/projects-web-demo",
+  "version": "v3.3.3",
+  "releaseNotesUrl": "https://github.com/jared-bidlow/projects-web-demo/releases",
+  "commit": "993a68b3c",
   "serviceBoundary": "Static public demo only. Browser-local sample data. Not a hosted service, sign-in surface, payment surface, or customer-data collection path.",
-  "repository": "https://github.com/jared-bidlow/projects-web-demo"
+  "generatedAt": "2026-06-20T05:59:07.8824390Z",
+  "scenario": "default"
 }
