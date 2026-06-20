@@ -4774,11 +4774,17 @@ function syncBlockerFieldHelp() {
     resolutionCopy.textContent = ownerResolvedBlocker ? ownerBlockerResolutionHelp() : "";
   }
   if (resolutionButton) {
+    const disabledReason = ownerBlockerResolutionDisabledReason(input?.value, valueOf("edit-owner"));
     resolutionButton.hidden = !ownerResolvedBlocker;
     resolutionButton.disabled = !ownerResolvedBlocker;
-    resolutionButton.title = ownerResolvedBlocker
-      ? "Choose None so Save stores Blocker: None."
-      : "";
+    syncDisabledReasonMetadata(resolutionButton, !ownerResolvedBlocker, disabledReason);
+    if (ownerResolvedBlocker) {
+      const copy = helpCopy("Choose None so Save stores Blocker: None.", DEMO_COPY_LIMITS.commandFlowHelp);
+      resolutionButton.title = copy;
+      resolutionButton.setAttribute("aria-label", copy);
+    } else {
+      resolutionButton.removeAttribute("aria-label");
+    }
   }
   if (help) {
     const clearHelp = ownerResolvedBlocker
@@ -4799,6 +4805,18 @@ function syncBlockerPresetButtons() {
 
 function ownerBlockerResolutionHelp() {
   return "Owner filled. Set Blocker: None, then save.";
+}
+
+function ownerBlockerResolutionDisabledReason(blocker, owner) {
+  if (!normalizeCopy(blocker).toLowerCase().includes("owner")) {
+    return "Where: Blocker. Blocker: not owner-related. Button runs next: choose None or edit the blocker reason.";
+  }
+
+  if (isMissingOwnerValue(owner)) {
+    return "Where: Blocker. Blocker: owner is still missing. Button runs next: fill Owner before setting Blocker: None.";
+  }
+
+  return "Where: Blocker. Blocker: no owner blocker to clear. Button runs next: choose Blocked with an owner blocker first.";
 }
 
 function syncPackDetailForwardPanel(pack) {
