@@ -1879,6 +1879,7 @@ function markdownCell(value) {
 
 function renderWork() {
   const visible = filteredPacks();
+  const orderedVisible = selectedFirstPacks(visible);
   const emptyWork = state.packs.length === 0
     ? emptyState("No sample work is available.", "Create sample work or reset demo data.", emptyStateContextFor("Work filters", "no sample work exists in this browser state", "create or reset sample work"))
     : emptyState("No sample work matches this filter.", "Clear search or choose another status filter.", emptyStateContextFor("Work filters", "current search or status filter hides every sample item", "clear search or choose another status filter"));
@@ -1893,7 +1894,7 @@ function renderWork() {
         ${navButton("create", profile().newWork, "btn btn-primary")}
       </div>
       ${routeActionReceiptPanel(visible, "Work filters")}
-      <div class="demo-work-list">${visible.length ? visible.map(workCard).join("") : emptyWork}</div>
+      <div class="demo-work-list">${orderedVisible.length ? orderedVisible.map(workCard).join("") : emptyWork}</div>
     </section>
   `;
   bindToolbar();
@@ -1949,6 +1950,7 @@ function renderBoard() {
 
 function renderReview() {
   const review = state.packs.filter(isReview);
+  const orderedReview = selectedFirstPacks(review);
   const selected = currentPack();
   const firstReview = selected && review.some((pack) => pack.id === selected.id) ? selected : review[0] || null;
   const reviewButtonReason = "Where: Review. Blocker: no sample work needs review. Button runs next: create or edit work.";
@@ -1967,7 +1969,7 @@ function renderReview() {
       </div>
       ${disabledReasonNotice(!firstReview, reviewButtonReason)}
       ${routeActionReceiptPanel(review, "Review")}
-      <div class="demo-review-list">${review.length ? review.map(reviewCard).join("") : emptyReview}</div>
+      <div class="demo-review-list">${orderedReview.length ? orderedReview.map(reviewCard).join("") : emptyReview}</div>
     </section>
   `;
   bindListActions();
@@ -5072,6 +5074,21 @@ function filteredPacks() {
     const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${pack.sources.join(" ")}`.toLowerCase();
     return filterMatch && (!query || haystack.includes(query));
   });
+}
+
+function selectedFirstPacks(packs) {
+  const selectedId = state.selectedId;
+  if (!selectedId || !Array.isArray(packs) || packs.length < 2) {
+    return packs;
+  }
+
+  const selectedIndex = packs.findIndex((pack) => pack.id === selectedId);
+  if (selectedIndex <= 0) {
+    return packs;
+  }
+
+  const selected = packs[selectedIndex];
+  return [selected, ...packs.slice(0, selectedIndex), ...packs.slice(selectedIndex + 1)];
 }
 
 function countByFilter() {
