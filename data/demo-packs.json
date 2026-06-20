@@ -12,20 +12,20 @@
     "doneWhen": "Venue hold list reviewed and owner assigned.",
     "sources": ["venue calendar", "agent-log"],
     "memory": ["Need owner before this can leave review."],
-    "activity": ["Imported from sample pack list.", "Review surfaced missing owner."]
+    "activity": ["Imported from starter work list.", "Review surfaced missing owner."]
   },
   {
     "id": "sample-pack-audit",
-    "title": "sample-pack-audit",
+    "title": "source-folder-audit",
     "type": "music",
     "status": "blocked",
     "blocker": "missing source folder",
     "next": "Set Blocker: None",
     "due": "",
     "owner": "Set lead",
-    "purpose": "Verify sample folders before the next set prep session.",
+    "purpose": "Verify source folders before the next set prep session.",
     "doneWhen": "All source folders are named and reachable.",
-    "sources": ["sample folder", "docs"],
+    "sources": ["source folder", "docs"],
     "memory": ["Keep this blocked until the source folder exists."],
     "activity": ["Blocker recorded.", "Demo user focused this pack."]
   },
@@ -72,7 +72,7 @@
     "doneWhen": "Recording export exists and is named.",
     "sources": ["agent-log"],
     "memory": ["Done item stays visible for audit context."],
-    "activity": ["Marked done.", "Kept as sample history."]
+    "activity": ["Marked done.", "Kept as browser history."]
   },
   {
     "id": "warmup-set-notes",
@@ -128,11 +128,11 @@
     "next": "",
     "due": "",
     "owner": "unassigned",
-    "purpose": "Find sample work that should not be ownerless.",
+    "purpose": "Find work that should not be ownerless.",
     "doneWhen": "Owner values are assigned or intentionally left blank.",
     "sources": ["agent-log"],
     "memory": ["Use the review queue to make owner gaps visible."],
-    "activity": ["Drafted from sample search.", "Owner gap detected."]
+    "activity": ["Drafted from search.", "Owner gap detected."]
   },
   {
     "id": "mobile-current-path-qa",
@@ -177,7 +177,7 @@
     "doneWhen": "Ingredients, glass, garnish, and stirring steps are ready.",
     "sources": ["recipe note", "bar checklist"],
     "memory": ["Use this as a low-stakes example of a personal pack."],
-    "activity": ["Sample personal pack added.", "Ready to open."]
+    "activity": ["Personal pack added.", "Ready to open."]
   },
   {
     "id": "calendar-date-pass",
@@ -188,8 +188,8 @@
     "next": "Open",
     "due": "2026-06-15",
     "owner": "Planning",
-    "purpose": "Make sure due-date samples exercise calendar and today views.",
-    "doneWhen": "Today and Calendar routes both show dated sample work.",
+    "purpose": "Make sure due-date work exercises calendar and today views.",
+    "doneWhen": "Today and Calendar routes both show dated work.",
     "sources": ["calendar", "docs"],
     "memory": ["Calendar is static here; real scheduling remains local."],
     "activity": ["Dates reviewed.", "Marked done."]

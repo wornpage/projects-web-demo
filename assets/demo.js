@@ -138,7 +138,7 @@ const filters = [
 
 const copyProfiles = {
   general: { work: "work", newWork: "New work", result: "Result", sources: "Sources" },
-  dj: { work: "gig", newWork: "Book gig", result: "Set recording", sources: "Sample packs" },
+  dj: { work: "gig", newWork: "Book gig", result: "Set recording", sources: "Source refs" },
   developer: { work: "task", newWork: "New task", result: "PR or commit", sources: "Repos and docs" },
   climate: { work: "site check", newWork: "New check", result: "Finding", sources: "Datasets and notes" }
 };
@@ -147,7 +147,7 @@ const DEMO_SCENARIOS = [
   {
     id: "default",
     label: "Default",
-    description: "Balanced sample flow with mixed states, review and done states.",
+    description: "Balanced workflow with mixed states, review and done states.",
     profile: "general",
     route: "home",
     filter: "all",
@@ -181,7 +181,7 @@ const DEMO_SCENARIOS = [
   {
     id: "onboarding",
     label: "Onboarding",
-    description: "Compact first-run sample set with clear labels and Button-runs-next values.",
+    description: "Compact first-run workflow with clear labels and Button-runs-next values.",
     profile: "climate",
     route: "home",
     filter: "all",
@@ -197,7 +197,7 @@ const DEMO_SCENARIOS = [
   {
     id: "due-view",
     label: "Due today",
-    description: "Shift active samples to today for calendar and today routes.",
+    description: "Shift active work to today for calendar and today routes.",
     profile: "general",
     route: "today",
     filter: "active",
@@ -454,7 +454,7 @@ function scenarioStatus(scenario) {
 }
 
 function resetDemoStatus() {
-  return "Where: Settings. Blocker: None. Button runs next: review reset sample data in this browser.";
+  return "Where: Settings. Blocker: None. Button runs next: review reset demo data in this browser.";
 }
 
 function routeStatus(where, blocker, next) {
@@ -747,13 +747,13 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     ? { title: "Search", where: "Search", blocker: searchBlocker, next: searchNext, stateText: searchQuery ? "Filtering" : "Ready", action: "search-demo", targetPackId: "" }
     : noSampleWorkCommand("Search", "Search", "Create work or reset demo data before searching.");
   const statsCommand = hasSampleWork
-    ? { title: "Stats", where: "Stats", blocker: "sample counts are calculated in this demo", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
+    ? { title: "Stats", where: "Stats", blocker: "counts are calculated in this browser", next: "Review work", stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
     : noSampleWorkCommand("Stats", "Stats", "Create work or reset demo data before reviewing stats.");
   const notesCommand = selected
-    ? { title: "Notes", where: "Notes", blocker: "sample notes stay with this browser", next: "Open memory", stateText: "Ready", action: "memory", targetPackId: selectedWorkCommand.targetPackId }
+    ? { title: "Notes", where: "Notes", blocker: "notes stay with this browser", next: "Open memory", stateText: "Ready", action: "memory", targetPackId: selectedWorkCommand.targetPackId }
     : { title: "Notes", ...selectedWorkCommand };
   const memoryCommand = selected
-    ? { title: "Memory", where: selectedWorkCommand.where, blocker: "sample notes stay with this browser", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId }
+    ? { title: "Memory", where: selectedWorkCommand.where, blocker: "notes stay with this browser", next: "Add note", stateText: "Ready", action: "add-note", targetPackId: selectedWorkCommand.targetPackId }
     : { title: "Memory", ...selectedWorkCommand };
 
   const routeCommands = {
@@ -769,8 +769,8 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     search: searchCommand,
     stats: statsCommand,
     notes: notesCommand,
-    timeline: { title: "Timeline", where: "Timeline", blocker: "sample activity stays with this browser", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
-    files: { title: "Files", where: "Files", blocker: "sample sources are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
+    timeline: { title: "Timeline", where: "Timeline", blocker: "activity stays with this browser", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
+    files: { title: "Files", where: "Files", blocker: "source links are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
     calendar: { title: "Calendar", ...selectedWorkCommand },
     create: { title: "Create", where: "Create", blocker: "required fields are title, owner, and Button runs next", next: "Save work", stateText: "Draft", action: "create-sample", targetPackId: "" },
     memory: memoryCommand,
@@ -1376,7 +1376,7 @@ function renderHome() {
         <span>Active scenario: <strong>${escapeHtml(scenario.label)}</strong></span>
         <span>${escapeHtml(scenario.description)}</span>
       </div>
-      ${optionalDetails("Scenarios", "Open for demo presets that replace the sample work state.", `
+      ${optionalDetails("Scenarios", "Open for demo presets that replace the browser work state.", `
         <div class="demo-scenario-grid">
           ${DEMO_SCENARIOS.map((item) => `
             <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}"${controlLabelAttributes(scenarioCardHelp(item, state.scenarioId === item.id))}>
@@ -2135,7 +2135,7 @@ function validationStatus(attention) {
   }
 
   return attention === 0
-    ? "Where: Check. Blocker: None. Button runs next: keep sample ready."
+    ? "Where: Check. Blocker: None. Button runs next: keep work ready."
     : `Where: Check. Blocker: ${attention} check item(s) need attention. Button runs next: fix check items.`;
 }
 
@@ -2216,7 +2216,7 @@ function validateSampleHelp() {
 }
 
 function resetDemoHelp() {
-  return "Reset sample work, profile, scenario, and edits in this browser.";
+  return "Reset demo work, profile, scenario, and edits in this browser.";
 }
 
 function renderFocus() {
@@ -2275,9 +2275,9 @@ function renderStats() {
   const total = Math.max(state.packs.length, 1);
   el("screen-content").innerHTML = `
     <div class="demo-grid demo-summary-strip">
-      ${metricCard("Active", counts.active ?? 0, "Sample work currently moving.")}
-      ${metricCard("Review", counts.review ?? 0, "Sample work with blockers or missing Button runs next.")}
-      ${metricCard("Done", counts.done ?? 0, "Sample work marked complete.")}
+      ${metricCard("Active", counts.active ?? 0, "Work currently moving.")}
+      ${metricCard("Review", counts.review ?? 0, "Work with blockers or missing Button runs next.")}
+      ${metricCard("Done", counts.done ?? 0, "Work marked complete.")}
     </div>
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -2298,13 +2298,13 @@ function renderNotes() {
   const rows = state.packs.flatMap((pack) => pack.memory.map((note) => ({ pack, note })));
   const emptyNotes = state.packs.length === 0
     ? emptyState("No notes exist.", "Create work or reset demo data before adding memory.", emptyStateContextFor("Notes", "no work exists in this browser state", "create or reset work"))
-    : emptyState("No sample notes exist.", "Open Memory and add a note to selected work.", emptyStateContextFor("Notes", "no memory notes have been saved in this browser", "open Memory and add a note"));
+    : emptyState("No notes exist.", "Open Memory and add a note to selected work.", emptyStateContextFor("Notes", "no memory notes have been saved in this browser", "open Memory and add a note"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Notes</span>
-          <h2>Sample notes across work</h2>
+          <h2>Notes across work</h2>
         </div>
         ${navButton("memory", "Open memory", "btn btn-primary")}
       </div>
@@ -2320,13 +2320,13 @@ function renderTimeline() {
   const rows = state.packs.flatMap((pack) => pack.activity.map((item, index) => ({ pack, item, index })));
   const emptyTimeline = state.packs.length === 0
     ? emptyState("No activity exists.", "Create work or reset demo data before running Button runs next.", emptyStateContextFor("Timeline", "no work exists in this browser state", "create or reset work"))
-    : emptyState("No sample activity exists.", "Run Button runs next to add activity.", emptyStateContextFor("Timeline", "no Button-runs-next result has written activity yet", "run Button runs next"));
+    : emptyState("No activity exists.", "Run Button runs next to add activity.", emptyStateContextFor("Timeline", "no Button-runs-next result has written activity yet", "run Button runs next"));
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Timeline</span>
-          <h2>Sample activity log</h2>
+          <h2>Activity log</h2>
         </div>
       </div>
       <div class="demo-list">
@@ -2343,12 +2343,12 @@ function renderFiles() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Files</span>
-          <h2>Sample source references</h2>
+          <h2>Source references</h2>
         </div>
         <span class="demo-status">Source links are references in this static demo</span>
       </div>
       <div class="demo-source-list">
-        ${rows.map(sourceRow).join("") || emptyState("No sample source references exist.", "Choose a scenario with sample source references.", emptyStateContextFor("Files", "this scenario has no source references", "choose a source-backed scenario"))}
+        ${rows.map(sourceRow).join("") || emptyState("No source references exist.", "Choose a source-backed scenario.", emptyStateContextFor("Files", "this scenario has no source references", "choose a source-backed scenario"))}
       </div>
     </section>
   `;
@@ -2367,7 +2367,7 @@ function renderCalendar() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Calendar</span>
-          <h2>Sample due dates</h2>
+          <h2>Due dates</h2>
         </div>
         <span class="demo-status">${rows.length} dated</span>
       </div>
@@ -2514,14 +2514,14 @@ function renderMemory() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Memory</span>
-          <h2>${pack ? escapeHtml(workTitle(pack)) : "Sample memory"}</h2>
+          <h2>${pack ? escapeHtml(workTitle(pack)) : "Work memory"}</h2>
         </div>
         <span class="demo-status">Stored in this browser</span>
       </div>
       <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${workTitle(pack)}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no work exists in this browser state", "create or reset work"))}</div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
-        <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a sample memory note">
+        <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a memory note">
         <p id="memory-note-help" class="demo-field-help" aria-live="polite">${escapeHtml(memoryState.help)}</p>
         <button id="add-memory" class="btn btn-primary" type="button" aria-describedby="memory-note-help"${disabledReasonAttributes(!memoryState.canSave, memoryState.help)}>Add note</button>
       </div>
@@ -2612,7 +2612,7 @@ function renderSettings() {
         <span id="reset-demo-help" class="sr-only">${escapeHtml(resetHelp)}</span>
         <button class="btn" type="button" id="reset-demo"${controlHelpAttributes(false, resetHelp, "reset-demo-help")}>Reset demo data</button>
       </div>
-      <p>Copy profile changes labels in this static demo. Sample edits stay in this browser only; real app data is untouched.</p>
+      <p>Copy profile changes labels in this static demo. Edits stay in this browser only; real app data is untouched.</p>
       <p class="demo-status-line" title="${escapeAttribute(statusHelp)}" aria-label="${escapeAttribute(statusHelp)}">${escapeHtml(statusVisible)}</p>
       <h3>Profile</h3>
       <div class="demo-profile-grid">
@@ -2623,7 +2623,7 @@ function renderSettings() {
           </button>
         `).join("")}
       </div>
-      ${optionalDetails("Scenarios", "Open for demo presets that replace the sample work state.", `
+      ${optionalDetails("Scenarios", "Open for demo presets that replace the browser work state.", `
         <div class="demo-scenario-grid">
           ${DEMO_SCENARIOS.map((item) => `
             <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}"${controlLabelAttributes(scenarioCardHelp(item, state.scenarioId === item.id))}>
@@ -2664,9 +2664,9 @@ function renderHealth() {
       <div class="demo-check-list">
         ${checks.map(healthLine).join("")}
       </div>
-      ${optionalDetails("Counts", "Open for sample counts and current route facts.", `
+      ${optionalDetails("Counts", "Open for browser counts and current route facts.", `
         <div class="demo-grid">
-          ${metricCard("Data", state.packs.length, "Loaded sample packs for this demo.")}
+          ${metricCard("Data", state.packs.length, "Loaded work items for this demo.")}
           ${metricCard("Checks", checks.filter((check) => check.status).length, "Passing health checks.")}
           ${metricCard("Total checks", checks.length, "All expected demo checks.")}
           ${metricCard("Scenario", state.scenarioId, "Current scenario library preset.")}
@@ -2752,7 +2752,7 @@ function renderMeta() {
         </div>
         <span class="demo-status">${escapeHtml(context.version || stateVersionLabel())}</span>
       </div>
-      <p>A compact summary from this browser's sample work and live checks.</p>
+      <p>A compact summary from this browser's work and live checks.</p>
       <div class="demo-grid">
         ${metricCard("Version", context.version || stateVersionLabel(), "Build label from the exported demo.")}
         ${metricCard("Scenario", state.scenarioId, "Active demo preset.")}
@@ -2785,7 +2785,7 @@ function renderMeta() {
           <div class="demo-grid">
             ${metricCard("Active packs", counts.active, "Packs ready to act on.")}
             ${metricCard("Blocked packs", counts.blocked, "Packs blocked or missing Button runs next.")}
-            ${metricCard("Done packs", counts.done, "Completed sample packs.")}
+            ${metricCard("Done packs", counts.done, "Completed work items.")}
             ${metricCard("All packs", counts.all, "Total packs loaded.")}
           </div>
         </div>
@@ -2860,9 +2860,9 @@ function renderLab() {
         </div>
         <span class="demo-status">${escapeHtml(action.label)}</span>
       </div>
-      <p>Pick sample work, inspect the blocker, then run the same Button runs next shown in Current path.</p>
+      <p>Pick work, inspect the blocker, then run the same Button runs next shown in Current path.</p>
       <div class="demo-grid">
-        ${metricCard("Selected", pack ? workTitle(pack) : "Choose sample work", pack ? `${workflow.label} / ${pack.owner}` : "Choose sample work to inspect its path.")}
+        ${metricCard("Selected", pack ? workTitle(pack) : "Choose work", pack ? `${workflow.label} / ${pack.owner}` : "Choose work to inspect its path.")}
         ${metricCard("Blocker", blockerTextForPack(pack), "The reason the work needs attention.")}
         ${metricCard("Runs next", action.label, "Selected work shows this Button-runs-next value.")}
       </div>
@@ -2879,7 +2879,7 @@ function renderLab() {
         ${disabledReasonNotice(!pack, noPackReason)}
       </div>
       <div class="demo-command-lines compact">
-        ${factLine("Where", pack ? workTitle(pack) : "Choose sample work")}
+        ${factLine("Where", pack ? workTitle(pack) : "Choose work")}
         ${factLine("Blocker", blockerTextForPack(pack))}
         ${factLine("Button runs next", action.label)}
       </div>
@@ -2934,7 +2934,7 @@ function syncLabRenderedSmokeChecks(pack, action, styleAudit) {
 
 function labPackSelectReason(hasWork) {
   return hasWork
-    ? "Where: Demo Lab. Blocker: None. Button runs next: choose sample work to preview Button runs next."
+    ? "Where: Demo Lab. Blocker: None. Button runs next: choose work to preview Button runs next."
     : "Where: Demo Lab. Blocker: no work is available. Button runs next: create work, reset demo data, or choose a scenario with work.";
 }
 
@@ -3086,10 +3086,10 @@ function sampleChecks() {
   const blocked = state.packs.filter((pack) => pack.status === "blocked").length;
   const missingDue = state.packs.filter((pack) => !pack.due && pack.status !== "done").length;
   return [
-    ["Owners", missingOwner, "Every moving sample item should name an owner."],
-    ["Button runs next", missingNext, "Each sample item needs a clear Button-runs-next value."],
-    ["Blocked", blocked, "Blocked sample work should say what is blocking it."],
-    ["Due dates", missingDue, "Unfinished sample work can optionally carry a date."]
+    ["Owners", missingOwner, "Every moving work item should name an owner."],
+    ["Button runs next", missingNext, "Each work item needs a clear Button-runs-next value."],
+    ["Blocked", blocked, "Blocked work should say what is blocking it."],
+    ["Due dates", missingDue, "Unfinished work can optionally carry a date."]
   ];
 }
 
@@ -4441,7 +4441,7 @@ function commandActionForLabel(label) {
 function defaultCreateValues() {
   return {
     title: "New work",
-    owner: "Sample owner",
+    owner: "Owner",
     next: "Open",
     due: "2026-06-30",
     purpose: "Describe why this work matters."
@@ -4973,8 +4973,8 @@ function createSamplePack() {
     next,
     due: values.due,
     owner,
-    purpose: values.purpose || "Sample work created in the static demo.",
-    doneWhen: "Sample result is described.",
+    purpose: values.purpose || "Work created in the static demo.",
+    doneWhen: "Result is described.",
     sources: ["browser-state"],
     memory: [],
     activity: ["Created in this browser."]
@@ -5233,7 +5233,7 @@ function blockerStateForPack(pack) {
       hasBlocker: false,
       mode: "none",
       storage: "",
-      label: "choose sample work",
+      label: "choose work",
       reason: ""
     };
   }
@@ -5254,7 +5254,7 @@ function blockerStateForPack(pack) {
 
 function blockerTextForPack(pack) {
   if (!pack) {
-    return "choose sample work";
+    return "choose work";
   }
 
   const blockerState = blockerStateForPack(pack);
@@ -5313,19 +5313,19 @@ function homeSecondaryAction(route, label, reason) {
 function routeButtonReason(route, label) {
   const reasons = {
     home: "Return to the simplified demo start.",
-    work: "Open the work list to choose one sample pack.",
+    work: "Open the work list to choose one work item.",
     triage: "Open triage to turn pasted work into Where, Blocker, and Button runs next.",
     today: "Open dated work and run Button runs next from due items.",
-    board: "Open the status board to compare sample work lanes.",
+    board: "Open the status board to compare work lanes.",
     review: "Open review work and resolve the next blocker.",
     next: "Open Button runs next setup for review work.",
     check: "Open demo checks for route and action coverage.",
     health: "Open demo health for route, asset, and state checks.",
-    search: "Open search to find sample work by title, owner, due date, or next action.",
-    stats: "Open sample counts for visible work, review, and done states.",
+    search: "Open search to find work by title, owner, due date, or next action.",
+    stats: "Open counts for visible work, review, and done states.",
     notes: "Open notes for selected work.",
     timeline: "Open browser-only activity written by demo actions.",
-    files: "Open source references used by the sample packs.",
+    files: "Open source references used by the work items.",
     calendar: "Open due-date work and date-based actions.",
     lab: "Open Demo Lab to inspect the selected work state.",
     meta: "Open Meta to inspect routes, assets, and build info.",
@@ -5664,7 +5664,7 @@ function activityPanel(pack) {
     <div class="demo-panel-head">
       <div>
         <span class="section-label">Activity</span>
-        <h2>Sample activity record</h2>
+        <h2>Activity record</h2>
       </div>
     </div>
     <div class="demo-list">${pack.activity.map((item) => `<div class="demo-note">${escapeHtml(item)}</div>`).join("")}</div>
@@ -5898,7 +5898,7 @@ function buildHealthChecks() {
     {
       label: "Pack list loaded",
       status: Array.isArray(state.packs) && state.packs.length > 0,
-      detail: `${state.packs.length} sample packs available.`
+      detail: `${state.packs.length} work item(s) available.`
     },
     {
       label: "Shipped files",
@@ -6298,7 +6298,7 @@ function labSmokeChecks(pack, styleAudit, disabledReasons = null) {
     {
       label: "Selected work",
       status: Boolean(pack),
-      detail: pack ? `${workTitle(pack)} is loaded into the lab.` : "Choose sample work to load it into the lab."
+      detail: pack ? `${workTitle(pack)} is loaded into the lab.` : "Choose work to load it into the lab."
     },
     {
       label: "Blocker visible",
@@ -6308,7 +6308,7 @@ function labSmokeChecks(pack, styleAudit, disabledReasons = null) {
     {
       label: "Button preview",
       status: Boolean(pack && action.action),
-      detail: pack ? `Button runs next shows ${action.label}.` : "Choose sample work so the Lab can preview Button runs next."
+      detail: pack ? `Button runs next shows ${action.label}.` : "Choose work so the Lab can preview Button runs next."
     },
     {
       label: "Bottom bar focus",
