@@ -1270,6 +1270,11 @@ function focusCommandTarget(kind, packId = "") {
     return;
   }
 
+  if (kind === "selected-card") {
+    focusAndPulse(target, { ensureTopVisible: true, behavior: "auto" });
+    return;
+  }
+
   focusAndPulse(target);
 }
 
@@ -1281,6 +1286,16 @@ function focusSelectors(kind, packId) {
       `.demo-review-card[data-pack-id="${id}"]`,
       `.demo-row[data-pack-id="${id}"]`,
       "#command-where"
+    ];
+  }
+
+  if (kind === "selected-card") {
+    return [
+      `.demo-work-card[data-pack-id="${id}"]`,
+      `.demo-review-card[data-pack-id="${id}"]`,
+      `.demo-work-card[data-pack-id="${id}"] .demo-card-title`,
+      `.demo-review-card[data-pack-id="${id}"] .demo-card-title`,
+      `.demo-row[data-pack-id="${id}"]`
     ];
   }
 
@@ -1385,8 +1400,14 @@ function focusSelectors(kind, packId) {
   return ["#primary-action"];
 }
 
-function focusAndPulse(target) {
-  target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+function focusAndPulse(target, options = {}) {
+  const behavior = options.behavior || "smooth";
+  const block = options.block || "center";
+  target.scrollIntoView({ behavior, block, inline: "nearest" });
+  if (options.ensureTopVisible) {
+    ensureFocusTopVisible(target);
+  }
+
   if (!isFocusable(target)) {
     target.setAttribute("tabindex", "-1");
   }
@@ -1398,6 +1419,14 @@ function focusAndPulse(target) {
   window.setTimeout(() => {
     target.classList.remove("demo-focus-pulse");
   }, 1800);
+}
+
+function ensureFocusTopVisible(target) {
+  const rect = target.getBoundingClientRect();
+  const topInset = 24;
+  if (rect.top < topInset) {
+    window.scrollBy({ top: rect.top - topInset, left: 0, behavior: "auto" });
+  }
 }
 
 function isFocusable(target) {
@@ -4160,6 +4189,7 @@ function handlePackAction(id, action) {
 
   if (action === "select") {
     state.status = selectedWorkStatus("Work list", pack);
+    queueFocus("selected-card", pack.id);
   } else if (action === "run-next") {
     runResolvedPackAction(pack);
     return;
