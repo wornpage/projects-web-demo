@@ -3937,7 +3937,7 @@ function updateActionReceipt() {
   const receiptElement = el("command-receipt");
   if (!receiptElement) return;
 
-  const receipt = normalizeActionReceipt(state.actionReceipt);
+  const receipt = commandActionReceipt();
   if (!receipt) {
     receiptElement.hidden = true;
     receiptElement.innerHTML = "";
@@ -3971,6 +3971,20 @@ function updateActionReceipt() {
       ${receiptLine("Button runs next", receipt.next)}
       ${receiptLine("Proof target", receipt.proof)}
     </div>`;
+}
+
+function commandActionReceipt() {
+  const receipt = normalizeActionReceipt(state.actionReceipt);
+  if (!receipt) {
+    return null;
+  }
+
+  if (receipt.kind === "clipboard" || !receipt.packId) {
+    return receipt;
+  }
+
+  const selected = currentPack();
+  return selected?.id === receipt.packId ? receipt : null;
 }
 
 function actionReceiptCard(pack) {
