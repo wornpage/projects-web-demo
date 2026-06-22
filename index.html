@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Static Projects demo with sample work and Button-runs-next controls.">
+  <meta name="description" content="Static Projects demo with browser-local work and Button runs next controls.">
   <title>Projects Static Demo</title>
   <link rel="icon" href="assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="assets/app.css?v=90cc64143-db7ec72f5a">
-  <link rel="stylesheet" href="assets/demo.css?v=90cc64143-db7ec72f5a">
-  <script src="assets/demo.js?v=90cc64143-db7ec72f5a" defer></script>
+  <link rel="stylesheet" href="assets/app.css?v=2945f5c27-c5d8eabc63">
+  <link rel="stylesheet" href="assets/demo.css?v=2945f5c27-c5d8eabc63">
+  <script src="assets/demo.js?v=2945f5c27-c5d8eabc63" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#demo-main">Skip to demo</a>
@@ -44,9 +44,9 @@
             <a id="demo-changelog" href="https://github.com/jared-bidlow/projects-web-demo/releases" rel="noopener noreferrer" target="_blank">Changelog</a>
           </div>
           <div class="demo-header-actions">
-            <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="false">Dark mode</button>
-            <a class="btn btn-sm" href="https://github.com/jared-bidlow/projects-web-demo">Public repo</a>
-            <a class="btn btn-primary btn-lg" href="https://github.com/jared-bidlow/projects-desktop">Source</a>
+            <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="false" title="Switch this demo to dark mode." aria-label="Switch this demo to dark mode.">Dark mode</button>
+            <a class="btn btn-sm" href="https://github.com/jared-bidlow/projects-web-demo" title="Open the public GitHub Pages demo repository." aria-label="Open the public GitHub Pages demo repository.">Public repo</a>
+            <a class="btn btn-primary btn-lg" href="https://github.com/jared-bidlow/projects-desktop" title="Open the source repository for the Projects app." aria-label="Open the source repository for the Projects app.">Source</a>
           </div>
         </div>
       </header>
@@ -54,7 +54,7 @@
       <main id="demo-main" class="demo-main page-content" tabindex="-1">
         <section class="demo-notice card" aria-label="Demo notice">
           <strong>Demo data only.</strong>
-          Browser-local sample data. Buttons update this tab only.
+          Demo data stays in this browser. Buttons update this tab only.
         </section>
 
         <section class="demo-command-brief sidecar" aria-label="Projects current path">
@@ -80,15 +80,15 @@
             </div>
           </div>
           <div id="command-work-path" class="demo-work-path demo-command-work-path" data-work-path="command-brief" hidden></div>
-          <div id="command-memory" class="demo-command-memory" hidden>
+          <div id="command-memory" class="demo-command-memory is-empty" data-memory-strip="command" hidden>
             <span>Relevant Memory</span>
-            <strong id="command-memory-text">none yet</strong>
+            <strong id="command-memory-text">none yet - add from Memory</strong>
           </div>
           <div class="demo-command-footer">
-            <span id="command-scope">Scope: sample work is loading.</span>
-            <p id="command-flow" class="demo-command-flow">Select work to see what the button runs next.</p>
+            <span id="command-scope">Scope: work is loading.</span>
+            <p id="command-flow" class="demo-command-flow">Loading demo data; Review work opens the first review item.</p>
             <div class="demo-command-actions">
-              <button id="primary-action" class="btn btn-primary" type="button">Review work</button>
+              <button id="primary-action" class="btn btn-primary" type="button" data-action="route-review" data-pack="" title="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-label="Where: Work list. Blocker: Loading demo data. Button runs next: Review work.">Review work</button>
             </div>
           </div>
           <div id="command-receipt" class="demo-command-receipt" role="status" aria-live="polite" tabindex="-1" hidden></div>
@@ -99,15 +99,15 @@
         <aside class="demo-bottom-brief" aria-label="Sticky current path summary">
           <a id="dock-where-item" class="demo-bottom-item" href="#/work">
             <span>Where</span>
-            <strong id="dock-where">Work</strong>
+            <strong id="dock-where">Work list</strong>
           </a>
           <a id="dock-review-item" class="demo-bottom-item" href="#/review">
             <span>Blocker</span>
-            <strong id="dock-blocker">Loading</strong>
+            <strong id="dock-blocker">Loading demo data.</strong>
           </a>
-          <button id="dock-next" class="demo-bottom-item demo-bottom-next" type="button">
+          <button id="dock-next" class="demo-bottom-item demo-bottom-next" type="button" data-action="route-review" data-pack="" title="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-label="Where: Work list. Blocker: Loading demo data. Button runs next: Review work.">
             <span>Button runs next</span>
-            <strong id="dock-next-label">Review</strong>
+            <strong id="dock-next-label">Review work</strong>
           </button>
         </aside>
       </main>

@@ -15,7 +15,7 @@
     "activity": ["Imported from starter work list.", "Review surfaced missing owner."]
   },
   {
-    "id": "sample-pack-audit",
+    "id": "source-folder-audit",
     "title": "source-folder-audit",
     "type": "music",
     "status": "blocked",
@@ -27,7 +27,7 @@
     "doneWhen": "All source folders are named and reachable.",
     "sources": ["source folder", "docs"],
     "memory": ["Keep this blocked until the source folder exists."],
-    "activity": ["Blocker recorded.", "Demo user focused this pack."]
+    "activity": ["Blocker recorded.", "Source-folder review opened."]
   },
   {
     "id": "lighting-checklist",
@@ -86,7 +86,7 @@
     "purpose": "Keep warmup notes attached to the set planning flow.",
     "doneWhen": "Warmup notes are saved for reference.",
     "sources": ["docs"],
-    "memory": ["Good example of a completed note pack."],
+    "memory": ["Good example of a completed note."],
     "activity": ["Saved note.", "Marked done."]
   },
   {
@@ -113,10 +113,10 @@
     "next": "Review",
     "due": "2026-06-19",
     "owner": "Dev",
-    "purpose": "Check the Button-runs-next response contract before the next release.",
+    "purpose": "Check the Button runs next response contract before the next release.",
     "doneWhen": "Contract examples and response fields agree.",
     "sources": ["github", "ci", "docs"],
-    "memory": ["Keep Where / Blocker / Button-runs-next fields explicit."],
+    "memory": ["Keep Where / Blocker / Button runs next fields explicit."],
     "activity": ["CI note imported.", "Review requested."]
   },
   {
@@ -139,11 +139,11 @@
     "title": "mobile-current-path-qa",
     "type": "qa",
     "status": "blocked",
-    "blocker": "bottom dock contrast needs review",
+    "blocker": "bottom bar contrast needs review",
     "next": "Review",
     "due": "2026-06-21",
     "owner": "QA",
-    "purpose": "Check the mobile bottom dock in dark and light themes.",
+    "purpose": "Check the mobile bottom bar in dark and light themes.",
     "doneWhen": "Dock, buttons, badges, and Current path are readable.",
     "sources": ["screenshot", "browser smoke"],
     "memory": ["Watch for light highlights behind white text in dark mode."],
@@ -176,8 +176,8 @@
     "purpose": "Keep a small repeatable checklist for making an Old Fashioned.",
     "doneWhen": "Ingredients, glass, garnish, and stirring steps are ready.",
     "sources": ["recipe note", "bar checklist"],
-    "memory": ["Use this as a low-stakes example of a personal pack."],
-    "activity": ["Personal pack added.", "Ready to open."]
+    "memory": ["Use this as a low-stakes example of personal work."],
+    "activity": ["Personal work added.", "Ready to open."]
   },
   {
     "id": "calendar-date-pass",
