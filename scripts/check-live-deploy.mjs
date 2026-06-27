@@ -11,6 +11,12 @@ try {
   const htmlResponse = await readResponse("/");
   const html = htmlResponse.text;
   const csp = htmlResponse.headers.get("content-security-policy") || "";
+  const sameOriginCors = await readResponse("/api/health", { origin: baseUrl.origin });
+  const blockedCorsPreflightStatus = await readStatus("/api/state", {
+    origin: "https://untrusted.example",
+    "access-control-request-method": "PUT",
+    "access-control-request-headers": "content-type, x-projects-demo-client"
+  }, "OPTIONS");
   const cspNonce = nonceFromCsp(csp);
   const htmlNonce = nonceFromHtml(html);
   const assetMatch = html.match(/assets\/demo\.js\?v=([^"']+)/u);
@@ -94,6 +100,8 @@ try {
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API script nonce matches CSP", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
   check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
+  check("live API CORS is same-origin only", sameOriginCors.headers.get("access-control-allow-origin") === baseUrl.origin, sameOriginCors.headers.get("access-control-allow-origin") || "missing");
+  check("live API rejects third-party preflight", blockedCorsPreflightStatus === 403, blockedCorsPreflightStatus);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
@@ -169,8 +177,9 @@ async function writeJson(pathname, payload, headers = {}) {
   return response.json();
 }
 
-async function readStatus(pathname, headers = {}) {
+async function readStatus(pathname, headers = {}, method = "GET") {
   const response = await fetch(new URL(pathname, baseUrl), {
+    method,
     headers: { "cache-control": "no-cache", ...headers }
   });
   return response.status;

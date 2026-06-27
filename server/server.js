@@ -55,11 +55,14 @@ const contentTypes = {
   ".txt": "text/plain; charset=utf-8"
 };
 
-const corsHeaders = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET,POST,PUT,PATCH,OPTIONS",
-  "access-control-allow-headers": `content-type, ${API_CLIENT_HEADER}`
-};
+const CORS_ALLOWED_METHODS = "GET,POST,PUT,PATCH,OPTIONS";
+const CORS_ALLOWED_HEADERS = `content-type, ${API_CLIENT_HEADER}`;
+const configuredCorsOrigins = parseCorsOrigins(process.env.PROJECTS_ALLOWED_ORIGINS);
+const localPreviewCorsOrigins = new Set([
+  "http://localhost:5181",
+  "http://127.0.0.1:5181",
+  "http://[::1]:5181"
+]);
 const securityHeaders = {
   "cache-control": "no-store",
   "referrer-policy": "no-referrer",
@@ -70,7 +73,12 @@ const stateStorage = createStateStorage();
 
 const server = http.createServer(async (request, response) => {
   if (request.method === "OPTIONS") {
-    sendEmpty(response, 204);
+    if (!isCorsRequestAllowed(request)) {
+      sendEmpty(response, 403);
+      return;
+    }
+
+    sendEmpty(request, response, 204);
     return;
   }
 
@@ -79,7 +87,7 @@ const server = http.createServer(async (request, response) => {
     await routeRequest(request, response, url);
   } catch (error) {
     const status = Number(error.statusCode || 500);
-    sendJson(response, status, {
+    sendJson(request, response, status, {
       error: status >= 500 ? "Internal server error" : error.message,
       detail: status >= 500 ? undefined : error.detail
     });
@@ -104,7 +112,7 @@ async function routeRequest(request, response, url) {
   const method = request.method || "GET";
 
   if (method === "GET" && pathname === "/api/health") {
-    sendJson(response, 200, {
+    sendJson(request, response, 200, {
       ok: true,
       service: "projects-web-demo-api",
       stateStorage: stateStorage.label,
@@ -114,19 +122,19 @@ async function routeRequest(request, response, url) {
   }
 
   if (method === "GET" && pathname === "/api/state") {
-    sendJson(response, 200, await readState(stateKeyForRequest(request)));
+    sendJson(request, response, 200, await readState(stateKeyForRequest(request)));
     return;
   }
 
   if ((method === "PUT" || method === "POST") && pathname === "/api/state") {
     const payload = await readJsonBody(request);
-    sendJson(response, 200, await writeState(payload, stateKeyForRequest(request)));
+    sendJson(request, response, 200, await writeState(payload, stateKeyForRequest(request)));
     return;
   }
 
   if (method === "GET" && pathname === "/api/packs") {
     const state = await readState(stateKeyForRequest(request));
-    sendJson(response, 200, state.packs);
+    sendJson(request, response, 200, state.packs);
     return;
   }
 
@@ -136,7 +144,7 @@ async function routeRequest(request, response, url) {
     const state = await readState(stateKey);
     const result = createPackFromPayload(state, payload);
     await writeState(state, stateKey);
-    sendJson(response, 201, result);
+    sendJson(request, response, 201, result);
     return;
   }
 
@@ -148,7 +156,7 @@ async function routeRequest(request, response, url) {
     const state = await readState(stateKey);
     const result = savePackPathAction(state, packId, payload);
     await writeState(state, stateKey);
-    sendJson(response, 200, result);
+    sendJson(request, response, 200, result);
     return;
   }
 
@@ -160,7 +168,7 @@ async function routeRequest(request, response, url) {
     const state = await readState(stateKey);
     const result = setPackNextAction(state, packId, payload.next);
     await writeState(state, stateKey);
-    sendJson(response, 200, result);
+    sendJson(request, response, 200, result);
     return;
   }
 
@@ -172,7 +180,7 @@ async function routeRequest(request, response, url) {
     const state = await readState(stateKey);
     const result = runPackAction(state, packId, payload.action);
     await writeState(state, stateKey);
-    sendJson(response, 200, result);
+    sendJson(request, response, 200, result);
     return;
   }
 
@@ -181,7 +189,7 @@ async function routeRequest(request, response, url) {
     const packId = decodeURIComponent(packCommandMatch[1]);
     const state = await readState(stateKeyForRequest(request));
     const pack = findPackOrThrow(state, packId);
-    sendJson(response, 200, packCommandPreview(pack));
+    sendJson(request, response, 200, packCommandPreview(pack));
     return;
   }
 
@@ -197,7 +205,7 @@ async function routeRequest(request, response, url) {
       const updated = sanitizePack({ ...pack, ...payload, id: pack.id });
       Object.assign(pack, updated, { id: pack.id });
       await writeState(state, stateKey);
-      sendJson(response, 200, pack);
+      sendJson(request, response, 200, pack);
       return;
     }
 
@@ -207,13 +215,13 @@ async function routeRequest(request, response, url) {
       const state = await readState(stateKey);
       const result = addPackMemoryAction(state, packId, payload.note);
       await writeState(state, stateKey);
-      sendJson(response, 200, result);
+      sendJson(request, response, 200, result);
       return;
     }
   }
 
   if (pathname === "/api" || pathname.startsWith("/api/")) {
-    sendJson(response, 404, { error: "Not found" });
+    sendJson(request, response, 404, { error: "Not found" });
     return;
   }
 
@@ -222,7 +230,7 @@ async function routeRequest(request, response, url) {
     return;
   }
 
-  sendJson(response, 404, { error: "Not found" });
+  sendJson(request, response, 404, { error: "Not found" });
 }
 
 async function serveStaticRequest(request, response, url) {
@@ -1245,21 +1253,107 @@ async function readJsonBody(request) {
   }
 }
 
-function sendJson(response, statusCode, payload) {
+function parseCorsOrigins(value) {
+  return new Set(
+    String(value || "")
+      .split(/[,\s]+/u)
+      .map((origin) => normalizedCorsOrigin(origin))
+      .filter(Boolean)
+  );
+}
+
+function normalizedCorsOrigin(value) {
+  const text = normalizeText(value, 300);
+  if (!text) {
+    return "";
+  }
+
+  try {
+    const url = new URL(text);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return "";
+    }
+    return url.origin;
+  } catch {
+    return "";
+  }
+}
+
+function isCorsRequestAllowed(request) {
+  const origin = normalizedCorsOrigin(request.headers.origin);
+  return !origin || Boolean(allowedCorsOrigin(origin, request));
+}
+
+function corsHeadersForRequest(request) {
+  if (!request) {
+    return {};
+  }
+
+  const origin = normalizedCorsOrigin(request.headers.origin);
+  const allowedOrigin = allowedCorsOrigin(origin, request);
+  if (!allowedOrigin) {
+    return {};
+  }
+
+  return {
+    "access-control-allow-origin": allowedOrigin,
+    "access-control-allow-methods": CORS_ALLOWED_METHODS,
+    "access-control-allow-headers": CORS_ALLOWED_HEADERS,
+    "access-control-max-age": "600"
+  };
+}
+
+function allowedCorsOrigin(origin, request) {
+  if (!origin) {
+    return "";
+  }
+  if (configuredCorsOrigins.has(origin) || localPreviewCorsOrigins.has(origin)) {
+    return origin;
+  }
+  return isSameHostOrigin(origin, request) ? origin : "";
+}
+
+function isSameHostOrigin(origin, request) {
+  let originHost = "";
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    return false;
+  }
+
+  return requestHostValues(request).some((host) => host === originHost);
+}
+
+function requestHostValues(request) {
+  const values = [
+    request.headers.host,
+    request.headers["x-forwarded-host"]
+  ];
+  return values
+    .flatMap((value) => String(value || "").split(","))
+    .map((host) => normalizeText(host, 300).toLowerCase())
+    .filter(Boolean);
+}
+
+function sendJson(request, response, statusCode, payload) {
   response.writeHead(statusCode, {
     ...securityHeaders,
-    ...corsHeaders,
+    ...corsHeadersForRequest(request),
     "content-type": "application/json; charset=utf-8",
-    "vary": API_CLIENT_HEADER
+    "vary": `Origin, ${API_CLIENT_HEADER}`
   });
   response.end(`${JSON.stringify(payload)}\n`);
 }
 
-function sendEmpty(response, statusCode) {
+function sendEmpty(requestOrResponse, responseOrStatusCode, maybeStatusCode) {
+  const hasRequest = maybeStatusCode !== undefined;
+  const request = hasRequest ? requestOrResponse : null;
+  const response = hasRequest ? responseOrStatusCode : requestOrResponse;
+  const statusCode = hasRequest ? maybeStatusCode : responseOrStatusCode;
   response.writeHead(statusCode, {
     ...securityHeaders,
-    ...corsHeaders,
-    "vary": API_CLIENT_HEADER
+    ...corsHeadersForRequest(request),
+    "vary": `Origin, ${API_CLIENT_HEADER}`
   });
   response.end();
 }

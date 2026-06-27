@@ -106,6 +106,10 @@ The Node app also rewrites the CSS/JS asset query string at startup using
 startup value. That keeps hosted deploys from serving stale cached frontend
 assets after a push.
 
+API CORS is bounded. Same-origin app requests are allowed, the default local
+static preview origin `http://localhost:5181` is allowed for development, and
+extra development origins must be listed in `PROJECTS_ALLOWED_ORIGINS`.
+
 The default local state file is `server/data/state.json`. When the browser sends
 its anonymous client key, local file-backed app mode stores that client's state
 in a separate hashed state file beside the default file. Hosted deploys should

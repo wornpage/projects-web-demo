@@ -122,7 +122,10 @@ GitHub Pages behavior.
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
 API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:
-nosniff`. This is still demo isolation, not private account security.
+nosniff`. API CORS reflects only same-origin requests, the default local static
+preview origin `http://localhost:5181`, or exact origins listed in
+`PROJECTS_ALLOWED_ORIGINS`. This is still demo isolation, not private account
+security.
 
 ## Checks
 

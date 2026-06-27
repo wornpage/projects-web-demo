@@ -58,6 +58,30 @@ try {
   check("runtime API script uses CSP nonce", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
   check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
 
+  const sameOrigin = `http://127.0.0.1:${port}`;
+  const sameOriginCors = await request(port, "/api/health", {
+    headers: { origin: sameOrigin }
+  });
+  const previewPreflight = await request(port, "/api/state", {
+    method: "OPTIONS",
+    headers: {
+      origin: "http://localhost:5181",
+      "access-control-request-method": "PUT",
+      "access-control-request-headers": "content-type, x-projects-demo-client"
+    }
+  });
+  const blockedPreflight = await request(port, "/api/state", {
+    method: "OPTIONS",
+    headers: {
+      origin: "https://untrusted.example",
+      "access-control-request-method": "PUT",
+      "access-control-request-headers": "content-type, x-projects-demo-client"
+    }
+  });
+  check("same-origin API CORS is exact, not wildcard", sameOriginCors.headers["access-control-allow-origin"] === sameOrigin, sameOriginCors.headers["access-control-allow-origin"] || "missing");
+  check("local preview origin can preflight the API", previewPreflight.status === 204 && previewPreflight.headers["access-control-allow-origin"] === "http://localhost:5181", `${previewPreflight.status} / ${previewPreflight.headers["access-control-allow-origin"] || "missing"}`);
+  check("third-party API preflight is rejected", blockedPreflight.status === 403 && !blockedPreflight.headers["access-control-allow-origin"], `${blockedPreflight.status} / ${blockedPreflight.headers["access-control-allow-origin"] || "no cors"}`);
+
   for (const pathname of [
     "/README.md",
     "/Dockerfile",
