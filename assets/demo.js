@@ -3193,6 +3193,7 @@ function renderMemory() {
   const pack = currentPack() || state.packs[0];
   const memoryState = memoryNoteSaveState(pack, "");
   el("screen-content").innerHTML = `
+    ${memoryWorkChooser(pack)}
     <section class="demo-panel">
       <div class="demo-panel-head">
         <div>
@@ -3224,6 +3225,56 @@ function renderMemory() {
     await savePackMemoryNote(pack, valueOf("memory-note"));
     render();
   });
+}
+
+function memoryWorkChooser(selected) {
+  if (state.packs.length === 0) {
+    return `
+      <section class="demo-toolbar" aria-label="Memory work selector">
+        <div class="demo-panel-head">
+          <div>
+            <span class="section-label">Selected work</span>
+            <h2>Choose memory target</h2>
+          </div>
+          <span class="demo-status">No work loaded</span>
+        </div>
+        <p id="memory-work-summary" class="demo-status-line" role="status" aria-live="polite">Create work before adding memory notes.</p>
+        ${navButton("create", profile().newWork)}
+      </section>
+    `;
+  }
+
+  const summary = selected
+    ? `Memory note will save to ${workTitle(selected)}.`
+    : `Choose a ${workNoun(1)} before adding memory.`;
+  return `
+    <section class="demo-toolbar" aria-label="Memory work selector">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Selected work</span>
+          <h2>Choose memory target</h2>
+        </div>
+        <span class="demo-status">${state.packs.length} ${workNoun(state.packs.length)}</span>
+      </div>
+      <p id="memory-work-summary" class="demo-status-line" role="status" aria-live="polite">${escapeHtml(summary)}</p>
+      <div class="demo-chip-row" aria-label="Work for memory" aria-describedby="memory-work-summary">
+        ${state.packs.map((pack) => memoryWorkChoiceButton(pack, selected)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function memoryWorkChoiceButton(pack, selected) {
+  const active = pack.id === selected?.id;
+  const label = active ? "Selected" : "Choose";
+  const help = active
+    ? `Current memory target: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: add memory note.`
+    : `Use ${workTitle(pack)} as the memory target. Blocker: ${blockerTextForPack(pack)}. Button runs next: add memory note.`;
+  return `
+    <button type="button" class="demo-chip" aria-pressed="${active}" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(help)}>
+      ${escapeHtml(workTitle(pack))}<span class="demo-chip-count">${escapeHtml(label)}</span>
+    </button>
+  `;
 }
 
 function blockerStateField(pack) {

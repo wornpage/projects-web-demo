@@ -116,6 +116,7 @@ check("pack route requires a work id", routeContract.pack?.acceptsPackId === tru
 check("home route surfaces a live sample spotlight", homeSpotlightContractOk(), "homeSpotlightPanel with facts and primary action");
 check("review route surfaces an up-next queue spotlight", reviewSpotlightContractOk(), "reviewQueuePanel with queue stats and actions");
 check("create route surfaces readiness before the form", createReadinessContractOk(), "createReadinessPanel with required field checklist");
+check("memory route exposes selected work chooser", memoryChooserContractOk(), "memoryWorkChooser with chip targets and create fallback");
 check("create field help names only current public surfaces", source.includes("Optional date kept on the work path and searchable in the work list.") && !source.includes("Today and Calendar views"), "due help avoids retired screens");
 check("runtime status copy avoids retired settings and check screens", !source.includes("Where: Settings") && !source.includes("Where: Check"), "status copy stays on public surfaces");
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
@@ -201,6 +202,22 @@ function createReadinessContractOk() {
     "syncCreateReadinessStep(\"create-readiness-button\", values.next)",
     "if (runRouteAction(action, button.dataset.pack || \"\"))",
     "bindListActions();"
+  ]);
+}
+
+function memoryChooserContractOk() {
+  return includesAll(source, [
+    "${memoryWorkChooser(pack)}",
+    "function memoryWorkChooser(selected)",
+    "aria-label=\"Memory work selector\"",
+    "id=\"memory-work-summary\" class=\"demo-status-line\" role=\"status\" aria-live=\"polite\"",
+    "aria-label=\"Work for memory\" aria-describedby=\"memory-work-summary\"",
+    "function memoryWorkChoiceButton(pack, selected)",
+    "data-action=\"memory\"",
+    "Current memory target:",
+    "Use ${workTitle(pack)} as the memory target.",
+    "Create work before adding memory notes.",
+    "navButton(\"create\", profile().newWork)"
   ]);
 }
 
