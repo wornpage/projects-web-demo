@@ -93,6 +93,10 @@ check("live verifier compares API seed data to checkout", includesAll(liveVerifi
   "seedPacksHash",
   "canonicalJson(liveSeedPacks)"
 ]), "live seed data hash match");
+check("live verifier rejects unkeyed API seed data", includesAll(liveVerifier, [
+  "unkeyedSeedPacksStatus",
+  "hosted seed data rejects missing client key"
+]), "unkeyed seed data rejection");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",

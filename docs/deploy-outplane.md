@@ -125,7 +125,8 @@ After deploy:
    that does not match this checkout, if the app shell is missing its
    same-origin runtime config script or no-inline CSP, if app/API responses are
    missing the noindex/noarchive robots header, if production minification did
-   not run, if hosted seed data does not match this checkout, if the
+   not run, if hosted seed data does not match this checkout, if unkeyed hosted
+   seed data can load, if the
    backend-backed frontend helpers are missing,
    if retired triage code is still public, if hosted state accepts a request
    without a browser client key, if hosted state accepts a weak manual client

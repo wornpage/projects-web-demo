@@ -123,9 +123,9 @@ from this checkout, then confirms the hosted app shell content, protected JS,
 CSS content, and API seed data match before it checks app behavior. It also
 confirms the hosted app uses Postgres, serves the app shell with a same-origin
 runtime config script and no-inline script CSP, rejects `/api/state`
-without a browser client key, loads seed demo work through `/api/demo-packs`
-with a browser client key, rejects weak manual and readable sync-code API client
-keys, keeps generated browser rows separate,
+without a browser client key, rejects unkeyed `/api/demo-packs`, loads seed
+demo work through `/api/demo-packs` with a browser client key, rejects weak
+manual and readable sync-code API client keys, keeps generated browser rows separate,
 lets a fixed shared sync key read the same row from another request, restores an
 exported state snapshot to its keyed row, rejects oversized keyed state
 snapshots, rejects duplicate work ids and invalid work items in state snapshots,
@@ -173,6 +173,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Docker image contains extra docs/source helpers | Fixed | Docker uses a build stage for frontend protection and package install, then the runtime stage copies only pruned production dependencies, named public files, seed JSON, and `server/server.js` |
 | Broad shared app stylesheet is public | Fixed | Removed `assets/app.css`; demo-owned tokens now live in `assets/demo.css` |
 | Hosted app serves static sample JSON directly | Fixed | `/data/demo-packs.json` is no longer served by the app server; seed work loads through `GET /api/demo-packs` with the browser client key |
+| Hosted seed API accepts unkeyed reads | Fixed | Local and live gates prove `/api/demo-packs` rejects missing browser keys |
 | Live verifier can miss stale hosted seed data | Fixed | The live gate compares `GET /api/demo-packs` with checkout `data/demo-packs.json` instead of only checking for a non-empty response |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Ship verification can mix local edits with an older live deploy | Fixed | `scripts/check-git-ship-state.mjs` requires a clean branch synced with upstream before the live Outplane check runs |
