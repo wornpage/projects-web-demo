@@ -1,14 +1,23 @@
 #!/usr/bin/env node
 
+import { spawnSync } from "node:child_process";
+import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 const DEFAULT_URL = "https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app";
 const MAX_STATE_PACKS = 50;
 const MAX_PLAIN_VALUE_DEPTH = 6;
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const baseUrl = normalizeBaseUrl(process.argv[2] || DEFAULT_URL);
 
 const checks = [];
 
 try {
+  const expectedFrontend = await expectedFrontendAssets();
   const health = await readJson("/api/health");
   const htmlResponse = await readResponse("/");
   const html = htmlResponse.text;
@@ -41,11 +50,14 @@ try {
     : "/assets/demo.js";
   const runtimeConfig = await readText(`/${runtimeConfigPath}`);
   const script = await readText(scriptPath);
+  const css = await readText("/assets/demo.css");
+  const scriptHash = sha256(script);
+  const cssHash = sha256(normalizeDeployText(css));
   const publicAssetTexts = [
     { pathname: "/", text: html },
     { pathname: `/${runtimeConfigPath}`, text: runtimeConfig },
     { pathname: scriptPath, text: script },
-    { pathname: "/assets/demo.css", text: await readText("/assets/demo.css") }
+    { pathname: "/assets/demo.css", text: css }
   ];
   const lineCount = script.split(/\r?\n/u).length;
   const liveClientKey = "demo-00000000-0000-4000-8000-000000000201";
@@ -198,6 +210,8 @@ try {
   check("live API rejects disallowed preflight method", blockedMethodPreflightStatus === 403, blockedMethodPreflightStatus);
   check("live API rejects disallowed preflight header", blockedHeaderPreflightStatus === 403, blockedHeaderPreflightStatus);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
+  check("live protected JS matches this checkout", scriptHash === expectedFrontend.scriptHash, `live=${scriptHash} expected=${expectedFrontend.scriptHash}`);
+  check("live CSS content matches this checkout", cssHash === expectedFrontend.cssHash, `live=${cssHash} expected=${expectedFrontend.cssHash}`);
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
   check("weak random fallback is absent", !script.includes("Math.random"), script.includes("Math.random") ? "Math.random" : "absent");
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
@@ -393,6 +407,40 @@ function deepActionReceipt(depth) {
 function runtimeConfigPathFromHtml(html) {
   const match = html.match(/<script src="(assets\/runtime-config\.js\?v=[^"]+)" defer><\/script>/u);
   return match?.[1] || "";
+}
+
+async function expectedFrontendAssets() {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "projects-live-frontend-"));
+  const protectedScriptPath = path.join(tmpDir, "demo.js");
+  try {
+    const result = spawnSync(process.execPath, ["scripts/protect-frontend.mjs", "assets/demo.js", protectedScriptPath], {
+      cwd: repoRoot,
+      encoding: "utf8"
+    });
+    if (result.status !== 0) {
+      throw new Error(`Local protected frontend build failed.\n${result.stderr || result.stdout}`);
+    }
+
+    const [script, css] = await Promise.all([
+      fs.readFile(protectedScriptPath, "utf8"),
+      fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8")
+    ]);
+
+    return {
+      scriptHash: sha256(script),
+      cssHash: sha256(normalizeDeployText(css))
+    };
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+}
+
+function sha256(value) {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function normalizeDeployText(value) {
+  return String(value).replace(/\r\n/gu, "\n");
 }
 
 function hasInlineScript(html) {

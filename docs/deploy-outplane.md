@@ -121,10 +121,11 @@ After deploy:
    with its upstream.
    The deploy-config step keeps this checklist, Docker defaults, ignored local
    state paths, and the live verifier target aligned. Its live step fails if
-   Outplane is still serving an old frontend bundle, if the app shell is
-   missing its same-origin runtime config script or no-inline CSP, if app/API
-   responses are missing the noindex/noarchive robots header, if production
-   minification did not run, if the backend-backed frontend helpers are missing,
+   Outplane is still serving protected JS or CSS content that does not match
+   this checkout, if the app shell is missing its same-origin runtime config
+   script or no-inline CSP, if app/API responses are missing the
+   noindex/noarchive robots header, if production minification did not run, if
+   the backend-backed frontend helpers are missing,
    if retired triage code is still public, if hosted state accepts a request
    without a browser client key, if hosted state accepts a weak manual client
    key or readable sync-code-shaped client key, if a missing-key write reaches

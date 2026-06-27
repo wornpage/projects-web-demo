@@ -118,7 +118,9 @@ Repeatable live gate:
 pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
 ```
 
-The live gate confirms the hosted app uses Postgres, serves the app shell with a
+The live gate rebuilds the protected frontend from this checkout and confirms
+the hosted protected JS and CSS content match before it checks app behavior. It
+also confirms the hosted app uses Postgres, serves the app shell with a
 same-origin runtime config script and no-inline script CSP, rejects `/api/state`
 without a browser client key, loads seed demo work through `/api/demo-packs`
 with a browser client key, rejects weak manual and readable sync-code API client

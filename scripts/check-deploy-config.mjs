@@ -74,6 +74,17 @@ check("server asset fallback is content-derived", includesAll(serverSource, [
   "\"data/demo-packs.json\""
 ]), "contentAssetVersion");
 check("server asset fallback avoids startup-random keys", !serverSource.includes("Date.now().toString(36)") && !serverSource.includes("crypto.randomUUID().slice(0, 8)"), "no timestamp/random fallback");
+check("live verifier rebuilds expected protected frontend", includesAll(liveVerifier, [
+  "function expectedFrontendAssets()",
+  "scripts/protect-frontend.mjs",
+  "assets/demo.js"
+]), "expectedFrontendAssets");
+check("live verifier compares deployed frontend hashes", includesAll(liveVerifier, [
+  "live protected JS matches this checkout",
+  "live CSS content matches this checkout",
+  "sha256(script)",
+  "normalizeDeployText(css)"
+]), "live JS/CSS hash match");
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
 check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, clean git state, and live/u.test(readme), "README ship summary");
 check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
