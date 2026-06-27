@@ -102,6 +102,8 @@ try {
   check("hosted sync copy uses named backend endpoint", syncCopy.ok, syncCopy.detail);
   const browserRowSave = frontendBrowserRowSaveUsesNamedEndpoint(frontendSource);
   check("hosted browser-row save uses named backend endpoint", browserRowSave.ok, browserRowSave.detail);
+  const hostedFilterSave = frontendFilterUsesBackendEndpoint(frontendSource);
+  check("hosted filter changes use named backend endpoint", hostedFilterSave.ok, hostedFilterSave.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -217,12 +219,18 @@ try {
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ packs: [] })
   });
+  const unkeyedFilterWrite = await request(port, "/api/state/filter", {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: JSON.stringify({ filter: "review" })
+  });
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
   check("keyed command preview owns flow and reason copy", commandPreviewOwnsCopy(keyedCommandPreview.body), `${keyedCommandPreview.body?.flowHint || "missing"} / ${keyedCommandPreview.body?.primaryReason || "missing"}`);
   check("unkeyed recovery restore rejects missing client key before body parsing", unkeyedRestore.status === 400, unkeyedRestore.status);
   check("unkeyed sync copy rejects missing client key before body parsing", unkeyedSyncCopy.status === 400, unkeyedSyncCopy.status);
+  check("unkeyed filter write rejects missing client key before body parsing", unkeyedFilterWrite.status === 400, unkeyedFilterWrite.status);
   check(
     "unkeyed API workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWrites.every(([, status]) => status === 400),
@@ -376,6 +384,25 @@ try {
       kind: "projects-state-v0",
       state: stateWithGeneratedPacks(1, "unsupported-browser-state-kind-boundary")
     })
+  });
+  const validFilterWrite = await jsonRequest(port, "/api/state/filter", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ filter: "review" })
+  });
+  const invalidFilterWrite = await request(port, "/api/state/filter", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ filter: "private-workflow" })
+  });
+  const clientAStateAfterFilter = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": clientA }
   });
   const missingPacksStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
@@ -672,6 +699,9 @@ try {
   check("null state snapshots are rejected", nullStateWrite.status === 400, nullStateWrite.status);
   check("array state snapshots are rejected", arrayStateWrite.status === 400, arrayStateWrite.status);
   check("unsupported browser state envelope kinds are rejected", unsupportedBrowserStateKindWrite.status === 400, unsupportedBrowserStateKindWrite.status);
+  check("named filter endpoint saves supported filters", validFilterWrite.status === 200 && validFilterWrite.body?.state?.filter === "review" && /Needs review filter applied:/u.test(validFilterWrite.body?.state?.status || ""), `${validFilterWrite.status} / ${validFilterWrite.body?.state?.filter || "missing"}`);
+  check("named filter endpoint rejects unsupported filters", invalidFilterWrite.status === 400, invalidFilterWrite.status);
+  check("named filter endpoint persists the keyed row", clientAStateAfterFilter.body?.filter === "review", clientAStateAfterFilter.body?.filter || "missing");
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("empty state snapshots are rejected", emptyPacksStateWrite.status === 400, emptyPacksStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
@@ -964,6 +994,7 @@ function writeRoutesValidateKeyBeforeBody(source) {
     "if (method === \"PUT\" && pathname === \"/api/state/browser\")",
     "if (method === \"POST\" && pathname === \"/api/state/restore\")",
     "if (method === \"POST\" && pathname === \"/api/state/sync\")",
+    "if (method === \"POST\" && pathname === \"/api/state/filter\")",
     "if (method === \"POST\" && pathname === \"/api/packs\")",
     "if (packPathMatch && method === \"POST\")",
     "if (packNextMatch && method === \"POST\")",
@@ -1059,6 +1090,27 @@ function frontendBrowserRowSaveUsesNamedEndpoint(source) {
     detail: ok
       ? "browser-row snapshots save through /api/state/browser without transient receipt/query"
       : "browser-row save still uses the generic or full recovery snapshot"
+  };
+}
+
+function frontendFilterUsesBackendEndpoint(source) {
+  const helperBody = functionBody(source, "saveBackendStateFilter");
+  const toolbarBody = functionBody(source, "bindToolbar");
+  if (!helperBody || !toolbarBody) {
+    return { ok: false, detail: "saveBackendStateFilter/bindToolbar:missing" };
+  }
+
+  const ok = helperBody.includes('fetch(apiUrl("/api/state/filter")')
+    && helperBody.includes("prepareBackendWorkflowRequest()")
+    && helperBody.includes("loadBackendOwnedState(result.state)")
+    && toolbarBody.includes("await saveBackendStateFilter(filter)")
+    && toolbarBody.includes("state.suppressNextSave = true")
+    && !toolbarBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
+  return {
+    ok,
+    detail: ok
+      ? "hosted filter changes post to /api/state/filter without falling back to browser-row saves"
+      : "hosted filter changes still rely on browser-row snapshot persistence"
   };
 }
 

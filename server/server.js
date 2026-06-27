@@ -179,6 +179,16 @@ async function routeRequest(request, response, url) {
     return;
   }
 
+  if (method === "POST" && pathname === "/api/state/filter") {
+    const stateKey = stateWriteKeyForRequest(request);
+    const payload = await readJsonBody(request);
+    const state = await readState(stateKey);
+    const result = saveStateFilterAction(state, payload);
+    await writeState(state, stateKey);
+    sendJson(request, response, 200, result);
+    return;
+  }
+
   if (method === "POST" && pathname === "/api/state/erase") {
     sendJson(request, response, 200, await eraseState(stateWriteKeyForRequest(request)));
     return;
@@ -812,6 +822,51 @@ function createPackFromPayload(state, payload) {
     receipt,
     state: sanitizeState(state)
   };
+}
+
+function saveStateFilterAction(state, payload) {
+  const source = workflowPayloadObject(payload);
+  const filter = workflowTextField(source, "filter", 40, { required: true });
+  if (!VALID_STATE_FILTERS.has(filter)) {
+    throw httpError(400, "Demo state filter is not supported.");
+  }
+
+  state.filter = filter;
+  state.status = filterStatusMessageForState(state, filter);
+  state.actionReceipt = null;
+  return { filter, state };
+}
+
+function filterStatusMessageForState(state, filter) {
+  const visibleCount = state.packs.filter((pack) => packMatchesFilter(pack, filter)).length;
+  return `${stateFilterLabel(filter)} filter applied: ${visibleCount} ${stateWorkNoun(state, visibleCount)} visible.`;
+}
+
+function packMatchesFilter(pack, filter) {
+  return filter === "all"
+    || (filter === "review" && isReviewPack(pack))
+    || pack.status === filter;
+}
+
+function isReviewPack(pack) {
+  return hasBlocker(pack) || isMissingNextAction(pack) || commandActionForLabel(pack?.next).action === "review";
+}
+
+function stateFilterLabel(filter) {
+  const labels = {
+    active: "Active",
+    all: "All",
+    blocked: "Blocked",
+    done: "Done",
+    draft: "Draft",
+    review: "Needs review"
+  };
+  return labels[filter] || "All";
+}
+
+function stateWorkNoun(state, count) {
+  const work = state.copyProfile === "climate" ? "action" : "work item";
+  return count === 1 ? work : `${work}s`;
 }
 
 function createPackValues(source) {

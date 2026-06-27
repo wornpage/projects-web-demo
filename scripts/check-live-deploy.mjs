@@ -91,6 +91,9 @@ try {
   const unkeyedSyncCopyStatus = await writeStatus("/api/state/sync", stateWithGeneratedPacks(1, "live-unkeyed-sync"), {
     "content-type": "text/plain"
   }, "POST");
+  const unkeyedFilterWriteStatus = await writeStatus("/api/state/filter", { filter: "review" }, {
+    "content-type": "text/plain"
+  }, "POST");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
   const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
@@ -178,6 +181,14 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const validFilterWrite = await writeJson("/api/state/filter", { filter: "review" }, {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "POST");
+  const invalidNamedFilterStatus = await writeStatus("/api/state/filter", { filter: "private-workflow" }, {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "POST");
   const unkeyedWorkflowWriteStatuses = await Promise.all([
     ["pack create", "/api/packs"],
     ["work path", "/api/packs/source-folder-audit/path"],
@@ -425,6 +436,7 @@ try {
   check("generic state PUT route is retired", retiredStatePutStatus === 404, retiredStatePutStatus);
   check("hosted recovery restore rejects missing client key before body parsing", unkeyedRestoreStatus === 400, unkeyedRestoreStatus);
   check("hosted sync copy rejects missing client key before body parsing", unkeyedSyncCopyStatus === 400, unkeyedSyncCopyStatus);
+  check("hosted filter write rejects missing client key before body parsing", unkeyedFilterWriteStatus === 400, unkeyedFilterWriteStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
@@ -454,6 +466,8 @@ try {
   check("hosted state rejects invalid copy profile types", invalidProfileTypeStateStatus === 400, invalidProfileTypeStateStatus);
   check("hosted state rejects invalid scenarios", invalidScenarioStateStatus === 400, invalidScenarioStateStatus);
   check("hosted state rejects invalid filters", invalidFilterStateStatus === 400, invalidFilterStateStatus);
+  check("hosted named filter endpoint saves supported filters", validFilterWrite.state?.filter === "review" && /Needs review filter applied:/u.test(validFilterWrite.state?.status || ""), validFilterWrite.state?.filter || "missing");
+  check("hosted named filter endpoint rejects unsupported filters", invalidNamedFilterStatus === 400, invalidNamedFilterStatus);
   check("hosted state rejects blank copy profiles", blankProfileStateStatus === 400, blankProfileStateStatus);
   check("hosted state rejects invalid top-level text fields", invalidStateTextFieldStatus === 400, invalidStateTextFieldStatus);
   check("hosted state rejects overlong top-level text fields", overlongStateTextFieldStatus === 400, overlongStateTextFieldStatus);

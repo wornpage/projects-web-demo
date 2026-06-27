@@ -734,6 +734,26 @@ async function sendBackendStateSnapshot(path, method, snapshot, label) {
   return response.json();
 }
 
+async function saveBackendStateFilter(filter) {
+  if (!DEMO_API_BASE_URL) {
+    return null;
+  }
+
+  prepareBackendWorkflowRequest();
+  const response = await fetch(apiUrl("/api/state/filter"), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify({ filter })
+  });
+  if (!response.ok) {
+    throw new Error(`Backend filter failed with ${response.status}`);
+  }
+
+  const result = await response.json();
+  loadBackendOwnedState(result.state);
+  return result;
+}
+
 async function runBackendPackAction(pack, action) {
   if (!DEMO_API_BASE_URL || !pack?.id || !SERVER_PACK_ACTIONS.has(action)) {
     return false;
@@ -1803,6 +1823,7 @@ function render() {
   const screenTitle = screenTitleForRoute();
   document.documentElement.dataset.demoRoute = state.route;
   el("screen-title").textContent = screenTitle;
+  updateDocumentTitle(screenTitle);
   renderCommand(currentPack());
 
   switch (state.route) {
@@ -1861,11 +1882,11 @@ function screenTitleForRoute() {
     return `${workLabelTitle()} path`;
   }
 
-  if (state.route === "files") {
-    return profile.sources;
-  }
-
   return ROUTE_CONTRACT[state.route]?.title || ROUTE_CONTRACT.work.title;
+}
+
+function updateDocumentTitle(screenTitle) {
+  document.title = screenTitle === "Start" ? "Projects Demo" : `${screenTitle} - Projects Demo`;
 }
 
 function routeLinkPackId(route) {
@@ -3422,30 +3443,6 @@ function cardTitleButtonAttributes(pack, action = "select") {
   return ` title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}"`;
 }
 
-function boardColumn(status) {
-  const packs = state.packs.filter((pack) => pack.status === status);
-  const emptyBoard = state.packs.length === 0
-    ? emptyState(`No ${status} work.`, "Create work, reset demo data, or choose a scenario with work.", emptyStateContextFor(`${capitalize(status)} lane`, "no work exists in this browser", "create work, reset demo data, or choose a scenario with work"))
-    : emptyState(`No ${status} work.`, "Change filters, choose another scenario, or edit work status.", emptyStateContextFor(`${capitalize(status)} lane`, `no work is marked ${status}`, "edit work status or choose another scenario"));
-  return `<section class="demo-board-column">
-    <div class="demo-board-head">
-      <strong>${escapeHtml(capitalize(status))}</strong>
-      <span>${packs.length}</span>
-    </div>
-    <div class="demo-list">
-      ${packs.map(boardMiniCard).join("") || emptyBoard}
-    </div>
-  </section>`;
-}
-
-function boardMiniCard(pack) {
-  const command = resolvePrimaryCommandForPack(pack);
-  return `<article class="demo-mini-card">
-    <button type="button" class="demo-card-title" data-action="focus" data-pack="${escapeAttribute(pack.id)}"${cardTitleButtonAttributes(pack, "focus")}>${escapeHtml(workTitle(pack))}</button>
-    <span>${escapeHtml(isUnblockedBlockerValue(pack.blocker) ? command.label : blockerDisplayValue(pack.blocker))}</span>
-  </article>`;
-}
-
 function nextCandidateRow(pack) {
   return `<div class="demo-row has-row-support" data-pack-id="${escapeAttribute(pack.id)}">
     <div>
@@ -3489,43 +3486,6 @@ function detailsOpenAttribute(...targetIds) {
   return targetIds.some((targetId) => clipboardTargetIsActive(targetId)) ? "open" : "";
 }
 
-function sampleChecks() {
-  const missingOwner = state.packs.filter((pack) => !pack.owner || pack.owner === "No owner" || pack.owner === "unassigned").length;
-  const missingNext = state.packs.filter(isMissingNextAction).length;
-  const blocked = state.packs.filter((pack) => pack.status === "blocked").length;
-  const missingDue = state.packs.filter((pack) => !pack.due && pack.status !== "done").length;
-  return [
-    ["Owners", missingOwner, "Every moving work item should name an owner."],
-    ["Button runs next", missingNext, "Each work item needs a clear Button runs next value."],
-    ["Blocked", blocked, "Blocked work should say what is blocking it."],
-    ["Due dates", missingDue, "Unfinished work can optionally carry a date."]
-  ];
-}
-
-function sourceRow({ pack, source }) {
-  return `<div class="demo-row has-row-support" data-pack-id="${escapeAttribute(pack.id)}">
-    <div>
-      <strong>${escapeHtml(source)}</strong>
-      <span>${escapeHtml(workTitle(pack))} / ${escapeHtml(pack.type)}</span>
-    </div>
-    <div class="demo-row-actions">
-      ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
-    </div>
-    ${compactRowSupport("Focus this work without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
-  </div>`;
-}
-
-function calendarCard(pack) {
-  const workflow = workflowStateForPack(pack);
-  return `<article class="demo-calendar-card" data-pack-id="${escapeAttribute(pack.id)}">
-    <span>${escapeHtml(pack.due)}</span>
-    <strong>${escapeHtml(workTitle(pack))}</strong>
-    <small>${escapeHtml(workflow.label)} / ${escapeHtml(pack.owner)}</small>
-    ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
-    ${compactRowSupport("Focus this work without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
-  </article>`;
-}
-
 function bindToolbar() {
   const search = el("demo-search");
   if (search) {
@@ -3536,8 +3496,22 @@ function bindToolbar() {
   }
 
   document.querySelectorAll(".demo-chip").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.filter = button.dataset.filter;
+    button.addEventListener("click", async () => {
+      const filter = button.dataset.filter;
+      if (DEMO_API_BASE_URL) {
+        try {
+          await saveBackendStateFilter(filter);
+          render();
+        } catch (error) {
+          state.filter = filter;
+          state.status = `Where: Filters. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+          state.suppressNextSave = true;
+          render();
+        }
+        return;
+      }
+
+      state.filter = filter;
       state.status = filterStatusMessage(state.filter);
       render();
     });
@@ -3584,19 +3558,6 @@ function workCard(pack) {
       </div>
     </details>
   </article>`;
-}
-
-function todayRow(pack) {
-  return `<div class="demo-row has-row-support">
-    <div>
-      <strong>${escapeHtml(workTitle(pack))}</strong>
-      <span>${escapeHtml(formatDue(pack))} / ${escapeHtml(pack.owner)}</span>
-    </div>
-    <div class="demo-row-actions">
-      ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
-    </div>
-    ${compactRowSupport("Focus this work without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
-  </div>`;
 }
 
 function reviewCard(pack) {

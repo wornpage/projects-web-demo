@@ -137,6 +137,7 @@ base instead of the incoming Host header.
 | `PUT /api/state/browser` | Save the typed durable browser-row state for the current browser row. |
 | `POST /api/state/restore` | Restore a bounded recovery snapshot into the current keyed demo state row. |
 | `POST /api/state/sync` | Copy the current demo snapshot into a newly selected sync-code row. |
+| `POST /api/state/filter` | Save one supported status filter and return the server-owned row state. |
 | `POST /api/state/erase` | Erase the current keyed demo state row. |
 | `GET /api/packs` | Load only work items. |
 | `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Button runs next` preview for one work item. |
@@ -154,9 +155,11 @@ command label to the server-preview run-next path.
 Hosted recovery restores use `POST /api/state/restore` instead of the generic
 browser save path; static preview keeps local browser restore.
 Hosted sync-code copies use `POST /api/state/sync` instead of the browser-row
-save path. Hosted browser rows save through a `projects-browser-state-v1`
-envelope on `PUT /api/state/browser`, omitting transient receipt and search
-text; the older generic `PUT /api/state` write path is retired.
+save path. Hosted filter chips use `POST /api/state/filter` instead of the
+browser-row save path. Hosted browser rows save through a
+`projects-browser-state-v1` envelope on `PUT /api/state/browser`, omitting
+transient receipt and search text; the older generic `PUT /api/state` write
+path is retired.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.

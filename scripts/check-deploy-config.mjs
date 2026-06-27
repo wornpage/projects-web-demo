@@ -145,6 +145,11 @@ check("live verifier rejects unkeyed sync copy before body parsing", includesAll
   "hosted sync copy rejects missing client key before body parsing",
   "\"/api/state/sync\""
 ]), "unkeyed sync copy rejection");
+check("live verifier rejects unkeyed filter writes before body parsing", includesAll(liveVerifier, [
+  "unkeyedFilterWriteStatus",
+  "hosted filter write rejects missing client key before body parsing",
+  "\"/api/state/filter\""
+]), "unkeyed filter write rejection");
 check("live verifier rejects invalid work-path status writes", includesAll(liveVerifier, [
   "invalidWorkPathStatus",
   "hosted work-path rejects invalid statuses"
