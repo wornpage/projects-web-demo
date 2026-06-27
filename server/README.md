@@ -62,26 +62,11 @@ The image sets:
 | `PORT` | `5179` |
 | `PROJECTS_STATE_FILE` | `/app/state/state.json` for local file fallback |
 
-## Render
-
-Use the repository root `render.yaml` as a Render Blueprint. It deploys the
-Docker app, creates a managed Postgres database, injects `DATABASE_URL`, and
-sets `/api/health` as the health check path.
-
-Production storage uses:
-
-| Variable | Purpose |
-|---|---|
-| `PROJECTS_STATE_STORAGE=postgres` | Select managed database state. |
-| `DATABASE_URL` | Render-provided private Postgres connection string. |
-| `PGHOST` / `PGDATABASE` / `PGUSER` / `PGPASSWORD` | Alternative split Postgres config. |
-| `PROJECTS_STATE_KEY=production` | Local file-mode fallback key. Hosted Postgres requests use the browser client key. |
-
 ## Outplane
 
 Use [../docs/deploy-outplane.md](../docs/deploy-outplane.md) for the Outplane
-development deploy path. It uses the same Dockerfile and Postgres-backed storage
-mode as Render.
+development deploy path. It uses the same Dockerfile and Postgres-backed
+storage mode as the production-shaped app.
 
 ## Static Preview
 

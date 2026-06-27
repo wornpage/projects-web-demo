@@ -42,7 +42,7 @@ Observed responses:
 | `/server/server.js` | `404` | Server source not served |
 | `/server/package-lock.json` | `404` | Dependency lockfile not served |
 | `/docs/deploy-outplane.md` | `404` | Docs not served by Outplane |
-| `/render.yaml` | `404` | Render config not served |
+| `/render.yaml` | `404` | Retired provider config not served |
 | `/assets/../server/server.js` | `404` | Traversal attempt denied |
 | `/assets/%2e%2e/server/server.js` | `404` | Encoded traversal attempt denied |
 | `/api/state` without client key | `400` | Hosted state is not shared by fallback |
@@ -102,6 +102,7 @@ Web Crypto and do not fall back to weak random values.
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
+| Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |
 | Local file-backed API users mix state | Fixed | Browser client keys map to separate hashed local state files |
 | Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |

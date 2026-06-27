@@ -44,7 +44,6 @@ Keep this repo focused on the public portfolio demo.
 | `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app is serving the protected current frontend. |
 | `scripts/check-ship.mjs` | Runs the local gates plus live Outplane verification before a ship. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
-| `render.yaml` | Render Blueprint for hosting the Docker app with managed Postgres state. |
 | `docs/deploy-outplane.md` | Outplane development deploy checklist. |
 | `docs/public-exposure-audit.md` | Public file exposure audit and frontend privacy boundary. |
 
@@ -171,28 +170,6 @@ https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app
 ```
 
 See [docs/deploy-outplane.md](docs/deploy-outplane.md).
-
-## Render
-
-This repo includes `render.yaml` for a Render Blueprint deployment.
-
-1. Push `main` to GitHub.
-2. In Render, create a new Blueprint from this repository.
-3. Confirm the `projects-web-demo` service.
-4. Confirm the `projects-web-demo-db` Postgres database.
-5. Use `/api/health` as the health check path.
-
-The Blueprint uses Docker, starts the same single-process app, and stores state
-in managed Postgres through `DATABASE_URL`. Each browser sends an anonymous
-client key so visitors do not overwrite each other; hosted API requests without
-that key are rejected instead of sharing one fallback row. The database is
-configured without a public IP allow list, so the app uses Render's private
-connection string.
-
-The optional sync code replaces the anonymous browser key with a hashed code so
-two devices can share one demo row. New codes are generated with Web Crypto and
-the app does not fall back to weak random values for sync or browser row keys.
-It does not create accounts or encrypt the stored JSON.
 
 ## Static Preview
 

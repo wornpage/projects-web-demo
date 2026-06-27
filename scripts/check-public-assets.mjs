@@ -24,6 +24,9 @@ const totalPublicTextBudgetBytes = 830000;
 const retiredPublicFiles = [
   "assets/demo-metadata.json"
 ];
+const retiredRootFiles = [
+  "render.yaml"
+];
 const forbiddenPatterns = [
   {
     name: "source map hints",
@@ -81,6 +84,9 @@ check("public asset tree contains only allowlisted files", unexpectedPublicFiles
 check("public asset allowlist files exist", missingPublicFiles.length === 0, missingPublicFiles.join(", ") || "complete");
 for (const pathname of retiredPublicFiles) {
   check(`${pathname} is not shipped`, !(await fileExists(path.join(repoRoot, pathname))), "absent");
+}
+for (const pathname of retiredRootFiles) {
+  check(`${pathname} retired deployment file is absent`, !(await fileExists(path.join(repoRoot, pathname))), "absent");
 }
 
 for (const row of checks) {
