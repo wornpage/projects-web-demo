@@ -55,6 +55,11 @@ The app shell is served with a Content Security Policy. The backend API-base
 setting is served through a same-origin `assets/runtime-config.js` response, so
 the app shell does not need inline scripts.
 
+The app shell rewrites CSS/JS asset query strings with
+`PROJECTS_ASSET_VERSION`, a known commit environment variable, or a
+content-derived asset fallback based on the shipped public runtime files. That
+keeps cache busting stable across restarts of the same build.
+
 Use `PROJECTS_STATE_STORAGE=postgres` and managed Postgres environment variables
 when deploying this app to a host where local files are ephemeral. Without
 `PROJECTS_STATE_FILE`, local file-backed app mode stores state under the user's

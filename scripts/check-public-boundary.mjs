@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import http from "node:http";
 import net from "node:net";
@@ -43,6 +44,7 @@ try {
   const health = await jsonRequest(port, "/api/health");
   const appShell = await request(port, "/");
   const runtimeConfigPath = runtimeConfigPathFromHtml(appShell.text);
+  const expectedAssetVersion = await contentAssetVersion();
   const runtimeConfig = await request(port, `/${runtimeConfigPath}`);
   const invalidHostHealth = await rawRequest(port, [
     "GET /api/health HTTP/1.1",
@@ -73,6 +75,7 @@ try {
   check("app shell opts out of search indexing", appShell.headers["x-robots-tag"] === "noindex, nofollow, noarchive", appShell.headers["x-robots-tag"] || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API config loads before the frontend script", runtimeConfigPath && appShell.text.indexOf("assets/runtime-config.js") < appShell.text.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
+  check("runtime asset version is content-derived", appShellUsesAssetVersion(appShell.text, expectedAssetVersion) && runtimeConfigPath === `assets/runtime-config.js?v=${expectedAssetVersion}`, runtimeConfigPath || "missing");
   check("runtime API config is served as same-origin JavaScript", runtimeConfig.text.includes("window.PROJECTS_API_BASE_URL = location.origin;"), runtimeConfig.text.trim() || "missing");
   check("app shell contains no inline scripts", !hasInlineScript(appShell.text), "external scripts only");
   check("script policy avoids unsafe inline scripts", scriptSrcDirective(csp) === "script-src 'self'", scriptSrcDirective(csp) || "missing");
@@ -447,6 +450,30 @@ function wideActionReceipt(keyCount) {
 function runtimeConfigPathFromHtml(html) {
   const match = html.match(/<script src="(assets\/runtime-config\.js\?v=[^"]+)" defer><\/script>/u);
   return match?.[1] || "";
+}
+
+async function contentAssetVersion() {
+  const hash = crypto.createHash("sha256");
+  for (const relativePath of [
+    "index.html",
+    "assets/demo.css",
+    "assets/demo.js",
+    "assets/favicon.png",
+    "data/demo-packs.json"
+  ]) {
+    hash.update(relativePath);
+    hash.update("\0");
+    hash.update(await fs.readFile(path.join(repoRoot, relativePath)));
+    hash.update("\0");
+  }
+
+  return `asset-${hash.digest("hex").slice(0, 12)}`;
+}
+
+function appShellUsesAssetVersion(html, version) {
+  return html.includes(`href="assets/demo.css?v=${version}"`)
+    && html.includes(`src="assets/runtime-config.js?v=${version}"`)
+    && html.includes(`src="assets/demo.js?v=${version}"`);
 }
 
 function hasInlineScript(html) {

@@ -15,6 +15,7 @@ const serverReadme = await readRepoFile("server/README.md");
 const deployDoc = await readRepoFile("docs/deploy-outplane.md");
 const liveVerifier = await readRepoFile("scripts/check-live-deploy.mjs");
 const shipGate = await readRepoFile("scripts/check-ship.mjs");
+const serverSource = await readRepoFile("server/server.js");
 
 const liveUrl = liveVerifier.match(/const DEFAULT_URL = "([^"]+)"/u)?.[1] || "";
 const environmentRows = tableRowsBetween(deployDoc, "## Environment", "## Checks");
@@ -66,9 +67,18 @@ check("ship gate runs deploy config before live", sourceOrder(shipGate, [
   'label: "live Outplane deploy"'
 ]), "deploy config and git state before live");
 check("ship gate verifies clean synced git state", shipGate.includes('args: ["scripts/check-git-ship-state.mjs"]'), "check-git-ship-state.mjs");
+check("server asset fallback is content-derived", includesAll(serverSource, [
+  "|| contentAssetVersion());",
+  "function contentAssetVersion()",
+  "crypto.createHash(\"sha256\")",
+  "\"data/demo-packs.json\""
+]), "contentAssetVersion");
+check("server asset fallback avoids startup-random keys", !serverSource.includes("Date.now().toString(36)") && !serverSource.includes("crypto.randomUUID().slice(0, 8)"), "no timestamp/random fallback");
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
 check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, clean git state, and live/u.test(readme), "README ship summary");
+check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, clean git state, and live/u.test(serverReadme), "server README ship summary");
+check("deploy doc documents content-derived asset fallback", deployDoc.includes("content-derived asset fallback"), "content-derived asset fallback");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);

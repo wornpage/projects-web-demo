@@ -104,8 +104,9 @@ After deploy:
    browser or active sync row returns to sample state.
 10. Confirm the app shell points at a current CSS/JS asset query string and
    `assets/demo.js` includes the latest frontend code. The Node app rewrites
-   asset query strings at startup so stale cached assets are bypassed after a
-   deploy.
+   asset query strings at startup using the deploy-provided asset version or a
+   content-derived asset fallback, so stale cached assets are bypassed after a
+   deploy without changing URLs on every restart of the same build.
 11. Run the full ship verifier from the repo root:
 
    ```powershell

@@ -109,9 +109,10 @@ anonymous browser client key as the rest of the API. The static
 preview, but the Node app does not serve that URL directly.
 
 The Node app also rewrites the CSS/JS asset query string at startup using
-`PROJECTS_ASSET_VERSION`, a known commit environment variable, or a generated
-startup value. That keeps hosted deploys from serving stale cached frontend
-assets after a push.
+`PROJECTS_ASSET_VERSION`, a known commit environment variable, or a
+content-derived asset fallback based on the shipped public runtime files. That
+keeps hosted deploys from serving stale cached frontend assets after a push
+without changing asset URLs on every restart of the same build.
 
 API CORS is bounded to same-origin app requests using the request `Host`, not
 forwarding headers. Hosted deploys can also pin explicit allowed origins with

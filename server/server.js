@@ -18,7 +18,7 @@ const STATE_STORAGE = normalizeStateStorageMode(process.env.PROJECTS_STATE_STORA
 const ASSET_VERSION = normalizeAssetVersion(process.env.PROJECTS_ASSET_VERSION
   || process.env.GIT_COMMIT
   || process.env.COMMIT_SHA
-  || `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`);
+  || contentAssetVersion());
 const API_CLIENT_HEADER = "x-projects-demo-client";
 const EXPLICIT_CORS_ORIGINS = parseCorsOrigins([
   process.env.PROJECTS_PUBLIC_ORIGIN,
@@ -433,6 +433,24 @@ function defaultStateDir() {
   }
 
   return path.join(os.homedir(), ".local", "state", "projects-web-demo");
+}
+
+function contentAssetVersion() {
+  const hash = crypto.createHash("sha256");
+  for (const relativePath of [
+    "index.html",
+    "assets/demo.css",
+    "assets/demo.js",
+    "assets/favicon.png",
+    "data/demo-packs.json"
+  ]) {
+    hash.update(relativePath);
+    hash.update("\0");
+    hash.update(fileSystem.readFileSync(path.join(ROOT_DIR, relativePath)));
+    hash.update("\0");
+  }
+
+  return `asset-${hash.digest("hex").slice(0, 12)}`;
 }
 
 function createFileStateStorage() {
