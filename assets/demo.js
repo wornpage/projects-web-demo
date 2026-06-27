@@ -2685,11 +2685,12 @@ function homeSpotlightFacts(pack, command) {
   </div>`;
 }
 
-function homeSpotlightFact(label, value) {
+function homeSpotlightFact(label, value, id = "") {
   const copy = copySurface(value || DEMO_BLOCKER_NONE_LABEL, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  const idAttribute = id ? ` id="${escapeAttribute(id)}"` : "";
   return `<div class="demo-home-spotlight-fact">
     <span>${escapeHtml(label)}</span>
-    <strong${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
+    <strong${idAttribute}${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
   </div>`;
 }
 
@@ -3073,9 +3074,9 @@ function createReadinessPanel(values, createState) {
       <span id="create-readiness-state" class="demo-state-pill" title="${escapeAttribute(createState.help)}">${escapeHtml(createState.canSave ? "Ready" : "Needs field")}</span>
     </div>
     <div class="demo-home-spotlight-facts" aria-label="${escapeAttribute(createState.help)}">
-      ${createReadinessFact("Where", profile().newWork, "create-readiness-where")}
-      ${createReadinessFact("Blocker", blockerDisplayValue(createState.blocker), "create-readiness-blocker")}
-      ${createReadinessFact("Button runs next", action.label, "create-readiness-next")}
+      ${homeSpotlightFact("Where", profile().newWork, "create-readiness-where")}
+      ${homeSpotlightFact("Blocker", blockerDisplayValue(createState.blocker), "create-readiness-blocker")}
+      ${homeSpotlightFact("Button runs next", action.label, "create-readiness-next")}
     </div>
     <div class="demo-create-readiness-list" aria-label="Required create fields">
       ${createReadinessStep("Title", values.title, "create-readiness-title")}
@@ -3087,14 +3088,6 @@ function createReadinessPanel(values, createState) {
       <small id="create-readiness-note">${escapeHtml(createState.help)}</small>
     </div>
   </article>`;
-}
-
-function createReadinessFact(label, value, id) {
-  const copy = copySurface(value || DEMO_BLOCKER_NONE_LABEL, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
-  return `<div class="demo-home-spotlight-fact">
-    <span>${escapeHtml(label)}</span>
-    <strong id="${escapeAttribute(id)}"${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
-  </div>`;
 }
 
 function createReadinessStep(label, value, id) {
@@ -3846,6 +3839,10 @@ function bindListActions() {
           state.status = noSelectedWorkStatus("choose work before setting Button runs next");
         }
       } else {
+        if (runRouteAction(action, button.dataset.pack || "")) {
+          return;
+        }
+
         handlePackAction(button.dataset.pack, action);
         return;
       }

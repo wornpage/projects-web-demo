@@ -152,11 +152,13 @@ function createReadinessContractOk() {
     "${createReadinessPanel(defaults, createState)}",
     "function createReadinessPanel(values, createState)",
     "Ready to save",
+    "homeSpotlightFact(\"Where\", profile().newWork, \"create-readiness-where\")",
     "function createReadinessStep(label, value, id)",
     "function syncCreateReadinessPanel(values, createState)",
     "syncCreateReadinessStep(\"create-readiness-title\", values.title)",
     "syncCreateReadinessStep(\"create-readiness-owner\", values.owner)",
     "syncCreateReadinessStep(\"create-readiness-button\", values.next)",
+    "if (runRouteAction(action, button.dataset.pack || \"\"))",
     "bindListActions();"
   ]);
 }
@@ -167,7 +169,7 @@ function spotlightFactsContractOk() {
     "homeSpotlightFact(\"Where\", workTitle(pack))",
     "homeSpotlightFact(\"Blocker\", blockerTextForPack(pack))",
     "homeSpotlightFact(\"Button runs next\", command.label)",
-    "function homeSpotlightFact(label, value)"
+    "function homeSpotlightFact(label, value"
   ]);
 }
 
