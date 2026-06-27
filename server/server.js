@@ -87,8 +87,8 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  const url = new URL(request.url || "/", `http://${request.headers.host || HOST}`);
   try {
+    const url = requestUrlFor(request);
     await routeRequest(request, response, url);
   } catch (error) {
     const status = Number(error.statusCode || 500);
@@ -1276,6 +1276,14 @@ function normalizeText(value, maxLength = 2000) {
 
 function normalizeAssetVersion(value) {
   return normalizeText(value, 120).replace(/[^A-Za-z0-9._-]/gu, "-") || "app";
+}
+
+function requestUrlFor(request) {
+  try {
+    return new URL(request.url || "/", "http://projects-demo.local");
+  } catch {
+    throw httpError(400, "Request URL is invalid.");
+  }
 }
 
 function findPackOrThrow(state, packId) {

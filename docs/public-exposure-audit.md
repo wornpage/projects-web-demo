@@ -79,7 +79,8 @@ Policy for the injected runtime API script. It also confirms the app shell sends
 legacy frame denial, same-origin resource/opener isolation, and restrictive
 Permissions-Policy headers. API CORS uses the exact same-origin app origin
 instead of a wildcard, rejects a third-party preflight, and cannot be authorized
-by a spoofed forwarding header.
+by a spoofed forwarding header. It also confirms malformed `Host` values do not
+bypass the normal request handler.
 
 Repeatable live gate:
 
@@ -128,6 +129,7 @@ Web Crypto and do not fall back to weak random values.
 | Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
 | App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin or explicit configured origins and does not trust forwarded-host for authorization |
+| Host header parsing can bypass the normal error path | Fixed | Request routing parses against a fixed internal base and the boundary gate sends an invalid Host header through `/api/health` |
 | GitHub Pages root publish could expose repo files | Possible if enabled | Keep Pages disabled or publish only a filtered artifact |
 
 ## What Cannot Be Hidden

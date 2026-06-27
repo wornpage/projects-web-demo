@@ -42,6 +42,13 @@ try {
   const serverSource = await fs.readFile(path.join(repoRoot, "server/server.js"), "utf8");
   const health = await jsonRequest(port, "/api/health");
   const appShell = await request(port, "/");
+  const invalidHostHealth = await rawRequest(port, [
+    "GET /api/health HTTP/1.1",
+    "Host: bad host",
+    "Connection: close",
+    "",
+    ""
+  ].join("\r\n"));
   for (const pathname of [
     "/",
     "/index.html",
@@ -67,6 +74,7 @@ try {
   const healthText = JSON.stringify(health.body);
   check("health endpoint reports only storage kind", health.body?.ok === true && health.body?.storage === "file", healthText);
   check("health endpoint hides storage internals", !("stateStorage" in health.body) && !healthText.includes(stateFile) && !/state\.json|projects_demo_state|DATABASE_URL|PGHOST|PGPASSWORD/iu.test(healthText), healthText);
+  check("invalid Host header stays inside normal request handling", invalidHostHealth.status === 200 && /projects-web-demo-api/u.test(invalidHostHealth.text), invalidHostHealth.status);
   check("API health sends shared security headers", sharedSecurityHeadersOk(health.headers), sharedSecurityHeaderDetail(health.headers));
   check("Postgres state keys are hashed before storage", /function postgresStateKey\(stateKey\)[\s\S]*v2:\$\{crypto\.createHash\("sha256"\)\.update\(normalized\)\.digest\("hex"\)\}/u.test(serverSource), "postgresStateKey");
   check("Postgres raw state-key path is migration-only", serverSource.includes("WHERE state_key = $1 OR state_key = $2") && serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "legacy read fallback plus delete");
@@ -438,6 +446,35 @@ function request(activePort, pathname, options = {}) {
     }
     req.end();
   });
+}
+
+function rawRequest(activePort, message) {
+  return new Promise((resolve, reject) => {
+    const socket = net.createConnection({ host: "127.0.0.1", port: activePort }, () => {
+      socket.end(message);
+    });
+    let text = "";
+    socket.setEncoding("utf8");
+    socket.on("data", (chunk) => {
+      text += chunk;
+    });
+    socket.on("end", () => {
+      resolve(parseRawResponse(text));
+    });
+    socket.on("error", reject);
+    socket.setTimeout(5000, () => {
+      socket.destroy(new Error("Raw HTTP request timed out."));
+    });
+  });
+}
+
+function parseRawResponse(text) {
+  const [headersText, body = ""] = String(text || "").split(/\r?\n\r?\n/u);
+  const status = Number(headersText.match(/^HTTP\/\d\.\d\s+(\d+)/u)?.[1] || 0);
+  return {
+    status,
+    text: body
+  };
 }
 
 function freePort() {
