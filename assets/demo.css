@@ -3749,6 +3749,7 @@ html[data-theme="dark"] .demo-command-work-path {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   left: auto;
   max-width: 100%;
+  overflow: hidden;
   padding: 6px;
   position: sticky;
   transform: none;

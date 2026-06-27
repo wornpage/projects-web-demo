@@ -322,7 +322,9 @@ function mobileDockContractOk() {
   const mobileDock = mobileDockStart < 0 ? "" : styles.slice(mobileDockStart);
   return includesAll(styles, [
     ".demo-bottom-item:focus-visible",
-    "outline: 3px solid var(--demo-focus-ring);"
+    "outline: 3px solid var(--demo-focus-ring);",
+    ".demo-bottom-brief",
+    "overflow: hidden;"
   ]) && includesAll(mobileDock, [
     ".demo-bottom-brief",
     "grid-template-columns: repeat(2, minmax(0, 1fr));",
