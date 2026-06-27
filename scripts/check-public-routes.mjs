@@ -125,7 +125,8 @@ check("next action panel is labelled by its visible title", html.includes('class
 check("next action panel exposes scope and flow summary", html.includes('aria-describedby="command-scope command-flow"') && html.includes('id="command-scope"') && html.includes('id="command-flow"'), "command-scope and command-flow describe next action panel");
 check("next action state announces changes politely", html.includes('id="command-state" class="demo-command-state" role="status" aria-live="polite" aria-atomic="true"'), "command-state status region");
 check("command receipt announces complete status updates", html.includes('id="command-receipt"') && html.includes('aria-atomic="true"'), "command receipt aria-atomic");
-check("bottom dock label describes purpose instead of layout", html.includes('class="demo-bottom-brief" aria-label="Next action summary"'), "Next action summary");
+check("bottom dock label describes purpose instead of layout", html.includes('class="demo-bottom-brief" aria-label="Next action summary" aria-describedby="dock-where dock-blocker dock-next-label"'), "Next action summary");
+check("bottom dock exposes where blocker and next labels", html.includes('aria-describedby="dock-where dock-blocker dock-next-label"') && html.includes('id="dock-where"') && html.includes('id="dock-blocker"') && html.includes('id="dock-next-label"'), "dock summary fields describe bottom dock");
 check("skip target landmark is labelled by the visible title", html.includes('id="demo-main"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels main landmark");
 check("screen content region is labelled by the visible title", html.includes('id="screen-content"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels live content");
 
