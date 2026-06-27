@@ -81,6 +81,7 @@ const blockedRetiredHelpers = [
   "collectDiagnosticContext",
   "collectLabSnapshot",
   "collectStyleAudit",
+  "dueTodayStatus",
   "feedbackIssueBody",
   "labSmokeChecks",
   "labNoPackReason",
@@ -92,6 +93,7 @@ const blockedRetiredHelpers = [
   "sourceRow",
   "styleAuditChecks",
   "syncLabRenderedSmokeChecks",
+  "setDueTodayState",
   "todayRow"
 ].filter((name) => source.includes(`function ${name}(`));
 

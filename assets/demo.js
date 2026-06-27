@@ -2952,43 +2952,9 @@ function renderNext() {
   bindListActions();
 }
 
-function setDueTodayState(surface = "Today") {
-  const unfinished = state.packs.filter((pack) => pack.status !== "done").length;
-  if (state.packs.length === 0) {
-    return {
-      canRun: false,
-      help: `Where: ${surface}. Blocker: no work exists. Button runs next: create or reset work before setting due dates.`
-    };
-  }
-
-  if (unfinished === 0) {
-    return {
-      canRun: false,
-      help: `Where: ${surface}. Blocker: all work is done. Button runs next: create or reopen work before setting due dates.`
-    };
-  }
-
-  return {
-    canRun: true,
-    help: `Where: ${surface}. Blocker: None. Button runs next: set ${unfinished} unfinished work item(s) due today in this browser.`
-  };
-}
-
 function todayIsoDate(date = new Date()) {
   const localTime = date.getTime() - date.getTimezoneOffset() * 60000;
   return new Date(localTime).toISOString().slice(0, 10);
-}
-
-function dueTodayStatus(date, updatedCount) {
-  if (state.packs.length === 0) {
-    return "Where: Today. Blocker: no work exists. Button runs next: create or reset work before setting due dates.";
-  }
-
-  if (updatedCount === 0) {
-    return "Where: Today. Blocker: all work is done. Button runs next: create or reopen work before setting due dates.";
-  }
-
-  return `Where: Today. Blocker: None. Button runs next: review ${updatedCount} work item(s) due ${date}.`;
 }
 
 function validationStatus(attention) {
