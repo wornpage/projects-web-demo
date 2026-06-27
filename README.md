@@ -1,11 +1,13 @@
 # Projects Web Demo
 
 This repository is the active lightweight web-tech home for the public
-Projects demo. It is a static GitHub Pages app: HTML, CSS, JavaScript, JSON
-demo data, and image assets only.
+Projects demo. It is a static GitHub Pages app by default: HTML, CSS,
+JavaScript, JSON demo data, and image assets.
 
-The demo is browser-local. It does not run a backend, collect customer data,
-store sign-ins, process payments, or call a live Projects service.
+The published demo is browser-local. This repo also includes an optional local
+Node backend in `server/` for development persistence. The optional backend does
+not add accounts, payments, customer-data collection, or a live Projects
+service.
 
 ## Active Boundary
 
@@ -13,11 +15,11 @@ Keep this repo focused on the public portfolio demo.
 
 | Area | Kept here | Not part of this repo |
 |---|---|---|
-| Runtime | Static GitHub Pages app | Razor Server, Blazor WASM, desktop app runtime |
+| Runtime | Static GitHub Pages app; optional local Node API in `server/` | Razor Server, Blazor WASM, desktop app runtime |
 | Data | `data/demo-packs.json` sample work | Real packs, private notes, customer data |
-| State | Browser `localStorage` under `projects-static-demo-state-v6` | Server persistence or account state |
+| State | Browser `localStorage` under `projects-static-demo-state-v6`; optional `server/data/state.json` when `?api=` is configured | Account state |
 | Styling | Static CSS in `assets/` | Source-side app shell generation |
-| Behavior | Static JS in `assets/demo.js` | Backend workflows or GitHub API calls |
+| Behavior | Static JS in `assets/demo.js`; API calls only when an API base URL is configured | Production backend workflows or GitHub API calls |
 
 ## Files
 
@@ -27,9 +29,10 @@ Keep this repo focused on the public portfolio demo.
 | `assets/demo.js` | Hash routing, demo state, button behavior, and smoke checks. |
 | `assets/demo.css` | Public demo layout and interaction styling. |
 | `assets/app.css` | Shared visual tokens and base component rules used by the demo. |
-| `assets/demo-metadata.json` | Build/version metadata shown in the demo header. |
+| `assets/demo-metadata.json` | Release metadata kept with the static export. |
 | `assets/favicon.png` | Demo favicon. |
 | `data/demo-packs.json` | Fake browser-local work data. |
+| `server/` | Optional local Node API for backend persistence experiments. |
 
 ## Routes
 
@@ -38,24 +41,22 @@ The important public paths are:
 
 | Hash path | Purpose |
 |---|---|
-| `#/home` | Work overview. |
+| `#/home` | Start screen with the portfolio value proposition. |
 | `#/review` | Work that needs review or setup. |
 | `#/work` | Work list and selected-work browsing. |
 | `#/pack/{packId}` | Edit one work item path. |
 | `#/next/{packId}` | Choose what Button runs next for one work item. |
 | `#/memory/{packId}` | Add browser-local memory for one work item. |
-| `#/settings` | Demo profile and scenario controls. |
-| `#/health` | Runtime checks for the static demo. |
-| `#/meta` | Copyable metadata and route snapshot. |
+| `#/create` | Add browser-local sample work. |
 
-Unknown hashes fall back to `#/home`.
+Unknown and retired hashes fall back to `#/home`.
 
 ## Local Preview
 
-Run any static file server from the repository root:
+Run the no-dependency static preview server from the repository root:
 
 ```powershell
-python -m http.server 5181
+pwsh -NoLogo -NoProfile -Command 'node "server/static.js"'
 ```
 
 Then open:
@@ -66,15 +67,39 @@ http://localhost:5181/#/home
 
 No build step is required for normal portfolio-demo edits.
 
+## Optional Backend
+
+Run the API in one terminal:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'node "server/server.js"'
+```
+
+Run the static frontend in another terminal:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'node "server/static.js"'
+```
+
+Then open:
+
+```text
+http://localhost:5181/?api=http://localhost:5179/#/home
+```
+
+When `api` is present, the frontend loads and saves demo state through
+`GET /api/state` and `PUT /api/state`. Without `api`, it keeps the original
+browser-local GitHub Pages behavior.
+
 ## GitHub Pages
 
 The published site is this static repository. Keep the Pages branch/folder
-pointing at these checked-in files.
+pointing at these checked-in files. Do not publish `server/data/state.json`.
 
 Before pushing, run:
 
 ```powershell
-node --check assets/demo.js
+pwsh -NoLogo -NoProfile -Command 'node --check "assets/demo.js"'
 ```
 
 Then smoke the main routes locally in light and dark mode:
@@ -85,9 +110,7 @@ Then smoke the main routes locally in light and dark mode:
 - `#/pack/source-folder-audit`
 - `#/next/source-folder-audit`
 - `#/memory/source-folder-audit`
-- `#/settings`
-- `#/health`
-- `#/meta`
+- `#/create`
 
 ## Product Rule
 

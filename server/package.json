@@ -1,0 +1,14 @@
+{
+  "name": "projects-web-demo-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Small local API for the Projects web demo.",
+  "scripts": {
+    "start": "node server.js",
+    "preview": "node static.js",
+    "check": "node --check server.js && node --check static.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,93 @@
+"use strict";
+
+const fs = require("node:fs");
+const fsp = require("node:fs/promises");
+const http = require("node:http");
+const path = require("node:path");
+
+const HOST = process.env.HOST || "127.0.0.1";
+const PORT = Number(process.env.PREVIEW_PORT || 5181);
+const ROOT_DIR = path.resolve(__dirname, "..");
+
+const contentTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8"
+};
+
+const server = http.createServer(async (request, response) => {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    sendText(response, 405, "Method not allowed");
+    return;
+  }
+
+  try {
+    const file = await resolveFile(request.url || "/");
+    response.writeHead(200, {
+      "content-type": contentTypes[path.extname(file).toLowerCase()] || "application/octet-stream"
+    });
+    if (request.method === "HEAD") {
+      response.end();
+      return;
+    }
+    fs.createReadStream(file).pipe(response);
+  } catch (error) {
+    const status = Number(error.statusCode || 500);
+    sendText(response, status, status === 404 ? "Not found" : "Preview server error");
+    if (status >= 500) {
+      console.error(error);
+    }
+  }
+});
+
+server.listen(PORT, HOST, () => {
+  console.log(`Projects demo preview listening at http://${HOST}:${PORT}`);
+});
+
+async function resolveFile(rawUrl) {
+  const url = new URL(rawUrl, `http://${HOST}:${PORT}`);
+  let pathname = decodeURIComponent(url.pathname);
+  if (pathname.endsWith("/")) {
+    pathname += "index.html";
+  }
+
+  const file = path.resolve(ROOT_DIR, `.${pathname}`);
+  if (!file.startsWith(`${ROOT_DIR}${path.sep}`)) {
+    throw httpError(404);
+  }
+
+  const stats = await fsp.stat(file).catch(() => null);
+  if (!stats) {
+    throw httpError(404);
+  }
+
+  if (stats.isDirectory()) {
+    const indexFile = path.join(file, "index.html");
+    const indexStats = await fsp.stat(indexFile).catch(() => null);
+    if (indexStats?.isFile()) {
+      return indexFile;
+    }
+    throw httpError(404);
+  }
+
+  if (!stats.isFile()) {
+    throw httpError(404);
+  }
+
+  return file;
+}
+
+function sendText(response, statusCode, text) {
+  response.writeHead(statusCode, { "content-type": "text/plain; charset=utf-8" });
+  response.end(`${text}\n`);
+}
+
+function httpError(statusCode) {
+  const error = new Error(`HTTP ${statusCode}`);
+  error.statusCode = statusCode;
+  return error;
+}

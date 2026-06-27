@@ -248,8 +248,9 @@ html[data-theme="dark"] .demo-app-shell {
   align-content: start;
   display: grid;
   flex: 1 1 auto;
-  gap: 8px;
+  gap: 2px;
   min-width: 0;
+  padding-top: 4px;
   width: 100%;
 }
 
@@ -1358,6 +1359,29 @@ html[data-theme="dark"] .demo-header-metadata {
   justify-content: center;
   margin-top: 2px;
   width: 100%;
+}
+
+.demo-home-hero {
+  display: grid;
+  gap: 12px;
+}
+
+.demo-home-hero > p {
+  color: var(--cockpit-text-secondary);
+  font-size: 14px;
+  font-weight: 620;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 76ch;
+}
+
+.demo-home-hero .demo-panel-head {
+  align-items: flex-start;
+}
+
+.demo-home-counts {
+  border-top: 1px solid var(--cockpit-border);
+  padding-top: 10px;
 }
 
 .demo-secondary-paths {

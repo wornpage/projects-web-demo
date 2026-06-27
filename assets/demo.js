@@ -10,6 +10,8 @@ const DEMO_REPO_URL = "https://github.com/jared-bidlow/projects-web-demo";
 const DEMO_ISSUE_URL = `${DEMO_REPO_URL}/issues/new`;
 const DEMO_RELEASE_NOTES_URL = `${DEMO_REPO_URL}/releases`;
 const DEMO_DEFAULT_VERSION = "working";
+const DEMO_API_QUERY_PARAM = "api";
+const API_STATE_SAVE_DEBOUNCE_MS = 300;
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
@@ -75,48 +77,20 @@ const state = {
 };
 
 const ROUTE_CONTRACT = Object.freeze({
-  home: { pattern: "#/home", title: "Work overview", commandSource: "route", navKey: "H", navLabel: "Home" },
-  triage: { pattern: "#/triage", title: "Work triage tool", commandSource: "route", navKey: ">", navLabel: "Triage" },
-  work: { pattern: "#/work/{packId}", title: "Work list", commandSource: "selected-work", acceptsPackId: true, navKey: "W", navLabel: "Work" },
-  today: { pattern: "#/today/{packId}", title: "Today", commandSource: "selected-work", acceptsPackId: true, navKey: "T", navLabel: "Today" },
-  board: { pattern: "#/board/{packId}", title: "Board", commandSource: "selected-work", acceptsPackId: true, navKey: "B", navLabel: "Board" },
-  review: { pattern: "#/review/{packId}", title: "Review", commandSource: "selected-work", acceptsPackId: true, navKey: "R", navLabel: "Review" },
-  focus: { pattern: "#/focus/{packId}", title: "Focus", commandSource: "selected-work", acceptsPackId: true, navKey: "F", navLabel: "Focus" },
-  next: { pattern: "#/next/{packId}", title: "Next setup", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "N", navLabel: "Next" },
-  check: { pattern: "#/check", title: "Check", commandSource: "route", navKey: "!", navLabel: "Check" },
-  health: { pattern: "#/health", title: "Demo health", commandSource: "route", navKey: "L", navLabel: "Health" },
-  search: { pattern: "#/search", title: "Search", commandSource: "route", navKey: "S", navLabel: "Search" },
-  stats: { pattern: "#/stats", title: "Stats", commandSource: "route", navKey: "%", navLabel: "Stats" },
-  notes: { pattern: "#/notes/{packId}", title: "Notes", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "N", navLabel: "Notes" },
-  timeline: { pattern: "#/timeline", title: "Timeline", commandSource: "route", navKey: "-", navLabel: "Timeline" },
-  files: { pattern: "#/files", title: "Files", commandSource: "route", navKey: "#", navLabel: "Files" },
-  calendar: { pattern: "#/calendar/{packId}", title: "Calendar", commandSource: "selected-work", acceptsPackId: true, navKey: "D", navLabel: "Calendar" },
+  home: { pattern: "#/home", title: "Start", commandSource: "route", navKey: "1", navLabel: "Start" },
+  review: { pattern: "#/review/{packId}", title: "Review", commandSource: "selected-work", acceptsPackId: true, navKey: "2", navLabel: "Review" },
+  work: { pattern: "#/work/{packId}", title: "Work", commandSource: "selected-work", acceptsPackId: true, navKey: "3", navLabel: "Work" },
+  next: { pattern: "#/next/{packId}", title: "Next action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "4", navLabel: "Next" },
+  memory: { pattern: "#/memory/{packId}", title: "Memory", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "5", navLabel: "Memory" },
   create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
-  memory: { pattern: "#/memory/{packId}", title: "Memory", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "M", navLabel: "Memory" },
-  lab: { pattern: "#/lab/{packId}", title: "Demo Lab", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "A", navLabel: "Lab" },
-  meta: { pattern: "#/meta", title: "Meta", commandSource: "route", navKey: "I", navLabel: "Meta" },
-  feedback: { pattern: "#/feedback", title: "Feedback", commandSource: "route", navKey: "?", navLabel: "Feedback" },
-  settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "...", navLabel: "Settings" },
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true }
 });
 
 const NAV_ROUTE_GROUPS = Object.freeze([
   Object.freeze({
-    id: "workflow",
-    label: "Work",
-    routes: Object.freeze(["home", "review", "work", "focus", "next", "create"])
-  }),
-  Object.freeze({
-    id: "support",
-    label: "Support",
-    collapsed: true,
-    routes: Object.freeze(["triage", "today", "board", "search", "calendar", "memory"])
-  }),
-  Object.freeze({
-    id: "system",
-    label: "System",
-    collapsed: true,
-    routes: Object.freeze(["check", "stats", "notes", "timeline", "files", "health", "lab", "meta", "feedback", "settings"])
+    id: "public",
+    label: "Demo",
+    routes: Object.freeze(["home", "review", "work", "next", "memory", "create"])
   })
 ]);
 
@@ -199,9 +173,9 @@ const DEMO_SCENARIOS = [
   {
     id: "due-view",
     label: "Due today",
-    description: "Shift active work to today for Calendar and Today screens.",
+    description: "Shift active work to today while keeping the same small work path.",
     profile: "general",
-    route: "today",
+    route: "work",
     filter: "active",
     transform: (packs) => packs.map((pack) => pack.status === "done"
       ? pack
@@ -247,6 +221,10 @@ function reviewScenarioPack(pack) {
 
 const el = (id) => document.getElementById(id);
 const launchParams = new URLSearchParams(location.search);
+const DEMO_API_BASE_URL = normalizeApiBaseUrl(launchParams.get(DEMO_API_QUERY_PARAM) || window.PROJECTS_API_BASE_URL || "");
+let apiSaveTimer = null;
+let apiPendingSnapshot = null;
+let apiSaveInFlight = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   if ("scrollRestoration" in history) {
@@ -258,11 +236,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindShellControls();
   bindBottomDockVisibility();
   renderNav();
+  updateServiceBoundaryNotice();
 
   try {
-    const [metadata, packsResponse, styleAudit] = await Promise.all([
+    const [metadata, packsResponse, backendState, styleAudit] = await Promise.all([
       fetch(DEMO_METADATA_FILE, { cache: "no-store" }).catch(() => null),
       fetch("data/demo-packs.json", { cache: "no-store" }),
+      loadBackendState(),
       collectStyleAudit()
     ]);
     if (!packsResponse.ok) {
@@ -273,16 +253,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const parsedMetadata = metadata && safeJson(await metadata.text());
     state.metadata = buildMetadata(parsedMetadata);
     state.styleAudit = styleAudit;
-    loadState();
+    loadState(backendState);
     applyLaunchConfiguration();
     routeFromHash();
     render();
   } catch (error) {
-    state.status = routeStatus("Demo", "static JSON could not load", "refresh");
+    const blocker = DEMO_API_BASE_URL ? "backend API could not load" : "static JSON could not load";
+    state.status = routeStatus("Demo", blocker, "refresh");
     updateCommand({
       title: "Demo unavailable",
       where: "Demo",
-      blocker: "static JSON could not load",
+      blocker,
       next: "Refresh",
       stateText: "Offline",
       scope: "Scope: no work is visible."
@@ -345,8 +326,10 @@ function bindShellControls() {
   });
 }
 
-function loadState() {
-  const saved = safeJson(localStorage.getItem(DEMO_STORAGE_KEY));
+function loadState(backendState = null) {
+  const saved = DEMO_API_BASE_URL
+    ? normalizeStoredDemoState(backendState)
+    : safeJson(localStorage.getItem(DEMO_STORAGE_KEY));
   state.packs = normalizeLegacyVisibleCopy(Array.isArray(saved?.packs) ? saved.packs : structuredClone(state.basePacks));
   state.copyProfile = saved?.copyProfile || "general";
   state.scenarioId = saved?.scenarioId || "default";
@@ -424,7 +407,17 @@ function applyScenario(scenario, options = {}) {
 }
 
 function saveState() {
-  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify({
+  const snapshot = demoStateSnapshot();
+  if (DEMO_API_BASE_URL) {
+    scheduleBackendStateSave(snapshot);
+    return;
+  }
+
+  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(snapshot));
+}
+
+function demoStateSnapshot() {
+  return {
     packs: state.packs,
     copyProfile: state.copyProfile,
     scenarioId: state.scenarioId,
@@ -435,7 +428,7 @@ function saveState() {
     query: state.query,
     triageInput: state.triageInput,
     triageRows: state.triageRows
-  }));
+  };
 }
 
 function resetState() {
@@ -454,6 +447,102 @@ function resetState() {
   state.clipboardReceipt = null;
   syncSearchParam("scenario", null);
   render();
+}
+
+function normalizeApiBaseUrl(value) {
+  const text = normalizeCopy(value);
+  return text ? text.replace(/\/+$/u, "") : "";
+}
+
+function apiUrl(path) {
+  const suffix = path.startsWith("/") ? path : `/${path}`;
+  return `${DEMO_API_BASE_URL}${suffix}`;
+}
+
+async function loadBackendState() {
+  if (!DEMO_API_BASE_URL) {
+    return null;
+  }
+
+  const response = await fetch(apiUrl("/api/state"), { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Backend API failed with ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function normalizeStoredDemoState(value) {
+  return value && typeof value === "object" ? value : {};
+}
+
+function scheduleBackendStateSave(snapshot) {
+  apiPendingSnapshot = structuredClone(snapshot);
+  window.clearTimeout(apiSaveTimer);
+  apiSaveTimer = window.setTimeout(flushBackendStateSave, API_STATE_SAVE_DEBOUNCE_MS);
+}
+
+function flushBackendStateSave() {
+  if (apiSaveInFlight || !apiPendingSnapshot) {
+    return;
+  }
+
+  const snapshot = apiPendingSnapshot;
+  apiPendingSnapshot = null;
+  apiSaveInFlight = true;
+  persistBackendStateSnapshot(snapshot)
+    .catch((error) => {
+      apiPendingSnapshot = snapshot;
+      console.error("Projects demo API save failed.", error);
+    })
+    .finally(() => {
+      apiSaveInFlight = false;
+      if (apiPendingSnapshot) {
+        scheduleBackendStateSave(apiPendingSnapshot);
+      }
+    });
+}
+
+async function persistBackendStateSnapshot(snapshot) {
+  const response = await fetch(apiUrl("/api/state"), {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(snapshot)
+  });
+  if (!response.ok) {
+    throw new Error(`Backend API save failed with ${response.status}`);
+  }
+}
+
+function updateServiceBoundaryNotice() {
+  const notice = el("demo-notice");
+  if (!notice) {
+    return;
+  }
+
+  notice.textContent = DEMO_API_BASE_URL
+    ? `Connected to backend API at ${DEMO_API_BASE_URL}. Demo state saves through the API.`
+    : "Browser-local sample. No account, backend, or real project data.";
+}
+
+function persistenceVerb() {
+  return DEMO_API_BASE_URL ? "Save to backend" : "Save work";
+}
+
+function persistenceStatusText(browserText = "This browser only") {
+  return DEMO_API_BASE_URL ? "Backend API" : browserText;
+}
+
+function persistenceEditStatus(browserText) {
+  return DEMO_API_BASE_URL ? "Edits save to backend" : browserText;
+}
+
+function persistenceMemoryStatus(browserText) {
+  return DEMO_API_BASE_URL ? "Stored in backend" : browserText;
+}
+
+function persistenceCreatedActivity() {
+  return DEMO_API_BASE_URL ? "Created through backend API." : "Created in this browser.";
 }
 
 function profileStatus(profileKey, source = "Settings") {
@@ -478,26 +567,7 @@ function routeStatus(where, blocker, next) {
 }
 
 function renderNav() {
-  el("demo-nav").innerHTML = NAV_ROUTE_GROUPS.map((group) => {
-    const isOpen = !group.collapsed || group.routes.includes(state.route);
-    const groupId = `demo-nav-group-${escapeAttribute(group.id)}`;
-    return `
-      <details id="${groupId}" class="demo-nav-group" data-nav-group="${escapeAttribute(group.id)}"${isOpen ? " open" : ""}>
-        <summary
-          class="demo-nav-group-label"
-          aria-controls="${groupId}-items"
-          aria-expanded="${isOpen ? "true" : "false"}"
-        >${escapeHtml(group.label)}</summary>
-        <div id="${groupId}-items" class="demo-nav-group-items">
-          ${group.routes.map((route) => navItemMarkup(route)).join("")}
-        </div>
-      </details>
-    `;
-  }).join("");
-  document.querySelectorAll(".demo-nav-group").forEach((group) => {
-    syncNavGroupExpandedState(group);
-    group.addEventListener("toggle", () => syncNavGroupExpandedState(group));
-  });
+  el("demo-nav").innerHTML = navItems.map((item) => navItemMarkup(item.route)).join("");
 }
 
 function syncNavGroupExpandedState(group) {
@@ -525,6 +595,10 @@ function navGroupIdForRoute(route) {
 function routeFromHash() {
   const parsedRoute = parseHashRoute(location.hash);
   state.route = parsedRoute.route;
+
+  if (parsedRoute.fallback) {
+    history.replaceState({}, "", `${location.pathname}${location.search}${formatRouteHash("home")}`);
+  }
 
   if (parsedRoute.packId) {
     state.selectedId = parsedRoute.packId;
@@ -601,20 +675,6 @@ function render() {
 
   if (!state.packs.find((pack) => pack.id === state.selectedId)) {
     state.selectedId = state.packs[0]?.id || "";
-  }
-
-  const versionElement = el("demo-version");
-  if (versionElement) {
-    versionElement.textContent = stateVersionLabel();
-  }
-  const stateSchemaElement = el("demo-state-schema");
-  if (stateSchemaElement) {
-    stateSchemaElement.textContent = storageStateLabel();
-  }
-  const changelogElement = el("demo-changelog");
-  if (changelogElement) {
-    changelogElement.href = state.metadata?.releaseNotesUrl || DEMO_RELEASE_NOTES_URL;
-    changelogElement.textContent = `Changelog (${state.metadata?.version || DEMO_DEFAULT_VERSION})`;
   }
 
   document.querySelectorAll(".demo-nav-item").forEach((item) => {
@@ -733,7 +793,7 @@ function screenTitleForRoute() {
   }
 
   if (state.route === "home") {
-    return `${workNounTitle(2)} overview`;
+    return "Start";
   }
 
   if (state.route === "work") {
@@ -762,7 +822,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   const reviewWorkNoun = workNoun(reviewCount);
   const allWorkNoun = workNoun(state.packs.length);
   const workListTitle = `${workNounTitle(2)} list`;
-  const workOverviewTitle = `${workNounTitle(2)} overview`;
+  const workOverviewTitle = "Start";
   const triageCount = state.triageRows.length;
   const triageBlockers = state.triageRows.filter((row) => !isUnblockedBlockerValue(row.blocker)).length;
   const triageAction = triageCount > 0 ? "copy-triage" : "parse-triage";
@@ -793,8 +853,8 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     ? { title: "Check", where: "Check", blocker: `${reviewCount} ${reviewWorkNoun} still need decisions`, next: `Check ${profile().work}`, stateText: "Ready", action: "validate-sample", targetPackId: "" }
     : noSampleWorkCommand("Check", "Check", validateState.help);
   const homeCommand = hasSampleWork
-    ? { title: workOverviewTitle, where: "Home", blocker: reviewSummary, next: `Review ${workNoun(2)}`, stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
-    : noSampleWorkCommand(workOverviewTitle, "Home", `${profile().newWork} or reset demo data before reviewing.`);
+    ? { title: workOverviewTitle, where: "Start", blocker: reviewSummary, next: `Review ${workNoun(2)}`, stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
+    : noSampleWorkCommand(workOverviewTitle, "Start", `${profile().newWork} or reset demo data before reviewing.`);
   const searchCommand = hasSampleWork
     ? { title: "Search", where: "Search", blocker: searchBlocker, next: searchNext, stateText: searchQuery ? "Filtering" : "Ready", action: "search-demo", targetPackId: "" }
     : noSampleWorkCommand("Search", "Search", `${profile().newWork} or reset demo data before searching.`);
@@ -840,7 +900,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     : "";
 
   const routeCommandsHints = {
-    home: hasSampleWork ? "Flow: review work, run next." : "Flow: create work, review.",
+    home: hasSampleWork ? "Review blocked work first." : "Create work, then review it.",
     triage: triageCount > 0
       ? "Flow: edit rows, copy Markdown."
       : "Flow: paste work, parse.",
@@ -891,7 +951,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   return {
     ...routeCommand,
     stateText: capitalize(routeCommand.stateText),
-    scope: `Scope: ${visibleCount} of ${state.packs.length} ${allWorkNoun} visible.`,
+    scope: `${visibleCount} of ${state.packs.length} ${allWorkNoun} visible.`,
     targetPackId: routeCommand.targetPackId || "",
     flowHint: routeCommandsHints[state.route] || routeCommandsHints.work
   };
@@ -904,7 +964,7 @@ function createRouteCommand() {
     title: "Create",
     where: "Create",
     blocker: blockerDisplayValue(createState.blocker),
-    next: createState.canSave ? "Save work" : createActionForBlocker(createState.blocker),
+    next: createState.canSave ? persistenceVerb() : createActionForBlocker(createState.blocker),
     stateText: createState.canSave ? "Ready" : "Needs field",
     stateHelp: createState.help,
     action: createState.canSave ? "create-sample" : createFocusActionForBlocker(createState.blocker),
@@ -1581,70 +1641,51 @@ function focusKindForAction(action, packId = "") {
 
 function renderHome() {
   const reviewCount = state.packs.filter(isReview).length;
-  const doneCount = state.packs.filter((pack) => pack.status === "done").length;
-  const scenario = DEMO_SCENARIO_BY_ID[state.scenarioId] || DEMO_SCENARIO_BY_ID.default;
+  const resetHelp = resetDemoHelp();
   const homeEmpty = state.packs.length === 0
-    ? emptyState("No work is loaded.", "Create work, reset demo data, or choose a scenario with work.", emptyStateContextFor("Home", "no work exists in this browser", "create work, reset demo data, or choose a scenario with work"))
+    ? emptyState("No work is loaded.", "Create work or reset the browser-local sample.", emptyStateContextFor("Start", "no work exists in this browser", "create work or reset the sample"))
     : "";
   el("screen-content").innerHTML = `
-    <div class="demo-grid demo-summary-strip">
-      ${metricCard("Visible work", state.packs.length, "Work items in this demo.")}
-      ${metricCard("Review", reviewCount, "Items with blockers or missing Button runs next.")}
-      ${metricCard("Done", doneCount, "Finished work.")}
-    </div>
-    <section class="demo-panel">
+    <section class="demo-panel demo-home-hero">
       <div class="demo-panel-head">
         <div>
-          <span class="section-label">Start here</span>
-          <h2>Pick work, clear blocker, run next</h2>
+          <span class="section-label">Small portfolio demo</span>
+          <h2>Pick work, see what blocks it, run the next action.</h2>
         </div>
       </div>
-      <p>The demo shows the public-safe shape of Projects: pick work, read Where / Blocker / Button runs next, then run Button runs next.</p>
+      <p>Projects is a compact way to keep work honest: each item shows where you are, what is blocking progress, and the one button that should run next. This static demo uses browser-local sample work so the value is visible without knowing the original project history.</p>
+      <p class="demo-home-counts">${state.packs.length} sample ${escapeHtml(workNoun(state.packs.length))}; ${reviewCount} need review.</p>
       ${homeEmpty}
       <div class="demo-start-path" aria-label="Primary demo path">
         <div class="demo-start-step">
           <span>1</span>
           <strong>Review</strong>
-          <small>Find blocked or unclear work.</small>
+          <small>Start with blocked or unclear work.</small>
           ${navButton("review", "Review work", "btn btn-primary")}
         </div>
         <div class="demo-start-step">
           <span>2</span>
           <strong>Work</strong>
-          <small>Check the current path fields.</small>
+          <small>Choose an item and read its blocker.</small>
           ${navButton("work", "Open work list")}
         </div>
         <div class="demo-start-step">
           <span>3</span>
-          <strong>Create</strong>
-          <small>Add browser-only work.</small>
-          ${navButton("create", "Create work")}
+          <strong>Next</strong>
+          <small>Set the action the main button will run.</small>
+          ${navButton("next", "Set next action")}
         </div>
       </div>
-      <div class="demo-quick-actions demo-secondary-paths" aria-label="Secondary demo views">
-        ${homeSecondaryAction("today", "Today", "See dated work without changing state.")}
-        ${homeSecondaryAction("triage", "Triage", "Turn rough notes into work fields.")}
-        ${homeSecondaryAction("memory", "Memory", "Add recall notes to selected work.")}
+      <div class="demo-quick-actions demo-secondary-paths" aria-label="Small demo actions">
+        ${navButton("memory", "Add memory")}
+        ${navButton("create", profile().newWork)}
+        <span id="reset-demo-home-help" class="sr-only">${escapeHtml(resetHelp)}</span>
+        <button class="btn" type="button" id="reset-demo-home"${controlHelpAttributes(false, resetHelp, "reset-demo-home-help")}>Reset sample</button>
       </div>
-      <div class="demo-meta-row" aria-label="Active scenario">
-        <span>Active scenario: <strong>${escapeHtml(scenario.label)}</strong></span>
-        <span>${escapeHtml(scenario.description)}</span>
-      </div>
-      ${optionalDetails("Scenarios", "Open for demo presets that replace the browser work state.", `
-        <div class="demo-scenario-grid">
-          ${DEMO_SCENARIOS.map((item) => `
-            <button type="button" class="demo-scenario-card" data-scenario="${escapeAttribute(item.id)}" aria-pressed="${state.scenarioId === item.id}"${controlLabelAttributes(scenarioCardHelp(item, state.scenarioId === item.id))}>
-              <strong>${escapeHtml(item.label)}</strong>
-              <span>${escapeHtml(item.description)}</span>
-            </button>
-          `).join("")}
-        </div>
-      `)}
     </section>
-    ${recentActivityPanel()}
   `;
   bindGoButtons();
-  bindScenarioCards();
+  el("reset-demo-home")?.addEventListener("click", resetState);
 }
 
 function renderTriage() {
@@ -2685,7 +2726,7 @@ function renderCreate() {
           <span class="section-label">Create</span>
           <h2>${escapeHtml(profile().newWork)}</h2>
         </div>
-        <span class="demo-status">This browser only</span>
+        <span class="demo-status">${escapeHtml(persistenceStatusText())}</span>
       </div>
       <div class="demo-form-grid">
         ${inputField("new-title", "Title", defaults.title, `Name the ${profile().work} before Save can run.`)}
@@ -2695,7 +2736,7 @@ function renderCreate() {
         ${textField("new-purpose", "Why it matters", defaults.purpose, `Optional context for why this ${profile().work} exists.`)}
       </div>
       <p id="create-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(createState.help)}</p>
-      <button id="create-sample" class="btn btn-primary" type="button" aria-describedby="create-save-help"${disabledReasonAttributes(!createState.canSave, createState.help)}>Save work</button>
+      <button id="create-sample" class="btn btn-primary" type="button" aria-describedby="create-save-help"${disabledReasonAttributes(!createState.canSave, createState.help)}>${escapeHtml(persistenceVerb())}</button>
     </section>
   `;
   el("create-sample").addEventListener("click", createSamplePack);
@@ -2725,7 +2766,7 @@ function renderPackDetail() {
           <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
           <p class="demo-pack-subtitle"${copySurfaceAttributes("Work path summary", detailSubtitle)}>${escapeHtml(detailSubtitle.visible)}</p>
         </div>
-        <span class="demo-status">Edits stay in this browser</span>
+        <span class="demo-status">${escapeHtml(persistenceEditStatus("Edits stay in this browser"))}</span>
       </div>
       <div class="demo-forward-panel" data-forward-motion="pack-detail">
         <div class="demo-forward-head">
@@ -2780,7 +2821,7 @@ function renderMemory() {
           <span class="section-label">Memory</span>
           <h2>${pack ? escapeHtml(workTitle(pack)) : "Work memory"}</h2>
         </div>
-        <span class="demo-status">Stored in this browser</span>
+        <span class="demo-status">${escapeHtml(persistenceMemoryStatus("Stored in this browser"))}</span>
       </div>
       <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${workTitle(pack)}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no work exists in this browser", "create or reset work"))}</div>
       <div class="demo-inline-form">
@@ -4462,7 +4503,7 @@ function handlePackAction(id, action) {
     setPackActionConfirmation(pack, "done", changed);
   } else if (action === "focus") {
     setActionConfirmation(pack, "focus");
-    go("focus", pack.id);
+    go("pack", pack.id);
     return;
   } else if (action === "edit") {
     queueFocus("pack-edit", pack.id);
@@ -4716,7 +4757,7 @@ function runRouteAction(action, targetPackId) {
       const review = preferredReviewPack();
       if (review) {
         state.selectedId = review.id;
-        go("focus", review.id);
+        go("pack", review.id);
       } else {
         go("work");
       }
@@ -4729,7 +4770,7 @@ function runRouteAction(action, targetPackId) {
 
     state.selectedId = selected.id;
     setActionConfirmation(selected, "review-work");
-    go("focus", selected.id);
+    go("pack", selected.id);
     return true;
   }
 
@@ -4986,7 +5027,7 @@ function createFormValues() {
 function createSaveState(values) {
   const workflow = initialWorkflowForCreatedPack(values.title, values.owner, values.next);
   const canSave = isUnblockedBlockerValue(workflow.blocker);
-  const next = canSave ? "Save work" : createActionForBlocker(workflow.blocker);
+  const next = canSave ? persistenceVerb() : createActionForBlocker(workflow.blocker);
 
   return {
     ...workflow,
@@ -5008,7 +5049,7 @@ function createActionForBlocker(blocker) {
     return "Choose Button runs next";
   }
 
-  return "Save work";
+  return persistenceVerb();
 }
 
 function bindCreateValidation() {
@@ -5587,7 +5628,7 @@ function createSamplePack() {
     doneWhen: "Result is described.",
     sources: ["browser-state"],
     memory: [],
-    activity: ["Created in this browser."]
+    activity: [persistenceCreatedActivity()]
   };
   state.packs.unshift(pack);
   state.selectedId = pack.id;

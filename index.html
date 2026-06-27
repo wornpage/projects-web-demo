@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Static Projects demo with browser-local work and Button runs next controls.">
-  <title>Projects Static Demo</title>
+  <meta name="description" content="Small browser-local Projects demo: pick work, see the blocker, run the next action.">
+  <title>Projects Demo</title>
   <link rel="icon" href="assets/favicon.png" type="image/png">
   <link rel="stylesheet" href="assets/app.css?v=a851ee5e9-c5d8eabc63">
   <link rel="stylesheet" href="assets/demo.css?v=a851ee5e9-c5d8eabc63">
@@ -19,13 +19,13 @@
         <span class="demo-brand-mark nav-rail-brand-mark" aria-hidden="true">P</span>
         <span>
           <strong>Projects</strong>
-          <small>Static demo</small>
+          <small>Small demo</small>
         </span>
       </a>
       <nav id="demo-nav" class="demo-nav nav-rail-section" aria-label="Primary demo screens"></nav>
       <div class="demo-sidebar-note card">
-        <strong>Demo data only.</strong>
-        Real packs, memory, files, and saves stay in the local app.
+        <strong>One idea.</strong>
+        Pick work, see the blocker, run the next action.
       </div>
     </aside>
 
@@ -33,35 +33,26 @@
       <header class="page-header demo-header">
         <div class="page-header-inner demo-header-inner">
           <div>
-            <div class="demo-kicker">Projects demo</div>
-            <h1 id="screen-title" class="demo-screen-title">Work list</h1>
-          </div>
-          <div class="demo-header-metadata">
-            <small>Build</small>
-            <strong id="demo-version">working</strong>
-            <small>State</small>
-            <strong id="demo-state-schema">v6</strong>
-            <a id="demo-changelog" href="https://github.com/jared-bidlow/projects-web-demo/releases" rel="noopener noreferrer" target="_blank">Changelog</a>
+            <div class="demo-kicker">Projects</div>
+            <h1 id="screen-title" class="demo-screen-title">Start</h1>
           </div>
           <div class="demo-header-actions">
             <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="false" title="Switch this demo to dark mode." aria-label="Switch this demo to dark mode.">Dark mode</button>
-            <a class="btn btn-sm" href="https://github.com/jared-bidlow/projects-web-demo" title="Open the static demo source repository." aria-label="Open the static demo source repository.">Code</a>
-            <a class="btn btn-primary btn-lg" href="https://github.com/jared-bidlow/projects-web-demo/releases" title="Open release notes for the static demo." aria-label="Open release notes for the static demo.">Releases</a>
+            <a class="btn btn-sm" href="https://github.com/jared-bidlow/projects-web-demo" title="Open the static demo source repository." aria-label="Open the static demo source repository.">Source</a>
           </div>
         </div>
       </header>
 
       <main id="demo-main" class="demo-main page-content" tabindex="-1">
-        <section class="demo-notice card" aria-label="Demo notice">
-          <strong>Demo data only.</strong>
-          Demo data stays in this browser. Buttons update this tab only.
+        <section id="demo-notice" class="demo-notice card" aria-label="Demo notice">
+          Browser-local sample. No account, backend, or real project data.
         </section>
 
-        <section class="demo-command-brief sidecar" aria-label="Projects current path">
+        <section class="demo-command-brief sidecar" aria-label="Projects next action">
           <div class="demo-command-top">
             <div>
-              <span class="demo-command-label">Current path</span>
-              <h2 id="command-title">Work list</h2>
+              <span class="demo-command-label">Next action</span>
+              <h2 id="command-title">Start</h2>
             </div>
             <span id="command-state" class="demo-command-state">Ready</span>
           </div>
@@ -85,8 +76,8 @@
             <strong id="command-memory-text">none yet - add from Memory</strong>
           </div>
           <div class="demo-command-footer">
-            <span id="command-scope">Scope: work is loading.</span>
-            <p id="command-flow" class="demo-command-flow">Loading demo data; Review work opens the first review item.</p>
+            <span id="command-scope">Loading sample work.</span>
+            <p id="command-flow" class="demo-command-flow">Next step: review blocked work.</p>
             <div class="demo-command-actions">
               <button id="primary-action" class="btn btn-primary" type="button" data-action="route-review" data-pack="" title="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-label="Where: Work list. Blocker: Loading demo data. Button runs next: Review work.">Review work</button>
             </div>
@@ -96,7 +87,7 @@
 
         <section id="screen-content" class="demo-screen" aria-live="polite"></section>
 
-        <aside class="demo-bottom-brief" aria-label="Sticky current path summary">
+        <aside class="demo-bottom-brief" aria-label="Sticky next action summary">
           <a id="dock-where-item" class="demo-bottom-item" href="#/work">
             <span>Where</span>
             <strong id="dock-where">Work list</strong>
