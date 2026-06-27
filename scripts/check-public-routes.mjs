@@ -134,6 +134,7 @@ check("empty states expose semantic context", source.includes('class="demo-empty
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 check("primary nav label stays compact and public-facing", html.includes('id="demo-nav"') && html.includes('aria-label="Demo screens"'), "Demo screens");
 check("brand home link stays public-facing", html.includes('aria-label="Projects demo home"'), "Projects demo home");
+check("metadata preview copy stays public and truthful", metadataPreviewContractOk(), "description omits browser-local-only framing and names no-login demo data");
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
 check("demo notice says no login or private data", html.includes("Demo data only. No login or private project data."), "no login/private data");
 check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("Saves to this backend row; no login.") && source.includes("No login or private storage.") && source.includes("No private project data.") && !source.includes("not an account") && !source.includes("Do not enter private project data"), "no-login runtime notices");
@@ -239,6 +240,12 @@ function sidebarNoteContractOk() {
     "<strong>One idea.</strong>",
     "Start with Review. Pick work, see the blocker, run the next action."
   ]);
+}
+
+function metadataPreviewContractOk() {
+  return html.includes('<meta name="description" content="Small Projects demo: pick work, see blockers, run next actions. Demo data only; no login or private project data.">')
+    && !html.includes("Small browser-local Projects demo")
+    && !html.includes("browser-local Projects demo");
 }
 
 function spotlightFactsContractOk() {
