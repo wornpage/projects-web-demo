@@ -215,6 +215,8 @@ browser-row snapshot path.
 Hosted selected-work navigation posts to `POST /api/state/selected` so the
 current work context is saved as a named backend field update instead of a
 browser-row snapshot.
+Hosted route-only navigation stays local-only; changing screens without
+changing selected work does not schedule backend browser-row persistence.
 Hosted scenario changes post to `POST /api/state/scenario` so the scenario
 transform and empty-state scenario are owned by the backend instead of a
 browser-row snapshot.

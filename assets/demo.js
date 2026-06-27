@@ -1766,6 +1766,7 @@ function navGroupIdForRoute(route) {
 function routeFromHash() {
   const parsedRoute = parseHashRoute(location.hash);
   const previousSelectedId = state.selectedId;
+  const previousRoute = state.route;
   state.route = parsedRoute.route;
 
   if (parsedRoute.fallback) {
@@ -1780,13 +1781,16 @@ function routeFromHash() {
     state.selectedId = preferredNextSetupPack()?.id || state.selectedId;
   }
 
-  if (DEMO_API_BASE_URL && state.selectedId !== previousSelectedId && findPack(state.selectedId)) {
+  const selectedWorkChanged = state.selectedId !== previousSelectedId && findPack(state.selectedId);
+  if (DEMO_API_BASE_URL && selectedWorkChanged) {
     state.suppressNextSave = true;
     saveBackendSelectedWork(state.selectedId).catch((error) => {
       state.status = `Where: Selected work. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
       state.suppressNextSave = true;
       render();
     });
+  } else if (DEMO_API_BASE_URL && (state.route !== previousRoute || parsedRoute.fallback)) {
+    state.suppressNextSave = true;
   }
 }
 

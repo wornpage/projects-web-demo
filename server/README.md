@@ -174,6 +174,9 @@ transient receipt, search, and browser-derived status text; the older generic
 backend-owned status instead of accepting browser status copy.
 Hosted search text stays local-only; search input changes re-render the work
 list without scheduling backend browser-row persistence.
+Hosted route-only navigation also stays local-only; selected-work changes use
+the named endpoint, while screen-only changes do not schedule browser-row
+persistence.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.

@@ -111,6 +111,8 @@ try {
   check("hosted filter changes use named backend endpoint", hostedFilterSave.ok, hostedFilterSave.detail);
   const hostedSelectedSave = frontendSelectedWorkUsesBackendEndpoint(frontendSource);
   check("hosted selected-work changes use named backend endpoint", hostedSelectedSave.ok, hostedSelectedSave.detail);
+  const hostedRouteOnly = frontendRouteOnlyNavigationStaysLocal(frontendSource);
+  check("hosted route-only navigation stays local-only", hostedRouteOnly.ok, hostedRouteOnly.detail);
   const hostedScenarioSave = frontendScenarioUsesBackendEndpoint(frontendSource);
   check("hosted scenario changes use named backend endpoint", hostedScenarioSave.ok, hostedScenarioSave.detail);
   const hostedProfileSave = frontendProfileUsesBackendEndpoint(frontendSource);
@@ -1326,6 +1328,36 @@ function frontendSelectedWorkUsesBackendEndpoint(source) {
     detail: ok
       ? "hosted selected-work navigation posts to /api/state/selected without falling back to browser-row saves"
       : "hosted selected-work navigation still relies on browser-row snapshot persistence"
+  };
+}
+
+function frontendRouteOnlyNavigationStaysLocal(source) {
+  const routeBody = functionBody(source, "routeFromHash");
+  if (!routeBody) {
+    return { ok: false, detail: "routeFromHash:missing" };
+  }
+
+  const previousRouteIndex = routeBody.indexOf("const previousRoute = state.route");
+  const routeSetIndex = routeBody.indexOf("state.route = parsedRoute.route");
+  const selectedChangeIndex = routeBody.indexOf("const selectedWorkChanged = state.selectedId !== previousSelectedId && findPack(state.selectedId)");
+  const selectedSaveIndex = routeBody.indexOf("saveBackendSelectedWork(state.selectedId)");
+  const routeOnlyIndex = routeBody.indexOf("state.route !== previousRoute || parsedRoute.fallback");
+  const suppressTail = routeBody.slice(routeOnlyIndex);
+  const ok = previousRouteIndex >= 0
+    && routeSetIndex > previousRouteIndex
+    && selectedChangeIndex > routeSetIndex
+    && selectedSaveIndex > selectedChangeIndex
+    && routeOnlyIndex > selectedSaveIndex
+    && suppressTail.includes("state.suppressNextSave = true")
+    && !suppressTail.includes("saveBackendSelectedWork")
+    && !suppressTail.includes("scheduleBackendStateSave")
+    && !suppressTail.includes("saveState();");
+
+  return {
+    ok,
+    detail: ok
+      ? "route-only hash navigation suppresses generic browser-row persistence while selected work keeps the named endpoint"
+      : "route-only navigation can still reach generic backend persistence"
   };
 }
 
