@@ -1,10 +1,11 @@
 # Projects Web Demo App
 
 This is a small Node app for the Projects demo. It serves the frontend and
-`/api` from one process. Local runs use `server/data/state.json`; hosted runs
-should use managed Postgres through `DATABASE_URL` or standard `PG*` variables.
-In API mode, the browser sends an anonymous client key so demo edits are
-isolated per browser without accounts.
+`/api` from one process. Local runs use `server/data/state.json` plus hashed
+per-client state files when the browser sends an anonymous client key; hosted
+runs should use managed Postgres through `DATABASE_URL` or standard `PG*`
+variables. In API mode, the browser sends an anonymous client key so demo edits
+are isolated per browser without accounts.
 
 When `PROJECTS_STATE_STORAGE=postgres` is active, state-changing and state-read
 API routes require that anonymous browser client key. Missing or invalid keys
@@ -30,7 +31,9 @@ In app mode, the frontend is served with a same-origin API setting, so no
 `?api=` query parameter is needed.
 
 Use `PROJECTS_STATE_STORAGE=postgres` and managed Postgres environment variables
-when deploying this app to a host where local files are ephemeral.
+when deploying this app to a host where local files are ephemeral. Local
+file-backed app mode still honors the browser client key by storing each keyed
+client in a separate hashed state file beside the default file.
 
 ## Docker
 
@@ -116,3 +119,14 @@ GitHub Pages behavior.
 
 API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:
 nosniff`. This is still demo isolation, not private account security.
+
+## Checks
+
+Run the backend syntax check, protected frontend check, and public boundary
+check from the repository root before shipping backend app-mode changes:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run check'
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run protect:check'
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
+```

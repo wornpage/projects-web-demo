@@ -53,6 +53,17 @@ GitHub evidence:
 | Likely GitHub Pages URL | `404` |
 | GitHub Pages API | `404` |
 
+Repeatable local gate:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
+```
+
+The gate starts the Node app with a temporary file-backed state directory,
+confirms only the public allowlist is served, confirms repository files and
+path traversal attempts return `404`, creates work under one browser client
+key, and confirms another client key plus the default local row cannot read it.
+
 ## Risk Decisions
 
 | Risk | Current status | Decision |
@@ -62,6 +73,7 @@ GitHub evidence:
 | Private repo files served by Outplane | Not observed | App allowlist only serves app assets and sample data |
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
+| Local file-backed API users mix state | Fixed | Browser client keys map to separate hashed local state files |
 | GitHub Pages root publish could expose repo files | Possible if enabled | Keep Pages disabled or publish only a filtered artifact |
 
 ## What Cannot Be Hidden

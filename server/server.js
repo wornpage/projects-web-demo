@@ -453,9 +453,10 @@ function normalizeStateStorageMode(value) {
   return mode === "postgres" ? "postgres" : "file";
 }
 
-async function readFileState() {
+async function readFileState(stateKey = DEFAULT_STATE_KEY) {
+  const stateFile = fileStatePathForKey(stateKey);
   try {
-    const text = await fs.readFile(STATE_FILE, "utf8");
+    const text = await fs.readFile(stateFile, "utf8");
     return sanitizeState(JSON.parse(text));
   } catch (error) {
     if (error.code !== "ENOENT") {
@@ -465,14 +466,27 @@ async function readFileState() {
   }
 }
 
-async function writeFileState(payload) {
+async function writeFileState(payload, stateKey = DEFAULT_STATE_KEY) {
+  const stateFile = fileStatePathForKey(stateKey);
   const state = sanitizeState(payload);
   await fs.mkdir(STATE_DIR, { recursive: true });
   state.savedAt = new Date().toISOString();
-  const tmpFile = path.join(STATE_DIR, `state.${crypto.randomUUID()}.tmp`);
+  const tmpFile = path.join(STATE_DIR, `${path.basename(stateFile)}.${crypto.randomUUID()}.tmp`);
   await fs.writeFile(tmpFile, `${JSON.stringify(state, null, 2)}\n`, "utf8");
-  await fs.rename(tmpFile, STATE_FILE);
+  await fs.rename(tmpFile, stateFile);
   return state;
+}
+
+function fileStatePathForKey(stateKey = DEFAULT_STATE_KEY) {
+  const normalized = normalizeText(stateKey, 120) || DEFAULT_STATE_KEY;
+  if (normalized === DEFAULT_STATE_KEY) {
+    return STATE_FILE;
+  }
+
+  const extension = path.extname(STATE_FILE) || ".json";
+  const baseName = path.basename(STATE_FILE, extension);
+  const digest = crypto.createHash("sha256").update(normalized).digest("hex").slice(0, 32);
+  return path.join(STATE_DIR, `${baseName}.${digest}${extension}`);
 }
 
 function createPackFromPayload(state, payload) {

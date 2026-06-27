@@ -36,6 +36,7 @@ Keep this repo focused on the public portfolio demo.
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
+| `scripts/check-public-boundary.mjs` | Local proof that the app server only serves public files and keyed demo states do not mix. |
 | `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app is serving the protected current frontend. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
 | `render.yaml` | Render Blueprint for hosting the Docker app with managed Postgres state. |
@@ -99,8 +100,10 @@ The Node app also rewrites the CSS/JS asset query string at startup using
 startup value. That keeps hosted deploys from serving stale cached frontend
 assets after a push.
 
-The default local state file is `server/data/state.json`. Hosted deploys should
-use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres environment
+The default local state file is `server/data/state.json`. When the browser sends
+its anonymous client key, local file-backed app mode stores that client's state
+in a separate hashed state file beside the default file. Hosted deploys should
+still use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres environment
 variables instead of writable container files.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
@@ -214,6 +217,7 @@ Before pushing, run:
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'node --check "assets/demo.js"'
 pwsh -NoLogo -NoProfile -Command 'npm --prefix server run protect:check'
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
 ```
 
 Then smoke the main routes locally in light and dark mode:
