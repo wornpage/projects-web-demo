@@ -4394,6 +4394,29 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
     width: 100%;
   }
 
+  .demo-sync,
+  .demo-sync-controls,
+  .demo-sync-share {
+    align-items: stretch;
+  }
+
+  .demo-sync-copy,
+  .demo-sync-controls,
+  .demo-sync-controls input {
+    max-width: none;
+    width: 100%;
+  }
+
+  .demo-sync-controls .btn {
+    flex: 1 1 120px;
+    justify-content: center;
+  }
+
+  .demo-sync-share {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .demo-command-footer {
     align-items: stretch;
     display: grid;
