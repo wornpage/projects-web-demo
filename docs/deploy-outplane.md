@@ -57,8 +57,10 @@ Do not set `PROJECTS_STATE_FILE` for the hosted Postgres app. That variable is
 only for local file-backed development, and it implies container or volume state.
 
 The browser sends an anonymous client key with API requests, so hosted demo
-edits are separated per browser without accounts. Hosted Postgres API requests
-without that browser key are rejected instead of sharing one fallback row.
+edits are separated per browser without accounts or cookie-backed sessions.
+App, API, and static-preview responses clear cookies so hidden cookie state
+cannot become a second identity path. Hosted Postgres API requests without that
+browser key are rejected instead of sharing one fallback row.
 The API accepts only generated `demo-...` browser keys or hashed `sync-...`
 share keys, and rejects weak manual header values or readable
 sync-code-shaped headers.

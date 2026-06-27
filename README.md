@@ -125,9 +125,9 @@ browser-local.
 
 The Node app also sends no-store, no-referrer, nosniff, HSTS, frame-deny,
 same-origin resource/opener/embedder isolation, restrictive
-Permissions-Policy headers, and a CSP that blocks unsafe inline scripts and
-styles on served app and API responses. The CSP also denies frames, workers,
-manifests, and media loaders the demo does not use.
+Permissions-Policy headers, `Clear-Site-Data: "cookies"`, and a CSP that blocks
+unsafe inline scripts and styles on served app and API responses. The CSP also
+denies frames, workers, manifests, and media loaders the demo does not use.
 App and API responses also send `X-Robots-Tag: noindex, nofollow, noarchive`
 so public dev deployments are not invited into search indexes or archives.
 The hosted app serves the backend API-base setting through
@@ -135,6 +135,9 @@ The hosted app serves the backend API-base setting through
 
 The local state path defaults to a user data directory outside the repository,
 but backend API state routes still require the browser's anonymous client key.
+The app does not use cookie-backed sessions; app, API, and static-preview
+responses clear cookies so hidden cookie state cannot become a second identity
+path.
 Local file-backed app mode stores each keyed client's state in a separate
 hashed state file beside that path and rejects unkeyed state requests. Hosted
 deploys should still use `PROJECTS_STATE_STORAGE=postgres` with managed
@@ -261,7 +264,7 @@ Use app mode at `http://localhost:5179/#/home` when you need backend-backed
 persistence.
 The preview server still uses the public file allowlist, a fixed internal URL
 base that does not depend on the incoming Host header, and defensive no-store,
-no-referrer, nosniff, HSTS, frame-deny,
+cookie-clearing, no-referrer, nosniff, HSTS, frame-deny,
 same-origin opener/resource/embedder isolation, Permissions-Policy, and CSP
 headers.
 

@@ -159,6 +159,7 @@ function request(activePort, pathname, options = {}) {
 
 function sharedSecurityHeadersOk(headers) {
   return getHeader(headers, "cache-control") === "no-store"
+    && getHeader(headers, "clear-site-data") === "\"cookies\""
     && getHeader(headers, "referrer-policy") === "no-referrer"
     && getHeader(headers, "x-content-type-options") === "nosniff"
     && getHeader(headers, "x-frame-options") === "DENY"
@@ -175,6 +176,7 @@ function sharedSecurityHeadersOk(headers) {
 function sharedSecurityHeaderDetail(headers) {
   return [
     "cache-control",
+    "clear-site-data",
     "referrer-policy",
     "x-content-type-options",
     "x-frame-options",

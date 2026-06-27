@@ -146,10 +146,10 @@ path and server-owned workflow write paths reject a missing browser key before
 body parsing, the hosted work-path endpoint rejects unsupported status values,
 the hosted app shell sends HSTS, frame-deny, same-origin
 resource/opener isolation, embedder
-isolation, origin-agent clustering, restrictive Permissions-Policy headers, a
-noindex/noarchive robots header, a style policy without unsafe inline styles,
-and explicit denials for unused frame, worker, manifest, and media loaders, and
-that
+isolation, origin-agent clustering, restrictive Permissions-Policy headers,
+cookie clearing, a noindex/noarchive robots header, a style policy without
+unsafe inline styles, and explicit denials for unused frame, worker, manifest,
+and media loaders, and that
 hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
 asset, unlisted public asset/data paths, and non-public repo/docs/server paths.
@@ -200,6 +200,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |
 | Local file-backed API users mix state | Fixed | Browser client keys are required and map to separate hashed local state files |
+| Hidden cookie-backed sessions mix or retain demo identity | Fixed | App, API, and static-preview responses send `Clear-Site-Data: "cookies"` so state stays on the explicit browser or sync key path |
 | Demo users cannot remove hosted anonymous state | Fixed | `POST /api/state/erase` deletes only the current keyed row and rejects missing keys before storage access |
 | Local file-backed state defaults inside the repo | Fixed | The no-env local default writes under a user data directory; Docker and tests still use explicit `PROJECTS_STATE_FILE` values |
 | Hosted Postgres stores raw browser row keys | Fixed | Hosted reads and writes use only server-side `v2:` SHA-256 state keys; the raw-key read fallback is retired |
@@ -214,9 +215,9 @@ This table is part of the ship gate. A risk row must be a final state:
 | Sync invite code remains in the URL after launch | Fixed | Sync links use `?sync=` only as a launch parameter; after shared state loads the frontend removes it from the address bar |
 | Backend app shell allows arbitrary inline script/style | Fixed | The Node app serves the API-base setting through same-origin `assets/runtime-config.js`, uses `script-src 'self'`, and blocks unsafe inline styles |
 | App shell CSP leaves unused loaders to fallback behavior | Fixed | CSP now explicitly denies frames, workers, manifests, and media loaders the demo does not use |
-| App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener/embedder isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
+| App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener/embedder isolation, cookie clearing, no-referrer, nosniff, and restrictive Permissions-Policy headers |
 | Public dev deploys can be indexed or archived by search engines | Fixed | App and API responses send `X-Robots-Tag: noindex, nofollow, noarchive`, and local/static/live gates assert it |
-| Shared security headers can drift unverified | Fixed | Local, static-preview, and live gates now assert embedder policy, origin-agent clustering, cross-domain policy denial, and robots indexing controls |
+| Shared security headers can drift unverified | Fixed | Local, static-preview, and live gates now assert cookie clearing, embedder policy, origin-agent clustering, cross-domain policy denial, and robots indexing controls |
 | Hosted app lacks HTTPS downgrade protection | Fixed | App and API responses send HSTS for HTTPS clients |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin or explicit configured origins and does not trust forwarded-host for authorization |
 | API preflight accepts retired methods or unlisted headers | Fixed | CORS preflights validate the requested method and header list before returning authorization headers |

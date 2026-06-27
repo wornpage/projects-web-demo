@@ -5,7 +5,7 @@ This is a small Node app for the Projects demo. It serves the frontend and
 files under the configured state directory; hosted runs should use managed
 Postgres through `DATABASE_URL` or standard `PG*` variables. In API mode, the
 browser sends an anonymous client key so demo edits are isolated per browser
-without accounts.
+without accounts or cookie-backed sessions.
 
 State-changing and state-read API routes require that anonymous browser client
 key in both local file-backed mode and hosted Postgres mode. Missing or invalid
@@ -115,9 +115,9 @@ http://localhost:5181/#/home
 The static preview keeps the browser-local GitHub Pages behavior. Use app mode
 at `http://localhost:5179/#/home` when you need backend-backed persistence.
 It serves only the static file allowlist and sends defensive no-store,
-no-referrer, nosniff, frame-deny, same-origin isolation, Permissions-Policy, and
-CSP headers. Request routing uses a fixed internal URL base instead of the
-incoming Host header.
+cookie-clearing, no-referrer, nosniff, frame-deny, same-origin isolation,
+Permissions-Policy, and CSP headers. Request routing uses a fixed internal URL
+base instead of the incoming Host header.
 
 ## Endpoints
 
@@ -139,9 +139,10 @@ incoming Host header.
 API and app responses use `Cache-Control: no-store`, `Referrer-Policy:
 no-referrer`, `X-Content-Type-Options: nosniff`, HSTS, `X-Frame-Options: DENY`,
 same-origin resource/opener/embedder isolation, origin-agent clustering, and
-restrictive `Permissions-Policy` headers. They also send
-`X-Robots-Tag: noindex, nofollow, noarchive` so public dev deployments are not
-invited into search indexes or archives. API body routes require
+restrictive `Permissions-Policy` headers. They also send a cookie-clearing
+`Clear-Site-Data` header so the demo cannot accidentally create a hidden
+cookie-backed identity path, plus `X-Robots-Tag: noindex, nofollow, noarchive`
+so public dev deployments are not invited into search indexes or archives. API body routes require
 `Content-Type: application/json`; non-JSON body writes are rejected with `415`.
 API CORS reflects only same-origin app requests. Preflights with retired methods
 or unlisted request headers are rejected. This is still demo isolation, not
