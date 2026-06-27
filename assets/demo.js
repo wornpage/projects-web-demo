@@ -84,7 +84,7 @@ const ROUTE_CONTRACT = Object.freeze({
   home: { pattern: "#/home", title: "Start", commandSource: "route", navKey: "1", navLabel: "Start" },
   review: { pattern: "#/review/{packId}", title: "Review", commandSource: "selected-work", acceptsPackId: true, navKey: "2", navLabel: "Review" },
   work: { pattern: "#/work/{packId}", title: "Work", commandSource: "selected-work", acceptsPackId: true, navKey: "3", navLabel: "Work" },
-  next: { pattern: "#/next/{packId}", title: "Next action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "4", navLabel: "Next Action" },
+  next: { pattern: "#/next/{packId}", title: "Next Action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "4", navLabel: "Next Action" },
   memory: { pattern: "#/memory/{packId}", title: "Memory", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "5", navLabel: "Memory" },
   create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true }
@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const [seedPacks, backendState] = await loadInitialDemoState();
     state.basePacks = normalizeLegacyVisibleCopy(seedPacks);
-    loadState(backendState);
+    DEMO_API_BASE_URL ? loadBackendOwnedState(backendState) : loadState(backendState);
     await applyLaunchConfiguration();
     if (launchedSyncCode) {
       state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "review shared demo state");
@@ -362,10 +362,7 @@ function loadState(backendState = null) {
   backendPackCommandCache.clear();
 }
 
-function loadBackendOwnedState(backendState) {
-  loadState(backendState);
-  state.suppressNextSave = true;
-}
+function loadBackendOwnedState(backendState){loadState(backendState);state.suppressNextSave=true}
 
 function purgeLegacyDemoState() {
   for (const key of LEGACY_DEMO_STORAGE_KEYS) {
@@ -2707,7 +2704,7 @@ function renderHome() {
           <h2>Pick work, see what blocks it, run the next action.</h2>
         </div>
       </div>
-      <p>Projects is a compact way to keep work honest: each item shows where you are, what is blocking progress, and the one button that should run next. This demo uses sample work so the value is visible without knowing the original project history.</p>
+      <p>Projects keeps work honest: each item shows where it is, what blocks progress, and the button that runs next. This demo uses sample work so the value is visible without project history.</p>
       <p class="demo-home-counts">${state.packs.length} sample ${escapeHtml(workNoun(state.packs.length))}; ${reviewCount} need review.</p>
       ${homeSpotlightPanel()}
       ${homeEmpty}

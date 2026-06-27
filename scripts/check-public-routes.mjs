@@ -19,6 +19,7 @@ const checks = [];
 const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create"];
 const expectedContractRoutes = [...expectedNavRoutes, "pack"];
 const expectedNavLabels = ["Start", "Review", "Work", "Next Action", "Memory", "Create"];
+const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Next Action", memory: "Memory", create: "Create", pack: "Work path" };
 const blockedPublicRoutes = [
   "board",
   "calendar",
@@ -103,6 +104,7 @@ const blockedRetiredHelpers = [
 check("route contract contains only the public routes plus pack detail", arraysEqual(contractRoutes, expectedContractRoutes), contractRoutes.join(", "));
 check("visible nav routes stay intentionally small", arraysEqual(navRoutes, expectedNavRoutes), navRoutes.join(", "));
 check("visible nav labels stay portfolio-facing", arraysEqual(navLabels, expectedNavLabels), navLabels.join(", "));
+check("route titles stay aligned with visible nav labels", routeTitlesContractOk(), expectedNavRoutes.map((route) => `${route}:${routeContract[route]?.title || ""}`).join(", "));
 check("pack detail route is not visible in nav", routeContract.pack && !navRoutes.includes("pack"), navRoutes.join(", "));
 check("internal routes are absent from route contract", blockedInContract.length === 0, blockedInContract.join(", ") || "absent");
 check("internal routes are absent from visible nav", blockedInNav.length === 0, blockedInNav.join(", ") || "absent");
@@ -168,6 +170,10 @@ if (failed.length > 0) {
 
 function check(name, ok, detail) {
   checks.push({ name, ok: Boolean(ok), detail: String(detail ?? "") });
+}
+
+function routeTitlesContractOk() {
+  return Object.entries(expectedRouteTitles).every(([route, title]) => routeContract[route]?.title === title);
 }
 
 function homeSpotlightContractOk() {

@@ -1665,6 +1665,15 @@ function frontendWorkflowHelpersAvoidFullStatePreflight(source) {
 
 function frontendBackendOwnedLoadsSuppressGenericSave(source) {
   const failures = [];
+  const bootstrapStart = source.indexOf('document.addEventListener("DOMContentLoaded"');
+  const bootstrapEnd = source.indexOf("async function loadInitialDemoState", bootstrapStart);
+  const bootstrapBody = bootstrapStart >= 0 && bootstrapEnd > bootstrapStart
+    ? source.slice(bootstrapStart, bootstrapEnd)
+    : "";
+  if (!bootstrapBody.includes("DEMO_API_BASE_URL ? loadBackendOwnedState(backendState) : loadState(backendState);")) {
+    failures.push("startup backend state:plain loadState");
+  }
+
   const loaderBody = functionBody(source, "loadBackendOwnedState");
   if (!loaderBody) {
     failures.push("loadBackendOwnedState:missing");
@@ -1672,7 +1681,7 @@ function frontendBackendOwnedLoadsSuppressGenericSave(source) {
     if (!loaderBody.includes("loadState(backendState);")) {
       failures.push("loadBackendOwnedState:no loadState");
     }
-    if (!loaderBody.includes("state.suppressNextSave = true;")) {
+    if (!loaderBody.includes("state.suppressNextSave=true") && !loaderBody.includes("state.suppressNextSave = true;")) {
       failures.push("loadBackendOwnedState:no suppress");
     }
   }
