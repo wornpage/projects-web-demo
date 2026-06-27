@@ -124,6 +124,12 @@ Use Outplane when you want a development deployment of the backend-backed app.
 The repo's Dockerfile already reads `PORT`, binds to `0.0.0.0`, and supports
 managed Postgres through Outplane's `PG*` environment variables.
 
+Current development deployment:
+
+```text
+https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app
+```
+
 See [docs/deploy-outplane.md](docs/deploy-outplane.md).
 
 ## Render

@@ -4,6 +4,17 @@ Outplane is the preferred development host for this repo's backend-backed demo
 mode. Use it as a Docker app with managed PostgreSQL so the container stays
 stateless.
 
+## Current Dev App
+
+Verified on June 27, 2026:
+
+```text
+https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app
+```
+
+The live app reported `postgres:projects_demo_state` from `/api/health`, and a
+save/read smoke test passed through `/api/state`.
+
 ## Shape
 
 | Area | Setting |
@@ -42,8 +53,15 @@ stateless.
 If Outplane gives you a single connection URI instead, you can use
 `DATABASE_URL` in place of the `PG*` variables.
 
+Do not set `PROJECTS_STATE_FILE` for the hosted Postgres app. That variable is
+only for local file-backed development, and it implies container or volume state.
+
 The browser sends an anonymous client key with API requests, so hosted demo
 edits are separated per browser without accounts.
+
+This is demo isolation, not real user security. Add authentication before
+storing private user data, real customer work, or anything that needs account
+ownership.
 
 ## Checks
 
