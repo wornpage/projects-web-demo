@@ -22,6 +22,7 @@ const protectedStringValues = Object.freeze([
   "/api/state/selected",
   "/api/state/scenario",
   "/api/state/profile",
+  "/api/state/reset",
   "/api/state/browser",
   "/api/state/erase",
   "/api/state",

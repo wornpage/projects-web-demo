@@ -219,6 +219,14 @@ async function routeRequest(request, response, url) {
     return;
   }
 
+  if (method === "POST" && pathname === "/api/state/reset") {
+    const stateKey = stateWriteKeyForRequest(request);
+    const result = await resetStateAction();
+    await writeState(result.state, stateKey);
+    sendJson(request, response, 200, result);
+    return;
+  }
+
   if (method === "POST" && pathname === "/api/state/erase") {
     sendJson(request, response, 200, await eraseState(stateWriteKeyForRequest(request)));
     return;
@@ -920,6 +928,17 @@ function saveStateProfileAction(state, payload) {
   state.status = profileStatusMessage(profile, sourceLabel);
   state.actionReceipt = null;
   return { profile, state };
+}
+
+async function resetStateAction() {
+  const state = await defaultState();
+  state.status = resetStatusMessage();
+  state.actionReceipt = null;
+  return { reset: true, state };
+}
+
+function resetStatusMessage() {
+  return "Where: Start. Blocker: None. Button runs next: review reset demo data in this browser.";
 }
 
 function profileStatusMessage(profile, sourceLabel) {

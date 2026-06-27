@@ -47,6 +47,7 @@ const leakedTokens = [
   "/api/packs",
   "/api/demo-packs",
   "/api/state/browser",
+  "/api/state/reset",
   "/api/state",
   "projects-static-demo-api-client-v1",
   "x-projects-demo-client"

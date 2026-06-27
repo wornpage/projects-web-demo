@@ -211,6 +211,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Hosted selected-work navigation uses generic browser-row persistence | Fixed | Selected-work navigation posts to `POST /api/state/selected` in hosted app mode and rejects missing browser keys before body parsing |
 | Hosted scenario changes use generic browser-row persistence | Fixed | Scenario cards post to `POST /api/state/scenario` in hosted app mode and reject missing browser keys before body parsing |
 | Hosted profile launch changes use generic browser-row persistence | Fixed | Profile launch params post to `POST /api/state/profile` in hosted app mode and reject missing browser keys before body parsing |
+| Hosted reset uses generic browser-row persistence | Fixed | Reset posts to `POST /api/state/reset` in hosted app mode and rejects missing browser keys before storage access |
 | Hosted browser-row persistence uses generic state write path | Fixed | Browser-row snapshots now save through `PUT /api/state/browser`; `PUT /api/state` is retired |
 | Server-owned work-path writes accept unsupported workflow status | Fixed | `/api/packs/{id}/path` rejects present blank or unsupported status values before storage, and local/live gates prove it |
 | Backend endpoint responses trigger immediate generic state re-saves | Fixed | Backend-loaded state marks the next render as save-suppressed, so workflow and sync loads are not immediately followed by a generic `PUT /api/state` |
@@ -300,6 +301,7 @@ Hosted filter changes use `POST /api/state/filter`.
 Hosted selected-work navigation uses `POST /api/state/selected`.
 Hosted scenario changes use `POST /api/state/scenario`.
 Hosted profile launch changes use `POST /api/state/profile`.
+Hosted reset uses `POST /api/state/reset`.
 Backend-loaded state also suppresses the next render's generic save, so a
 specific workflow endpoint response is not immediately re-written through
 `PUT /api/state/browser`.
@@ -311,7 +313,8 @@ on `PUT /api/state/browser`. Hosted recovery restore uses `POST
 hosted filter changes use `POST /api/state/filter`; hosted selected-work
 navigation uses `POST /api/state/selected`; hosted scenario changes use
 `POST /api/state/scenario`; hosted profile launch changes use
-`POST /api/state/profile`. The older duplicate `POST /api/state` and generic
+`POST /api/state/profile`; hosted reset uses `POST /api/state/reset`.
+The older duplicate `POST /api/state` and generic
 `PUT /api/state` write paths are retired.
 
 ## Obfuscation Decision

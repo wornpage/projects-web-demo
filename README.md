@@ -213,6 +213,9 @@ transform and empty-state scenario are owned by the backend instead of a
 browser-row snapshot.
 Hosted profile launch changes post to `POST /api/state/profile` so URL-selected
 copy labels are saved by the backend instead of a browser-row snapshot.
+Hosted reset posts to `POST /api/state/reset` so the server rebuilds the
+default row from checked-in seed data instead of accepting a browser-row
+snapshot.
 If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
 and does not continue into the static fallback write path.
 Those workflow endpoints reject malformed or overlong request fields before

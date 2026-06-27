@@ -165,6 +165,16 @@ check("live verifier rejects unkeyed profile writes before body parsing", includ
   "hosted profile write rejects missing client key before body parsing",
   "\"/api/state/profile\""
 ]), "unkeyed profile write rejection");
+check("live verifier rejects unkeyed reset writes before storage", includesAll(liveVerifier, [
+  "unkeyedResetWriteStatus",
+  "hosted reset write rejects missing client key before storage",
+  "\"/api/state/reset\""
+]), "unkeyed reset write rejection");
+check("live verifier handles hosted reset", includesAll(liveVerifier, [
+  "validResetWrite",
+  "hosted named reset endpoint restores default row",
+  "\"/api/state/reset\""
+]), "hosted reset");
 check("live verifier rejects invalid work-path status writes", includesAll(liveVerifier, [
   "invalidWorkPathStatus",
   "hosted work-path rejects invalid statuses"
@@ -187,12 +197,14 @@ check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSelectedStateStatus",
   "eraseScenarioStateStatus",
   "eraseProfileStateStatus",
+  "eraseResetStateStatus",
   "hosted verifier cleanup erases shared row",
   "hosted verifier cleanup erases recovery row",
   "hosted verifier cleanup erases path-status row",
   "hosted verifier cleanup erases selected-work row",
   "hosted verifier cleanup erases scenario row",
-  "hosted verifier cleanup erases profile row"
+  "hosted verifier cleanup erases profile row",
+  "hosted verifier cleanup erases reset row"
 ]), "live verifier cleanup");
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
 check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+North Star audit, whitespace, clean git state, and live/u.test(readme), "README ship summary");

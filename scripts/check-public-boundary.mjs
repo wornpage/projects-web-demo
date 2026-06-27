@@ -95,6 +95,7 @@ try {
   check("state write rate limits are configured", stateWriteRateLimitConfigured(serverSource), "stateWriteKeyForRequest before body read");
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
   check("state-changing routes validate client keys and write limits before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
+  check("state reset validates client key before storage", resetRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
   const recoveryRestore = frontendRecoveryRestoreUsesBackendEndpoint(frontendSource);
   check("hosted recovery restore uses named backend endpoint", recoveryRestore.ok, recoveryRestore.detail);
@@ -110,6 +111,8 @@ try {
   check("hosted scenario changes use named backend endpoint", hostedScenarioSave.ok, hostedScenarioSave.detail);
   const hostedProfileSave = frontendProfileUsesBackendEndpoint(frontendSource);
   check("hosted profile changes use named backend endpoint", hostedProfileSave.ok, hostedProfileSave.detail);
+  const hostedResetSave = frontendResetUsesBackendEndpoint(frontendSource);
+  check("hosted reset uses named backend endpoint", hostedResetSave.ok, hostedResetSave.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -245,6 +248,7 @@ try {
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ profile: "developer" })
   });
+  const unkeyedResetWrite = await request(port, "/api/state/reset", { method: "POST" });
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
@@ -255,6 +259,7 @@ try {
   check("unkeyed selected-work write rejects missing client key before body parsing", unkeyedSelectedWrite.status === 400, unkeyedSelectedWrite.status);
   check("unkeyed scenario write rejects missing client key before body parsing", unkeyedScenarioWrite.status === 400, unkeyedScenarioWrite.status);
   check("unkeyed profile write rejects missing client key before body parsing", unkeyedProfileWrite.status === 400, unkeyedProfileWrite.status);
+  check("unkeyed reset write rejects missing client key before storage", unkeyedResetWrite.status === 400, unkeyedResetWrite.status);
   check(
     "unkeyed API workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWrites.every(([, status]) => status === 400),
@@ -296,6 +301,7 @@ try {
   const clientB = "demo-00000000-0000-4000-8000-000000000002";
   const limitClient = "demo-00000000-0000-4000-8000-000000000003";
   const scenarioClient = "demo-00000000-0000-4000-8000-000000000005";
+  const resetClient = "demo-00000000-0000-4000-8000-000000000006";
   const packTitle = `Boundary check ${Date.now().toString(36)}`;
   const clientBTitle = `Boundary other row ${Date.now().toString(36)}`;
   const seedPacks = await jsonRequest(port, "/api/demo-packs", {
@@ -485,6 +491,21 @@ try {
   });
   const clientAStateAfterProfile = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientA }
+  });
+  await jsonRequest(port, "/api/state/profile", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": resetClient
+    },
+    body: JSON.stringify({ profile: "developer", source: "Boundary" })
+  });
+  const validResetWrite = await jsonRequest(port, "/api/state/reset", {
+    method: "POST",
+    headers: { "x-projects-demo-client": resetClient }
+  });
+  const resetStateAfterWrite = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": resetClient }
   });
   const missingPacksStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
@@ -793,6 +814,8 @@ try {
   check("named profile endpoint saves supported profile", validProfileWrite.status === 200 && validProfileWrite.body?.state?.copyProfile === "developer", `${validProfileWrite.status} / ${validProfileWrite.body?.state?.copyProfile || "missing"}`);
   check("named profile endpoint rejects unsupported profiles", invalidProfileWrite.status === 400, invalidProfileWrite.status);
   check("named profile endpoint persists the keyed row", clientAStateAfterProfile.body?.copyProfile === "developer", clientAStateAfterProfile.body?.copyProfile || "missing");
+  check("named reset endpoint restores default row", validResetWrite.status === 200 && validResetWrite.body?.state?.copyProfile === "general" && validResetWrite.body?.state?.scenarioId === "default" && validResetWrite.body?.state?.filter === "all" && Array.isArray(validResetWrite.body?.state?.packs) && validResetWrite.body.state.packs.length > 0, `${validResetWrite.status} / ${validResetWrite.body?.state?.copyProfile || "missing"}`);
+  check("named reset endpoint persists the keyed row", resetStateAfterWrite.body?.copyProfile === "general" && resetStateAfterWrite.body?.scenarioId === "default" && resetStateAfterWrite.body?.filter === "all", `${resetStateAfterWrite.body?.copyProfile || "missing"} / ${resetStateAfterWrite.body?.scenarioId || "missing"} / ${resetStateAfterWrite.body?.filter || "missing"}`);
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("empty state snapshots are rejected", emptyPacksStateWrite.status === 400, emptyPacksStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
@@ -1187,6 +1210,15 @@ function frontendBrowserRowSaveUsesNamedEndpoint(source) {
   };
 }
 
+function frontendPostStateHelper(source) {
+  const helperBody = functionBody(source, "postBackendStateAction");
+  return Boolean(helperBody
+    && helperBody.includes("fetch(apiUrl(path)")
+    && helperBody.includes('method: "POST"')
+    && helperBody.includes("JSON.stringify(payload)")
+    && helperBody.includes("loadBackendOwnedState(result.state)"));
+}
+
 function frontendFilterUsesBackendEndpoint(source) {
   const helperBody = functionBody(source, "saveBackendStateFilter");
   const toolbarBody = functionBody(source, "bindToolbar");
@@ -1194,9 +1226,9 @@ function frontendFilterUsesBackendEndpoint(source) {
     return { ok: false, detail: "saveBackendStateFilter/bindToolbar:missing" };
   }
 
-  const ok = helperBody.includes('fetch(apiUrl("/api/state/filter")')
+  const ok = frontendPostStateHelper(source)
+    && helperBody.includes('postBackendStateAction("/api/state/filter", { filter }, "filter")')
     && helperBody.includes("prepareBackendWorkflowRequest()")
-    && helperBody.includes("loadBackendOwnedState(result.state)")
     && toolbarBody.includes("await saveBackendStateFilter(filter)")
     && toolbarBody.includes("state.suppressNextSave = true")
     && !toolbarBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
@@ -1215,9 +1247,8 @@ function frontendSelectedWorkUsesBackendEndpoint(source) {
     return { ok: false, detail: "saveBackendSelectedWork/routeFromHash:missing" };
   }
 
-  const ok = helperBody.includes('fetch(apiUrl("/api/state/selected")')
-    && helperBody.includes("JSON.stringify({ selectedId })")
-    && helperBody.includes("loadBackendOwnedState(result.state)")
+  const ok = frontendPostStateHelper(source)
+    && helperBody.includes('postBackendStateAction("/api/state/selected", { selectedId }, "selected work")')
     && routeBody.includes("saveBackendSelectedWork(state.selectedId)")
     && routeBody.includes("state.suppressNextSave = true")
     && !routeBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
@@ -1236,10 +1267,10 @@ function frontendScenarioUsesBackendEndpoint(source) {
     return { ok: false, detail: "saveBackendScenario/applyScenario:missing" };
   }
 
-  const ok = helperBody.includes('fetch(apiUrl("/api/state/scenario")')
-    && helperBody.includes("JSON.stringify({")
+  const ok = frontendPostStateHelper(source)
+    && helperBody.includes('postBackendStateAction("/api/state/scenario"')
     && helperBody.includes("scenarioId")
-    && helperBody.includes("loadBackendOwnedState(result.state)")
+    && helperBody.includes("preserveProfile")
     && applyBody.includes("await saveBackendScenario(current.id")
     && applyBody.includes("clearPendingBackendStateSave()")
     && !applyBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
@@ -1258,9 +1289,8 @@ function frontendProfileUsesBackendEndpoint(source) {
     return { ok: false, detail: "saveBackendProfile/applyLaunchConfiguration:missing" };
   }
 
-  const ok = helperBody.includes('fetch(apiUrl("/api/state/profile")')
-    && helperBody.includes("JSON.stringify({ profile, source })")
-    && helperBody.includes("loadBackendOwnedState(result.state)")
+  const ok = frontendPostStateHelper(source)
+    && helperBody.includes('postBackendStateAction("/api/state/profile", { profile, source }, "profile")')
     && launchBody.includes("await saveBackendProfile(profileParam, \"URL\")")
     && !launchBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
   return {
@@ -1269,6 +1299,39 @@ function frontendProfileUsesBackendEndpoint(source) {
       ? "hosted profile launch changes post to /api/state/profile without falling back to browser-row saves"
       : "hosted profile launch changes still rely on browser-row snapshot persistence"
   };
+}
+
+function frontendResetUsesBackendEndpoint(source) {
+  const helperBody = functionBody(source, "saveBackendResetState");
+  const resetBody = functionBody(source, "resetState");
+  if (!helperBody || !resetBody) {
+    return { ok: false, detail: "saveBackendResetState/resetState:missing" };
+  }
+
+  const ok = frontendPostStateHelper(source)
+    && helperBody.includes('postBackendStateAction("/api/state/reset", {}, "reset")')
+    && resetBody.includes("await saveBackendResetState()")
+    && resetBody.includes("clearPendingBackendStateSave()")
+    && resetBody.includes("state.packs = structuredClone(state.basePacks)")
+    && !resetBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
+  return {
+    ok,
+    detail: ok
+      ? "hosted reset posts to /api/state/reset while static reset keeps local data"
+      : "hosted reset still relies on browser-row snapshot persistence"
+  };
+}
+
+function resetRouteValidatesKey(source) {
+  const routeStart = source.indexOf('if (method === "POST" && pathname === "/api/state/reset")');
+  if (routeStart < 0) {
+    return false;
+  }
+
+  const routeEnd = source.indexOf("\n  }\n\n", routeStart);
+  const routeSource = source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined);
+  return routeSource.includes("const stateKey = stateWriteKeyForRequest(request)")
+    && routeSource.includes("await writeState(result.state, stateKey)");
 }
 
 function eraseRouteValidatesKey(source) {

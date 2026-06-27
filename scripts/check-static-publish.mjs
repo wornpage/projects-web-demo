@@ -36,6 +36,7 @@ const protectedReadableTokens = [
   "backend-command-pending",
   "x-projects-demo-client",
   "/api/state/browser",
+  "/api/state/reset",
   "/api/state"
 ];
 

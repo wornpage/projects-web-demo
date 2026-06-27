@@ -103,6 +103,7 @@ try {
   const unkeyedProfileWriteStatus = await writeStatus("/api/state/profile", { profile: "developer" }, {
     "content-type": "text/plain"
   }, "POST");
+  const unkeyedResetWriteStatus = await readStatus("/api/state/reset", {}, "POST");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
   const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
@@ -114,6 +115,7 @@ try {
   const selectedKey = `demo-${crypto.randomUUID()}`;
   const scenarioKey = `demo-${crypto.randomUUID()}`;
   const profileKey = `demo-${crypto.randomUUID()}`;
+  const resetKey = `demo-${crypto.randomUUID()}`;
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
@@ -224,6 +226,14 @@ try {
   }, "POST");
   const invalidNamedProfileStatus = await writeStatus("/api/state/profile", { profile: "private" }, {
     "x-projects-demo-client": profileKey,
+    "content-type": "application/json"
+  }, "POST");
+  await writeJson("/api/state/profile", { profile: "developer", source: "Boundary" }, {
+    "x-projects-demo-client": resetKey,
+    "content-type": "application/json"
+  }, "POST");
+  const validResetWrite = await writeJson("/api/state/reset", {}, {
+    "x-projects-demo-client": resetKey,
     "content-type": "application/json"
   }, "POST");
   const unkeyedWorkflowWriteStatuses = await Promise.all([
@@ -360,6 +370,8 @@ try {
   const scenarioStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": scenarioKey });
   const eraseProfileStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": profileKey }, "POST");
   const profileStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": profileKey });
+  const eraseResetStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": resetKey }, "POST");
+  const resetStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": resetKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
@@ -489,6 +501,7 @@ try {
   check("hosted selected-work write rejects missing client key before body parsing", unkeyedSelectedWriteStatus === 400, unkeyedSelectedWriteStatus);
   check("hosted scenario write rejects missing client key before body parsing", unkeyedScenarioWriteStatus === 400, unkeyedScenarioWriteStatus);
   check("hosted profile write rejects missing client key before body parsing", unkeyedProfileWriteStatus === 400, unkeyedProfileWriteStatus);
+  check("hosted reset write rejects missing client key before storage", unkeyedResetWriteStatus === 400, unkeyedResetWriteStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
@@ -526,6 +539,7 @@ try {
   check("hosted named scenario endpoint rejects unsupported scenarios", invalidNamedScenarioStatus === 400, invalidNamedScenarioStatus);
   check("hosted named profile endpoint saves supported profile", validProfileWrite.state?.copyProfile === "developer", validProfileWrite.state?.copyProfile || "missing");
   check("hosted named profile endpoint rejects unsupported profiles", invalidNamedProfileStatus === 400, invalidNamedProfileStatus);
+  check("hosted named reset endpoint restores default row", validResetWrite.state?.copyProfile === "general" && validResetWrite.state?.scenarioId === "default" && validResetWrite.state?.filter === "all" && Array.isArray(validResetWrite.state?.packs) && validResetWrite.state.packs.length > 0, `${validResetWrite.state?.copyProfile || "missing"} / ${validResetWrite.state?.scenarioId || "missing"} / ${validResetWrite.state?.filter || "missing"}`);
   check("hosted state rejects blank copy profiles", blankProfileStateStatus === 400, blankProfileStateStatus);
   check("hosted state rejects invalid top-level text fields", invalidStateTextFieldStatus === 400, invalidStateTextFieldStatus);
   check("hosted state rejects overlong top-level text fields", overlongStateTextFieldStatus === 400, overlongStateTextFieldStatus);
@@ -560,6 +574,7 @@ try {
   check("hosted verifier cleanup erases selected-work row", eraseSelectedStateStatus === 200 && selectedStateAfterCleanup.selectedId !== "source-folder-audit", `${eraseSelectedStateStatus} / ${selectedStateAfterCleanup.selectedId || "none"}`);
   check("hosted verifier cleanup erases scenario row", eraseScenarioStateStatus === 200 && scenarioStateAfterCleanup.scenarioId !== "empty", `${eraseScenarioStateStatus} / ${scenarioStateAfterCleanup.scenarioId || "none"}`);
   check("hosted verifier cleanup erases profile row", eraseProfileStateStatus === 200 && profileStateAfterCleanup.copyProfile !== "developer", `${eraseProfileStateStatus} / ${profileStateAfterCleanup.copyProfile || "none"}`);
+  check("hosted verifier cleanup erases reset row", eraseResetStateStatus === 200 && resetStateAfterCleanup.copyProfile === "general" && resetStateAfterCleanup.scenarioId === "default", `${eraseResetStateStatus} / ${resetStateAfterCleanup.copyProfile || "none"}`);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("API command route returns selected-work flow copy", commandPreviewOwnsCopy(commandPreview), `${commandPreview.flowHint || "missing"} / ${commandPreview.primaryReason || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");

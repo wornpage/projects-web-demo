@@ -487,9 +487,23 @@ function recoverySnapshotText() {
   }, null, 2);
 }
 
-function resetState() {
+async function resetState() {
   localStorage.removeItem(DEMO_STORAGE_KEY);
   purgeLegacyDemoState();
+  syncSearchParam("scenario", null);
+  syncSearchParam("profile", null);
+  state.actionReceipt = null;
+  state.clipboardReceipt = null;
+  if (DEMO_API_BASE_URL) {
+    try {
+      clearPendingBackendStateSave();
+      await saveBackendResetState();
+    } catch (error) {
+      state.status = routeStatus("Backend reset", error.message || "reset failed", "try again");
+    }
+    render();
+    return;
+  }
   state.packs = structuredClone(state.basePacks);
   state.copyProfile = "general";
   state.scenarioId = "default";
@@ -497,9 +511,6 @@ function resetState() {
   state.query = "";
   state.filter = "all";
   state.status = resetDemoStatus();
-  state.actionReceipt = null;
-  state.clipboardReceipt = null;
-  syncSearchParam("scenario", null);
   render();
 }
 
@@ -757,65 +768,37 @@ async function sendBackendStateSnapshot(path, method, snapshot, label) {
   return response.json();
 }
 
-async function saveBackendStateFilter(filter) {
-  prepareBackendWorkflowRequest();
-  const response = await fetch(apiUrl("/api/state/filter"), {
+async function postBackendStateAction(path, payload, label) {
+  const response = await fetch(apiUrl(path), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({ filter })
+    body: JSON.stringify(payload)
   });
-  if (!response.ok) {
-    throw new Error(`Backend filter failed with ${response.status}`);
-  }
-
   const result = await response.json();
+  if (!response.ok) throw new Error(`Backend ${label} failed with ${response.status}`);
   loadBackendOwnedState(result.state);
   return result;
+}
+
+async function saveBackendStateFilter(filter) {
+  prepareBackendWorkflowRequest();
+  return postBackendStateAction("/api/state/filter", { filter }, "filter");
 }
 
 async function saveBackendSelectedWork(selectedId) {
-  const response = await fetch(apiUrl("/api/state/selected"), {
-    method: "POST",
-    headers: await apiHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({ selectedId })
-  });
-  if (!response.ok) {
-    throw new Error(`Backend selected work failed with ${response.status}`);
-  }
-
-  const result = await response.json();
-  loadBackendOwnedState(result.state);
-  return result;
+  return postBackendStateAction("/api/state/selected", { selectedId }, "selected work");
 }
 
 async function saveBackendScenario(scenarioId, options = {}) {
-  const response = await fetch(apiUrl("/api/state/scenario"), {
-    method: "POST",
-    headers: await apiHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({
-      scenarioId,
-      preserveProfile: Boolean(options.preserveProfile)
-    })
-  });
-  if (!response.ok) {
-    throw new Error(`Backend scenario failed with ${response.status}`);
-  }
-
-  const result = await response.json();
-  loadBackendOwnedState(result.state);
-  return result;
+  return postBackendStateAction("/api/state/scenario", { scenarioId, preserveProfile: Boolean(options.preserveProfile) }, "scenario");
 }
 
 async function saveBackendProfile(profile, source = "Start") {
-  const response = await fetch(apiUrl("/api/state/profile"), {
-    method: "POST",
-    headers: await apiHeaders({ "content-type": "application/json" }),
-    body: JSON.stringify({ profile, source })
-  });
-  const result = await response.json();
-  if (!response.ok) throw new Error(`Backend profile failed with ${response.status}`);
-  loadBackendOwnedState(result.state);
-  return result;
+  return postBackendStateAction("/api/state/profile", { profile, source }, "profile");
+}
+
+async function saveBackendResetState() {
+  return postBackendStateAction("/api/state/reset", {}, "reset");
 }
 
 async function runBackendPackAction(pack, action) {
