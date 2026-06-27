@@ -88,18 +88,20 @@ After deploy:
    `assets/demo.js` includes the latest frontend code. The Node app rewrites
    asset query strings at startup so stale cached assets are bypassed after a
    deploy.
-9. Run the live deploy verifier from the repo root:
+9. Run the full ship verifier from the repo root:
 
    ```powershell
-   pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
+   pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
    ```
 
-   The verifier fails if Outplane is still serving an old frontend bundle, if
-   production minification did not run, if the backend-backed frontend helpers
-   are missing, if retired triage code is still public, if hosted state accepts
-   a request without a browser client key, if two browser client keys can read
-   each other's state, or if a shared sync key cannot be read from a second
-   request. It writes only fixed `live-check-*` verifier rows.
+   The ship verifier runs local syntax, protected frontend, public-boundary,
+   whitespace, and live Outplane checks. Its live step fails if Outplane is
+   still serving an old frontend bundle, if production minification did not run,
+   if the backend-backed frontend helpers are missing, if retired triage code is
+   still public, if hosted state accepts a request without a browser client key,
+   if two browser client keys can read each other's state, or if a shared sync
+   key cannot be read from a second request. It writes only fixed `live-check-*`
+   verifier rows.
 
 ## Notes
 

@@ -38,6 +38,7 @@ Keep this repo focused on the public portfolio demo.
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
 | `scripts/check-public-boundary.mjs` | Local proof that the app server only serves public files and keyed demo states do not mix. |
 | `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app is serving the protected current frontend. |
+| `scripts/check-ship.mjs` | Runs the local gates plus live Outplane verification before a ship. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
 | `render.yaml` | Render Blueprint for hosting the Docker app with managed Postgres state. |
 | `docs/deploy-outplane.md` | Outplane development deploy checklist. |
@@ -212,15 +213,15 @@ the original browser-local GitHub Pages behavior.
 The published site is this static repository. Keep the Pages branch/folder
 pointing at these checked-in files. Do not publish `server/data/state.json`.
 
-Before pushing, run:
+Before shipping, run the full local plus live gate:
 
 ```powershell
-pwsh -NoLogo -NoProfile -Command 'node --check "assets/demo.js"'
-pwsh -NoLogo -NoProfile -Command 'npm --prefix server run protect:check'
-pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 ```
 
-Then smoke the main routes locally in light and dark mode:
+That command runs frontend syntax, backend syntax, protected frontend,
+public-boundary, whitespace, and live Outplane checks. For UI-only work, also
+smoke the main routes locally in light and dark mode:
 
 - `#/home`
 - `#/review`

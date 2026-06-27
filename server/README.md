@@ -122,11 +122,12 @@ nosniff`. This is still demo isolation, not private account security.
 
 ## Checks
 
-Run the backend syntax check, protected frontend check, and public boundary
-check from the repository root before shipping backend app-mode changes:
+Run the full ship gate from the repository root before shipping backend
+app-mode changes:
 
 ```powershell
-pwsh -NoLogo -NoProfile -Command 'npm --prefix server run check'
-pwsh -NoLogo -NoProfile -Command 'npm --prefix server run protect:check'
-pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 ```
+
+That command runs backend syntax, frontend protection, the public boundary
+check, whitespace checks, and the live Outplane verifier.
