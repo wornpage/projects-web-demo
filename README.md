@@ -154,9 +154,10 @@ Full-state writes must be JSON object snapshots with a `packs` array; scalar,
 array, empty, or missing-work payloads are rejected before they can sanitize
 into an empty row. Use the backend erase endpoint to clear the current row.
 Full-state writes also require supported profile, scenario, and filter values,
-plus each work item must keep a unique id, title, and valid workflow status.
-That keeps backup or sync restores from silently creating ambiguous duplicate
-or off-contract work rows.
+plus each work item must keep a unique id, title, and valid workflow status, and
+the saved selected work id must reference one of those items. That keeps backup
+or sync restores from silently creating duplicate rows, dangling selections, or
+off-contract work rows.
 Selected-work commands in hosted app mode wait for the server command preview
 before enabling the primary command buttons, so the browser does not briefly run
 the local workflow fallback while `/api/packs/{id}/command` is loading.

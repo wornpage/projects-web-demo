@@ -1359,7 +1359,8 @@ function validateStatePayload(payload) {
   }
 
   validateStateMetadata(payload);
-  validateStatePacks(payload.packs);
+  const packIds = validateStatePacks(payload.packs);
+  validateSelectedPackId(payload.selectedId, packIds);
   validatePlainValueShape(payload.actionReceipt);
 }
 
@@ -1411,6 +1412,14 @@ function validateStatePacks(value) {
     }
     packIds.add(id);
   });
+  return packIds;
+}
+
+function validateSelectedPackId(value, packIds) {
+  const selectedId = normalizeText(value, 120);
+  if (!selectedId || !packIds.has(selectedId)) {
+    throw httpError(400, "Demo state selected work must reference an existing item.");
+  }
 }
 
 function sanitizePack(payload) {

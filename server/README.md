@@ -18,7 +18,8 @@ Hosted Postgres stores and reads a server-side digest of that key in
 `state_key`; local file-backed mode stores hashed filenames.
 Each anonymous state row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected. Full-state writes require each
-work item to keep a unique id and title, and also reject oversized
+work item to keep a unique id and title, require the selected work id to
+reference an existing item, and also reject oversized
 `actionReceipt` object shapes before storage.
 `POST /api/state/erase` removes only the row selected by the current generated
 browser key or hashed sync key. Missing or invalid keys are rejected before any
