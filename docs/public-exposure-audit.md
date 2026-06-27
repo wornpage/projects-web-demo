@@ -118,10 +118,11 @@ Repeatable live gate:
 pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
 ```
 
-The live gate rebuilds the protected frontend from this checkout and confirms
-the hosted protected JS and CSS content match before it checks app behavior. It
-also confirms the hosted app uses Postgres, serves the app shell with a
-same-origin runtime config script and no-inline script CSP, rejects `/api/state`
+The live gate rebuilds expected app-shell content and the protected frontend
+from this checkout, then confirms the hosted app shell content, protected JS,
+and CSS content match before it checks app behavior. It also confirms the
+hosted app uses Postgres, serves the app shell with a same-origin runtime config
+script and no-inline script CSP, rejects `/api/state`
 without a browser client key, loads seed demo work through `/api/demo-packs`
 with a browser client key, rejects weak manual and readable sync-code API client
 keys, keeps generated browser rows separate,
@@ -175,6 +176,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Ship verification can mix local edits with an older live deploy | Fixed | `scripts/check-git-ship-state.mjs` requires a clean branch synced with upstream before the live Outplane check runs |
 | Hosted asset URLs change on every restart of the same build | Fixed | Asset query-string fallback is derived from shipped public runtime file contents, while explicit deploy asset versions still win |
+| Live verifier can miss stale app-shell HTML | Fixed | The live gate compares hosted app-shell content against checkout-derived app-shell content while normalizing asset-version query strings and checking the runtime config script separately |
 | Live verifier leaves hosted check rows behind | Fixed | The live gate erases temporary shared-sync and recovery rows after proving cross-request sync and restore behavior |
 | Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |

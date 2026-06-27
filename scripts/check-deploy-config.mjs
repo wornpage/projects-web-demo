@@ -80,11 +80,13 @@ check("live verifier rebuilds expected protected frontend", includesAll(liveVeri
   "assets/demo.js"
 ]), "expectedFrontendAssets");
 check("live verifier compares deployed frontend hashes", includesAll(liveVerifier, [
+  "live app shell matches this checkout",
   "live protected JS matches this checkout",
   "live CSS content matches this checkout",
+  "canonicalAppShellHtml(appShell)",
   "sha256(script)",
   "normalizeDeployText(css)"
-]), "live JS/CSS hash match");
+]), "live app shell/JS/CSS hash match");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",
@@ -93,9 +95,11 @@ check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
 ]), "live verifier cleanup");
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
 check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, clean git state, and live/u.test(readme), "README ship summary");
+check("README documents live app-shell matching", /app shell and\s+protected frontend content matching/u.test(readme), "app shell matching");
 check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, clean git state, and live/u.test(serverReadme), "server README ship summary");
 check("deploy doc documents content-derived asset fallback", deployDoc.includes("content-derived asset fallback"), "content-derived asset fallback");
+check("deploy doc documents live app-shell matching", /app shell content,\s+protected JS, or CSS content/u.test(deployDoc), "app shell matching");
 check("deploy doc documents live verifier cleanup", /erases the temporary\s+verifier rows/u.test(deployDoc), "live verifier cleanup");
 
 for (const row of checks) {

@@ -21,6 +21,7 @@ try {
   const health = await readJson("/api/health");
   const htmlResponse = await readResponse("/");
   const html = htmlResponse.text;
+  const appShellHash = sha256(canonicalAppShellHtml(html));
   const csp = htmlResponse.headers.get("content-security-policy") || "";
   const sameOriginCors = await readResponse("/api/health", { origin: baseUrl.origin });
   const spoofedForwardedCors = await readResponse("/api/health", {
@@ -214,6 +215,7 @@ try {
   check("live API rejects disallowed preflight method", blockedMethodPreflightStatus === 403, blockedMethodPreflightStatus);
   check("live API rejects disallowed preflight header", blockedHeaderPreflightStatus === 403, blockedHeaderPreflightStatus);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
+  check("live app shell matches this checkout", appShellHash === expectedFrontend.appShellHash, `live=${appShellHash} expected=${expectedFrontend.appShellHash}`);
   check("live protected JS matches this checkout", scriptHash === expectedFrontend.scriptHash, `live=${scriptHash} expected=${expectedFrontend.scriptHash}`);
   check("live CSS content matches this checkout", cssHash === expectedFrontend.cssHash, `live=${cssHash} expected=${expectedFrontend.cssHash}`);
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
@@ -427,12 +429,14 @@ async function expectedFrontendAssets() {
       throw new Error(`Local protected frontend build failed.\n${result.stderr || result.stdout}`);
     }
 
-    const [script, css] = await Promise.all([
+    const [script, css, appShell] = await Promise.all([
       fs.readFile(protectedScriptPath, "utf8"),
-      fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8")
+      fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8"),
+      fs.readFile(path.join(repoRoot, "index.html"), "utf8")
     ]);
 
     return {
+      appShellHash: sha256(canonicalAppShellHtml(appShell)),
       scriptHash: sha256(script),
       cssHash: sha256(normalizeDeployText(css))
     };
@@ -443,6 +447,13 @@ async function expectedFrontendAssets() {
 
 function sha256(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function canonicalAppShellHtml(html) {
+  return normalizeDeployText(html)
+    .replace(/\s*<script[^>]*src="assets\/runtime-config\.js[^"]*"[^>]*><\/script>\s*/gu, "\n  ")
+    .replace(/(href="assets\/demo\.css\?v=)[^"]*/gu, "$1<asset-version>")
+    .replace(/(src="assets\/demo\.js\?v=)[^"]*/gu, "$1<asset-version>");
 }
 
 function normalizeDeployText(value) {
