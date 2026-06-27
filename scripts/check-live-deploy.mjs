@@ -226,14 +226,7 @@ try {
     "x-projects-demo-client": pathStatusKey,
     "content-type": "application/json"
   }, "POST");
-  const rateLimitedStateWriteStatuses = await Promise.all(
-    Array.from({ length: RATE_LIMIT_STATE_WRITE_REQUESTS + 1 }, () => writeStatus("/api/state", {
-      ignored: "rate limit check should fail content-type before storage until the bucket is full"
-    }, {
-      "x-projects-demo-client": rateLimitKey,
-      "content-type": "text/plain"
-    }, "PUT"))
-  );
+  const rateLimitedStateWriteStatuses = await rateLimitWriteStatuses(rateLimitKey);
   const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
     actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
   }), {
@@ -555,6 +548,19 @@ async function writeStatus(pathname, payload, headers = {}, method = "PUT") {
     body: JSON.stringify(payload)
   });
   return response.status;
+}
+
+async function rateLimitWriteStatuses(clientKey) {
+  const statuses = [];
+  for (let index = 0; index < RATE_LIMIT_STATE_WRITE_REQUESTS + 1; index += 1) {
+    statuses.push(await writeStatus("/api/state", {
+      ignored: "rate limit check should fail content-type before storage until the bucket is full"
+    }, {
+      "x-projects-demo-client": clientKey,
+      "content-type": "text/plain"
+    }, "PUT"));
+  }
+  return statuses;
 }
 
 function stateWithCheckPack(state, id, title) {

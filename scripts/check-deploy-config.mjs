@@ -147,6 +147,7 @@ check("live verifier handles hosted oversized upload rejection", includesAll(liv
 check("live verifier checks hosted write rate limits", includesAll(liveVerifier, [
   "rateLimitedStateWriteStatuses",
   "hosted state write rate limit rejects before content-type parsing",
+  "rateLimitWriteStatuses",
   "RATE_LIMIT_STATE_WRITE_REQUESTS"
 ]), "hosted write rate limit rejection");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
