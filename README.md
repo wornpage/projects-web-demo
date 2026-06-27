@@ -37,7 +37,7 @@ Keep this repo focused on the public portfolio demo.
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
 | `scripts/check-public-assets.mjs` | Local proof that public text assets stay budgeted and omit source maps or private path strings. |
-| `scripts/check-public-routes.mjs` | Local proof that the visible route set stays small and retired route entrypoints stay absent. |
+| `scripts/check-public-routes.mjs` | Local proof that the visible route set stays small and retired route code stays absent. |
 | `scripts/check-sync-surface.mjs` | Local proof that sync links, QR sharing, and sync client keys stay wired. |
 | `scripts/check-state-recovery.mjs` | Local proof that one client's exported state can be restored without mixing rows. |
 | `scripts/check-public-boundary.mjs` | Local proof that the app server only serves public files and keyed demo states do not mix. |

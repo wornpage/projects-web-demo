@@ -64,7 +64,7 @@ confirms only the public allowlist is served, confirms repository files and
 path traversal attempts return `404`, creates work under one browser client
 key, confirms another client key plus the default local row cannot read it,
 confirms public text assets stay under explicit size budgets without source-map
-hints or private path strings, confirms retired route entrypoints stay absent,
+hints or private path strings, confirms retired route code stays absent,
 and confirms the backend-served app shell sends a nonce-based Content Security
 Policy for the injected runtime API script.
 

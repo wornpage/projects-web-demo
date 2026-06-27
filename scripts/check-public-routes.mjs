@@ -53,6 +53,33 @@ const blockedRouteActions = [
   "search-demo",
   "validate-sample"
 ].filter((action) => source.includes(`action === "${action}"`) || source.includes(`action: "${action}"`));
+const blockedRenderFunctions = [
+  "renderBoard",
+  "renderCalendar",
+  "renderCheck",
+  "renderFeedback",
+  "renderFiles",
+  "renderFocus",
+  "renderHealth",
+  "renderLab",
+  "renderMeta",
+  "renderNotes",
+  "renderSearch",
+  "renderSettings",
+  "renderStats",
+  "renderTimeline",
+  "renderToday"
+].filter((name) => source.includes(`function ${name}(`));
+const blockedRetiredHelpers = [
+  "bindLabControls",
+  "copyFeedbackContext",
+  "feedbackIssueBody",
+  "labNoPackReason",
+  "labPackSelectReason",
+  "labRunActionHelp",
+  "labSetNextActionHelp",
+  "syncLabRenderedSmokeChecks"
+].filter((name) => source.includes(`function ${name}(`));
 
 check("route contract contains only the public routes plus pack detail", arraysEqual(contractRoutes, expectedContractRoutes), contractRoutes.join(", "));
 check("visible nav routes stay intentionally small", arraysEqual(navRoutes, expectedNavRoutes), navRoutes.join(", "));
@@ -63,6 +90,8 @@ check("internal routes are absent from visible nav", blockedInNav.length === 0, 
 check("internal routes are absent from render dispatch", blockedDispatchCases.length === 0, blockedDispatchCases.join(", ") || "absent");
 check("internal routes are absent from go() entrypoints", blockedGoCalls.length === 0, blockedGoCalls.join(", ") || "absent");
 check("retired route actions are absent", blockedRouteActions.length === 0, blockedRouteActions.join(", ") || "absent");
+check("retired route render functions are absent", blockedRenderFunctions.length === 0, blockedRenderFunctions.join(", ") || "absent");
+check("retired route helper functions are absent", blockedRetiredHelpers.length === 0, blockedRetiredHelpers.join(", ") || "absent");
 check("public routes use hash patterns", publicRoutedPatterns.every((pattern) => pattern.startsWith("#/")), publicRoutedPatterns.join(", "));
 check("pack route requires a work id", routeContract.pack?.acceptsPackId === true && routeContract.pack?.pattern === "#/pack/{packId}", routeContract.pack?.pattern || "missing");
 

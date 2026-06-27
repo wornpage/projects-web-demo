@@ -8,13 +8,13 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const checks = [];
 const publicTextAssets = [
   { pathname: "index.html", maxBytes: 12000 },
-  { pathname: "assets/demo.js", maxBytes: 350000 },
+  { pathname: "assets/demo.js", maxBytes: 300000 },
   { pathname: "assets/demo.css", maxBytes: 130000 },
   { pathname: "assets/app.css", maxBytes: 490000 },
   { pathname: "assets/demo-metadata.json", maxBytes: 2000 },
   { pathname: "data/demo-packs.json", maxBytes: 15000 }
 ];
-const totalPublicTextBudgetBytes = 1000000;
+const totalPublicTextBudgetBytes = 900000;
 const forbiddenPatterns = [
   {
     name: "source map hints",
