@@ -18,7 +18,7 @@ const ast = acorn.parse(source, {
 const checks = [];
 const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create"];
 const expectedContractRoutes = [...expectedNavRoutes, "pack"];
-const expectedNavLabels = ["Start", "Review", "Work", "Next", "Memory", "Create"];
+const expectedNavLabels = ["Start", "Review", "Work", "Next Action", "Memory", "Create"];
 const blockedPublicRoutes = [
   "board",
   "calendar",

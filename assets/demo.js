@@ -84,7 +84,7 @@ const ROUTE_CONTRACT = Object.freeze({
   home: { pattern: "#/home", title: "Start", commandSource: "route", navKey: "1", navLabel: "Start" },
   review: { pattern: "#/review/{packId}", title: "Review", commandSource: "selected-work", acceptsPackId: true, navKey: "2", navLabel: "Review" },
   work: { pattern: "#/work/{packId}", title: "Work", commandSource: "selected-work", acceptsPackId: true, navKey: "3", navLabel: "Work" },
-  next: { pattern: "#/next/{packId}", title: "Next action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "4", navLabel: "Next" },
+  next: { pattern: "#/next/{packId}", title: "Next action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "4", navLabel: "Next Action" },
   memory: { pattern: "#/memory/{packId}", title: "Memory", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "5", navLabel: "Memory" },
   create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true }
