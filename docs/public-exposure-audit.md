@@ -45,7 +45,7 @@ Observed responses:
 | `/render.yaml` | `404` | Retired provider config not served |
 | `/assets/../server/server.js` | `404` | Traversal attempt denied |
 | `/assets/%2e%2e/server/server.js` | `404` | Encoded traversal attempt denied |
-| `/api/state` without client key | `400` | Hosted state is not shared by fallback |
+| `/api/state` without client key | `400` | Backend state has no unkeyed fallback row |
 | `/api/state` with client key | `200` | Demo state loads for that client key |
 
 GitHub evidence:
@@ -66,7 +66,8 @@ The gate starts the Node app with a temporary file-backed state directory,
 confirms only the named public file allowlist is served, confirms repository
 files, unlisted asset/data paths, and path traversal attempts return `404`,
 creates work under one browser client
-key, confirms another client key plus the default local row cannot read it,
+key, confirms another client key cannot read it, confirms unkeyed local API
+state is rejected,
 confirms public assets stay on the file allowlist, confirms public text assets
 stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
@@ -107,7 +108,7 @@ Web Crypto and do not fall back to weak random values.
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |
-| Local file-backed API users mix state | Fixed | Browser client keys map to separate hashed local state files |
+| Local file-backed API users mix state | Fixed | Browser client keys are required and map to separate hashed local state files |
 | Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |
 | Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin |

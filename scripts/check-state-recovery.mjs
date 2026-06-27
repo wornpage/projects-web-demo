@@ -99,6 +99,7 @@ try {
   const files = await fs.readdir(tmpDir);
   check("recovery state stays in keyed local file", files.some((file) => /^state\.[a-f0-9]{32}\.json$/u.test(file)), files.join(", "));
   check("recovery filenames hide client keys", files.every((file) => !file.includes(clientA) && !file.includes(clientB)), files.join(", "));
+  check("recovery does not write an unkeyed local state file", !files.includes("state.json"), files.join(", "));
 
   for (const row of checks) {
     console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);

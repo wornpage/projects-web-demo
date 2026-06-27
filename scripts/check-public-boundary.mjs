@@ -152,14 +152,15 @@ try {
   const clientBState = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientB }
   });
-  const defaultState = await jsonRequest(port, "/api/state");
+  const unkeyedState = await request(port, "/api/state");
   check("client A reads its created work", stateHasPackTitle(clientAState.body, packTitle), clientAState.status);
   check("client B does not read client A work", !stateHasPackTitle(clientBState.body, packTitle), clientBState.status);
-  check("default local file row does not read client A work", !stateHasPackTitle(defaultState.body, packTitle), defaultState.status);
+  check("unkeyed local API state is rejected", unkeyedState.status === 400, unkeyedState.status);
 
   const files = await fs.readdir(tmpDir);
   check("keyed local state uses hashed filenames", files.some((file) => /^state\.[a-f0-9]{32}\.json$/u.test(file)), files.join(", "));
   check("keyed local state filenames hide raw client keys", files.every((file) => !file.includes(clientA) && !file.includes(clientB)), files.join(", "));
+  check("unkeyed local state file is not written", !files.includes("state.json"), files.join(", "));
 
   for (const row of checks) {
     console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);

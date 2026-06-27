@@ -1,15 +1,15 @@
 # Projects Web Demo App
 
 This is a small Node app for the Projects demo. It serves the frontend and
-`/api` from one process. Local runs use `server/data/state.json` plus hashed
-per-client state files when the browser sends an anonymous client key; hosted
-runs should use managed Postgres through `DATABASE_URL` or standard `PG*`
-variables. In API mode, the browser sends an anonymous client key so demo edits
-are isolated per browser without accounts.
+`/api` from one process. Local file-backed runs use hashed per-client state
+files under the configured state directory; hosted runs should use managed
+Postgres through `DATABASE_URL` or standard `PG*` variables. In API mode, the
+browser sends an anonymous client key so demo edits are isolated per browser
+without accounts.
 
-When `PROJECTS_STATE_STORAGE=postgres` is active, state-changing and state-read
-API routes require that anonymous browser client key. Missing or invalid keys
-are rejected instead of falling back to one shared hosted row.
+State-changing and state-read API routes require that anonymous browser client
+key in both local file-backed mode and hosted Postgres mode. Missing or invalid
+keys are rejected instead of falling back to one shared row.
 
 The frontend can replace the anonymous browser key with a hashed sync code so
 two browsers or devices can share one demo row. New sync codes and anonymous
@@ -37,8 +37,8 @@ fresh nonce on each response.
 
 Use `PROJECTS_STATE_STORAGE=postgres` and managed Postgres environment variables
 when deploying this app to a host where local files are ephemeral. Local
-file-backed app mode still honors the browser client key by storing each keyed
-client in a separate hashed state file beside the default file.
+file-backed app mode stores each keyed client in a separate hashed state file
+beside the configured state path and rejects unkeyed state requests.
 
 ## Docker
 
@@ -60,7 +60,7 @@ The image sets:
 |---|---|
 | `HOST` | `0.0.0.0` |
 | `PORT` | `5179` |
-| `PROJECTS_STATE_FILE` | `/app/state/state.json` for local file fallback |
+| `PROJECTS_STATE_FILE` | `/app/state/state.json` as the local file-backed state path |
 
 ## Outplane
 

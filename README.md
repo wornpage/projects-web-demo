@@ -107,11 +107,12 @@ assets after a push.
 API CORS is bounded to same-origin app requests. Use the single Node app for
 backend-backed local testing; the static preview remains browser-local.
 
-The default local state file is `server/data/state.json`. When the browser sends
-its anonymous client key, local file-backed app mode stores that client's state
-in a separate hashed state file beside the default file. Hosted deploys should
-still use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres environment
-variables instead of writable container files.
+The local state path defaults to `server/data/state.json`, but backend API
+state routes still require the browser's anonymous client key. Local
+file-backed app mode stores each keyed client's state in a separate hashed
+state file beside that path and rejects unkeyed state requests. Hosted deploys
+should still use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres
+environment variables instead of writable container files.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
 to the same demo row. Use **New** to create a Web Crypto generated 20-character

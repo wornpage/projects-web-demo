@@ -15,7 +15,6 @@ const STATE_FILE = process.env.PROJECTS_STATE_FILE || path.join(DATA_DIR, "state
 const STATE_DIR = path.dirname(STATE_FILE);
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const STATE_STORAGE = normalizeStateStorageMode(process.env.PROJECTS_STATE_STORAGE || (hasPostgresConfig() ? "postgres" : "file"));
-const DEFAULT_STATE_KEY = normalizeText(process.env.PROJECTS_STATE_KEY || "default", 120) || "default";
 const ASSET_VERSION = normalizeAssetVersion(process.env.PROJECTS_ASSET_VERSION
   || process.env.GIT_COMMIT
   || process.env.COMMIT_SHA
@@ -338,11 +337,11 @@ function escapeHtmlAttribute(value) {
     .replace(/>/gu, "&gt;");
 }
 
-async function readState(stateKey = DEFAULT_STATE_KEY) {
+async function readState(stateKey) {
   return stateStorage.read(stateKey);
 }
 
-async function writeState(payload, stateKey = DEFAULT_STATE_KEY) {
+async function writeState(payload, stateKey) {
   return stateStorage.write(payload, stateKey);
 }
 
@@ -381,14 +380,14 @@ function createPostgresStateStorage() {
         saved_at timestamptz NOT NULL DEFAULT now()
       )
     `),
-    async read(stateKey = DEFAULT_STATE_KEY) {
+    async read(stateKey) {
       const result = await pool.query(
         "SELECT state_json FROM projects_demo_state WHERE state_key = $1",
         [stateKey]
       );
       return result.rows[0]?.state_json ? sanitizeState(result.rows[0].state_json) : defaultState();
     },
-    async write(payload, stateKey = DEFAULT_STATE_KEY) {
+    async write(payload, stateKey) {
       const state = sanitizeState(payload);
       state.savedAt = new Date().toISOString();
       await pool.query(
@@ -410,11 +409,7 @@ function stateKeyForRequest(request) {
     return value;
   }
 
-  if (STATE_STORAGE === "postgres") {
-    throw httpError(400, `Missing or invalid ${API_CLIENT_HEADER} header.`);
-  }
-
-  return DEFAULT_STATE_KEY;
+  throw httpError(400, `Missing or invalid ${API_CLIENT_HEADER} header.`);
 }
 
 function hasPostgresConfig() {
@@ -466,7 +461,7 @@ function normalizeStateStorageMode(value) {
   return mode === "postgres" ? "postgres" : "file";
 }
 
-async function readFileState(stateKey = DEFAULT_STATE_KEY) {
+async function readFileState(stateKey) {
   const stateFile = fileStatePathForKey(stateKey);
   try {
     const text = await fs.readFile(stateFile, "utf8");
@@ -479,7 +474,7 @@ async function readFileState(stateKey = DEFAULT_STATE_KEY) {
   }
 }
 
-async function writeFileState(payload, stateKey = DEFAULT_STATE_KEY) {
+async function writeFileState(payload, stateKey) {
   const stateFile = fileStatePathForKey(stateKey);
   const state = sanitizeState(payload);
   await fs.mkdir(STATE_DIR, { recursive: true });
@@ -490,10 +485,10 @@ async function writeFileState(payload, stateKey = DEFAULT_STATE_KEY) {
   return state;
 }
 
-function fileStatePathForKey(stateKey = DEFAULT_STATE_KEY) {
-  const normalized = normalizeText(stateKey, 120) || DEFAULT_STATE_KEY;
-  if (normalized === DEFAULT_STATE_KEY) {
-    return STATE_FILE;
+function fileStatePathForKey(stateKey) {
+  const normalized = normalizeText(stateKey, 120);
+  if (!normalized) {
+    throw new Error("State key is required.");
   }
 
   const extension = path.extname(STATE_FILE) || ".json";
