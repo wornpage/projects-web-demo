@@ -822,11 +822,19 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-sync-share a {
+  align-items: center;
   color: var(--cockpit-accent);
+  display: inline-flex;
   font-size: 12px;
   font-weight: 750;
   line-height: 1.25;
+  min-height: 34px;
   overflow-wrap: anywhere;
+}
+
+.demo-sync-share a:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
 }
 
 .demo-sync-qr {

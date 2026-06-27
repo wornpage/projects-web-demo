@@ -312,6 +312,16 @@ check(
   "full-width input, centered buttons, compact share grid"
 );
 
+check(
+  "sync share link keeps visible keyboard focus",
+  includesAll(styles, [
+    ".demo-sync-share a:focus-visible",
+    "outline: 3px solid var(--demo-focus-ring);",
+    "outline-offset: 2px;"
+  ]),
+  "focus ring on generated share link"
+);
+
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
 }
