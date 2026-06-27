@@ -2268,6 +2268,7 @@ html[data-theme="dark"] .demo-header-metadata {
   border: 1px solid var(--cockpit-border);
   border-radius: 999px;
   color: inherit;
+  flex: 0 0 auto;
   min-width: 1.4em;
   padding: 1px 6px;
   text-align: center;
@@ -5947,6 +5948,7 @@ html[data-theme="dark"] .demo-app-shell {
 
   .demo-bottom-next strong {
     font-size: 14px;
+    overflow-wrap: anywhere;
     white-space: normal;
   }
 }

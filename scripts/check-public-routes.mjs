@@ -295,6 +295,7 @@ function workFilterStylesContractOk() {
     "min-height: 42px;",
     "width: 100%;",
     ".demo-chip[aria-pressed=\"true\"] .demo-chip-count",
+    "flex: 0 0 auto;",
     "background: var(--cockpit-bg);",
     "color: var(--cockpit-text);"
   ]) && includesAll(mobileStyles, [
