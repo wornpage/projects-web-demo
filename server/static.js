@@ -144,9 +144,14 @@ function contentSecurityPolicy() {
     "base-uri 'none'",
     "object-src 'none'",
     "frame-ancestors 'none'",
+    "frame-src 'none'",
+    "worker-src 'none'",
     "script-src 'self'",
     "style-src 'self'",
+    "font-src 'self'",
     "img-src 'self' data:",
+    "media-src 'none'",
+    "manifest-src 'none'",
     "connect-src 'self'",
     "form-action 'none'"
   ].join("; ");

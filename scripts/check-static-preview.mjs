@@ -53,6 +53,7 @@ try {
   check("static preview app shell blocks framing", csp.includes("frame-ancestors 'none'") && appShell.headers["x-frame-options"] === "DENY", `${csp || "missing"} / ${appShell.headers["x-frame-options"] || "missing"}`);
   check("static preview app shell limits network calls", csp.includes("connect-src 'self'"), csp || "missing");
   check("static preview style policy avoids unsafe inline styles", styleSrcDirective(csp) === "style-src 'self'", styleSrcDirective(csp) || "missing");
+  check("static preview content policy blocks unused loaders", cspBlocksUnusedLoaders(csp), unusedLoaderDirectiveDetail(csp));
 
   const unexpectedHostShell = await request(port, "/", {
     headers: { "Host": "preview.example" }
@@ -189,7 +190,25 @@ function getHeader(headers, name) {
 }
 
 function styleSrcDirective(csp) {
-  return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("style-src")) || "";
+  return cspDirective(csp, "style-src");
+}
+
+function cspBlocksUnusedLoaders(csp) {
+  return cspDirective(csp, "frame-src") === "frame-src 'none'"
+    && cspDirective(csp, "worker-src") === "worker-src 'none'"
+    && cspDirective(csp, "font-src") === "font-src 'self'"
+    && cspDirective(csp, "media-src") === "media-src 'none'"
+    && cspDirective(csp, "manifest-src") === "manifest-src 'none'";
+}
+
+function unusedLoaderDirectiveDetail(csp) {
+  return ["frame-src", "worker-src", "font-src", "media-src", "manifest-src"]
+    .map((name) => cspDirective(csp, name) || `${name}=missing`)
+    .join("; ");
+}
+
+function cspDirective(csp, name) {
+  return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith(name)) || "";
 }
 
 function freePort() {

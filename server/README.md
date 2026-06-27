@@ -123,7 +123,8 @@ same-origin resource/opener isolation, and restrictive `Permissions-Policy`
 headers. API body routes require `Content-Type: application/json`; non-JSON body
 writes are rejected with `415`. API CORS reflects only same-origin app requests.
 Preflights with retired methods or unlisted request headers are rejected. This
-is still demo isolation, not private account security.
+is still demo isolation, not private account security. The app-shell CSP also
+denies frames, workers, manifests, and media loaders the demo does not use.
 
 ## Checks
 
