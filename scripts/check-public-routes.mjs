@@ -248,7 +248,7 @@ function sidebarNoteContractOk() {
   return includesAll(html, [
     'class="demo-sidebar-note card" role="note" aria-label="Demo idea and starting point"',
     "<strong>One idea.</strong>",
-    "Start with Review. Pick work, see the blocker, run the next action."
+    "Start with Review. Pick a work item, see its blocker, run the next action."
   ]);
 }
 
