@@ -109,6 +109,8 @@ try {
   check("hosted search stays local-only", hostedSearch.ok, hostedSearch.detail);
   const hostedClipboard = frontendClipboardReceiptsStayLocalOnly(frontendSource);
   check("hosted clipboard receipts stay local-only", hostedClipboard.ok, hostedClipboard.detail);
+  const hostedSyncShare = frontendSyncShareReceiptsStayLocalOnly(frontendSource);
+  check("hosted sync share receipts stay local-only", hostedSyncShare.ok, hostedSyncShare.detail);
   const hostedFilterSave = frontendFilterUsesBackendEndpoint(frontendSource);
   check("hosted filter changes use named backend endpoint", hostedFilterSave.ok, hostedFilterSave.detail);
   const hostedSelectedSave = frontendSelectedWorkUsesBackendEndpoint(frontendSource);
@@ -1287,6 +1289,25 @@ function frontendBrowserRowSaveUsesNamedEndpoint(source) {
   };
 }
 
+function firstExistingIndex(body, needles) {
+  const indexes = needles.map((needle) => body.indexOf(needle)).filter((index) => index >= 0);
+  return indexes.length === 0 ? -1 : Math.min(...indexes);
+}
+
+function suppressNextSaveIndex(body) {
+  return firstExistingIndex(body, [
+    "state.suppressNextSave=true",
+    "state.suppressNextSave = true"
+  ]);
+}
+
+function hostedSuppressNextSaveIndex(body) {
+  return firstExistingIndex(body, [
+    "if(DEMO_API_BASE_URL)state.suppressNextSave=true",
+    "if (DEMO_API_BASE_URL) state.suppressNextSave = true"
+  ]);
+}
+
 function frontendSearchStaysLocalOnly(source) {
   const toolbarBody = functionBody(source, "bindToolbar");
   if (!toolbarBody) {
@@ -1299,7 +1320,7 @@ function frontendSearchStaysLocalOnly(source) {
     ? ""
     : toolbarBody.slice(inputIndex, filterIndex > inputIndex ? filterIndex : undefined);
   const queryIndex = searchBody.indexOf("state.query = event.currentTarget.value");
-  const suppressIndex = searchBody.indexOf("state.suppressNextSave = true");
+  const suppressIndex = suppressNextSaveIndex(searchBody);
   const renderIndex = searchBody.indexOf("render();");
   const ok = queryIndex >= 0
     && suppressIndex > queryIndex
@@ -1323,7 +1344,7 @@ function frontendClipboardReceiptsStayLocalOnly(source) {
     return { ok: false, detail: "setClipboardReceipt/copyToClipboard:missing" };
   }
 
-  const ok = receiptBody.includes("if (DEMO_API_BASE_URL) state.suppressNextSave = true;")
+  const ok = hostedSuppressNextSaveIndex(receiptBody) >= 0
     && receiptBody.includes("state.clipboardReceipt =")
     && copyBody.includes('setClipboardReceipt("success"')
     && copyBody.includes('setClipboardReceipt("blocked"')
@@ -1336,6 +1357,48 @@ function frontendClipboardReceiptsStayLocalOnly(source) {
     detail: ok
       ? "clipboard receipt renders are transient UI and do not schedule hosted backend persistence"
       : "clipboard receipt flow can still reach backend or durable state save path"
+  };
+}
+
+function frontendSyncShareReceiptsStayLocalOnly(source) {
+  const contracts = [
+    {
+      name: "copySyncLink",
+      status: 'routeStatus("Sync link"',
+      feedback: "Sync link copied."
+    },
+    {
+      name: "copySyncCode",
+      status: 'routeStatus("Sync code"',
+      feedback: "Sync code copied."
+    }
+  ];
+  const failures = [];
+  for (const contract of contracts) {
+    const body = functionBody(source, contract.name);
+    if (!body) {
+      failures.push(`${contract.name}:missing`);
+      continue;
+    }
+    const statusIndex = body.indexOf(contract.status);
+    const suppressIndex = hostedSuppressNextSaveIndex(body);
+    const renderIndex = body.indexOf("render();", statusIndex);
+    if (statusIndex < 0 || suppressIndex < statusIndex || renderIndex < suppressIndex) {
+      failures.push(`${contract.name}:missing transient hosted suppression`);
+    }
+    if (!body.includes(contract.feedback)) {
+      failures.push(`${contract.name}:missing feedback`);
+    }
+    if (body.includes("saveBackend") || body.includes("scheduleBackendStateSave") || body.includes("saveState();")) {
+      failures.push(`${contract.name}:durable save path`);
+    }
+  }
+
+  return {
+    ok: failures.length === 0,
+    detail: failures.length === 0
+      ? "sync link/code copy confirmations render as transient UI without scheduling hosted backend persistence"
+      : failures.join(", ")
   };
 }
 
@@ -1359,7 +1422,7 @@ function frontendFilterUsesBackendEndpoint(source) {
     && helperBody.includes('postBackendStateAction("/api/state/filter", { filter }, "filter")')
     && helperBody.includes("prepareBackendWorkflowRequest()")
     && toolbarBody.includes("await saveBackendStateFilter(filter)")
-    && toolbarBody.includes("state.suppressNextSave = true")
+    && suppressNextSaveIndex(toolbarBody) >= 0
     && !toolbarBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
   return {
     ok,
@@ -1379,7 +1442,7 @@ function frontendSelectedWorkUsesBackendEndpoint(source) {
   const ok = frontendPostStateHelper(source)
     && helperBody.includes('postBackendStateAction("/api/state/selected", { selectedId }, "selected work")')
     && routeBody.includes("saveBackendSelectedWork(state.selectedId)")
-    && routeBody.includes("state.suppressNextSave = true")
+    && suppressNextSaveIndex(routeBody) >= 0
     && !routeBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
   return {
     ok,
@@ -1406,7 +1469,7 @@ function frontendRouteOnlyNavigationStaysLocal(source) {
     && selectedChangeIndex > routeSetIndex
     && selectedSaveIndex > selectedChangeIndex
     && routeOnlyIndex > selectedSaveIndex
-    && suppressTail.includes("state.suppressNextSave = true")
+    && suppressNextSaveIndex(suppressTail) >= 0
     && !suppressTail.includes("saveBackendSelectedWork")
     && !suppressTail.includes("scheduleBackendStateSave")
     && !suppressTail.includes("saveState();");

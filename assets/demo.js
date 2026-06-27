@@ -417,7 +417,7 @@ async function applyScenario(scenario, options = {}) {
       return result;
     } catch (error) {
       state.status = `Where: Scenario. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
-      state.suppressNextSave = true;
+      state.suppressNextSave=true;
       render();
       return null;
     }
@@ -1142,9 +1142,9 @@ async function copySyncLink() {
 
   try {
     await navigator.clipboard.writeText(shareUrl);
-    state.status = routeStatus("Sync link", DEMO_BLOCKER_NONE, "open on another device");
+    state.status=routeStatus("Sync link",DEMO_BLOCKER_NONE,"open on another device");if(DEMO_API_BASE_URL)state.suppressNextSave=true;
     render();
-    renderDemoSyncControls("Sync link copied. Anyone with it can open this state.");
+    renderDemoSyncControls("Sync link copied. Anyone with it can open it.");
   } catch {
     renderDemoSyncControls("Copy blocked. Use the visible sync link or scan the QR code.");
   }
@@ -1159,9 +1159,9 @@ async function copySyncCode() {
 
   try {
     await navigator.clipboard.writeText(syncCode);
-    state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "enter code on another device");
+    state.status=routeStatus("Sync code",DEMO_BLOCKER_NONE,"enter code on another device");if(DEMO_API_BASE_URL)state.suppressNextSave=true;
     render();
-    renderDemoSyncControls("Sync code copied. Anyone with it can open this state.");
+    renderDemoSyncControls("Sync code copied. Anyone with it can open it.");
   } catch {
     renderDemoSyncControls("Copy blocked. Use the visible sync code or scan the QR code.");
   }
@@ -1770,14 +1770,14 @@ function routeFromHash() {
 
   const selectedWorkChanged = state.selectedId !== previousSelectedId && findPack(state.selectedId);
   if (DEMO_API_BASE_URL && selectedWorkChanged) {
-    state.suppressNextSave = true;
+    state.suppressNextSave=true;
     saveBackendSelectedWork(state.selectedId).catch((error) => {
       state.status = `Where: Selected work. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
-      state.suppressNextSave = true;
+      state.suppressNextSave=true;
       render();
     });
   } else if (DEMO_API_BASE_URL && (state.route !== previousRoute || parsedRoute.fallback)) {
-    state.suppressNextSave = true;
+    state.suppressNextSave=true;
   }
 }
 
@@ -3508,7 +3508,7 @@ function bindToolbar() {
   if (search) {
     search.addEventListener("input", (event) => {
       state.query = event.currentTarget.value;
-      state.suppressNextSave = true;
+      state.suppressNextSave=true;
       render();
     });
   }
@@ -3523,7 +3523,7 @@ function bindToolbar() {
         } catch (error) {
           state.filter = filter;
           state.status = `Where: Filters. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
-          state.suppressNextSave = true;
+          state.suppressNextSave=true;
           render();
         }
         return;
@@ -6412,7 +6412,7 @@ function clipboardTargetState(targetId) {
 }
 
 function setClipboardReceipt(kind, options = {}) {
-  if (DEMO_API_BASE_URL) state.suppressNextSave = true;
+  if(DEMO_API_BASE_URL)state.suppressNextSave=true;
   const success = kind === "success";
   const title = options.title || (success ? "Copied to clipboard" : "Clipboard blocked");
   const detail = options.detail || (success
