@@ -12,9 +12,20 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PROJECTS_STATE_FILE
-        value: /app/state/state.json
-    disk:
-      name: projects-web-demo-state
-      mountPath: /app/state
-      sizeGB: 1
+      - key: PROJECTS_STATE_STORAGE
+        value: postgres
+      - key: PROJECTS_STATE_KEY
+        value: production
+      - key: PROJECTS_POSTGRES_SSL
+        value: require
+      - key: DATABASE_URL
+        fromDatabase:
+          name: projects-web-demo-db
+          property: connectionString
+databases:
+  - name: projects-web-demo-db
+    databaseName: projects_web_demo
+    user: projects_web_demo
+    plan: basic-256mb
+    region: oregon
+    ipAllowList: []

@@ -12,7 +12,19 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const SEED_PACKS_FILE = path.join(ROOT_DIR, "data", "demo-packs.json");
 const DATA_DIR = path.join(__dirname, "data");
 const STATE_FILE = process.env.PROJECTS_STATE_FILE || path.join(DATA_DIR, "state.json");
+const STATE_DIR = path.dirname(STATE_FILE);
+const DATABASE_URL = process.env.DATABASE_URL || "";
+const STATE_STORAGE = normalizeStateStorageMode(process.env.PROJECTS_STATE_STORAGE || (DATABASE_URL ? "postgres" : "file"));
+const DEFAULT_STATE_KEY = normalizeText(process.env.PROJECTS_STATE_KEY || "default", 120) || "default";
+const API_CLIENT_HEADER = "x-projects-demo-client";
 const MAX_BODY_BYTES = 1024 * 1024;
+const publicStaticFiles = new Set([
+  "/index.html",
+  "/data/demo-packs.json"
+]);
+const publicStaticPrefixes = [
+  "/assets/"
+];
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -27,8 +39,10 @@ const contentTypes = {
 const corsHeaders = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET,POST,PUT,PATCH,OPTIONS",
-  "access-control-allow-headers": "content-type"
+  "access-control-allow-headers": `content-type, ${API_CLIENT_HEADER}`
 };
+
+const stateStorage = createStateStorage();
 
 const server = http.createServer(async (request, response) => {
   if (request.method === "OPTIONS") {
@@ -51,9 +65,14 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`Projects demo app listening at http://${HOST}:${PORT}`);
-  console.log(`State file: ${STATE_FILE}`);
+stateStorage.ready.then(() => {
+  server.listen(PORT, HOST, () => {
+    console.log(`Projects demo app listening at http://${HOST}:${PORT}`);
+    console.log(`State storage: ${stateStorage.label}`);
+  });
+}).catch((error) => {
+  console.error("Projects demo app failed to initialize storage.", error);
+  process.exit(1);
 });
 
 async function routeRequest(request, response, url) {
@@ -64,32 +83,33 @@ async function routeRequest(request, response, url) {
     sendJson(response, 200, {
       ok: true,
       service: "projects-web-demo-api",
-      stateFile: STATE_FILE,
+      stateStorage: stateStorage.label,
       time: new Date().toISOString()
     });
     return;
   }
 
   if (method === "GET" && pathname === "/api/state") {
-    sendJson(response, 200, await readState());
+    sendJson(response, 200, await readState(stateKeyForRequest(request)));
     return;
   }
 
   if ((method === "PUT" || method === "POST") && pathname === "/api/state") {
     const payload = await readJsonBody(request);
-    sendJson(response, 200, await writeState(payload));
+    sendJson(response, 200, await writeState(payload, stateKeyForRequest(request)));
     return;
   }
 
   if (method === "GET" && pathname === "/api/packs") {
-    const state = await readState();
+    const state = await readState(stateKeyForRequest(request));
     sendJson(response, 200, state.packs);
     return;
   }
 
   if (method === "POST" && pathname === "/api/packs") {
     const payload = await readJsonBody(request);
-    const state = await readState();
+    const stateKey = stateKeyForRequest(request);
+    const state = await readState(stateKey);
     const pack = sanitizePack(payload);
     if (!pack.id) {
       pack.id = uniquePackId(state.packs, slugify(pack.title || "sample-work"));
@@ -98,7 +118,7 @@ async function routeRequest(request, response, url) {
       throw httpError(409, `Pack already exists: ${pack.id}`);
     }
     state.packs.unshift(pack);
-    await writeState(state);
+    await writeState(state, stateKey);
     sendJson(response, 201, pack);
     return;
   }
@@ -109,18 +129,20 @@ async function routeRequest(request, response, url) {
     const isMemoryRoute = pathname.endsWith("/memory");
     if (method === "PATCH" && !isMemoryRoute) {
       const payload = await readJsonBody(request);
-      const state = await readState();
+      const stateKey = stateKeyForRequest(request);
+      const state = await readState(stateKey);
       const pack = findPackOrThrow(state, packId);
       const updated = sanitizePack({ ...pack, ...payload, id: pack.id });
       Object.assign(pack, updated, { id: pack.id });
-      await writeState(state);
+      await writeState(state, stateKey);
       sendJson(response, 200, pack);
       return;
     }
 
     if (method === "POST" && isMemoryRoute) {
       const payload = await readJsonBody(request);
-      const state = await readState();
+      const stateKey = stateKeyForRequest(request);
+      const state = await readState(stateKey);
       const pack = findPackOrThrow(state, packId);
       const note = normalizeText(payload.note, 2000);
       if (!note) {
@@ -132,7 +154,7 @@ async function routeRequest(request, response, url) {
         pack.activity = normalizeStringArray(pack.activity, 100, 400);
         pack.activity.unshift("Memory note added.");
       }
-      await writeState(state);
+      await writeState(state, stateKey);
       sendJson(response, 200, pack);
       return;
     }
@@ -173,9 +195,9 @@ async function serveStaticRequest(request, response, url) {
 }
 
 async function resolveStaticFile(rawPathname) {
-  let pathname = decodeURIComponent(rawPathname || "/");
-  if (pathname.endsWith("/")) {
-    pathname += "index.html";
+  const pathname = normalizePublicStaticPathname(rawPathname);
+  if (!isPublicStaticPathname(pathname)) {
+    throw httpError(404, "Not found");
   }
 
   const file = path.resolve(ROOT_DIR, `.${pathname}`);
@@ -199,6 +221,33 @@ async function resolveStaticFile(rawPathname) {
   throw httpError(404, "Not found");
 }
 
+function normalizePublicStaticPathname(rawPathname) {
+  let pathname = "";
+  try {
+    pathname = decodeURIComponent(rawPathname || "/");
+  } catch {
+    throw httpError(404, "Not found");
+  }
+
+  if (pathname.includes("\\") || pathname.includes("\0")) {
+    throw httpError(404, "Not found");
+  }
+
+  if (!pathname.startsWith("/")) {
+    pathname = `/${pathname}`;
+  }
+  if (pathname.endsWith("/")) {
+    pathname += "index.html";
+  }
+
+  return path.posix.normalize(pathname);
+}
+
+function isPublicStaticPathname(pathname) {
+  return publicStaticFiles.has(pathname)
+    || publicStaticPrefixes.some((prefix) => pathname.startsWith(prefix));
+}
+
 function isIndexFile(file) {
   return path.resolve(file) === path.join(ROOT_DIR, "index.html");
 }
@@ -215,7 +264,98 @@ function injectAppApiBase(html) {
   );
 }
 
-async function readState() {
+async function readState(stateKey = DEFAULT_STATE_KEY) {
+  return stateStorage.read(stateKey);
+}
+
+async function writeState(payload, stateKey = DEFAULT_STATE_KEY) {
+  return stateStorage.write(payload, stateKey);
+}
+
+function createStateStorage() {
+  if (STATE_STORAGE === "postgres") {
+    return createPostgresStateStorage();
+  }
+
+  return createFileStateStorage();
+}
+
+function createFileStateStorage() {
+  return {
+    label: `file:${STATE_FILE}`,
+    ready: Promise.resolve(),
+    read: readFileState,
+    write: writeFileState
+  };
+}
+
+function createPostgresStateStorage() {
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is required when PROJECTS_STATE_STORAGE=postgres.");
+  }
+
+  const { Pool } = require("pg");
+  const poolOptions = { connectionString: DATABASE_URL };
+  const ssl = postgresSslOption();
+  if (ssl !== undefined) {
+    poolOptions.ssl = ssl;
+  }
+  const pool = new Pool(poolOptions);
+
+  return {
+    label: "postgres:projects_demo_state",
+    ready: pool.query(`
+      CREATE TABLE IF NOT EXISTS projects_demo_state (
+        state_key text PRIMARY KEY,
+        state_json jsonb NOT NULL,
+        saved_at timestamptz NOT NULL DEFAULT now()
+      )
+    `),
+    async read(stateKey = DEFAULT_STATE_KEY) {
+      const result = await pool.query(
+        "SELECT state_json FROM projects_demo_state WHERE state_key = $1",
+        [stateKey]
+      );
+      return result.rows[0]?.state_json ? sanitizeState(result.rows[0].state_json) : defaultState();
+    },
+    async write(payload, stateKey = DEFAULT_STATE_KEY) {
+      const state = sanitizeState(payload);
+      state.savedAt = new Date().toISOString();
+      await pool.query(
+        `INSERT INTO projects_demo_state (state_key, state_json, saved_at)
+         VALUES ($1, $2::jsonb, $3::timestamptz)
+         ON CONFLICT (state_key) DO UPDATE
+         SET state_json = EXCLUDED.state_json,
+             saved_at = EXCLUDED.saved_at`,
+        [stateKey, JSON.stringify(state), state.savedAt]
+      );
+      return state;
+    }
+  };
+}
+
+function stateKeyForRequest(request) {
+  const value = normalizeText(request.headers[API_CLIENT_HEADER], 120);
+  return /^[A-Za-z0-9][A-Za-z0-9._-]{7,119}$/u.test(value) ? value : DEFAULT_STATE_KEY;
+}
+
+function postgresSslOption() {
+  const mode = normalizeText(process.env.PROJECTS_POSTGRES_SSL, 20).toLowerCase();
+  if (mode === "require") {
+    return { rejectUnauthorized: false };
+  }
+  if (mode === "disable") {
+    return false;
+  }
+  return undefined;
+}
+
+function normalizeStateStorageMode(value) {
+  const mode = normalizeText(value, 40).toLowerCase();
+  return mode === "postgres" ? "postgres" : "file";
+}
+
+async function readFileState() {
   try {
     const text = await fs.readFile(STATE_FILE, "utf8");
     return sanitizeState(JSON.parse(text));
@@ -227,11 +367,11 @@ async function readState() {
   }
 }
 
-async function writeState(payload) {
+async function writeFileState(payload) {
   const state = sanitizeState(payload);
-  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.mkdir(STATE_DIR, { recursive: true });
   state.savedAt = new Date().toISOString();
-  const tmpFile = path.join(DATA_DIR, `state.${crypto.randomUUID()}.tmp`);
+  const tmpFile = path.join(STATE_DIR, `state.${crypto.randomUUID()}.tmp`);
   await fs.writeFile(tmpFile, `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await fs.rename(tmpFile, STATE_FILE);
   return state;

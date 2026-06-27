@@ -1,0 +1,55 @@
+# Deploy on Outplane
+
+Outplane is the preferred development host for this repo's backend-backed demo
+mode. Use it as a Docker app with managed PostgreSQL so the container stays
+stateless.
+
+## Shape
+
+| Area | Setting |
+|---|---|
+| Build method | Dockerfile |
+| Root directory | `/` |
+| App port | `5179`, or the value Outplane injects as `PORT` |
+| Bind host | `0.0.0.0` through the Dockerfile `HOST` setting |
+| Storage | Managed PostgreSQL through `DATABASE_URL` |
+| Health check | `/api/health` |
+
+## Deploy Steps
+
+1. Create an Outplane managed PostgreSQL database.
+2. Copy the database connection URI.
+3. Create an Outplane application from this GitHub repository.
+4. Select Dockerfile as the build method.
+5. Set the root directory to `/`.
+6. Set the app port to `5179` if Outplane does not prefill it.
+7. Add the runtime environment variables below.
+8. Deploy the app.
+
+## Environment
+
+| Variable | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `PROJECTS_STATE_STORAGE` | `postgres` |
+| `PROJECTS_STATE_KEY` | `outplane-dev` |
+| `PROJECTS_POSTGRES_SSL` | `require` |
+| `DATABASE_URL` | Outplane PostgreSQL connection URI |
+
+The browser sends an anonymous client key with API requests, so hosted demo
+edits are separated per browser without accounts.
+
+## Checks
+
+After deploy:
+
+1. Open `/api/health` and confirm `ok` is `true`.
+2. Open `/#/home`.
+3. Change one work item.
+4. Refresh the page and confirm the change remains in that browser.
+5. Open a private window and confirm it starts from seed demo data.
+
+## Notes
+
+Keep GitHub Pages as the static public portfolio path. Use Outplane only when
+you want to test the backend-backed app mode.

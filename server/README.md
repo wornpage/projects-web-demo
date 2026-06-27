@@ -1,8 +1,10 @@
 # Projects Web Demo App
 
-This is a small no-dependency Node app for the Projects demo. It serves the
-frontend and `/api` from one process and stores runtime state in
-`server/data/state.json`.
+This is a small Node app for the Projects demo. It serves the frontend and
+`/api` from one process. Local runs use `server/data/state.json`; hosted runs
+should use managed Postgres through `DATABASE_URL`. In API mode, the browser
+sends an anonymous client key so demo edits are isolated per browser without
+accounts.
 
 ## App Mode
 
@@ -19,8 +21,8 @@ http://localhost:5179/#/home
 In app mode, the frontend is served with a same-origin API setting, so no
 `?api=` query parameter is needed.
 
-Use `PROJECTS_STATE_FILE` or a persistent disk when deploying this app to a
-host where local files are otherwise ephemeral.
+Use `PROJECTS_STATE_STORAGE=postgres` and `DATABASE_URL` when deploying this app
+to a host where local files are ephemeral.
 
 ## Docker
 
@@ -42,13 +44,27 @@ The image sets:
 |---|---|
 | `HOST` | `0.0.0.0` |
 | `PORT` | `5179` |
-| `PROJECTS_STATE_FILE` | `/app/state/state.json` |
+| `PROJECTS_STATE_FILE` | `/app/state/state.json` for local file fallback |
 
 ## Render
 
 Use the repository root `render.yaml` as a Render Blueprint. It deploys the
-Docker app, sets `/api/health` as the health check path, and mounts a persistent
-disk at `/app/state`.
+Docker app, creates a managed Postgres database, injects `DATABASE_URL`, and
+sets `/api/health` as the health check path.
+
+Production storage uses:
+
+| Variable | Purpose |
+|---|---|
+| `PROJECTS_STATE_STORAGE=postgres` | Select managed database state. |
+| `DATABASE_URL` | Render-provided private Postgres connection string. |
+| `PROJECTS_STATE_KEY=production` | Fallback state key when no browser client key is present. |
+
+## Outplane
+
+Use [../docs/deploy-outplane.md](../docs/deploy-outplane.md) for the Outplane
+development deploy path. It uses the same Dockerfile and Postgres-backed storage
+mode as Render.
 
 ## Static Preview With API
 

@@ -1,2 +1,2 @@
-server/data/state.json
-server/data/state.*.tmp
+server/data/
+server/node_modules/

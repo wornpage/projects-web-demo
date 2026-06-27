@@ -8,6 +8,13 @@ const path = require("node:path");
 const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PREVIEW_PORT || 5181);
 const ROOT_DIR = path.resolve(__dirname, "..");
+const publicStaticFiles = new Set([
+  "/index.html",
+  "/data/demo-packs.json"
+]);
+const publicStaticPrefixes = [
+  "/assets/"
+];
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -50,9 +57,9 @@ server.listen(PORT, HOST, () => {
 
 async function resolveFile(rawUrl) {
   const url = new URL(rawUrl, `http://${HOST}:${PORT}`);
-  let pathname = decodeURIComponent(url.pathname);
-  if (pathname.endsWith("/")) {
-    pathname += "index.html";
+  const pathname = normalizePublicStaticPathname(url.pathname);
+  if (!isPublicStaticPathname(pathname)) {
+    throw httpError(404);
   }
 
   const file = path.resolve(ROOT_DIR, `.${pathname}`);
@@ -79,6 +86,33 @@ async function resolveFile(rawUrl) {
   }
 
   return file;
+}
+
+function normalizePublicStaticPathname(rawPathname) {
+  let pathname = "";
+  try {
+    pathname = decodeURIComponent(rawPathname || "/");
+  } catch {
+    throw httpError(404);
+  }
+
+  if (pathname.includes("\\") || pathname.includes("\0")) {
+    throw httpError(404);
+  }
+
+  if (!pathname.startsWith("/")) {
+    pathname = `/${pathname}`;
+  }
+  if (pathname.endsWith("/")) {
+    pathname += "index.html";
+  }
+
+  return path.posix.normalize(pathname);
+}
+
+function isPublicStaticPathname(pathname) {
+  return publicStaticFiles.has(pathname)
+    || publicStaticPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
 function sendText(response, statusCode, text) {

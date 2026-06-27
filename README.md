@@ -5,9 +5,10 @@ Projects demo. It is a static GitHub Pages app by default: HTML, CSS,
 JavaScript, JSON demo data, and image assets.
 
 The published GitHub Pages demo is browser-local. This repo also includes a
-single-process Node app in `server/` for backend-backed demo persistence. The
-Node app does not add accounts, payments, customer-data collection, or a live
-Projects service.
+single-process Node app in `server/` for backend-backed demo persistence. Hosted
+app mode keeps the container stateless and stores anonymous per-browser demo
+state in managed Postgres. The Node app does not add accounts, payments,
+customer-data collection, or a live Projects service.
 
 ## Active Boundary
 
@@ -17,7 +18,7 @@ Keep this repo focused on the public portfolio demo.
 |---|---|---|
 | Runtime | Static GitHub Pages app; optional single-process Node app in `server/` | Razor Server, Blazor WASM, desktop app runtime |
 | Data | `data/demo-packs.json` sample work | Real packs, private notes, customer data |
-| State | Browser `localStorage` under `projects-static-demo-state-v6`; optional `server/data/state.json` in Node app mode | Account state |
+| State | Browser `localStorage` under `projects-static-demo-state-v6`; optional Node app storage backed by local file or anonymous per-browser managed Postgres rows | Account state |
 | Styling | Static CSS in `assets/` | Source-side app shell generation |
 | Behavior | Static JS in `assets/demo.js`; API calls only in Node app mode or when an API base URL is configured | Production backend workflows or GitHub API calls |
 
@@ -34,7 +35,8 @@ Keep this repo focused on the public portfolio demo.
 | `data/demo-packs.json` | Fake browser-local work data. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
-| `render.yaml` | Render Blueprint for hosting the Docker app with a persistent disk. |
+| `render.yaml` | Render Blueprint for hosting the Docker app with managed Postgres state. |
+| `docs/deploy-outplane.md` | Outplane development deploy checklist. |
 
 ## Routes
 
@@ -88,8 +90,9 @@ The same Node process serves the frontend and `/api`. In app mode,
 `assets/demo.js` at the same-origin API, so no `?api=` query parameter is
 needed.
 
-The default state file is `server/data/state.json`. Use `PROJECTS_STATE_FILE`
-or a persistent disk when deploying this as a hosted app.
+The default local state file is `server/data/state.json`. Hosted deploys should
+use `PROJECTS_STATE_STORAGE=postgres` with `DATABASE_URL` instead of writable
+container files.
 
 ## Docker
 
@@ -99,7 +102,7 @@ Build the app image:
 pwsh -NoLogo -NoProfile -Command 'docker build -t projects-web-demo .'
 ```
 
-Run it with persisted state:
+Run it with local file-backed state:
 
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'docker run --rm -p 5179:5179 -v projects-web-demo-state:/app/state projects-web-demo'
@@ -111,9 +114,17 @@ Then open:
 http://localhost:5179/#/home
 ```
 
-The container serves the frontend and `/api` from one Node process. Runtime
-state is written to `/app/state/state.json`, so mount a volume or persistent
-disk there when hosting it.
+The container serves the frontend and `/api` from one Node process. It can use
+local file-backed state for development, but hosted deploys should use managed
+Postgres so app containers stay stateless.
+
+## Outplane Dev Deploy
+
+Use Outplane when you want a development deployment of the backend-backed app.
+The repo's Dockerfile already reads `PORT`, binds to `0.0.0.0`, and supports
+managed Postgres through `DATABASE_URL`.
+
+See [docs/deploy-outplane.md](docs/deploy-outplane.md).
 
 ## Render
 
@@ -122,12 +133,14 @@ This repo includes `render.yaml` for a Render Blueprint deployment.
 1. Push `main` to GitHub.
 2. In Render, create a new Blueprint from this repository.
 3. Confirm the `projects-web-demo` service.
-4. Keep the persistent disk mounted at `/app/state`.
+4. Confirm the `projects-web-demo-db` Postgres database.
 5. Use `/api/health` as the health check path.
 
-The Blueprint uses Docker, starts the same single-process app, and writes state
-to `/app/state/state.json`. The configured service plan is `starter` because
-the app needs a persistent disk for backend-backed demo state.
+The Blueprint uses Docker, starts the same single-process app, and stores state
+in managed Postgres through `DATABASE_URL`. Each browser sends an anonymous
+client key so visitors do not overwrite one shared public row. The database is
+configured without a public IP allow list, so the app uses Render's private
+connection string.
 
 ## Static Preview With API
 

@@ -12,6 +12,7 @@ const DEMO_RELEASE_NOTES_URL = `${DEMO_REPO_URL}/releases`;
 const DEMO_DEFAULT_VERSION = "working";
 const DEMO_API_QUERY_PARAM = "api";
 const API_STATE_SAVE_DEBOUNCE_MS = 300;
+const API_CLIENT_STORAGE_KEY = "projects-static-demo-api-client-v1";
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
@@ -225,6 +226,7 @@ const DEMO_API_BASE_URL = normalizeApiBaseUrl(launchParams.get(DEMO_API_QUERY_PA
 let apiSaveTimer = null;
 let apiPendingSnapshot = null;
 let apiSaveInFlight = false;
+let apiSessionClientId = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
   if ("scrollRestoration" in history) {
@@ -464,7 +466,10 @@ async function loadBackendState() {
     return null;
   }
 
-  const response = await fetch(apiUrl("/api/state"), { cache: "no-store" });
+  const response = await fetch(apiUrl("/api/state"), {
+    cache: "no-store",
+    headers: apiHeaders()
+  });
   if (!response.ok) {
     throw new Error(`Backend API failed with ${response.status}`);
   }
@@ -506,7 +511,7 @@ function flushBackendStateSave() {
 async function persistBackendStateSnapshot(snapshot) {
   const response = await fetch(apiUrl("/api/state"), {
     method: "PUT",
-    headers: { "content-type": "application/json" },
+    headers: apiHeaders({ "content-type": "application/json" }),
     body: JSON.stringify(snapshot)
   });
   if (!response.ok) {
@@ -521,8 +526,58 @@ function updateServiceBoundaryNotice() {
   }
 
   notice.textContent = DEMO_API_BASE_URL
-    ? `Connected to backend API at ${DEMO_API_BASE_URL}. Demo state saves through the API.`
+    ? `Connected to backend API at ${DEMO_API_BASE_URL}. Demo state saves through the API for this browser.`
     : "Browser-local sample. No account, backend, or real project data.";
+}
+
+function apiHeaders(values = {}) {
+  const headers = { ...values };
+  const clientId = apiClientId();
+  if (clientId) {
+    headers["x-projects-demo-client"] = clientId;
+  }
+  return headers;
+}
+
+function apiClientId() {
+  if (!DEMO_API_BASE_URL) {
+    return "";
+  }
+
+  const saved = readApiClientId();
+  if (isApiClientId(saved)) {
+    return saved;
+  }
+  if (isApiClientId(apiSessionClientId)) {
+    return apiSessionClientId;
+  }
+
+  const next = generateApiClientId();
+  apiSessionClientId = next;
+  try {
+    localStorage.setItem(API_CLIENT_STORAGE_KEY, next);
+  } catch {
+    // LocalStorage access can be restricted in some embedded contexts.
+  }
+  return next;
+}
+
+function readApiClientId() {
+  try {
+    return localStorage.getItem(API_CLIENT_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function generateApiClientId() {
+  const randomValue = globalThis.crypto?.randomUUID?.()
+    || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  return `demo-${randomValue}`;
+}
+
+function isApiClientId(value) {
+  return /^demo-[A-Za-z0-9._-]{8,120}$/u.test(value);
 }
 
 function persistenceVerb() {
@@ -2171,7 +2226,7 @@ function collectTriageSnapshot(rows = normalizedTriageRows()) {
   return {
     tool: "Button runs next: work triage tool",
     route: formatRouteHash("triage"),
-    storage: "browser localStorage only",
+    storage: DEMO_API_BASE_URL ? "backend API for this browser" : "browser localStorage only",
     rows: rows.map((row) => ({
       work: row.work,
       where: row.where,
