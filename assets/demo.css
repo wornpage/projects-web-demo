@@ -3775,6 +3775,11 @@ html[data-theme="dark"] .demo-command-work-path {
   background: var(--cockpit-hover-bg);
 }
 
+.demo-bottom-item:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
+}
+
 .demo-bottom-item span {
   color: var(--cockpit-text-muted);
   font-size: 10px;

@@ -307,7 +307,10 @@ function workFilterStylesContractOk() {
 function mobileDockContractOk() {
   const mobileDockStart = styles.indexOf("Mobile dock gives the primary next action a full row");
   const mobileDock = mobileDockStart < 0 ? "" : styles.slice(mobileDockStart);
-  return includesAll(mobileDock, [
+  return includesAll(styles, [
+    ".demo-bottom-item:focus-visible",
+    "outline: 3px solid var(--demo-focus-ring);"
+  ]) && includesAll(mobileDock, [
     ".demo-bottom-brief",
     "grid-template-columns: repeat(2, minmax(0, 1fr));",
     ".demo-bottom-next",
