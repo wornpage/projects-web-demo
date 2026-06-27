@@ -132,11 +132,12 @@ check(
     'inputmode="text"',
     'enterkeyhint="go"',
     'autocomplete="off"',
+    'autocorrect="off"',
     'autocapitalize="characters"',
     'spellcheck="false"',
     'aria-describedby="sync-code-help"'
   ]),
-  "text input, go key, no autocomplete, character caps, no spellcheck"
+  "text input, go key, no autocomplete/correct, character caps, no spellcheck"
 );
 
 check(
