@@ -116,8 +116,9 @@ single Node app for backend-backed local testing; the static preview remains
 browser-local.
 
 The Node app also sends no-store, no-referrer, nosniff, frame-deny,
-same-origin resource/opener isolation, and restrictive Permissions-Policy
-headers on served app and API responses.
+same-origin resource/opener isolation, restrictive Permissions-Policy headers,
+and a CSP that blocks unsafe inline scripts and styles on served app and API
+responses.
 
 The local state path defaults to `server/data/state.json`, but backend API
 state routes still require the browser's anonymous client key. Local

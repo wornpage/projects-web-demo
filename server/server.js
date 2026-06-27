@@ -325,7 +325,7 @@ function contentSecurityPolicy(nonce) {
     "object-src 'none'",
     "frame-ancestors 'none'",
     `script-src 'self' 'nonce-${nonce}'`,
-    "style-src 'self' 'unsafe-inline'",
+    "style-src 'self'",
     "img-src 'self' data:",
     "connect-src 'self'",
     "form-action 'none'"

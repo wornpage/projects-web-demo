@@ -75,7 +75,8 @@ confirms public assets stay on the file allowlist, confirms public text assets
 stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
 and confirms the backend-served app shell sends a nonce-based Content Security
-Policy for the injected runtime API script. It also confirms the app shell sends
+Policy for the injected runtime API script and blocks unsafe inline styles. It
+also confirms the app shell sends
 legacy frame denial, same-origin resource/opener isolation, and restrictive
 Permissions-Policy headers. API CORS uses the exact same-origin app origin
 instead of a wildcard, rejects a third-party preflight, and cannot be authorized
@@ -107,7 +108,8 @@ row from another request, restores an exported state snapshot to its keyed row,
 rejects oversized keyed state snapshots, uses same-origin API CORS instead of
 wildcard CORS, rejects a third-party preflight, and rejects forwarded-host CORS
 spoofing. It also confirms the hosted app shell sends frame-deny, same-origin
-resource/opener isolation, and restrictive Permissions-Policy headers, and that
+resource/opener isolation, restrictive Permissions-Policy headers, and a style
+policy without unsafe inline styles, and that
 hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
 asset, or unlisted public asset/data paths.
@@ -137,7 +139,7 @@ Web Crypto and do not fall back to weak random values.
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Full-state writes accept unbounded receipt objects | Fixed | `actionReceipt` objects are depth/key/item bounded before storage |
 | Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |
-| Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
+| Backend app shell allows arbitrary inline script/style | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script and blocks unsafe inline styles |
 | App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin or explicit configured origins and does not trust forwarded-host for authorization |
 | Host header parsing can bypass the normal error path | Fixed | Request routing parses against a fixed internal base and the boundary gate sends an invalid Host header through `/api/health` |

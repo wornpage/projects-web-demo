@@ -71,6 +71,7 @@ try {
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API script uses CSP nonce", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
   check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
+  check("style policy avoids unsafe inline styles", styleSrcDirective(csp) === "style-src 'self'", styleSrcDirective(csp) || "missing");
   const healthText = JSON.stringify(health.body);
   check("health endpoint reports only storage kind", health.body?.ok === true && health.body?.storage === "file", healthText);
   check("health endpoint hides storage internals", !("stateStorage" in health.body) && !healthText.includes(stateFile) && !/state\.json|projects_demo_state|DATABASE_URL|PGHOST|PGPASSWORD/iu.test(healthText), healthText);
@@ -353,6 +354,10 @@ function nonceFromHtml(html) {
 
 function scriptSrcDirective(csp) {
   return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("script-src")) || "";
+}
+
+function styleSrcDirective(csp) {
+  return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("style-src")) || "";
 }
 
 function permissionsPolicyDisables(value, features) {

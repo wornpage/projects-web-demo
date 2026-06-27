@@ -52,6 +52,7 @@ try {
   check("static preview app shell sends CSP", csp.includes("default-src 'self'") && csp.includes("script-src 'self'") && csp.includes("object-src 'none'"), csp || "missing");
   check("static preview app shell blocks framing", csp.includes("frame-ancestors 'none'") && appShell.headers["x-frame-options"] === "DENY", `${csp || "missing"} / ${appShell.headers["x-frame-options"] || "missing"}`);
   check("static preview app shell limits network calls", csp.includes("connect-src 'self'"), csp || "missing");
+  check("static preview style policy avoids unsafe inline styles", styleSrcDirective(csp) === "style-src 'self'", styleSrcDirective(csp) || "missing");
 
   const unexpectedHostShell = await request(port, "/", {
     headers: { "Host": "preview.example" }
@@ -183,6 +184,10 @@ function permissionsPolicyDisables(value, features) {
 
 function getHeader(headers, name) {
   return headers?.[name] || "";
+}
+
+function styleSrcDirective(csp) {
+  return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("style-src")) || "";
 }
 
 function freePort() {

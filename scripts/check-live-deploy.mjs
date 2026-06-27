@@ -156,6 +156,7 @@ try {
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API script nonce matches CSP", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
   check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
+  check("style policy avoids unsafe inline styles", styleSrcDirective(csp) === "style-src 'self'", styleSrcDirective(csp) || "missing");
   check("live API CORS is same-origin only", sameOriginCors.headers.get("access-control-allow-origin") === baseUrl.origin, sameOriginCors.headers.get("access-control-allow-origin") || "missing");
   check("live API CORS omits retired PATCH method", !String(sameOriginCors.headers.get("access-control-allow-methods") || "").includes("PATCH"), sameOriginCors.headers.get("access-control-allow-methods") || "missing");
   check("live API rejects forwarded-host CORS spoofing", !spoofedForwardedCors.headers.get("access-control-allow-origin"), spoofedForwardedCors.headers.get("access-control-allow-origin") || "no cors");
@@ -343,6 +344,10 @@ function nonceFromHtml(html) {
 
 function scriptSrcDirective(csp) {
   return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("script-src")) || "";
+}
+
+function styleSrcDirective(csp) {
+  return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("style-src")) || "";
 }
 
 function permissionsPolicyDisables(value, features) {
