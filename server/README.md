@@ -1,15 +1,58 @@
-# Projects Web Demo API
+# Projects Web Demo App
 
-This is a small local backend for the static Projects demo. It has no external
-dependencies and stores runtime state in `server/data/state.json`.
+This is a small no-dependency Node app for the Projects demo. It serves the
+frontend and `/api` from one process and stores runtime state in
+`server/data/state.json`.
 
-## Run
+## App Mode
 
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'node "server/server.js"'
 ```
 
-Then serve the static frontend from the repository root:
+Open:
+
+```text
+http://localhost:5179/#/home
+```
+
+In app mode, the frontend is served with a same-origin API setting, so no
+`?api=` query parameter is needed.
+
+Use `PROJECTS_STATE_FILE` or a persistent disk when deploying this app to a
+host where local files are otherwise ephemeral.
+
+## Docker
+
+Build from the repository root:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'docker build -t projects-web-demo .'
+```
+
+Run with persisted state:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'docker run --rm -p 5179:5179 -v projects-web-demo-state:/app/state projects-web-demo'
+```
+
+The image sets:
+
+| Variable | Value |
+|---|---|
+| `HOST` | `0.0.0.0` |
+| `PORT` | `5179` |
+| `PROJECTS_STATE_FILE` | `/app/state/state.json` |
+
+## Static Preview With API
+
+Run the app/API in one terminal:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'node "server/server.js"'
+```
+
+Then serve the static frontend from the repository root in another terminal:
 
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'node "server/static.js"'

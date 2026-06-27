@@ -1,6 +1,7 @@
 "use strict";
 
 const crypto = require("node:crypto");
+const fileSystem = require("node:fs");
 const fs = require("node:fs/promises");
 const http = require("node:http");
 const path = require("node:path");
@@ -12,6 +13,16 @@ const SEED_PACKS_FILE = path.join(ROOT_DIR, "data", "demo-packs.json");
 const DATA_DIR = path.join(__dirname, "data");
 const STATE_FILE = process.env.PROJECTS_STATE_FILE || path.join(DATA_DIR, "state.json");
 const MAX_BODY_BYTES = 1024 * 1024;
+
+const contentTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8"
+};
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
@@ -41,7 +52,7 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Projects demo API listening at http://${HOST}:${PORT}`);
+  console.log(`Projects demo app listening at http://${HOST}:${PORT}`);
   console.log(`State file: ${STATE_FILE}`);
 });
 
@@ -127,7 +138,81 @@ async function routeRequest(request, response, url) {
     }
   }
 
+  if (pathname === "/api" || pathname.startsWith("/api/")) {
+    sendJson(response, 404, { error: "Not found" });
+    return;
+  }
+
+  if (method === "GET" || method === "HEAD") {
+    await serveStaticRequest(request, response, url);
+    return;
+  }
+
   sendJson(response, 404, { error: "Not found" });
+}
+
+async function serveStaticRequest(request, response, url) {
+  const file = await resolveStaticFile(url.pathname);
+  const extension = path.extname(file).toLowerCase();
+  const contentType = contentTypes[extension] || "application/octet-stream";
+
+  if (isIndexFile(file)) {
+    const html = injectAppApiBase(await fs.readFile(file, "utf8"));
+    response.writeHead(200, { "content-type": contentType });
+    response.end(request.method === "HEAD" ? "" : html);
+    return;
+  }
+
+  response.writeHead(200, { "content-type": contentType });
+  if (request.method === "HEAD") {
+    response.end();
+    return;
+  }
+
+  fileSystem.createReadStream(file).pipe(response);
+}
+
+async function resolveStaticFile(rawPathname) {
+  let pathname = decodeURIComponent(rawPathname || "/");
+  if (pathname.endsWith("/")) {
+    pathname += "index.html";
+  }
+
+  const file = path.resolve(ROOT_DIR, `.${pathname}`);
+  if (!file.startsWith(`${ROOT_DIR}${path.sep}`)) {
+    throw httpError(404, "Not found");
+  }
+
+  const stats = await fs.stat(file).catch(() => null);
+  if (stats?.isFile()) {
+    return file;
+  }
+
+  if (stats?.isDirectory()) {
+    const indexFile = path.join(file, "index.html");
+    const indexStats = await fs.stat(indexFile).catch(() => null);
+    if (indexStats?.isFile()) {
+      return indexFile;
+    }
+  }
+
+  throw httpError(404, "Not found");
+}
+
+function isIndexFile(file) {
+  return path.resolve(file) === path.join(ROOT_DIR, "index.html");
+}
+
+function injectAppApiBase(html) {
+  const script = '<script>window.PROJECTS_API_BASE_URL = window.PROJECTS_API_BASE_URL || location.origin;</script>';
+  if (html.includes(script)) {
+    return html;
+  }
+
+  return html.replace(
+    /(\s*<script src="assets\/demo\.js[^>]*><\/script>)/u,
+    `  ${script}\n$1`
+  );
 }
 
 async function readState() {
