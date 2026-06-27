@@ -3233,7 +3233,7 @@ function renderMemory() {
       <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${workTitle(pack)}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no work exists in this browser", "create or reset work"))}</div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
-        <input id="memory-note" class="demo-search-input" type="text" placeholder="Add a memory note">
+        <input id="memory-note" class="demo-search-input" type="text" placeholder="Capture decision, source, or proof" autocomplete="off" aria-describedby="memory-note-help">
         <p id="memory-note-help" class="demo-field-help" aria-live="polite">${escapeHtml(memoryState.help)}</p>
         <button id="add-memory" class="btn btn-primary" type="button" aria-describedby="memory-note-help"${disabledReasonAttributes(!memoryState.canSave, memoryState.help)}>Add note</button>
       </div>
@@ -3517,6 +3517,7 @@ function bindToolbar() {
   if (search) {
     search.addEventListener("input", (event) => {
       state.query = event.currentTarget.value;
+      state.suppressNextSave = true;
       render();
     });
   }

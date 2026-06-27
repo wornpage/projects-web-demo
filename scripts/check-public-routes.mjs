@@ -117,6 +117,7 @@ check("home route surfaces a live sample spotlight", homeSpotlightContractOk(), 
 check("review route surfaces an up-next queue spotlight", reviewSpotlightContractOk(), "reviewQueuePanel with queue stats and actions");
 check("create route surfaces readiness before the form", createReadinessContractOk(), "createReadinessPanel with required field checklist");
 check("memory route exposes selected work chooser", memoryChooserContractOk(), "memoryWorkChooser with chip targets and create fallback");
+check("memory note input exposes live save guidance", memoryNoteInputContractOk(), "memory note placeholder names useful note types and describes live help");
 check("create field help names only current public surfaces", source.includes("Optional date kept on the work path and searchable in the work list.") && !source.includes("Today and Calendar views"), "due help avoids retired screens");
 check("runtime status copy avoids retired settings and check screens", !source.includes("Where: Settings") && !source.includes("Where: Check"), "status copy stays on public surfaces");
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
@@ -219,6 +220,16 @@ function memoryChooserContractOk() {
     "Use ${workTitle(pack)} as the memory target.",
     "Create work before adding memory notes.",
     "navButton(\"create\", profile().newWork)"
+  ]);
+}
+
+function memoryNoteInputContractOk() {
+  return includesAll(source, [
+    'id="memory-note" class="demo-search-input" type="text"',
+    'placeholder="Capture decision, source, or proof"',
+    'autocomplete="off" aria-describedby="memory-note-help"',
+    'id="memory-note-help" class="demo-field-help" aria-live="polite"',
+    'button id="add-memory" class="btn btn-primary" type="button" aria-describedby="memory-note-help"'
   ]);
 }
 
