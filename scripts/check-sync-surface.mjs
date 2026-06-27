@@ -126,6 +126,19 @@ check(
 );
 
 check(
+  "sync code input keeps mobile-friendly entry hints",
+  includesAll(html, [
+    'id="sync-code-input"',
+    'inputmode="text"',
+    'autocomplete="off"',
+    'autocapitalize="characters"',
+    'spellcheck="false"',
+    'aria-describedby="sync-code-help"'
+  ]),
+  "text input, no autocomplete, character caps, no spellcheck"
+);
+
+check(
   "launch sync code comes from ?sync= only in backend app mode",
   includesAll(applyLaunchSync, [
     "!DEMO_API_BASE_URL",
