@@ -446,32 +446,9 @@ async function applyScenario(scenario, options = {}) {
   render();
 }
 
-function saveState() {
-  if (state.suppressNextSave) {
-    state.suppressNextSave = false;
-    return;
-  }
+function saveState(){if(state.suppressNextSave){state.suppressNextSave=false;return}if(DEMO_API_BASE_URL){scheduleBackendStateSave(browserRowStateSnapshot());return}localStorage.setItem(DEMO_STORAGE_KEY,JSON.stringify(demoStateSnapshot()))}
 
-  if (DEMO_API_BASE_URL) {
-    scheduleBackendStateSave(browserRowStateSnapshot());
-    return;
-  }
-
-  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(demoStateSnapshot()));
-}
-
-function demoStateSnapshot() {
-  return {
-    packs: state.packs,
-    copyProfile: state.copyProfile,
-    scenarioId: state.scenarioId,
-    selectedId: state.selectedId,
-    status: state.status,
-    actionReceipt: state.actionReceipt,
-    filter: state.filter,
-    query: state.query,
-  };
-}
+function demoStateSnapshot(){return{packs:state.packs,copyProfile:state.copyProfile,scenarioId:state.scenarioId,selectedId:state.selectedId,status:state.status,actionReceipt:state.actionReceipt,filter:state.filter,query:state.query}}
 
 function browserRowStateSnapshot(){const s=demoStateSnapshot();delete s.actionReceipt;delete s.query;delete s.status;return{kind:"projects-browser-state-v1",state:s}}
 
@@ -495,7 +472,7 @@ async function resetState() {
       clearPendingBackendStateSave();
       await saveBackendResetState();
     } catch (error) {
-      state.status = routeStatus("Backend reset", error.message || "reset failed", "try again");
+      state.status=routeStatus("Backend reset",error.message||"reset failed","try again");state.suppressNextSave=true;
     }
     render();
     return;
@@ -552,6 +529,7 @@ async function restoreRecoverySnapshot() {
     render();
   } catch (error) {
     state.status = `Where: Recovery. Blocker: ${error.message || "invalid backup"}. Button runs next: paste a valid demo backup.`;
+    if(DEMO_API_BASE_URL)state.suppressNextSave=true;
     render();
   }
 }
@@ -577,7 +555,7 @@ async function eraseBackendState() {
     state.clipboardReceipt = null;
     render();
   } catch (error) {
-    state.status = routeStatus("Backend erase", error.message || "erase failed", "try again");
+    state.status=routeStatus("Backend erase",error.message||"erase failed","try again");state.suppressNextSave=true;
     render();
   }
 }

@@ -123,6 +123,8 @@ try {
   check("hosted profile changes use named backend endpoint", hostedProfileSave.ok, hostedProfileSave.detail);
   const hostedResetSave = frontendResetUsesBackendEndpoint(frontendSource);
   check("hosted reset uses named backend endpoint", hostedResetSave.ok, hostedResetSave.detail);
+  const hostedStatusFailures = frontendHostedStatusFailuresStayLocalOnly(frontendSource);
+  check("hosted status-only failures stay local-only", hostedStatusFailures.ok, hostedStatusFailures.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -1541,6 +1543,52 @@ function frontendResetUsesBackendEndpoint(source) {
     detail: ok
       ? "hosted reset posts to /api/state/reset while static reset keeps local data"
       : "hosted reset still relies on browser-row snapshot persistence"
+  };
+}
+
+function frontendHostedStatusFailuresStayLocalOnly(source) {
+  const contracts = [
+    {
+      name: "resetState",
+      status: 'routeStatus("Backend reset"',
+      suppress: "state.suppressNextSave=true"
+    },
+    {
+      name: "restoreRecoverySnapshot",
+      status: "invalid backup",
+      suppress: "if(DEMO_API_BASE_URL)state.suppressNextSave=true"
+    },
+    {
+      name: "eraseBackendState",
+      status: 'routeStatus("Backend erase"',
+      suppress: "state.suppressNextSave=true"
+    }
+  ];
+  const failures = [];
+  for (const contract of contracts) {
+    const body = functionBody(source, contract.name);
+    if (!body) {
+      failures.push(`${contract.name}:missing`);
+      continue;
+    }
+    const catchIndex = body.lastIndexOf("catch (error)");
+    const catchBody = catchIndex < 0 ? "" : body.slice(catchIndex);
+    const statusIndex = catchBody.indexOf(contract.status);
+    const suppressIndex = catchBody.indexOf(contract.suppress);
+    const renderIndex = catchBody.indexOf("render();", statusIndex);
+    if (statusIndex < 0 || suppressIndex < statusIndex || renderIndex < suppressIndex) {
+      failures.push(`${contract.name}:status failure can schedule browser-row save`);
+    }
+    if (catchBody.includes("scheduleBackendStateSave") || catchBody.includes("saveState();")) {
+      failures.push(`${contract.name}:durable save path`);
+    }
+  }
+
+  return {
+    ok: failures.length === 0,
+    detail: failures.length === 0
+      ? "hosted reset, recovery, and erase failure messages render without scheduling browser-row persistence"
+      : failures.join(", ")
   };
 }
 
