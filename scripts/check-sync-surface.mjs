@@ -139,6 +139,18 @@ check(
 );
 
 check(
+  "sync buttons keep clear accessible names",
+  includesAll(html, [
+    'id="sync-code-use" class="btn btn-sm" type="button" aria-label="Use sync code"',
+    'id="sync-code-new" class="btn btn-sm" type="button" aria-label="Create sync code"',
+    'id="sync-code-copy-code" class="btn btn-sm" type="button" aria-label="Copy sync code"',
+    'id="sync-code-copy" class="btn btn-sm" type="button" aria-label="Copy sync link"',
+    'id="sync-code-leave" class="btn btn-sm" type="button" aria-label="Leave sync code"'
+  ]),
+  "sync button aria-labels"
+);
+
+check(
   "sync help keeps short private-data warning",
   html.includes("Anyone with this code can open this demo state. No private data.") &&
     source.includes("Anyone with this code can open this demo state. No private data.") &&
