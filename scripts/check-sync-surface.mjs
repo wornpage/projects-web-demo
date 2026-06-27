@@ -130,12 +130,13 @@ check(
   includesAll(html, [
     'id="sync-code-input"',
     'inputmode="text"',
+    'enterkeyhint="go"',
     'autocomplete="off"',
     'autocapitalize="characters"',
     'spellcheck="false"',
     'aria-describedby="sync-code-help"'
   ]),
-  "text input, no autocomplete, character caps, no spellcheck"
+  "text input, go key, no autocomplete, character caps, no spellcheck"
 );
 
 check(
