@@ -150,7 +150,7 @@ and explicit denials for unused frame, worker, manifest, and media loaders, and
 that
 hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
-asset, or unlisted public asset/data paths.
+asset, unlisted public asset/data paths, and non-public repo/docs/server paths.
 It confirms `/api/health` reports only the storage kind and does not expose
 database table names, local state file paths, or storage credentials.
 The full ship gate also refuses to run the live verifier from a dirty working
@@ -175,7 +175,7 @@ This table is part of the ship gate. A risk row must be a final state:
 |---|---|---|
 | Browser JS is visible | True | Accept for demo; move valuable logic server-side if it becomes proprietary |
 | Static sample data is visible on static targets | True | Accept for GitHub Pages/static preview; the static preview gate proves it remains the only public data file, while hosted app mode loads seed data through the keyed API |
-| Private repo files served by Outplane | Not observed | App allowlist only serves app assets and keyed API routes |
+| Private repo files served by Outplane | Fixed | Live Outplane verification proves repo docs, deploy files, Git metadata, server source, lockfiles, and traversal attempts return `404` |
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
 | Docker image contains extra docs/source helpers | Fixed | Docker uses a build stage for frontend protection and package install, then the runtime stage copies only pruned production dependencies, named public files, seed JSON, and `server/server.js` |

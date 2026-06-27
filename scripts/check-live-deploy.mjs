@@ -246,6 +246,17 @@ try {
     "/data/not-allowlisted.json",
     "/render.yaml"
   ].map(async (pathname) => [pathname, await readStatus(pathname)]));
+  const hostedNonPublicRepoStatuses = await Promise.all([
+    "/README.md",
+    "/Dockerfile",
+    "/server/server.js",
+    "/server/package-lock.json",
+    "/docs/deploy-outplane.md",
+    "/docs/public-exposure-audit.md",
+    "/.git/config",
+    "/assets/../server/server.js",
+    "/assets/%2e%2e/server/server.js"
+  ].map(async (pathname) => [pathname, await readStatus(pathname)]));
   const healthText = JSON.stringify(health);
 
   check("health endpoint reports ok", health.ok === true, health.ok);
@@ -288,6 +299,7 @@ try {
   check("public assets have no source map references", publicSourceMapReferences.length === 0, publicSourceMapReferences.join(", ") || "absent");
   check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
   check("source map, retired metadata, unlisted public files, direct seed JSON, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
+  check("hosted non-public repo files are not served", hostedNonPublicRepoStatuses.every(([, status]) => status === 404), hostedNonPublicRepoStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
   check("API seed data route returns demo packs", Array.isArray(liveSeedPacks) && liveSeedPacks.length > 0, `${liveSeedPacks?.length || 0} pack(s)`);
   check("API seed data matches this checkout", liveSeedPacksHash === expectedFrontend.seedPacksHash, `live=${liveSeedPacksHash} expected=${expectedFrontend.seedPacksHash}`);

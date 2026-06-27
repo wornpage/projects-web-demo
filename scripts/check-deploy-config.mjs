@@ -93,6 +93,12 @@ check("live verifier compares API seed data to checkout", includesAll(liveVerifi
   "seedPacksHash",
   "canonicalJson(liveSeedPacks)"
 ]), "live seed data hash match");
+check("live verifier blocks non-public repo files", includesAll(liveVerifier, [
+  "hosted non-public repo files are not served",
+  "/server/server.js",
+  "/.git/config",
+  "/docs/public-exposure-audit.md"
+]), "live non-public repo file rejection");
 check("live verifier rejects unkeyed API seed data", includesAll(liveVerifier, [
   "unkeyedSeedPacksStatus",
   "hosted seed data rejects missing client key"
