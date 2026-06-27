@@ -9,10 +9,14 @@ ENV PROJECTS_STATE_FILE=/app/state/state.json
 
 COPY server/package*.json ./server/
 RUN npm --prefix server ci --include=dev
+RUN mkdir -p assets data scripts
 
 COPY index.html ./
-COPY assets ./assets
-COPY data ./data
+COPY assets/app.css ./assets/app.css
+COPY assets/demo.css ./assets/demo.css
+COPY assets/demo.js ./assets/demo.js
+COPY assets/favicon.png ./assets/favicon.png
+COPY data/demo-packs.json ./data/demo-packs.json
 COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs
 COPY server/server.js ./server/server.js
 

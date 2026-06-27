@@ -103,7 +103,10 @@ try {
     "/assets/demo.js.map",
     "/assets/demo.css.map",
     "/assets/app.css.map",
-    "/assets/demo-metadata.json"
+    "/assets/demo-metadata.json",
+    "/assets/not-allowlisted.txt",
+    "/assets/private/demo.js",
+    "/data/not-allowlisted.json"
   ].map(async (pathname) => [pathname, await readStatus(pathname)]));
 
   check("health endpoint reports ok", health.ok === true, health.ok);
@@ -123,7 +126,7 @@ try {
   check("retired browser diagnostics are absent", retiredDiagnosticTokens.length === 0, retiredDiagnosticTokens.join(", ") || "absent");
   check("public assets have no source map references", publicSourceMapReferences.length === 0, publicSourceMapReferences.join(", ") || "absent");
   check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
-  check("source map and retired metadata files are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
+  check("source map, retired metadata, and unlisted public files are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);

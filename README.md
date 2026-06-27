@@ -35,7 +35,7 @@ Keep this repo focused on the public portfolio demo.
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
-| `scripts/check-public-assets.mjs` | Local proof that public text assets stay budgeted and omit source maps or private path strings. |
+| `scripts/check-public-assets.mjs` | Local proof that public assets stay allowlisted and public text assets stay budgeted without source maps or private path strings. |
 | `scripts/check-public-routes.mjs` | Local proof that the visible route set stays small and retired route code stays absent. |
 | `scripts/check-sync-surface.mjs` | Local proof that sync links, QR sharing, and sync client keys stay wired. |
 | `scripts/check-state-recovery.mjs` | Local proof that one client's exported state can be restored without mixing rows. |
@@ -140,9 +140,10 @@ Then open:
 http://localhost:5179/#/home
 ```
 
-The container serves the frontend and `/api` from one Node process. It can use
-local file-backed state for development, but hosted deploys should use managed
-Postgres so app containers stay stateless.
+The container serves the frontend and `/api` from one Node process. The image
+copies only the named public frontend files, not the whole repository or broad
+asset directories. It can use local file-backed state for development, but
+hosted deploys should use managed Postgres so app containers stay stateless.
 
 Production Docker builds run `scripts/protect-frontend.mjs` against
 `assets/demo.js`. The script minifies with top-level Terser compression and

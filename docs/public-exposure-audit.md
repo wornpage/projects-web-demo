@@ -8,7 +8,10 @@ The hosted Outplane app does not expose private repository files through the
 web server. The public surface is the browser app itself:
 
 - `index.html`
-- `assets/`
+- `assets/app.css`
+- `assets/demo.css`
+- `assets/demo.js`
+- `assets/favicon.png`
 - `data/demo-packs.json`
 - `/api/health`
 - `/api/state` and related API routes only when the browser sends a demo client
@@ -60,11 +63,13 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
 ```
 
 The gate starts the Node app with a temporary file-backed state directory,
-confirms only the public allowlist is served, confirms repository files and
-path traversal attempts return `404`, creates work under one browser client
+confirms only the named public file allowlist is served, confirms repository
+files, unlisted asset/data paths, and path traversal attempts return `404`,
+creates work under one browser client
 key, confirms another client key plus the default local row cannot read it,
-confirms public text assets stay under explicit size budgets without source-map
-hints or private path strings, confirms retired route code stays absent,
+confirms public assets stay on the file allowlist, confirms public text assets
+stay under explicit size budgets without source-map hints or private path
+strings, confirms retired route code stays absent,
 and confirms the backend-served app shell sends a nonce-based Content Security
 Policy for the injected runtime API script. It also confirms API CORS uses
 the exact same-origin app origin instead of a wildcard and rejects a
@@ -82,8 +87,8 @@ nonce-based CSP, rejects `/api/state` without a browser client key, keeps fixed
 row from another request, restores an exported state snapshot to its keyed row,
 uses same-origin API CORS instead of wildcard CORS, and rejects a third-party
 preflight. It also confirms the hosted public assets have no source-map
-references, private path strings, served source-map files, or retired metadata
-asset.
+references, private path strings, served source-map files, retired metadata
+asset, or unlisted public asset/data paths.
 
 ## Risk Decisions
 
@@ -95,6 +100,7 @@ asset.
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
+| Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |
 | Local file-backed API users mix state | Fixed | Browser client keys map to separate hashed local state files |
 | Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin |

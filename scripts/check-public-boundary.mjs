@@ -83,7 +83,10 @@ try {
     "/render.yaml",
     "/.git/config",
     "/assets/../server/server.js",
-    "/assets/%2e%2e/server/server.js"
+    "/assets/%2e%2e/server/server.js",
+    "/assets/not-allowlisted.txt",
+    "/assets/private/demo.js",
+    "/data/not-allowlisted.json"
   ]) {
     const response = await request(port, pathname);
     check(`private repo file blocked: ${pathname}`, response.status === 404, response.status);

@@ -13,13 +13,18 @@ const copyLines = lines.filter((line) => line.startsWith("COPY "));
 const allowedCopyLines = [
   "COPY server/package*.json ./server/",
   "COPY index.html ./",
-  "COPY assets ./assets",
-  "COPY data ./data",
+  "COPY assets/app.css ./assets/app.css",
+  "COPY assets/demo.css ./assets/demo.css",
+  "COPY assets/demo.js ./assets/demo.js",
+  "COPY assets/favicon.png ./assets/favicon.png",
+  "COPY data/demo-packs.json ./data/demo-packs.json",
   "COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs",
   "COPY server/server.js ./server/server.js"
 ];
 const forbiddenCopyPatterns = [
   /^COPY\s+\.\s+/u,
+  /^COPY\s+assets\s+/u,
+  /^COPY\s+data\s+/u,
   /^COPY\s+README\.md\b/u,
   /^COPY\s+docs\b/u,
   /^COPY\s+render\.yaml\b/u,
@@ -32,8 +37,16 @@ const forbiddenCopies = copyLines.filter((line) => forbiddenCopyPatterns.some((p
 
 check("Docker base image is pinned to Node Alpine", lines.includes("FROM node:24-alpine"), firstLine("FROM"));
 check("Docker build installs from package lock", normalized.includes("RUN npm --prefix server ci --include=dev"), "npm ci --include=dev");
+check("Docker build creates named public asset directories", lines.includes("RUN mkdir -p assets data scripts"), "assets/data/scripts");
 check("Docker copy list is allowlisted", unexpectedCopies.length === 0, unexpectedCopies.join(" | ") || "allowlist only");
 check("Dockerfile does not copy repo root or docs", forbiddenCopies.length === 0, forbiddenCopies.join(" | ") || "absent");
+check("Docker image copies only named public frontend files", [
+  "COPY assets/app.css ./assets/app.css",
+  "COPY assets/demo.css ./assets/demo.css",
+  "COPY assets/demo.js ./assets/demo.js",
+  "COPY assets/favicon.png ./assets/favicon.png",
+  "COPY data/demo-packs.json ./data/demo-packs.json"
+].every((line) => copyLines.includes(line)), copyLines.join(" | "));
 check("Docker image copies only the app server source", copyLines.includes("COPY server/server.js ./server/server.js"), copyLines.join(" | "));
 check("Docker build protects frontend before prune", normalized.includes("RUN node scripts/protect-frontend.mjs assets/demo.js assets/demo.js \\\n  && npm --prefix server prune --omit=dev"), "protect then prune");
 check("Docker runtime defaults to hosted app port", lines.includes("ENV HOST=0.0.0.0") && lines.includes("ENV PORT=5179") && lines.includes("EXPOSE 5179"), "HOST/PORT/EXPOSE");

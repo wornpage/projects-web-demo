@@ -10,11 +10,12 @@ const PORT = Number(process.env.PREVIEW_PORT || 5181);
 const ROOT_DIR = path.resolve(__dirname, "..");
 const publicStaticFiles = new Set([
   "/index.html",
+  "/assets/app.css",
+  "/assets/demo.css",
+  "/assets/demo.js",
+  "/assets/favicon.png",
   "/data/demo-packs.json"
 ]);
-const publicStaticPrefixes = [
-  "/assets/"
-];
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -111,8 +112,7 @@ function normalizePublicStaticPathname(rawPathname) {
 }
 
 function isPublicStaticPathname(pathname) {
-  return publicStaticFiles.has(pathname)
-    || publicStaticPrefixes.some((prefix) => pathname.startsWith(prefix));
+  return publicStaticFiles.has(pathname);
 }
 
 function sendText(response, statusCode, text) {

@@ -13,6 +13,13 @@ const publicTextAssets = [
   { pathname: "assets/app.css", maxBytes: 490000 },
   { pathname: "data/demo-packs.json", maxBytes: 15000 }
 ];
+const publicFileAllowlist = [
+  "assets/app.css",
+  "assets/demo.css",
+  "assets/demo.js",
+  "assets/favicon.png",
+  "data/demo-packs.json"
+];
 const totalPublicTextBudgetBytes = 830000;
 const retiredPublicFiles = [
   "assets/demo-metadata.json"
@@ -67,6 +74,11 @@ check("public text assets stay under total budget", totalBytes <= totalPublicTex
 
 const publicMapFiles = await findPublicMapFiles();
 check("public asset tree contains no source map files", publicMapFiles.length === 0, publicMapFiles.join(", ") || "absent");
+const publicAssetFiles = await findPublicAssetFiles();
+const unexpectedPublicFiles = publicAssetFiles.filter((file) => !publicFileAllowlist.includes(file));
+const missingPublicFiles = publicFileAllowlist.filter((file) => !publicAssetFiles.includes(file));
+check("public asset tree contains only allowlisted files", unexpectedPublicFiles.length === 0, unexpectedPublicFiles.join(", ") || "allowlist only");
+check("public asset allowlist files exist", missingPublicFiles.length === 0, missingPublicFiles.join(", ") || "complete");
 for (const pathname of retiredPublicFiles) {
   check(`${pathname} is not shipped`, !(await fileExists(path.join(repoRoot, pathname))), "absent");
 }
@@ -87,6 +99,10 @@ function check(name, ok, detail) {
 }
 
 async function findPublicMapFiles() {
+  return (await findPublicAssetFiles()).filter((file) => file.endsWith(".map"));
+}
+
+async function findPublicAssetFiles() {
   const roots = ["assets", "data"];
   const matches = [];
   for (const root of roots) {
@@ -115,7 +131,7 @@ async function walk(directory, matches) {
       await walk(child, matches);
       continue;
     }
-    if (entry.isFile() && entry.name.endsWith(".map")) {
+    if (entry.isFile()) {
       matches.push(child);
     }
   }

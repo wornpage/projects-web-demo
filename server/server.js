@@ -39,11 +39,12 @@ const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
 ]);
 const publicStaticFiles = new Set([
   "/index.html",
+  "/assets/app.css",
+  "/assets/demo.css",
+  "/assets/demo.js",
+  "/assets/favicon.png",
   "/data/demo-packs.json"
 ]);
-const publicStaticPrefixes = [
-  "/assets/"
-];
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -306,8 +307,7 @@ function normalizePublicStaticPathname(rawPathname) {
 }
 
 function isPublicStaticPathname(pathname) {
-  return publicStaticFiles.has(pathname)
-    || publicStaticPrefixes.some((prefix) => pathname.startsWith(prefix));
+  return publicStaticFiles.has(pathname);
 }
 
 function isIndexFile(file) {
