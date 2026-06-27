@@ -77,9 +77,9 @@ strings, confirms retired route code stays absent,
 and confirms the backend-served app shell sends a nonce-based Content Security
 Policy for the injected runtime API script and blocks unsafe inline styles. It
 also confirms the app shell blocks unused frame, worker, manifest, and media
-loaders, and sends legacy frame denial, HSTS, same-origin resource/opener
-isolation, and restrictive Permissions-Policy headers. API CORS uses the exact
-same-origin app origin
+loaders, and sends legacy frame denial, HSTS, same-origin
+resource/opener/embedder isolation, origin-agent clustering, and restrictive
+Permissions-Policy headers. API CORS uses the exact same-origin app origin
 instead of a wildcard, rejects third-party preflights, rejects retired methods
 or unlisted request headers during preflight, and cannot be authorized by a
 spoofed forwarding header. It also confirms malformed `Host` values do not
@@ -111,9 +111,9 @@ rejects oversized keyed state snapshots, uses same-origin API CORS instead of
 wildcard CORS, rejects third-party preflights, rejects disallowed preflight
 methods/headers, and rejects forwarded-host CORS spoofing. It also confirms the
 hosted app shell sends HSTS, frame-deny, same-origin resource/opener isolation,
-restrictive Permissions-Policy headers, a style policy without unsafe inline
-styles, and explicit denials for unused frame, worker, manifest, and media
-loaders, and that
+embedder isolation, origin-agent clustering, restrictive Permissions-Policy
+headers, a style policy without unsafe inline styles, and explicit denials for
+unused frame, worker, manifest, and media loaders, and that
 hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
 asset, or unlisted public asset/data paths.
@@ -146,7 +146,8 @@ Web Crypto and do not fall back to weak random values.
 | Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |
 | Backend app shell allows arbitrary inline script/style | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script and blocks unsafe inline styles |
 | App shell CSP leaves unused loaders to fallback behavior | Fixed | CSP now explicitly denies frames, workers, manifests, and media loaders the demo does not use |
-| App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
+| App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener/embedder isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
+| Shared security headers can drift unverified | Fixed | Local, static-preview, and live gates now assert embedder policy, origin-agent clustering, and cross-domain policy denial |
 | Hosted app lacks HTTPS downgrade protection | Fixed | App and API responses send HSTS for HTTPS clients |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin or explicit configured origins and does not trust forwarded-host for authorization |
 | API preflight accepts retired methods or unlisted headers | Fixed | CORS preflights validate the requested method and header list before returning authorization headers |

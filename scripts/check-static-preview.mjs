@@ -161,9 +161,12 @@ function sharedSecurityHeadersOk(headers) {
     && getHeader(headers, "referrer-policy") === "no-referrer"
     && getHeader(headers, "x-content-type-options") === "nosniff"
     && getHeader(headers, "x-frame-options") === "DENY"
+    && getHeader(headers, "cross-origin-embedder-policy") === "require-corp"
     && getHeader(headers, "cross-origin-resource-policy") === "same-origin"
     && getHeader(headers, "cross-origin-opener-policy") === "same-origin"
+    && getHeader(headers, "origin-agent-cluster") === "?1"
     && getHeader(headers, "strict-transport-security") === "max-age=31536000; includeSubDomains"
+    && getHeader(headers, "x-permitted-cross-domain-policies") === "none"
     && permissionsPolicyDisables(getHeader(headers, "permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]);
 }
 
@@ -173,9 +176,12 @@ function sharedSecurityHeaderDetail(headers) {
     "referrer-policy",
     "x-content-type-options",
     "x-frame-options",
+    "cross-origin-embedder-policy",
     "cross-origin-resource-policy",
     "cross-origin-opener-policy",
+    "origin-agent-cluster",
     "strict-transport-security",
+    "x-permitted-cross-domain-policies",
     "permissions-policy"
   ].map((name) => `${name}=${getHeader(headers, name) || "missing"}`).join("; ");
 }

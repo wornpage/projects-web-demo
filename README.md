@@ -117,10 +117,10 @@ methods or unlisted request headers are rejected. The static preview remains
 browser-local.
 
 The Node app also sends no-store, no-referrer, nosniff, HSTS, frame-deny,
-same-origin resource/opener isolation, restrictive Permissions-Policy headers,
-and a CSP that blocks unsafe inline scripts and styles on served app and API
-responses. The CSP also denies frames, workers, manifests, and media loaders the
-demo does not use.
+same-origin resource/opener/embedder isolation, restrictive
+Permissions-Policy headers, and a CSP that blocks unsafe inline scripts and
+styles on served app and API responses. The CSP also denies frames, workers,
+manifests, and media loaders the demo does not use.
 
 The local state path defaults to a user data directory outside the repository,
 but backend API state routes still require the browser's anonymous client key.
@@ -212,7 +212,8 @@ persistence.
 The preview server still uses the public file allowlist, a fixed internal URL
 base that does not depend on the incoming Host header, and defensive no-store,
 no-referrer, nosniff, HSTS, frame-deny,
-same-origin isolation, Permissions-Policy, and CSP headers.
+same-origin opener/resource/embedder isolation, Permissions-Policy, and CSP
+headers.
 
 ## GitHub Pages
 

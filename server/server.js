@@ -66,6 +66,7 @@ const CORS_ALLOWED_METHOD_SET = new Set(CORS_ALLOWED_METHODS.split(","));
 const CORS_ALLOWED_HEADER_SET = new Set(CORS_ALLOWED_HEADERS.split(",").map((header) => header.trim().toLowerCase()));
 const securityHeaders = {
   "cache-control": "no-store",
+  "cross-origin-embedder-policy": "require-corp",
   "cross-origin-opener-policy": "same-origin",
   "cross-origin-resource-policy": "same-origin",
   "origin-agent-cluster": "?1",

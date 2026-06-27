@@ -162,6 +162,7 @@ try {
   check("app shell sends legacy frame deny header", htmlResponse.headers.get("x-frame-options") === "DENY", htmlResponse.headers.get("x-frame-options") || "missing");
   check("app shell limits cross-origin resource reuse", htmlResponse.headers.get("cross-origin-resource-policy") === "same-origin", htmlResponse.headers.get("cross-origin-resource-policy") || "missing");
   check("app shell isolates opener context", htmlResponse.headers.get("cross-origin-opener-policy") === "same-origin", htmlResponse.headers.get("cross-origin-opener-policy") || "missing");
+  check("app shell requires cross-origin embedder policy", htmlResponse.headers.get("cross-origin-embedder-policy") === "require-corp", htmlResponse.headers.get("cross-origin-embedder-policy") || "missing");
   check("app shell disables sensitive browser permissions", permissionsPolicyDisables(htmlResponse.headers.get("permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]), htmlResponse.headers.get("permissions-policy") || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API script nonce matches CSP", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
@@ -391,9 +392,12 @@ function sharedSecurityHeadersOk(headers) {
     && getHeader(headers, "referrer-policy") === "no-referrer"
     && getHeader(headers, "x-content-type-options") === "nosniff"
     && getHeader(headers, "x-frame-options") === "DENY"
+    && getHeader(headers, "cross-origin-embedder-policy") === "require-corp"
     && getHeader(headers, "cross-origin-resource-policy") === "same-origin"
     && getHeader(headers, "cross-origin-opener-policy") === "same-origin"
+    && getHeader(headers, "origin-agent-cluster") === "?1"
     && getHeader(headers, "strict-transport-security") === "max-age=31536000; includeSubDomains"
+    && getHeader(headers, "x-permitted-cross-domain-policies") === "none"
     && permissionsPolicyDisables(getHeader(headers, "permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]);
 }
 
@@ -403,9 +407,12 @@ function sharedSecurityHeaderDetail(headers) {
     "referrer-policy",
     "x-content-type-options",
     "x-frame-options",
+    "cross-origin-embedder-policy",
     "cross-origin-resource-policy",
     "cross-origin-opener-policy",
+    "origin-agent-cluster",
     "strict-transport-security",
+    "x-permitted-cross-domain-policies",
     "permissions-policy"
   ].map((name) => `${name}=${getHeader(headers, name) || "missing"}`).join("; ");
 }

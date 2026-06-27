@@ -28,6 +28,7 @@ const contentTypes = {
 
 const securityHeaders = {
   "cache-control": "no-store",
+  "cross-origin-embedder-policy": "require-corp",
   "cross-origin-opener-policy": "same-origin",
   "cross-origin-resource-policy": "same-origin",
   "origin-agent-cluster": "?1",
