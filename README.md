@@ -152,6 +152,9 @@ backup or sync restores cannot silently create ambiguous duplicate work rows.
 Selected-work commands in hosted app mode wait for the server command preview
 before enabling the primary command buttons, so the browser does not briefly run
 the local workflow fallback while `/api/packs/{id}/command` is loading.
+That same command preview owns the selected-work flow hint and primary "why"
+copy in hosted app mode; the browser-side copy remains only as the static
+fallback.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
 to the same demo row. Use **New** to create a Web Crypto generated 20-character

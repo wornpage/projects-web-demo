@@ -851,6 +851,8 @@ function backendPackCommandForSelected(pack) {
     stateHelp: preview.stateHelp || localWorkflow.help,
     action: preview.action || localCommand.action,
     targetPackId: preview.targetPackId || localCommand.targetPackId,
+    flowHint: preview.flowHint || selectedFlowHintForPack(pack, localCommand, preview.blocker || blockerTextForPack(pack)),
+    primaryReason: preview.primaryReason || primaryCommandVisibleReason(pack, localCommand),
     memory: latestRelevantMemory(pack)
   };
 }
@@ -864,6 +866,8 @@ function backendCommandPendingForPack(pack) {
     stateHelp: backendCommandPendingReason(),
     action: "backend-command-pending",
     targetPackId: pack.id,
+    flowHint: backendCommandPendingFlowHint(),
+    primaryReason: "Why: waiting for backend command.",
     memory: latestRelevantMemory(pack),
     backendPending: true
   };
@@ -1897,9 +1901,7 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     ? (isBackendCommandPending(selectedWorkCommand) ? selectedWorkCommand : resolvePrimaryCommandForPack(selected))
     : null;
   const selectedActionFlow = selected
-    ? (isBackendCommandPending(selectedWorkCommand)
-      ? backendCommandPendingFlowHint(selectedWorkCommand)
-      : selectedFlowHintForPack(selected, selectedActionCommand, selectedBlocker))
+    ? (selectedWorkCommand.flowHint || selectedFlowHintForPack(selected, selectedActionCommand, selectedBlocker))
     : "";
 
   const routeCommandsHints = {
@@ -3491,7 +3493,7 @@ function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)
 }
 
 function primaryCommandReasonNote(pack, command = resolvePrimaryCommandForPack(pack)) {
-  const reason = primaryCommandVisibleReason(pack, command);
+  const reason = normalizeCopy(command?.primaryReason) || primaryCommandVisibleReason(pack, command);
   const copy = copySurface(reason, DEMO_COPY_LIMITS.commandFlowVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   return `<small class="demo-primary-reason" data-primary-action-reason title="${escapeAttribute(copy.help)}" aria-label="${escapeAttribute(copy.help)}">${escapeHtml(copy.visible)}</small>`;
 }

@@ -1037,16 +1037,19 @@ function actionReceiptForPack(pack, summary, next = resolvePrimaryCommandForPack
 function packCommandPreview(pack) {
   const next = resolvePrimaryCommandForPack(pack);
   const workflow = workflowStateForPack(pack, next);
+  const blocker = blockerTextForPack(pack);
   return {
     packId: pack.id,
     signature: packCommandSignature(pack),
     where: workTitle(pack),
-    blocker: blockerTextForPack(pack),
+    blocker,
     next: next.label,
     action: next.action,
     targetPackId: next.targetPackId,
     stateText: workflow.label,
     stateHelp: workflow.help || "",
+    flowHint: selectedFlowHintForPack(pack, next, blocker),
+    primaryReason: primaryCommandVisibleReason(pack, next),
     proof: proofTargetForPack(pack)
   };
 }
@@ -1062,21 +1065,86 @@ function actionReceiptContext(pack, next) {
 function workflowStateForPack(pack, command = null) {
   const resolved = command || resolvePrimaryCommandForPack(pack);
   if (pack.status === "done") {
-    return { label: "Done" };
+    return {
+      label: "Done",
+      help: `Proof is saved for ${workTitle(pack)}.`
+    };
   }
   if (isMissingNextAction(pack)) {
-    return { label: "Needs setup" };
+    return {
+      label: "Needs setup",
+      help: "Button runs next is missing."
+    };
   }
   if (hasBlocker(pack)) {
-    return { label: "Blocked" };
+    return {
+      label: "Blocked",
+      help: `Blocker: ${blockerTextForPack(pack)}.`
+    };
   }
   if (resolved.action === "done") {
-    return { label: "Proof ready" };
+    return {
+      label: "Proof ready",
+      help: `Ready to finish with proof: ${proofTargetForPack(pack)}.`
+    };
   }
   if (pack.status === "draft") {
-    return { label: "Draft" };
+    return {
+      label: "Draft",
+      help: "Work path is still being set."
+    };
   }
-  return { label: "Ready" };
+  return {
+    label: "Ready",
+    help: `Button runs next: ${resolved.label}.`
+  };
+}
+
+function selectedFlowHintForPack(pack, command = resolvePrimaryCommandForPack(pack), blocker = blockerTextForPack(pack)) {
+  const title = workTitle(pack);
+  if (isMissingNextAction(pack)) {
+    return `Flow: set Button runs next for ${title}.`;
+  }
+
+  if (hasBlocker(pack)) {
+    const ownerFlow = ownerBlockerFlowHint(pack);
+    if (ownerFlow) {
+      return ownerFlow;
+    }
+
+    return command?.action === "unblock"
+      ? `Flow: clear ${blocker || DEMO_BLOCKER_NONE_LABEL} on ${title}.`
+      : `Flow: review ${blocker || DEMO_BLOCKER_NONE_LABEL} on ${title}.`;
+  }
+
+  return `Flow: run ${command?.label || "Open"} for ${title}.`;
+}
+
+function ownerBlockerFlowHint(pack) {
+  const blocker = blockerTextForPack(pack).toLowerCase();
+  if (!blocker.includes("owner")) {
+    return "";
+  }
+
+  return isMissingOwnerValue(pack?.owner)
+    ? "Flow: fill Owner, then set Blocker: None."
+    : "Flow: set Blocker: None.";
+}
+
+function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPack(pack)) {
+  if (isMissingNextAction(pack)) {
+    return "Why: setup comes first.";
+  }
+
+  if (hasBlocker(pack)) {
+    return `Why: ${blockerTextForPack(pack)} blocks it.`;
+  }
+
+  if (command.action === "done") {
+    return "Why: proof is ready.";
+  }
+
+  return `Why: no blocker; ${command.label} can run.`;
 }
 
 function resolvePrimaryCommandForPack(pack) {

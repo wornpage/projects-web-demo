@@ -94,6 +94,8 @@ try {
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateKeyForRequest required");
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
+  const serverPreviewMarkers = serverCommandPreviewCopyMarkers(serverSource);
+  check("server command preview owns selected-work flow copy", serverPreviewMarkers.ok, serverPreviewMarkers.detail);
 
   const sameOrigin = `http://127.0.0.1:${port}`;
   const sameOriginCors = await request(port, "/api/health", {
@@ -159,6 +161,9 @@ try {
   const unkeyedSeedPacks = await request(port, "/api/demo-packs");
   const unkeyedPacks = await request(port, "/api/packs");
   const unkeyedCommandPreview = await request(port, "/api/packs/source-folder-audit/command");
+  const keyedCommandPreview = await jsonRequest(port, "/api/packs/source-folder-audit/command", {
+    headers: { "x-projects-demo-client": "demo-00000000-0000-4000-8000-000000000001" }
+  });
   const unkeyedWorkflowWrites = await Promise.all([
     ["pack create", "/api/packs"],
     ["work path", "/api/packs/source-folder-audit/path"],
@@ -176,6 +181,7 @@ try {
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
+  check("keyed command preview owns flow and reason copy", commandPreviewOwnsCopy(keyedCommandPreview.body), `${keyedCommandPreview.body?.flowHint || "missing"} / ${keyedCommandPreview.body?.primaryReason || "missing"}`);
   check(
     "unkeyed API workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWrites.every(([, status]) => status === 400),
@@ -622,6 +628,27 @@ function backendCommandPendingMarkers(source) {
     ok: missing.length === 0,
     detail: missing.length === 0 ? "selected work controls wait while preview loads" : missing.join(", ")
   };
+}
+
+function serverCommandPreviewCopyMarkers(source) {
+  const markers = [
+    "flowHint: selectedFlowHintForPack(pack, next, blocker)",
+    "primaryReason: primaryCommandVisibleReason(pack, next)",
+    "function selectedFlowHintForPack(pack",
+    "function primaryCommandVisibleReason(pack"
+  ];
+  const missing = markers.filter((marker) => !source.includes(marker));
+  return {
+    ok: missing.length === 0,
+    detail: missing.length === 0 ? "server preview includes selected-work flow and why copy" : missing.join(", ")
+  };
+}
+
+function commandPreviewOwnsCopy(preview) {
+  return typeof preview?.flowHint === "string"
+    && preview.flowHint.startsWith("Flow:")
+    && typeof preview?.primaryReason === "string"
+    && preview.primaryReason.startsWith("Why:");
 }
 
 async function waitForHealth(activePort) {
