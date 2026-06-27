@@ -33,6 +33,11 @@ const steps = [
     args: ["scripts/check-public-assets.mjs"]
   },
   {
+    label: "static preview boundary",
+    command: process.execPath,
+    args: ["scripts/check-static-preview.mjs"]
+  },
+  {
     label: "public route contract",
     command: process.execPath,
     args: ["scripts/check-public-routes.mjs"]

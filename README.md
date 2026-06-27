@@ -35,6 +35,7 @@ Keep this repo focused on the public portfolio demo.
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
 | `scripts/check-public-assets.mjs` | Local proof that public assets stay allowlisted and public text assets stay budgeted without source maps or private path strings. |
+| `scripts/check-static-preview.mjs` | Local proof that the static preview serves only the static allowlist and sends defensive headers. |
 | `scripts/check-public-routes.mjs` | Local proof that the visible route set stays small and retired route code stays absent. |
 | `scripts/check-sync-surface.mjs` | Local proof that sync links, QR sharing, and sync client keys stay wired. |
 | `scripts/check-state-recovery.mjs` | Local proof that one client's exported state can be restored without mixing rows. |
@@ -205,6 +206,10 @@ http://localhost:5181/#/home
 The static preview uses browser-local state, matching the GitHub Pages behavior.
 Use app mode at `http://localhost:5179/#/home` when you need backend-backed
 persistence.
+The preview server still uses the public file allowlist, a fixed internal URL
+base that does not depend on the incoming Host header, and defensive no-store,
+no-referrer, nosniff, frame-deny,
+same-origin isolation, Permissions-Policy, and CSP headers.
 
 ## GitHub Pages
 

@@ -26,15 +26,30 @@ const contentTypes = {
   ".txt": "text/plain; charset=utf-8"
 };
 
+const securityHeaders = {
+  "cache-control": "no-store",
+  "cross-origin-opener-policy": "same-origin",
+  "cross-origin-resource-policy": "same-origin",
+  "origin-agent-cluster": "?1",
+  "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+  "referrer-policy": "no-referrer",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "x-permitted-cross-domain-policies": "none"
+};
+
 const server = http.createServer(async (request, response) => {
   if (request.method !== "GET" && request.method !== "HEAD") {
-    sendText(response, 405, "Method not allowed");
+    sendText(response, 405, "Method not allowed", { "allow": "GET, HEAD" });
     return;
   }
 
   try {
     const file = await resolveFile(request.url || "/");
+    const isIndex = path.resolve(file) === path.join(ROOT_DIR, "index.html");
     response.writeHead(200, {
+      ...securityHeaders,
+      ...(isIndex ? { "content-security-policy": contentSecurityPolicy() } : {}),
       "content-type": contentTypes[path.extname(file).toLowerCase()] || "application/octet-stream"
     });
     if (request.method === "HEAD") {
@@ -56,7 +71,7 @@ server.listen(PORT, HOST, () => {
 });
 
 async function resolveFile(rawUrl) {
-  const url = new URL(rawUrl, `http://${HOST}:${PORT}`);
+  const url = requestUrlFor(rawUrl);
   const pathname = normalizePublicStaticPathname(url.pathname);
   if (!isPublicStaticPathname(pathname)) {
     throw httpError(404);
@@ -88,6 +103,14 @@ async function resolveFile(rawUrl) {
   return file;
 }
 
+function requestUrlFor(rawUrl) {
+  try {
+    return new URL(rawUrl || "/", "http://projects-demo-preview.local");
+  } catch {
+    throw httpError(400);
+  }
+}
+
 function normalizePublicStaticPathname(rawPathname) {
   let pathname = "";
   try {
@@ -114,8 +137,26 @@ function isPublicStaticPathname(pathname) {
   return publicStaticFiles.has(pathname);
 }
 
-function sendText(response, statusCode, text) {
-  response.writeHead(statusCode, { "content-type": "text/plain; charset=utf-8" });
+function contentSecurityPolicy() {
+  return [
+    "default-src 'self'",
+    "base-uri 'none'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "form-action 'none'"
+  ].join("; ");
+}
+
+function sendText(response, statusCode, text, headers = {}) {
+  response.writeHead(statusCode, {
+    ...securityHeaders,
+    ...headers,
+    "content-type": "text/plain; charset=utf-8"
+  });
   response.end(`${text}\n`);
 }
 

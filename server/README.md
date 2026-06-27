@@ -94,6 +94,10 @@ http://localhost:5181/#/home
 
 The static preview keeps the browser-local GitHub Pages behavior. Use app mode
 at `http://localhost:5179/#/home` when you need backend-backed persistence.
+It serves only the static file allowlist and sends defensive no-store,
+no-referrer, nosniff, frame-deny, same-origin isolation, Permissions-Policy, and
+CSP headers. Request routing uses a fixed internal URL base instead of the
+incoming Host header.
 
 ## Endpoints
 

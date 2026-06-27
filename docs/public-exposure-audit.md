@@ -82,6 +82,15 @@ instead of a wildcard, rejects a third-party preflight, and cannot be authorized
 by a spoofed forwarding header. It also confirms malformed `Host` values do not
 bypass the normal request handler.
 
+The static preview gate starts `server/static.js`, confirms only the static file
+allowlist is served, confirms static sample JSON remains the only public data
+file, rejects non-read methods, sends defensive CSP and browser security headers,
+and confirms unexpected valid `Host` values do not affect preview routing:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run static:check'
+```
+
 Repeatable live gate:
 
 ```powershell
@@ -110,7 +119,7 @@ Web Crypto and do not fall back to weak random values.
 | Risk | Current status | Decision |
 |---|---|---|
 | Browser JS is visible | True | Accept for demo; move valuable logic server-side if it becomes proprietary |
-| Static sample data is visible on static targets | True | Accept for GitHub Pages/static preview; hosted app mode loads seed data through the keyed API |
+| Static sample data is visible on static targets | True | Accept for GitHub Pages/static preview; the static preview gate proves it remains the only public data file, while hosted app mode loads seed data through the keyed API |
 | Private repo files served by Outplane | Not observed | App allowlist only serves app assets and keyed API routes |
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |

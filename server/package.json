@@ -9,6 +9,7 @@
     "check": "node --check server.js && node --check static.js",
     "protect:check": "node ../scripts/check-protected-frontend.mjs",
     "assets:check": "node ../scripts/check-public-assets.mjs",
+    "static:check": "node ../scripts/check-static-preview.mjs",
     "routes:check": "node ../scripts/check-public-routes.mjs",
     "sync:check": "node ../scripts/check-sync-surface.mjs",
     "recovery:check": "node ../scripts/check-state-recovery.mjs",
