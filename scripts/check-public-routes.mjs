@@ -108,6 +108,7 @@ check("spotlight facts keep the command triad visible", spotlightFactsContractOk
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
 check("card support actions stay readable and tappable", cardSupportActionStylesContractOk(), "grid tiles plus single-column mobile actions");
+check("panel forms group labels controls and help", panelFormFieldStylesContractOk(), "field-card grouping plus focus state");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 
 for (const row of checks) {
@@ -228,6 +229,19 @@ function cardSupportActionStylesContractOk() {
   ]) && includesAll(mobileStyles, [
     ".demo-card-support > .demo-card-actions",
     "grid-template-columns: 1fr;"
+  ]);
+}
+
+function panelFormFieldStylesContractOk() {
+  return includesAll(styles, [
+    ".demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field)",
+    ".demo-panel > .demo-inline-form > .demo-field:not(.demo-state-preview):not(.demo-blocker-field)",
+    "background: var(--demo-form-field-bg);",
+    "box-shadow: var(--demo-form-inner-shadow);",
+    ".demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field):focus-within",
+    ".demo-panel > .demo-inline-form > .demo-field:not(.demo-state-preview):not(.demo-blocker-field):focus-within",
+    ".demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field) .demo-field-help",
+    "margin: 0;"
   ]);
 }
 

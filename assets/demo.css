@@ -2113,7 +2113,9 @@ html[data-theme="dark"] .demo-header-metadata {
   box-shadow: none;
 }
 
-.demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field) {
+.demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
+.demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
+.demo-panel > .demo-inline-form > .demo-field:not(.demo-state-preview):not(.demo-blocker-field) {
   background: var(--demo-form-field-bg);
   border: 1px solid var(--demo-form-field-border);
   border-radius: var(--cockpit-radius);
@@ -2125,13 +2127,17 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-edit-panel .demo-field:focus-within,
+.demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field):focus-within,
+.demo-panel > .demo-inline-form > .demo-field:not(.demo-state-preview):not(.demo-blocker-field):focus-within,
 .demo-edit-panel .demo-blocker-field:focus-within,
 .demo-edit-panel .demo-state-preview:focus-within {
   border-color: var(--cockpit-accent);
   box-shadow: var(--demo-form-inner-shadow), var(--demo-form-focus-shadow);
 }
 
-.demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field) > span {
+.demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field) > span,
+.demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field) > span,
+.demo-panel > .demo-inline-form > .demo-field:not(.demo-state-preview):not(.demo-blocker-field) > span {
   margin-bottom: 0;
 }
 
@@ -2829,6 +2835,12 @@ html[data-theme="dark"] .demo-state-pill {
   font-size: 12px;
   line-height: 1.25;
   margin: -4px 0 0;
+}
+
+.demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field) .demo-field-help,
+.demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field) .demo-field-help,
+.demo-panel > .demo-inline-form > .demo-field:not(.demo-state-preview):not(.demo-blocker-field) .demo-field-help {
+  margin: 0;
 }
 
 .demo-row {
