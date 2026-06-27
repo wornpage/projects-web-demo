@@ -962,8 +962,8 @@ function updateServiceBoundaryNotice() {
   notice.textContent = DEMO_API_BASE_URL && syncCode
     ? "Sync code active. Anyone with the code can open this demo state. Do not enter private project data."
     : DEMO_API_BASE_URL
-      ? "Demo data only. Saves through the API for this browser, not an account. Do not enter private project data."
-      : "Demo data only. Saves in this browser, not an account. Do not enter private project data.";
+      ? "Demo data only. Saves through the API for this browser; no login. Do not enter private project data."
+      : "Demo data only. Saves in this browser; no login. Do not enter private project data.";
   renderDemoSyncControls();
 }
 
@@ -1042,7 +1042,7 @@ function renderDemoSyncControls(message = "") {
   if (help) {
     help.textContent = message || (syncCode
       ? "Anyone with this code can open the same demo state. Do not use it for private data."
-      : "Use a code to sync this demo across devices. This is not an account or private storage.");
+      : "Use a code to sync this demo across devices. No login or private storage.");
   }
 }
 
