@@ -64,6 +64,16 @@ confirms only the public allowlist is served, confirms repository files and
 path traversal attempts return `404`, creates work under one browser client
 key, and confirms another client key plus the default local row cannot read it.
 
+Repeatable live gate:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
+```
+
+The live gate confirms the hosted app uses Postgres, rejects `/api/state`
+without a browser client key, keeps fixed `live-check-*` browser rows separate,
+and lets a fixed shared sync key read the same row from another request.
+
 ## Risk Decisions
 
 | Risk | Current status | Decision |

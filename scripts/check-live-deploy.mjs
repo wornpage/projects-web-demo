@@ -20,6 +20,22 @@ try {
   const apiHeaders = { "x-projects-demo-client": liveClientKey };
   const liveState = await readJson("/api/state", apiHeaders);
   const commandPreview = await readJson("/api/packs/source-folder-audit/command", apiHeaders);
+  const unkeyedStateStatus = await readStatus("/api/state");
+  const isolationStamp = Date.now().toString(36);
+  const clientAKey = "live-check-browser-a";
+  const clientBKey = "live-check-browser-b";
+  const sharedKey = "sync-live-check-shared";
+  const clientATitle = `Live isolation check ${isolationStamp}`;
+  const sharedTitle = `Live shared sync check ${isolationStamp}`;
+  await writeJson("/api/state", stateWithCheckPack(liveState, "live-isolation-check", clientATitle), {
+    "x-projects-demo-client": clientAKey
+  });
+  await writeJson("/api/state", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
+    "x-projects-demo-client": sharedKey
+  });
+  const clientAState = await readJson("/api/state", { "x-projects-demo-client": clientAKey });
+  const clientBState = await readJson("/api/state", { "x-projects-demo-client": clientBKey });
+  const sharedStateFromSecondRequest = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
@@ -44,6 +60,10 @@ try {
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
   check("internal API strings are encoded", readableInternalStrings.length === 0, readableInternalStrings.join(", ") || "hidden");
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
+  check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
+  check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
+  check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);
+  check("hosted sync key is readable from another request", stateHasPackTitle(sharedStateFromSecondRequest, sharedTitle), sharedTitle);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");
   check("private repo and local path strings are absent", !/(github\.com\/jared-bidlow|C:\\|C:\/|\.git\/config|server\/server\.js)/iu.test(script), "private path scan");
@@ -80,6 +100,59 @@ async function readText(pathname, headers = {}) {
 
 async function readJson(pathname, headers = {}) {
   return JSON.parse(await readText(pathname, headers));
+}
+
+async function writeJson(pathname, payload, headers = {}) {
+  const response = await fetch(new URL(pathname, baseUrl), {
+    method: "PUT",
+    headers: {
+      "cache-control": "no-cache",
+      "content-type": "application/json",
+      ...headers
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    throw new Error(`${pathname} returned ${response.status}`);
+  }
+  return response.json();
+}
+
+async function readStatus(pathname, headers = {}) {
+  const response = await fetch(new URL(pathname, baseUrl), {
+    headers: { "cache-control": "no-cache", ...headers }
+  });
+  return response.status;
+}
+
+function stateWithCheckPack(state, id, title) {
+  const packs = Array.isArray(state?.packs) ? state.packs : [];
+  const checkPack = {
+    id,
+    title,
+    type: "live-check",
+    status: "active",
+    blocker: "none",
+    next: "Open",
+    due: "",
+    owner: "live verifier",
+    purpose: "Verify hosted demo state separation.",
+    doneWhen: "Live verifier can read this state only through the intended key.",
+    sources: ["live-deploy-check"],
+    memory: [],
+    activity: ["Live deploy verifier wrote this check row."]
+  };
+  return {
+    ...state,
+    packs: [checkPack, ...packs.filter((pack) => pack?.id !== id)],
+    selectedId: id,
+    status: `Live verifier wrote ${title}.`,
+    actionReceipt: null
+  };
+}
+
+function stateHasPackTitle(state, title) {
+  return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
 }
 
 function normalizeBaseUrl(value) {

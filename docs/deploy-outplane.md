@@ -96,7 +96,10 @@ After deploy:
 
    The verifier fails if Outplane is still serving an old frontend bundle, if
    production minification did not run, if the backend-backed frontend helpers
-   are missing, or if retired triage code is still public.
+   are missing, if retired triage code is still public, if hosted state accepts
+   a request without a browser client key, if two browser client keys can read
+   each other's state, or if a shared sync key cannot be read from a second
+   request. It writes only fixed `live-check-*` verifier rows.
 
 ## Notes
 
