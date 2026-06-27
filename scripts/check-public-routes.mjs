@@ -114,6 +114,7 @@ check("card state pills stay compact in headers", cardStatePillStylesContractOk(
 check("panel forms group labels controls and help", panelFormFieldStylesContractOk(), "field-card grouping plus focus state");
 check("work filters stay scannable and tappable", workFilterStylesContractOk(), "equal-width chip grid plus compact mobile columns");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
+check("primary nav label stays compact and public-facing", html.includes('id="demo-nav"') && html.includes('aria-label="Demo screens"'), "Demo screens");
 check("brand home link stays public-facing", html.includes('aria-label="Projects demo home"'), "Projects demo home");
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
 check("demo notice says no login or private data", html.includes("Demo data only. No login or private project data."), "no login/private data");
