@@ -261,7 +261,7 @@ function brandHomeLinkContractOk() {
 }
 
 function metadataPreviewContractOk() {
-  return html.includes('<meta name="description" content="Projects portfolio demo: pick work, see blockers, run next actions. Demo data only; no login or private project data.">')
+  return html.includes('<meta name="description" content="Projects portfolio demo: pick work, see blockers, run the next action. Sample data only; no login or private project data.">')
     && html.includes("<title>Projects Portfolio Demo</title>")
     && !html.includes("Small Projects demo")
     && !html.includes("Small browser-local Projects demo")
