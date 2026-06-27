@@ -165,6 +165,14 @@ try {
     headers: { "x-projects-demo-client": clientB }
   });
   const unkeyedState = await request(port, "/api/state");
+  const nonJsonStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "text/plain",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithGeneratedPacks(1, "non-json-boundary"))
+  });
   const oversizedStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -201,6 +209,7 @@ try {
   check("client A reads its created work", stateHasPackTitle(clientAState.body, packTitle), clientAState.status);
   check("client B does not read client A work", !stateHasPackTitle(clientBState.body, packTitle), clientBState.status);
   check("unkeyed local API state is rejected", unkeyedState.status === 400, unkeyedState.status);
+  check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
   check("client A state survives rejected oversized snapshot", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
   check("state rows can reach the documented work cap", limitStateWrite.status === 200, limitStateWrite.status);

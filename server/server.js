@@ -1261,6 +1261,8 @@ function uniquePackId(packs, seed) {
 }
 
 async function readJsonBody(request) {
+  requireJsonContentType(request);
+
   let body = "";
   let bytes = 0;
   for await (const chunk of request) {
@@ -1279,6 +1281,13 @@ async function readJsonBody(request) {
     return JSON.parse(body);
   } catch {
     throw httpError(400, "Request body must be valid JSON.");
+  }
+}
+
+function requireJsonContentType(request) {
+  const contentType = normalizeText(request.headers["content-type"], 120).split(";")[0].trim().toLowerCase();
+  if (contentType !== "application/json") {
+    throw httpError(415, "Request body must use application/json.");
   }
 }
 

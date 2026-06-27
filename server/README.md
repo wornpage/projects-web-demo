@@ -111,8 +111,9 @@ at `http://localhost:5179/#/home` when you need backend-backed persistence.
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
 API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:
-nosniff`. API CORS reflects only same-origin app requests. This is still demo
-isolation, not private account security.
+nosniff`. API body routes require `Content-Type: application/json`; non-JSON
+body writes are rejected with `415`. API CORS reflects only same-origin app
+requests. This is still demo isolation, not private account security.
 
 ## Checks
 

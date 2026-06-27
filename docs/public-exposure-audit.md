@@ -68,8 +68,8 @@ confirms only the named public file allowlist is served, confirms repository
 files, unlisted asset/data paths, and path traversal attempts return `404`,
 creates work under one browser client
 key, confirms another client key cannot read it, confirms unkeyed local API
-state is rejected, confirms oversized keyed state snapshots and create requests
-past the state cap are rejected,
+state is rejected, confirms non-JSON state writes are rejected, confirms
+oversized keyed state snapshots and create requests past the state cap are rejected,
 confirms public assets stay on the file allowlist, confirms public text assets
 stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
@@ -117,6 +117,7 @@ Web Crypto and do not fall back to weak random values.
 | Local file-backed API users mix state | Fixed | Browser client keys are required and map to separate hashed local state files |
 | Hosted Postgres stores raw browser row keys | Reduced | New writes use server-side `v2:` SHA-256 state keys; raw-key reads remain only to migrate pre-hash rows on next write |
 | Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
+| API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |
 | Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin |
