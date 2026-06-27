@@ -142,6 +142,8 @@ Local file-backed app mode stores each keyed client's state in a separate
 hashed state file beside that path and rejects unkeyed state requests. Hosted
 deploys should still use `PROJECTS_STATE_STORAGE=postgres` with managed
 Postgres environment variables instead of writable container files.
+Invalid `PROJECTS_STATE_STORAGE` values fail startup instead of silently falling
+back to file-backed state.
 Hosted Postgres stores a server-side digest of the browser client key rather
 than the raw request header value, and hosted reads use only that digest key.
 State-changing API routes validate that client key before reading JSON payloads.

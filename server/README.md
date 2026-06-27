@@ -71,7 +71,8 @@ when deploying this app to a host where local files are ephemeral. Without
 `PROJECTS_STATE_FILE`, local file-backed app mode stores state under the user's
 data directory instead of the repository. Each keyed client gets a separate
 hashed state file beside the configured or default state path, and unkeyed state
-requests are rejected.
+requests are rejected. Invalid `PROJECTS_STATE_STORAGE` values fail startup
+instead of silently falling back to file-backed state.
 
 ## Docker
 

@@ -164,6 +164,9 @@ database table names, local state file paths, or storage credentials.
 The full ship gate also refuses to run the live verifier from a dirty working
 tree or from a branch that is not synced with its upstream, so local and live
 evidence cannot silently describe different commits.
+The deploy-config gate also starts the server with an invalid
+`PROJECTS_STATE_STORAGE` value and expects startup to fail, so hosted storage
+typos cannot silently switch the app to file-backed state.
 The sync gate confirms generated sync codes and anonymous browser row keys use
 Web Crypto and do not fall back to weak random values. It also confirms sync
 link codes are removed from the address bar after the shared state loads. The
@@ -200,6 +203,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Live verifier can miss stale hosted seed data | Fixed | The live gate compares `GET /api/demo-packs` with checkout `data/demo-packs.json` instead of only checking for a non-empty response |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Ship verification can mix local edits with an older live deploy | Fixed | `scripts/check-git-ship-state.mjs` requires a clean branch synced with upstream before the live Outplane check runs |
+| Hosted storage mode typos silently use file-backed state | Fixed | Invalid `PROJECTS_STATE_STORAGE` values fail startup, and the deploy-config gate launches the server with a bad value to prove the failure |
 | Hosted asset URLs change on every restart of the same build | Fixed | Asset query-string fallback is derived from shipped public runtime file contents, while explicit deploy asset versions still win |
 | Live verifier can miss stale app-shell HTML | Fixed | The live gate compares hosted app-shell content against checkout-derived app-shell content while normalizing asset-version query strings and checking the runtime config script separately |
 | Live verifier leaves hosted check rows behind | Fixed | The live gate erases temporary shared-sync and recovery rows after proving cross-request sync and restore behavior |

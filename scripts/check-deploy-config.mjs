@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,6 +17,7 @@ const deployDoc = await readRepoFile("docs/deploy-outplane.md");
 const liveVerifier = await readRepoFile("scripts/check-live-deploy.mjs");
 const shipGate = await readRepoFile("scripts/check-ship.mjs");
 const serverSource = await readRepoFile("server/server.js");
+const invalidStorageStartup = await invalidStorageModeStartupResult();
 
 const liveUrl = liveVerifier.match(/const DEFAULT_URL = "([^"]+)"/u)?.[1] || "";
 const environmentRows = tableRowsBetween(deployDoc, "## Environment", "## Checks");
@@ -74,6 +76,13 @@ check("server asset fallback is content-derived", includesAll(serverSource, [
   "\"data/demo-packs.json\""
 ]), "contentAssetVersion");
 check("server asset fallback avoids startup-random keys", !serverSource.includes("Date.now().toString(36)") && !serverSource.includes("crypto.randomUUID().slice(0, 8)"), "no timestamp/random fallback");
+check(
+  "server rejects invalid state storage mode",
+  invalidStorageStartup.exited
+    && invalidStorageStartup.code !== 0
+    && invalidStorageStartup.output.includes("PROJECTS_STATE_STORAGE must be \"file\" or \"postgres\"."),
+  invalidStorageStartup.detail
+);
 check("live verifier rebuilds expected protected frontend", includesAll(liveVerifier, [
   "function expectedFrontendAssets()",
   "scripts/protect-frontend.mjs",
@@ -131,12 +140,15 @@ check("README documents live app-shell matching", /app shell and\s+protected fro
 check("README documents live seed-data matching", /seed-data matching/u.test(readme), "seed-data matching");
 check("README documents unkeyed seed-data rejection", /unkeyed seed data\s+rejection/u.test(readme), "unkeyed seed data rejection");
 check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
+check("README documents invalid storage fail-fast", readme.includes("Invalid `PROJECTS_STATE_STORAGE` values fail startup"), "invalid storage fail-fast");
 check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, clean git state, and live/u.test(serverReadme), "server README ship summary");
 check("server README documents unkeyed seed-data rejection", /unkeyed seed data\s+rejection/u.test(serverReadme), "unkeyed seed data rejection");
+check("server README documents invalid storage fail-fast", serverReadme.includes("Invalid `PROJECTS_STATE_STORAGE` values fail startup"), "invalid storage fail-fast");
 check("deploy doc documents content-derived asset fallback", deployDoc.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("deploy doc documents live app-shell matching", /app shell content,\s+protected JS, or CSS content/u.test(deployDoc), "app shell matching");
 check("deploy doc documents live seed-data matching", /hosted seed data does not match this checkout/u.test(deployDoc), "seed-data matching");
 check("deploy doc documents live verifier cleanup", /erases the temporary\s+verifier rows/u.test(deployDoc), "live verifier cleanup");
+check("deploy doc documents invalid storage fail-fast", /any\s+other value fails startup/u.test(deployDoc), "invalid storage fail-fast");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
@@ -177,6 +189,50 @@ function stripTicks(value) {
 
 function includesAll(text, needles) {
   return needles.every((needle) => text.includes(needle));
+}
+
+function invalidStorageModeStartupResult() {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, ["server/server.js"], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        HOST: "127.0.0.1",
+        PORT: "0",
+        PROJECTS_STATE_STORAGE: "memory"
+      },
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let output = "";
+    child.stdout.on("data", (chunk) => {
+      output += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      output += chunk;
+    });
+    const timeout = setTimeout(() => {
+      child.kill();
+      resolve({
+        exited: false,
+        code: null,
+        output,
+        detail: `still running; output=${compactDetail(output)}`
+      });
+    }, 3000);
+    child.once("exit", (code) => {
+      clearTimeout(timeout);
+      resolve({
+        exited: true,
+        code,
+        output,
+        detail: `code=${code}; output=${compactDetail(output)}`
+      });
+    });
+  });
+}
+
+function compactDetail(value) {
+  return String(value || "").replace(/\s+/gu, " ").trim().slice(0, 240) || "empty";
 }
 
 function gitignoreLineExists(text, expectedLine) {

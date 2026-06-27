@@ -55,6 +55,8 @@ If Outplane gives you a single connection URI instead, you can use
 
 Do not set `PROJECTS_STATE_FILE` for the hosted Postgres app. That variable is
 only for local file-backed development, and it implies container or volume state.
+Only `postgres` and `file` are accepted `PROJECTS_STATE_STORAGE` values; any
+other value fails startup instead of silently using file-backed state.
 
 The browser sends an anonymous client key with API requests, so hosted demo
 edits are separated per browser without accounts or cookie-backed sessions.

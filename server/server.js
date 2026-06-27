@@ -592,7 +592,13 @@ function postgresSslOption() {
 
 function normalizeStateStorageMode(value) {
   const mode = normalizeText(value, 40).toLowerCase();
-  return mode === "postgres" ? "postgres" : "file";
+  if (!mode || mode === "file") {
+    return "file";
+  }
+  if (mode === "postgres") {
+    return "postgres";
+  }
+  throw new Error("PROJECTS_STATE_STORAGE must be \"file\" or \"postgres\".");
 }
 
 async function readFileState(stateKey) {
