@@ -1669,7 +1669,7 @@ function persistenceCreatedActivity() {
   return DEMO_API_BASE_URL ? `Created through ${apiPersistenceLabel().toLowerCase()}.` : "Created in this browser.";
 }
 
-function profileStatus(profileKey, source = "Settings") {
+function profileStatus(profileKey, source = "Start") {
   const value = copyProfiles[profileKey] || copyProfiles.general;
   const label = capitalize(copyProfiles[profileKey] ? profileKey : "general");
   return `Where: ${source}. Blocker: None. Button runs next: use ${label} copy labels for ${value.work}.`;
@@ -1682,7 +1682,7 @@ function scenarioStatus(scenario) {
 }
 
 function resetDemoStatus() {
-  return "Where: Settings. Blocker: None. Button runs next: review reset demo data in this browser.";
+  return "Where: Start. Blocker: None. Button runs next: review reset demo data in this browser.";
 }
 
 function routeStatus(where, blocker, next) {
@@ -2957,16 +2957,6 @@ function todayIsoDate(date = new Date()) {
   return new Date(localTime).toISOString().slice(0, 10);
 }
 
-function validationStatus(attention) {
-  if (state.packs.length === 0) {
-    return "Where: Check. Blocker: no work exists. Button runs next: create or reset work before checking.";
-  }
-
-  return attention === 0
-    ? "Where: Check. Blocker: None. Button runs next: keep work ready."
-    : `Where: Check. Blocker: ${attention} check item(s) need attention. Button runs next: fix check items.`;
-}
-
 function saveNextChoiceHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
   return `Where: Next setup / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: save choice; preview shows ${command.label}.`;
 }
@@ -3024,24 +3014,6 @@ function nextChoicePreviewHelp(pack, command = resolvePrimaryCommandForPack(pack
     ? " because this work is still blocked"
     : "";
   return `After save, Button runs next shows ${command.label}${blocker}.`;
-}
-
-function validateSampleState() {
-  if (state.packs.length === 0) {
-    return {
-      canRun: false,
-      help: "Where: Check. Blocker: no work exists. Button runs next: create or reset work before checking."
-    };
-  }
-
-  return {
-    canRun: true,
-    help: "Where: Check. Blocker: None. Button runs next: run work readiness checks and update demo status."
-  };
-}
-
-function validateSampleHelp() {
-  return validateSampleState().help;
 }
 
 function resetDemoHelp() {

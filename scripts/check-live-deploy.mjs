@@ -101,6 +101,7 @@ try {
   const recoveryKey = "demo-00000000-0000-4000-8000-000000000204";
   const limitKey = "demo-00000000-0000-4000-8000-000000000205";
   const pathStatusKey = "demo-00000000-0000-4000-8000-000000000206";
+  const filterKey = `demo-${crypto.randomUUID()}`;
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
@@ -182,11 +183,11 @@ try {
     "content-type": "application/json"
   }, "PUT");
   const validFilterWrite = await writeJson("/api/state/filter", { filter: "review" }, {
-    "x-projects-demo-client": limitKey,
+    "x-projects-demo-client": filterKey,
     "content-type": "application/json"
   }, "POST");
   const invalidNamedFilterStatus = await writeStatus("/api/state/filter", { filter: "private-workflow" }, {
-    "x-projects-demo-client": limitKey,
+    "x-projects-demo-client": filterKey,
     "content-type": "application/json"
   }, "POST");
   const unkeyedWorkflowWriteStatuses = await Promise.all([
@@ -315,6 +316,8 @@ try {
   const recoveryStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": recoveryKey });
   const erasePathStatusStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": pathStatusKey }, "POST");
   const pathStatusStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": pathStatusKey });
+  const eraseFilterStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": filterKey }, "POST");
+  const filterStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": filterKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
@@ -498,6 +501,7 @@ try {
   check("hosted verifier cleanup erases shared row", eraseSharedStateStatus === 200 && !stateHasPackTitle(sharedStateAfterCleanup, sharedTitle), `${eraseSharedStateStatus} / ${sharedTitle}`);
   check("hosted verifier cleanup erases recovery row", eraseRecoveryStateStatus === 200 && !stateHasPackTitle(recoveryStateAfterCleanup, recoverySnapshotTitle), `${eraseRecoveryStateStatus} / ${recoverySnapshotTitle}`);
   check("hosted verifier cleanup erases path-status row", erasePathStatusStateStatus === 200 && !stateHasPackTitle(pathStatusStateAfterCleanup, pathStatusTitle), `${erasePathStatusStateStatus} / ${pathStatusTitle}`);
+  check("hosted verifier cleanup erases filter row", eraseFilterStateStatus === 200 && filterStateAfterCleanup.filter !== "review", `${eraseFilterStateStatus} / ${filterStateAfterCleanup.filter || "none"}`);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("API command route returns selected-work flow copy", commandPreviewOwnsCopy(commandPreview), `${commandPreview.flowHint || "missing"} / ${commandPreview.primaryReason || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");

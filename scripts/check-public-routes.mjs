@@ -94,7 +94,10 @@ const blockedRetiredHelpers = [
   "styleAuditChecks",
   "syncLabRenderedSmokeChecks",
   "setDueTodayState",
-  "todayRow"
+  "todayRow",
+  "validateSampleHelp",
+  "validateSampleState",
+  "validationStatus"
 ].filter((name) => source.includes(`function ${name}(`));
 
 check("route contract contains only the public routes plus pack detail", arraysEqual(contractRoutes, expectedContractRoutes), contractRoutes.join(", "));
@@ -114,6 +117,7 @@ check("home route surfaces a live sample spotlight", homeSpotlightContractOk(), 
 check("review route surfaces an up-next queue spotlight", reviewSpotlightContractOk(), "reviewQueuePanel with queue stats and actions");
 check("create route surfaces readiness before the form", createReadinessContractOk(), "createReadinessPanel with required field checklist");
 check("create field help names only current public surfaces", source.includes("Optional date kept on the work path and searchable in the work list.") && !source.includes("Today and Calendar views"), "due help avoids retired screens");
+check("runtime status copy avoids retired settings and check screens", !source.includes("Where: Settings") && !source.includes("Where: Check"), "status copy stays on public surfaces");
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
