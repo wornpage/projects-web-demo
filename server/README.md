@@ -110,7 +110,7 @@ GitHub Pages behavior.
 | `PATCH /api/packs/{id}` | Update one work item. |
 | `POST /api/packs/{id}/actions` | Run a server-owned pack action such as `start`, `unblock`, `block`, `done`, or `open`. |
 | `POST /api/packs/{id}/next` | Set the server-owned `Button runs next` value for one work item. |
-| `POST /api/packs/{id}/memory` | Add one memory note. |
+| `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
 API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:
 nosniff`. This is still demo isolation, not private account security.

@@ -174,19 +174,9 @@ async function routeRequest(request, response, url) {
       const payload = await readJsonBody(request);
       const stateKey = stateKeyForRequest(request);
       const state = await readState(stateKey);
-      const pack = findPackOrThrow(state, packId);
-      const note = normalizeText(payload.note, 2000);
-      if (!note) {
-        throw httpError(400, "Memory note is required.");
-      }
-      pack.memory = normalizeStringArray(pack.memory, 100, 2000);
-      if (!pack.memory.some((value) => normalizeText(value) === note)) {
-        pack.memory.unshift(note);
-        pack.activity = normalizeStringArray(pack.activity, 100, 400);
-        pack.activity.unshift("Memory note added.");
-      }
+      const result = addPackMemoryAction(state, packId, payload.note);
       await writeState(state, stateKey);
-      sendJson(response, 200, pack);
+      sendJson(response, 200, result);
       return;
     }
   }
@@ -572,6 +562,37 @@ function setPackNextAction(state, packId, rawNext) {
     changed,
     next: pack.next,
     label,
+    pack: sanitizePack(pack),
+    receipt,
+    state: sanitizeState(state)
+  };
+}
+
+function addPackMemoryAction(state, packId, rawNote) {
+  const pack = findPackOrThrow(state, packId);
+  const note = normalizeText(rawNote, 2000);
+  if (!note) {
+    throw httpError(400, "Memory note is required.");
+  }
+
+  pack.memory = normalizeStringArray(pack.memory, 100, 2000);
+  const added = !pack.memory.some((value) => normalizeText(value) === note);
+  if (added) {
+    pack.memory.unshift(note);
+    addPackActivity(pack, "Memory note added.");
+  }
+
+  state.selectedId = pack.id;
+  const command = resolvePrimaryCommandForPack(pack);
+  const summary = added
+    ? `Memory note added for ${workTitle(pack)}.`
+    : `Memory note already exists for ${workTitle(pack)}.`;
+  const receipt = actionReceiptForPack(pack, summary, command);
+  state.status = receipt.summary;
+  state.actionReceipt = receipt;
+  return {
+    added,
+    note,
     pack: sanitizePack(pack),
     receipt,
     state: sanitizeState(state)

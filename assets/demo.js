@@ -608,6 +608,28 @@ async function createBackendPack(values) {
   return result;
 }
 
+async function addBackendPackMemoryNote(pack, note) {
+  if (!DEMO_API_BASE_URL || !pack?.id) {
+    return null;
+  }
+
+  clearPendingBackendStateSave();
+  await persistBackendStateSnapshot(demoStateSnapshot());
+  const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/memory`), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify({ note })
+  });
+  if (!response.ok) {
+    throw new Error(`Backend memory action failed with ${response.status}`);
+  }
+
+  const result = await response.json();
+  loadState(result.state);
+  state.selectedId = result.pack?.id || pack.id;
+  return result;
+}
+
 function updateServiceBoundaryNotice() {
   const notice = el("demo-notice");
   if (!notice) {
@@ -3573,7 +3595,7 @@ function renderMemory() {
   `;
   bindMemoryValidation(pack);
   bindGoButtons();
-  el("add-memory").addEventListener("click", () => {
+  el("add-memory").addEventListener("click", async () => {
     const memoryState = memoryNoteSaveState(pack, valueOf("memory-note"));
     if (!memoryState.canSave) {
       state.status = memoryState.help;
@@ -3581,8 +3603,7 @@ function renderMemory() {
       return;
     }
 
-    const result = addPackMemoryNote(pack, valueOf("memory-note"));
-    setMemoryConfirmation(pack, result);
+    await savePackMemoryNote(pack, valueOf("memory-note"));
     render();
   });
 }
@@ -5123,6 +5144,23 @@ function addPackMemoryNote(pack, note) {
   return { added: true, note: copy };
 }
 
+async function savePackMemoryNote(pack, note) {
+  try {
+    const backendResult = await addBackendPackMemoryNote(pack, note);
+    if (backendResult) {
+      return backendResult;
+    }
+
+    const result = addPackMemoryNote(pack, note);
+    setMemoryConfirmation(pack, result);
+    return result;
+  } catch (error) {
+    console.error("Projects demo backend memory action failed.", error);
+    state.status = `Where: Backend memory. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+    return null;
+  }
+}
+
 function setPackNextAction(pack, value) {
   const next = normalizeCopy(value) || "Open";
   const beforeStatus = normalizeCopy(pack?.status);
@@ -5664,12 +5702,11 @@ function runRouteAction(action, targetPackId) {
       return true;
     }
     if (pack && input?.value.trim()) {
-      const result = addPackMemoryNote(pack, input.value);
-      setMemoryConfirmation(pack, result);
+      savePackMemoryNote(pack, input.value).then(() => render());
     } else {
       state.status = memoryRouteStatus(pack);
+      render();
     }
-    render();
     return true;
   }
 

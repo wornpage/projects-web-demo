@@ -86,7 +86,8 @@ Do not rely on obfuscation for security.
 
 The first server-side slice is pack workflow execution. In backend app mode,
 pack creation runs through `POST /api/packs`, `Button runs next` changes run
-through `POST /api/packs/{id}/next`, and pack-level actions such as `start`,
+through `POST /api/packs/{id}/next`, memory notes run through
+`POST /api/packs/{id}/memory`, and pack-level actions such as `start`,
 `unblock`, `block`, `done`, and `open` run through
 `POST /api/packs/{id}/actions`. These endpoints update the stored demo state on
 the server and return the resulting receipt to the browser.
