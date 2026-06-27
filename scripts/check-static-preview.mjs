@@ -58,7 +58,7 @@ try {
   const unexpectedHostShell = await request(port, "/", {
     headers: { "Host": "preview.example" }
   });
-  check("static preview unexpected Host header does not affect routing", unexpectedHostShell.status === 200 && /Projects Demo/u.test(unexpectedHostShell.text), unexpectedHostShell.status);
+  check("static preview unexpected Host header does not affect routing", unexpectedHostShell.status === 200 && /Projects Portfolio Demo/u.test(unexpectedHostShell.text), unexpectedHostShell.status);
 
   const unsupportedMethod = await request(port, "/", { method: "POST" });
   check("static preview rejects non-read methods", unsupportedMethod.status === 405 && unsupportedMethod.headers.allow === "GET, HEAD", `${unsupportedMethod.status} / ${unsupportedMethod.headers.allow || "missing"}`);

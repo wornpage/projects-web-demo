@@ -148,7 +148,7 @@ check("bottom dock label describes purpose instead of layout", html.includes('cl
 check("bottom dock exposes where blocker and next labels", html.includes('aria-describedby="dock-where dock-blocker dock-next-label"') && html.includes('id="dock-where"') && html.includes('id="dock-blocker"') && html.includes('id="dock-next-label"'), "dock summary fields describe bottom dock");
 check("next action controls declare the content region they update", html.includes('id="primary-action"') && html.includes('id="dock-where-item" class="demo-bottom-item" href="#/work" aria-controls="screen-content"') && html.includes('id="dock-review-item" class="demo-bottom-item" href="#/review" aria-controls="screen-content"') && html.includes('id="dock-next"') && html.includes('aria-controls="screen-content"'), "screen-content controlled by action controls");
 check("pack-aware navigation keeps selected work context", source.includes("function routeLinkPackId(route)") && source.includes('item.setAttribute("href", formatRouteHash(item.dataset.route, routeLinkPackId(item.dataset.route)))') && source.includes('data-pack="${escapeAttribute(routeLinkPackId(route))}"'), "nav and route buttons preserve selected work ids");
-check("browser title follows the current screen", source.includes("function updateDocumentTitle(screenTitle)") && source.includes('document.title = screenTitle === "Start" ? "Projects Demo" : `${screenTitle} - Projects Demo`;') && source.includes("updateDocumentTitle(screenTitle);"), "document title mirrors screen title");
+check("browser title follows the current screen", source.includes("function updateDocumentTitle(screenTitle)") && source.includes('document.title = screenTitle === "Start" ? "Projects Portfolio Demo" : `${screenTitle} - Projects Portfolio Demo`;') && source.includes("updateDocumentTitle(screenTitle);"), "document title mirrors screen title with portfolio framing");
 check("theme toggle keeps a stable pressed-button name", themeToggleContractOk(), "Dark mode name stays stable while title describes next action");
 check("skip target landmark is labelled by the visible title", html.includes('id="demo-main"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels main landmark");
 check("screen content region is labelled by the visible title", html.includes('id="screen-content"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels live content");
@@ -252,7 +252,9 @@ function brandHomeLinkContractOk() {
 }
 
 function metadataPreviewContractOk() {
-  return html.includes('<meta name="description" content="Small Projects demo: pick work, see blockers, run next actions. Demo data only; no login or private project data.">')
+  return html.includes('<meta name="description" content="Projects portfolio demo: pick work, see blockers, run next actions. Demo data only; no login or private project data.">')
+    && html.includes("<title>Projects Portfolio Demo</title>")
+    && !html.includes("Small Projects demo")
     && !html.includes("Small browser-local Projects demo")
     && !html.includes("browser-local Projects demo");
 }

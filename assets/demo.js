@@ -800,6 +800,10 @@ async function saveBackendResetState() {
   return postBackendStateAction("/api/state/reset", {}, "reset");
 }
 
+async function copyBackendStateToSync(targetClientId) {
+  return postBackendStateAction("/api/state/sync-copy", { targetClientId }, "sync copy");
+}
+
 async function runBackendPackAction(pack, action) {
   if (!DEMO_API_BASE_URL || !pack?.id || !SERVER_PACK_ACTIONS.has(action)) {
     return false;
@@ -1215,12 +1219,14 @@ async function activateSyncCode(value, options = {}) {
   }
 
   clearPendingBackendStateSave();
-  writeSyncCode(code);
-  apiSessionClientId = "";
   if (options.copyCurrentState) {
-    await sendBackendStateSnapshot("/api/state/sync", "POST", demoStateSnapshot(), "Sync");
+    await copyBackendStateToSync(await syncClientId(code));
+    writeSyncCode(code);
+    apiSessionClientId = "";
     state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use code on another device");
   } else {
+    writeSyncCode(code);
+    apiSessionClientId = "";
     loadBackendOwnedState(await loadBackendState());
     state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "review shared demo state");
   }
@@ -1946,7 +1952,7 @@ function screenTitleForRoute() {
 }
 
 function updateDocumentTitle(screenTitle) {
-  document.title = screenTitle === "Start" ? "Projects Demo" : `${screenTitle} - Projects Demo`;
+  document.title = screenTitle === "Start" ? "Projects Portfolio Demo" : `${screenTitle} - Projects Portfolio Demo`;
 }
 
 function routeLinkPackId(route) {
