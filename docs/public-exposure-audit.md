@@ -140,7 +140,7 @@ values are rejected.
 | Private repo files served by Outplane | Not observed | App allowlist only serves app assets and keyed API routes |
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
-| Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
+| Docker image contains extra docs/source helpers | Fixed | Docker uses a build stage for frontend protection and package install, then the runtime stage copies only pruned production dependencies, named public files, seed JSON, and `server/server.js` |
 | Broad shared app stylesheet is public | Fixed | Removed `assets/app.css`; demo-owned tokens now live in `assets/demo.css` |
 | Hosted app serves static sample JSON directly | Fixed | `/data/demo-packs.json` is no longer served by the app server; seed work loads through `GET /api/demo-packs` with the browser client key |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
@@ -209,12 +209,13 @@ private and can break debugging, accessibility, and interaction flows if it is
 too aggressive.
 
 The production Docker build runs `scripts/protect-frontend.mjs` against
-`assets/demo.js`. The script uses local Terser minification with top-level
-compression and mangling, encodes selected internal API strings into a runtime
-string table, syntax-checks the generated script, and fails the build if
+`assets/demo.js` in the build stage only. The final runtime stage does not copy
+that script or package manifests. The script uses local Terser minification with
+top-level compression and mangling, encodes selected internal API strings into a
+runtime string table, syntax-checks the generated script, and fails the build if
 readable helper names or protected strings remain. This hides readable helper
-names such as the backend action helpers while keeping the deployed script
-small enough to load normally.
+names such as the backend action helpers while keeping the deployed script small
+enough to load normally.
 
 `nstarke/egodeath` was evaluated at pinned commit
 `ef8ed58fd26eb5cba59cb3a2787660efc7ac5b31`, but it is not enabled for

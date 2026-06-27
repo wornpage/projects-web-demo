@@ -169,18 +169,19 @@ Then open:
 http://localhost:5179/#/home
 ```
 
-The container serves the frontend and `/api` from one Node process. The image
-copies only the named frontend files, the server seed JSON, and the app server,
-not the whole repository, broad asset directories, or the retired shared app
-stylesheet. It can use local file-backed state for development, but hosted
+The container serves the frontend and `/api` from one Node process. The final
+runtime image copies only pruned production dependencies, the named frontend
+files, the server seed JSON, and the app server, not the whole repository, broad
+asset directories, package manifests, build scripts, docs, or the retired shared
+app stylesheet. It can use local file-backed state for development, but hosted
 deploys should use managed Postgres so app containers stay stateless.
 
 Production Docker builds run `scripts/protect-frontend.mjs` against
-`assets/demo.js`. The script minifies with top-level Terser compression and
-mangling, encodes selected internal API strings into a runtime string table,
-syntax-checks the generated script, and fails the build if readable helper names
-or protected strings remain. This makes the deployed browser script harder to
-read, but it is still public executable JavaScript.
+`assets/demo.js` in the build stage only. The script minifies with top-level
+Terser compression and mangling, encodes selected internal API strings into a
+runtime string table, syntax-checks the generated script, and fails the build if
+readable helper names or protected strings remain. This makes the deployed
+browser script harder to read, but it is still public executable JavaScript.
 
 The pinned `nstarke/egodeath` commit
 `ef8ed58fd26eb5cba59cb3a2787660efc7ac5b31` was tested and left disabled for

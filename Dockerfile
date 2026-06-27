@@ -1,11 +1,8 @@
-FROM node:24-alpine
+FROM node:24-alpine AS build
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV HOST=0.0.0.0
-ENV PORT=5179
-ENV PROJECTS_STATE_FILE=/app/state/state.json
 
 COPY server/package*.json ./server/
 RUN npm --prefix server ci --include=dev
@@ -21,6 +18,23 @@ COPY server/server.js ./server/server.js
 
 RUN node scripts/protect-frontend.mjs assets/demo.js assets/demo.js \
   && npm --prefix server prune --omit=dev
+
+FROM node:24-alpine AS runtime
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=5179
+ENV PROJECTS_STATE_FILE=/app/state/state.json
+
+COPY --from=build /app/server/node_modules ./server/node_modules
+COPY --from=build /app/index.html ./
+COPY --from=build /app/assets/demo.css ./assets/demo.css
+COPY --from=build /app/assets/demo.js ./assets/demo.js
+COPY --from=build /app/assets/favicon.png ./assets/favicon.png
+COPY --from=build /app/data/demo-packs.json ./data/demo-packs.json
+COPY --from=build /app/server/server.js ./server/server.js
 
 RUN mkdir -p /app/state \
   && addgroup -S app \
