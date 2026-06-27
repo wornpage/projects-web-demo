@@ -128,7 +128,7 @@ check("card title buttons keep a readable hit area", cardTitleButtonStylesContra
 check("card state pills stay compact in headers", cardStatePillStylesContractOk(), "desktop badge cap plus mobile start alignment");
 check("panel forms group labels controls and help", panelFormFieldStylesContractOk(), "field-card grouping plus focus state");
 check("work filters stay scannable and tappable", workFilterStylesContractOk(), "equal-width chip grid plus compact mobile columns");
-check("work search reports visible result context", source.includes('aria-describedby="demo-search-summary"') && source.includes('id="demo-search-summary" class="demo-status-line" role="status" aria-live="polite"') && source.includes("function workToolbarSummary()"), "search summary describes visible count and active filter");
+check("work search reports visible result context", workSearchContractOk(), "search summary describes visible count and active filter; placeholder advertises searchable blocker");
 check("empty states expose semantic context", source.includes('class="demo-empty" role="note" aria-label="${escapeAttribute(label)}"') && source.includes("Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Button runs next: ${context.next}."), "empty state note labels include triad");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 check("primary nav label stays compact and public-facing", html.includes('id="demo-nav"') && html.includes('aria-label="Demo screens"'), "Demo screens");
@@ -375,6 +375,16 @@ function workFilterStylesContractOk() {
   ]) && includesAll(mobileStyles, [
     ".demo-chip-row",
     "grid-template-columns: repeat(2, minmax(0, 1fr));"
+  ]);
+}
+
+function workSearchContractOk() {
+  return includesAll(source, [
+    'aria-describedby="demo-search-summary"',
+    'id="demo-search-summary" class="demo-status-line" role="status" aria-live="polite"',
+    "function workToolbarSummary()",
+    "placeholder=\"Search ${escapeAttribute(currentWork)} title, blocker, Button runs next, owner, or due date\"",
+    "const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${pack.sources.join(\" \")}`.toLowerCase();"
   ]);
 }
 

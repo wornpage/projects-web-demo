@@ -3391,7 +3391,7 @@ function workToolbar(label) {
   return `
     <section class="demo-toolbar" aria-label="${escapeAttribute(label)}">
       <label class="sr-only" for="demo-search">Search demo ${escapeHtml(currentWork)}</label>
-      <input id="demo-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search ${escapeAttribute(currentWork)} title, Button runs next, owner, or due date" autocomplete="off" aria-describedby="demo-search-summary">
+      <input id="demo-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search ${escapeAttribute(currentWork)} title, blocker, Button runs next, owner, or due date" autocomplete="off" aria-describedby="demo-search-summary">
       <p id="demo-search-summary" class="demo-status-line" role="status" aria-live="polite">${escapeHtml(summary)}</p>
       <div id="status-chips" class="demo-chip-row" aria-label="Status filters">
         ${renderFilterChips()}
