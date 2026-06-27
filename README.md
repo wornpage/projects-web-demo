@@ -37,6 +37,7 @@ Keep this repo focused on the public portfolio demo.
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
 | `render.yaml` | Render Blueprint for hosting the Docker app with managed Postgres state. |
 | `docs/deploy-outplane.md` | Outplane development deploy checklist. |
+| `docs/public-exposure-audit.md` | Public file exposure audit and frontend privacy boundary. |
 
 ## Routes
 

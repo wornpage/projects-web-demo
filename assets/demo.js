@@ -6,9 +6,6 @@ const LEGACY_DEMO_STORAGE_KEYS = [
 ];
 const THEME_STORAGE_KEY = "projects-demo-theme-v2";
 const DEMO_METADATA_FILE = "assets/demo-metadata.json";
-const DEMO_REPO_URL = "https://github.com/jared-bidlow/projects-web-demo";
-const DEMO_ISSUE_URL = `${DEMO_REPO_URL}/issues/new`;
-const DEMO_RELEASE_NOTES_URL = `${DEMO_REPO_URL}/releases`;
 const DEMO_DEFAULT_VERSION = "working";
 const DEMO_API_QUERY_PARAM = "api";
 const API_STATE_SAVE_DEBOUNCE_MS = 300;
@@ -3708,10 +3705,18 @@ function renderHealth() {
 function renderFeedback() {
   const issueTitle = `Projects static demo issue (${stateVersionLabel()})`;
   const issueBody = feedbackIssueBody();
-  const issueUrl = `${DEMO_ISSUE_URL}?title=${encodeURIComponent(issueTitle)}&labels=demo%2Cfeedback&body=${encodeURIComponent(issueBody)}`;
+  const issueBaseUrl = state.metadata?.issueUrl || "";
+  const issueUrl = issueBaseUrl
+    ? `${issueBaseUrl}?title=${encodeURIComponent(issueTitle)}&labels=demo%2Cfeedback&body=${encodeURIComponent(issueBody)}`
+    : "";
   const copyFeedbackHelp = clipboardStatus("Feedback", "copy issue context into the issue body");
-  const openFeedbackHelp = routeStatus("Feedback", DEMO_BLOCKER_NONE, "open the prefilled GitHub issue");
-  const feedbackContextHelp = "Review or edit the issue context before copying it into a GitHub issue.";
+  const openFeedbackHelp = issueUrl
+    ? routeStatus("Feedback", DEMO_BLOCKER_NONE, "open the prefilled issue")
+    : routeStatus("Feedback", "no public issue tracker is configured", "copy context");
+  const feedbackContextHelp = "Review or edit the issue context before copying it into a feedback report.";
+  const openFeedbackAction = issueUrl
+    ? `<a class="btn btn-primary" id="open-feedback" href="${escapeAttribute(issueUrl)}" rel="noopener noreferrer" target="_blank"${controlHelpAttributes(false, openFeedbackHelp, "open-feedback-help")}>Open issue</a>`
+    : "";
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -3721,12 +3726,12 @@ function renderFeedback() {
         </div>
         <span class="demo-status">${escapeHtml(stateVersionLabel())}</span>
       </div>
-      <p>Copy the current demo context or open a pre-filled GitHub issue. The raw issue text is available below if you want to inspect it first.</p>
+      <p>Copy the current demo context. The raw text is available below if you want to inspect it first.</p>
       <div class="demo-card-actions">
         <span id="copy-feedback-help" class="sr-only">${escapeHtml(copyFeedbackHelp)}</span>
         <span id="open-feedback-help" class="sr-only">${escapeHtml(openFeedbackHelp)}</span>
         ${copyButton("copy-feedback", "Copy context", "btn", copyFeedbackHelp, "copy-feedback-help")}
-        <a class="btn btn-primary" id="open-feedback" href="${escapeAttribute(issueUrl)}" rel="noopener noreferrer" target="_blank"${controlHelpAttributes(false, openFeedbackHelp, "open-feedback-help")}>Open GitHub issue</a>
+        ${openFeedbackAction}
       </div>
       ${clipboardNoticePanel("copy-feedback")}
       ${optionalDetails("Issue text", "Open for copyable context before filing feedback.", `
@@ -3739,8 +3744,8 @@ function renderFeedback() {
     </section>
   `;
   el("copy-feedback").addEventListener("click", copyFeedbackContext);
-  el("open-feedback").addEventListener("click", () => {
-        state.status = routeStatus("Feedback", DEMO_BLOCKER_NONE, "review the prefilled GitHub issue");
+  el("open-feedback")?.addEventListener("click", () => {
+    state.status = routeStatus("Feedback", DEMO_BLOCKER_NONE, "review the prefilled issue");
   });
 }
 
@@ -7072,13 +7077,13 @@ function refreshMetaDiagnostics() {
 
 function buildMetadata(rawMetadata = {}) {
   const fallbackVersion = DEMO_DEFAULT_VERSION;
-  const releaseNotesUrl = rawMetadata?.releaseNotesUrl || DEMO_RELEASE_NOTES_URL;
   return {
     version: rawMetadata?.version || fallbackVersion,
     commit: rawMetadata?.commit || "unknown",
     generatedAt: rawMetadata?.generatedAt || rawMetadata?.generated || new Date().toISOString(),
-    releaseNotesUrl,
-    repository: rawMetadata?.repository || DEMO_REPO_URL,
+    issueUrl: rawMetadata?.issueUrl || "",
+    releaseNotesUrl: rawMetadata?.releaseNotesUrl || "",
+    repository: rawMetadata?.repository || "",
     profileApplied: rawMetadata?.profileApplied || state.copyProfile,
     scenario: rawMetadata?.scenario || state.scenarioId
   };

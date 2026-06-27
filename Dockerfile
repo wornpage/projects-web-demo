@@ -13,7 +13,7 @@ RUN npm --prefix server ci --omit=dev
 COPY index.html ./
 COPY assets ./assets
 COPY data ./data
-COPY server ./server
+COPY server/server.js ./server/server.js
 
 RUN mkdir -p /app/state \
   && addgroup -S app \
