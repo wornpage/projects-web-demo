@@ -34,6 +34,7 @@ Keep this repo focused on the public portfolio demo.
 | `data/demo-packs.json` | Fake browser-local work data. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
+| `render.yaml` | Render Blueprint for hosting the Docker app with a persistent disk. |
 
 ## Routes
 
@@ -113,6 +114,20 @@ http://localhost:5179/#/home
 The container serves the frontend and `/api` from one Node process. Runtime
 state is written to `/app/state/state.json`, so mount a volume or persistent
 disk there when hosting it.
+
+## Render
+
+This repo includes `render.yaml` for a Render Blueprint deployment.
+
+1. Push `main` to GitHub.
+2. In Render, create a new Blueprint from this repository.
+3. Confirm the `projects-web-demo` service.
+4. Keep the persistent disk mounted at `/app/state`.
+5. Use `/api/health` as the health check path.
+
+The Blueprint uses Docker, starts the same single-process app, and writes state
+to `/app/state/state.json`. The configured service plan is `starter` because
+the app needs a persistent disk for backend-backed demo state.
 
 ## Static Preview With API
 

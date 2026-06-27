@@ -44,6 +44,12 @@ The image sets:
 | `PORT` | `5179` |
 | `PROJECTS_STATE_FILE` | `/app/state/state.json` |
 
+## Render
+
+Use the repository root `render.yaml` as a Render Blueprint. It deploys the
+Docker app, sets `/api/health` as the health check path, and mounts a persistent
+disk at `/app/state`.
+
 ## Static Preview With API
 
 Run the app/API in one terminal:
