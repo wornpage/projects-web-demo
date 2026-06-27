@@ -48,12 +48,13 @@ try {
     { pathname: "/assets/demo.css", text: await readText("/assets/demo.css") }
   ];
   const lineCount = script.split(/\r?\n/u).length;
-  const liveClientKey = `live-check-${Date.now().toString(36)}`;
+  const liveClientKey = "demo-00000000-0000-4000-8000-000000000201";
   const apiHeaders = { "x-projects-demo-client": liveClientKey };
   const liveSeedPacks = await readJson("/api/demo-packs", apiHeaders);
   const liveState = await readJson("/api/state", apiHeaders);
   const commandPreview = await readJson("/api/packs/source-folder-audit/command", apiHeaders);
   const unkeyedStateStatus = await readStatus("/api/state");
+  const weakKeyedStateStatus = await readStatus("/api/state", { "x-projects-demo-client": "password1" });
   const retiredGenericPatchStatus = await readStatus("/api/packs/source-folder-audit", {
     ...apiHeaders,
     "content-type": "application/json"
@@ -63,11 +64,11 @@ try {
     "content-type": "application/json"
   }, "POST");
   const isolationStamp = Date.now().toString(36);
-  const clientAKey = "live-check-browser-a";
-  const clientBKey = "live-check-browser-b";
-  const sharedKey = "sync-live-check-shared";
-  const recoveryKey = "live-check-recovery";
-  const limitKey = "live-check-state-limit";
+  const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
+  const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
+  const sharedKey = "sync-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const recoveryKey = "demo-00000000-0000-4000-8000-000000000204";
+  const limitKey = "demo-00000000-0000-4000-8000-000000000205";
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
@@ -197,6 +198,7 @@ try {
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
+  check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
   check("hosted state writes reject missing client key before body parsing", unkeyedNonJsonStateWriteStatus === 400, unkeyedNonJsonStateWriteStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);

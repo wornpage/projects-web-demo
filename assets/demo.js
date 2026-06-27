@@ -1389,7 +1389,7 @@ function generateApiClientId() {
 }
 
 function isApiClientId(value) {
-  return /^demo-[A-Za-z0-9._-]{8,120}$/u.test(value);
+  return /^demo-(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[A-Za-z0-9_-]{22})$/iu.test(value);
 }
 
 function persistenceVerb() {

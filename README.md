@@ -135,6 +135,8 @@ Postgres environment variables instead of writable container files.
 Hosted Postgres stores a server-side digest of the browser client key rather
 than the raw request header value.
 State-changing API routes validate that client key before reading JSON payloads.
+The API accepts only generated `demo-...` browser keys or `sync-...` share keys;
+weak manual header values such as short passwords are rejected.
 Each keyed backend row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected instead of being silently stored.
 
@@ -234,7 +236,8 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 
 That command runs frontend syntax, backend syntax, protected frontend, public
 asset-disclosure, public route-contract, sync sharing, state recovery,
-public-boundary, Docker deploy-boundary, whitespace, and live Outplane checks.
+public-boundary, Docker deploy-boundary, whitespace, and live Outplane checks,
+including rejection of weak manual API client keys.
 For UI-only work, also smoke the main routes locally in light and dark mode:
 
 - `#/home`

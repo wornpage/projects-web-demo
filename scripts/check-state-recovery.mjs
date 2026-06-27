@@ -36,8 +36,8 @@ server.stderr.on("data", (chunk) => {
 try {
   await waitForHealth(port);
 
-  const clientA = "recovery-check-client-a";
-  const clientB = "recovery-check-client-b";
+  const clientA = "demo-00000000-0000-4000-8000-000000000101";
+  const clientB = "demo-00000000-0000-4000-8000-000000000102";
   const stamp = Date.now().toString(36);
   const snapshotTitle = `Recovery snapshot ${stamp}`;
   const overwriteTitle = `Recovery overwritten ${stamp}`;
@@ -191,7 +191,7 @@ async function checkDefaultStatePath() {
 
   try {
     await waitForHealth(defaultPort);
-    const defaultClient = "default-state-path-check";
+    const defaultClient = "demo-00000000-0000-4000-8000-000000000103";
     const initialState = await jsonRequest(defaultPort, "/api/state", {
       headers: { "x-projects-demo-client": defaultClient }
     });

@@ -11,6 +11,8 @@ State-changing and state-read API routes require that anonymous browser client
 key in both local file-backed mode and hosted Postgres mode. Missing or invalid
 keys are rejected instead of falling back to one shared row.
 State-changing routes validate that key before reading JSON payloads.
+The API accepts only generated `demo-...` browser keys or `sync-...` share keys,
+and rejects weak manual header values such as short passwords.
 Hosted Postgres stores a server-side digest of that key in `state_key`; local
 file-backed mode stores hashed filenames.
 Each anonymous state row is capped at 50 work items. Oversized full-state writes
@@ -142,4 +144,5 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 
 That command runs backend syntax, frontend protection, public asset-disclosure,
 public route-contract, sync sharing, state recovery, public boundary, Docker
-deploy-boundary, whitespace, and live Outplane checks.
+deploy-boundary, whitespace, and live Outplane checks, including rejection of
+weak manual API client keys.

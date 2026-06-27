@@ -59,6 +59,8 @@ only for local file-backed development, and it implies container or volume state
 The browser sends an anonymous client key with API requests, so hosted demo
 edits are separated per browser without accounts. Hosted Postgres API requests
 without that browser key are rejected instead of sharing one fallback row.
+The API accepts only generated `demo-...` browser keys or `sync-...` share keys,
+and rejects weak manual header values such as short passwords.
 The server stores a digest of the browser client key in Postgres `state_key`,
 not the raw request header value. It can read old raw-key rows long enough to
 migrate them on the next write.
@@ -111,14 +113,15 @@ After deploy:
    responses are missing the noindex/noarchive robots header, if production
    minification did not run, if the backend-backed frontend helpers are missing,
    if retired triage code is still public, if hosted state accepts a request
-   without a browser client key, if a missing-key write reaches body parsing
-   before ownership validation, if hosted state accepts a non-JSON write, if
-   hosted state accepts an oversized receipt shape, if two browser client keys
-   can read each other's state, if seed demo work cannot load through the keyed
-   API, if a shared sync key cannot be read from a second request, if an
+   without a browser client key, if hosted state accepts a weak manual client
+   key, if a missing-key write reaches body parsing before ownership validation,
+   if hosted state accepts a non-JSON write, if hosted state accepts an
+   oversized receipt shape, if two browser client keys can read each other's
+   state, if seed demo work cannot load through the keyed API, if a shared sync
+   key cannot be read from a second request, if an
    exported state snapshot cannot be restored, or if public assets expose source
    maps or private path strings.
-   It writes only fixed `live-check-*` verifier rows.
+   It writes only generated-format verifier rows.
 
 ## Notes
 

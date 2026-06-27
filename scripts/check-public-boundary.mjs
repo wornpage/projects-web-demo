@@ -133,7 +133,7 @@ try {
     method: "PATCH",
     headers: {
       "content-type": "application/json",
-      "x-projects-demo-client": "local-check-client-a"
+      "x-projects-demo-client": "demo-00000000-0000-4000-8000-000000000001"
     },
     body: JSON.stringify({ status: "done" })
   });
@@ -143,7 +143,7 @@ try {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-projects-demo-client": "local-check-client-a"
+      "x-projects-demo-client": "demo-00000000-0000-4000-8000-000000000001"
     },
     body: JSON.stringify({ packs: [] })
   });
@@ -183,9 +183,9 @@ try {
     check(`retired public asset not served: ${pathname}`, response.status === 404, response.status);
   }
 
-  const clientA = "local-check-client-a";
-  const clientB = "local-check-client-b";
-  const limitClient = "local-check-limit-client";
+  const clientA = "demo-00000000-0000-4000-8000-000000000001";
+  const clientB = "demo-00000000-0000-4000-8000-000000000002";
+  const limitClient = "demo-00000000-0000-4000-8000-000000000003";
   const packTitle = `Boundary check ${Date.now().toString(36)}`;
   const seedPacks = await jsonRequest(port, "/api/demo-packs", {
     headers: { "x-projects-demo-client": clientA }
@@ -214,6 +214,9 @@ try {
     headers: { "x-projects-demo-client": clientB }
   });
   const unkeyedState = await request(port, "/api/state");
+  const weakKeyedState = await request(port, "/api/state", {
+    headers: { "x-projects-demo-client": "password1" }
+  });
   const unkeyedNonJsonStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -285,6 +288,7 @@ try {
   check("client A reads its created work", stateHasPackTitle(clientAState.body, packTitle), clientAState.status);
   check("client B does not read client A work", !stateHasPackTitle(clientBState.body, packTitle), clientBState.status);
   check("unkeyed local API state is rejected", unkeyedState.status === 400, unkeyedState.status);
+  check("weak manual API client keys are rejected", weakKeyedState.status === 400, weakKeyedState.status);
   check("unkeyed local API state writes are rejected before body parsing", unkeyedNonJsonStateWrite.status === 400, unkeyedNonJsonStateWrite.status);
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);

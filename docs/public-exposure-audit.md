@@ -12,10 +12,10 @@ web server. The public surface is the browser app itself:
 - `assets/demo.js`
 - `assets/favicon.png`
 - `/api/health`
-- `/api/demo-packs` and related API routes only when the browser sends a demo
-  client key
-- `/api/state` and related API routes only when the browser sends a demo client
-  key
+- `/api/demo-packs` and related API routes only when the browser sends a
+  generated `demo-...` browser key or `sync-...` share key
+- `/api/state` and related API routes only when the browser sends a generated
+  `demo-...` browser key or `sync-...` share key
 
 HTML, CSS, JavaScript, images, and public JSON are visible to every visitor.
 That is expected for a browser app. Anything in those files must be treated as
@@ -46,7 +46,8 @@ Observed responses:
 | `/assets/../server/server.js` | `404` | Traversal attempt denied |
 | `/assets/%2e%2e/server/server.js` | `404` | Encoded traversal attempt denied |
 | `/api/state` without client key | `400` | Backend state has no unkeyed fallback row |
-| `/api/state` with client key | `200` | Demo state loads for that client key |
+| `/api/state` with generated client key | `200` | Demo state loads for that client key |
+| `/api/state` with weak manual client key | `400` | Short/manual row selectors are rejected |
 | `/api/demo-packs` with client key | `200` | Demo seed data loads through the keyed API |
 
 GitHub evidence:
@@ -68,9 +69,9 @@ confirms only the named public file allowlist is served, confirms repository
 files, unlisted asset/data paths, and path traversal attempts return `404`,
 creates work under one browser client
 key, confirms another client key cannot read it, confirms unkeyed local API
-state is rejected, confirms non-JSON state writes are rejected, confirms
-oversized keyed state snapshots, oversized `actionReceipt` shapes, and create
-requests past the state cap are rejected,
+state is rejected, confirms weak manual API client keys are rejected, confirms
+non-JSON state writes are rejected, confirms oversized keyed state snapshots,
+oversized `actionReceipt` shapes, and create requests past the state cap are rejected,
 confirms public assets stay on the file allowlist, confirms public text assets
 stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
@@ -105,7 +106,8 @@ pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
 The live gate confirms the hosted app uses Postgres, serves the app shell with a
 same-origin runtime config script and no-inline script CSP, rejects `/api/state`
 without a browser client key, loads seed demo work through `/api/demo-packs`
-with a browser client key, keeps fixed `live-check-*` browser rows separate,
+with a browser client key, rejects weak manual API client keys, keeps generated
+browser rows separate,
 lets a fixed shared sync key read the same row from another request, restores an
 exported state snapshot to its keyed row, rejects oversized keyed state
 snapshots, uses same-origin API CORS instead of wildcard CORS, rejects
@@ -123,7 +125,8 @@ asset, or unlisted public asset/data paths.
 It confirms `/api/health` reports only the storage kind and does not expose
 database table names, local state file paths, or storage credentials.
 The sync gate confirms generated sync codes and anonymous browser row keys use
-Web Crypto and do not fall back to weak random values.
+Web Crypto and do not fall back to weak random values. The local and live
+boundary gates also confirm weak manual API client key values are rejected.
 
 ## Risk Decisions
 
@@ -147,7 +150,7 @@ Web Crypto and do not fall back to weak random values.
 | Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Full-state writes accept unbounded receipt objects | Fixed | `actionReceipt` objects are depth/key/item bounded before storage |
-| Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |
+| Guessable generated sync or browser row keys | Fixed | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback, and local/live gates reject weak manual API client keys. Anyone with a valid sync code or sync link can still open that shared demo row |
 | Backend app shell allows arbitrary inline script/style | Fixed | The Node app serves the API-base setting through same-origin `assets/runtime-config.js`, uses `script-src 'self'`, and blocks unsafe inline styles |
 | App shell CSP leaves unused loaders to fallback behavior | Fixed | CSP now explicitly denies frames, workers, manifests, and media loaders the demo does not use |
 | App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener/embedder isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
