@@ -97,6 +97,9 @@ try {
   const unkeyedSelectedWriteStatus = await writeStatus("/api/state/selected", { selectedId: "source-folder-audit" }, {
     "content-type": "text/plain"
   }, "POST");
+  const unkeyedScenarioWriteStatus = await writeStatus("/api/state/scenario", { scenarioId: "empty" }, {
+    "content-type": "text/plain"
+  }, "POST");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
   const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
@@ -106,6 +109,7 @@ try {
   const pathStatusKey = "demo-00000000-0000-4000-8000-000000000206";
   const filterKey = `demo-${crypto.randomUUID()}`;
   const selectedKey = `demo-${crypto.randomUUID()}`;
+  const scenarioKey = `demo-${crypto.randomUUID()}`;
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
@@ -200,6 +204,14 @@ try {
   }, "POST");
   const invalidNamedSelectedStatus = await writeStatus("/api/state/selected", { selectedId: "private-workflow" }, {
     "x-projects-demo-client": selectedKey,
+    "content-type": "application/json"
+  }, "POST");
+  const validScenarioWrite = await writeJson("/api/state/scenario", { scenarioId: "empty" }, {
+    "x-projects-demo-client": scenarioKey,
+    "content-type": "application/json"
+  }, "POST");
+  const invalidNamedScenarioStatus = await writeStatus("/api/state/scenario", { scenarioId: "private-roadmap" }, {
+    "x-projects-demo-client": scenarioKey,
     "content-type": "application/json"
   }, "POST");
   const unkeyedWorkflowWriteStatuses = await Promise.all([
@@ -332,9 +344,14 @@ try {
   const filterStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": filterKey });
   const eraseSelectedStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": selectedKey }, "POST");
   const selectedStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": selectedKey });
+  const eraseScenarioStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": scenarioKey }, "POST");
+  const scenarioStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": scenarioKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
+    "saveBackendStateFilter",
+    "saveBackendSelectedWork",
+    "saveBackendScenario",
     "loadBackendSeedPacks",
     "loadBackendPackCommandPreview",
     "createBackendPack",
@@ -455,6 +472,7 @@ try {
   check("hosted sync copy rejects missing client key before body parsing", unkeyedSyncCopyStatus === 400, unkeyedSyncCopyStatus);
   check("hosted filter write rejects missing client key before body parsing", unkeyedFilterWriteStatus === 400, unkeyedFilterWriteStatus);
   check("hosted selected-work write rejects missing client key before body parsing", unkeyedSelectedWriteStatus === 400, unkeyedSelectedWriteStatus);
+  check("hosted scenario write rejects missing client key before body parsing", unkeyedScenarioWriteStatus === 400, unkeyedScenarioWriteStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
@@ -488,6 +506,8 @@ try {
   check("hosted named filter endpoint rejects unsupported filters", invalidNamedFilterStatus === 400, invalidNamedFilterStatus);
   check("hosted named selected-work endpoint saves existing work", validSelectedWrite.state?.selectedId === "source-folder-audit", validSelectedWrite.state?.selectedId || "missing");
   check("hosted named selected-work endpoint rejects unknown work", invalidNamedSelectedStatus === 400, invalidNamedSelectedStatus);
+  check("hosted named scenario endpoint saves empty scenario", validScenarioWrite.state?.scenarioId === "empty" && Array.isArray(validScenarioWrite.state?.packs) && validScenarioWrite.state.packs.length === 0, `${validScenarioWrite.state?.scenarioId || "missing"} / ${validScenarioWrite.state?.packs?.length ?? "missing"}`);
+  check("hosted named scenario endpoint rejects unsupported scenarios", invalidNamedScenarioStatus === 400, invalidNamedScenarioStatus);
   check("hosted state rejects blank copy profiles", blankProfileStateStatus === 400, blankProfileStateStatus);
   check("hosted state rejects invalid top-level text fields", invalidStateTextFieldStatus === 400, invalidStateTextFieldStatus);
   check("hosted state rejects overlong top-level text fields", overlongStateTextFieldStatus === 400, overlongStateTextFieldStatus);
@@ -520,6 +540,7 @@ try {
   check("hosted verifier cleanup erases path-status row", erasePathStatusStateStatus === 200 && !stateHasPackTitle(pathStatusStateAfterCleanup, pathStatusTitle), `${erasePathStatusStateStatus} / ${pathStatusTitle}`);
   check("hosted verifier cleanup erases filter row", eraseFilterStateStatus === 200 && filterStateAfterCleanup.filter !== "review", `${eraseFilterStateStatus} / ${filterStateAfterCleanup.filter || "none"}`);
   check("hosted verifier cleanup erases selected-work row", eraseSelectedStateStatus === 200 && selectedStateAfterCleanup.selectedId !== "source-folder-audit", `${eraseSelectedStateStatus} / ${selectedStateAfterCleanup.selectedId || "none"}`);
+  check("hosted verifier cleanup erases scenario row", eraseScenarioStateStatus === 200 && scenarioStateAfterCleanup.scenarioId !== "empty", `${eraseScenarioStateStatus} / ${scenarioStateAfterCleanup.scenarioId || "none"}`);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("API command route returns selected-work flow copy", commandPreviewOwnsCopy(commandPreview), `${commandPreview.flowHint || "missing"} / ${commandPreview.primaryReason || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");

@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const [seedPacks, backendState] = await loadInitialDemoState();
     state.basePacks = normalizeLegacyVisibleCopy(seedPacks);
     loadState(backendState);
-    applyLaunchConfiguration();
+    await applyLaunchConfiguration();
     if (launchedSyncCode) {
       state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "review shared demo state");
       clearLaunchSyncCodeParam();
@@ -378,16 +378,16 @@ function purgeLegacyDemoState() {
   }
 }
 
-function applyLaunchConfiguration() {
+async function applyLaunchConfiguration() {
   const profileParam = launchParams.get("profile");
   const hasProfileParam = Boolean(profileParam && copyProfiles[profileParam]);
 
   const scenarioParam = launchParams.get("scenario");
   if (scenarioParam && DEMO_SCENARIO_BY_ID[scenarioParam]) {
     state.route = DEMO_SCENARIO_BY_ID[scenarioParam].route || state.route;
-    applyScenario(DEMO_SCENARIO_BY_ID[scenarioParam], { force: true, preserveProfile: hasProfileParam });
+    await applyScenario(DEMO_SCENARIO_BY_ID[scenarioParam], { force: true, preserveProfile: hasProfileParam });
   } else if (!Array.isArray(state.packs) || state.packs.length === 0) {
-    applyScenario(DEMO_SCENARIO_BY_ID.default, { preserveProfile: hasProfileParam });
+    await applyScenario(DEMO_SCENARIO_BY_ID.default, { preserveProfile: hasProfileParam });
   } else if (!DEMO_SCENARIO_BY_ID[state.scenarioId]) {
     state.scenarioId = "default";
   }
@@ -400,9 +400,28 @@ function applyLaunchConfiguration() {
 
 }
 
-function applyScenario(scenario, options = {}) {
+async function applyScenario(scenario, options = {}) {
   const current = DEMO_SCENARIO_BY_ID[scenario?.id] || DEMO_SCENARIO_BY_ID.default;
   const force = options.force ?? false;
+
+  if (DEMO_API_BASE_URL) {
+    try {
+      clearPendingBackendStateSave();
+      const result = await saveBackendScenario(current.id, { preserveProfile: Boolean(options.preserveProfile) });
+      if (current.route && options.applyRoute) {
+        state.route = current.route;
+      }
+      syncSearchParam("scenario", result.scenarioId || current.id);
+      syncSearchParam("profile", state.copyProfile);
+      render();
+      return result;
+    } catch (error) {
+      state.status = `Where: Scenario. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+      state.suppressNextSave = true;
+      render();
+      return null;
+    }
+  }
 
   const next = current.transform(structuredClone(state.basePacks));
   state.packs = next;
@@ -766,6 +785,28 @@ async function saveBackendSelectedWork(selectedId) {
   });
   if (!response.ok) {
     throw new Error(`Backend selected work failed with ${response.status}`);
+  }
+
+  const result = await response.json();
+  loadBackendOwnedState(result.state);
+  return result;
+}
+
+async function saveBackendScenario(scenarioId, options = {}) {
+  if (!DEMO_API_BASE_URL) {
+    return null;
+  }
+
+  const response = await fetch(apiUrl("/api/state/scenario"), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify({
+      scenarioId,
+      preserveProfile: Boolean(options.preserveProfile)
+    })
+  });
+  if (!response.ok) {
+    throw new Error(`Backend scenario failed with ${response.status}`);
   }
 
   const result = await response.json();
@@ -6304,11 +6345,11 @@ function activityPanel(pack) {
 
 function bindScenarioCards() {
   document.querySelectorAll("[data-scenario]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const scenario = DEMO_SCENARIO_BY_ID[button.dataset.scenario];
       if (!scenario) return;
       syncSearchParam("scenario", scenario.id);
-      applyScenario(scenario, { force: true, applyRoute: true });
+      await applyScenario(scenario, { force: true, applyRoute: true });
       if (scenario.route) {
         go(scenario.route);
       }

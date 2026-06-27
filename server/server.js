@@ -199,6 +199,16 @@ async function routeRequest(request, response, url) {
     return;
   }
 
+  if (method === "POST" && pathname === "/api/state/scenario") {
+    const stateKey = stateWriteKeyForRequest(request);
+    const payload = await readJsonBody(request);
+    const current = await readState(stateKey);
+    const result = await saveStateScenarioAction(current, payload);
+    await writeState(result.state, stateKey, { allowEmptyPacks: true });
+    sendJson(request, response, 200, result);
+    return;
+  }
+
   if (method === "POST" && pathname === "/api/state/erase") {
     sendJson(request, response, 200, await eraseState(stateWriteKeyForRequest(request)));
     return;
@@ -443,8 +453,8 @@ async function readState(stateKey) {
   return stateStorage.read(stateKey);
 }
 
-async function writeState(payload, stateKey) {
-  validateStatePayload(payload);
+async function writeState(payload, stateKey, options = {}) {
+  validateStatePayload(payload, options);
   return stateStorage.write(payload, stateKey);
 }
 
@@ -857,6 +867,166 @@ function saveStateSelectedAction(state, payload) {
   state.selectedId = selectedId;
   state.actionReceipt = null;
   return { selectedId, state };
+}
+
+async function saveStateScenarioAction(currentState, payload) {
+  const source = workflowPayloadObject(payload);
+  const scenarioId = workflowTextField(source, "scenarioId", 80, { required: true });
+  const preserveProfile = workflowBooleanField(source, "preserveProfile");
+  if (!VALID_SCENARIOS.has(scenarioId)) {
+    throw httpError(400, "Demo state scenario is not supported.");
+  }
+
+  const scenario = stateScenarioDefinition(scenarioId);
+  const basePacks = await readSeedPacks();
+  const packs = scenarioStatePacks(scenarioId, basePacks).map(sanitizePack);
+  const copyProfile = preserveProfile
+    ? currentState.copyProfile
+    : scenario.profile || currentState.copyProfile || "general";
+  const state = sanitizeState({
+    ...currentState,
+    packs,
+    copyProfile,
+    scenarioId,
+    selectedId: packs[0]?.id || "",
+    status: scenarioStatusMessage(scenario),
+    actionReceipt: null,
+    filter: scenario.filter || "all",
+    query: ""
+  });
+
+  return { scenarioId, state };
+}
+
+function workflowBooleanField(source, key) {
+  if (!Object.prototype.hasOwnProperty.call(source, key)) {
+    return false;
+  }
+  if (typeof source[key] !== "boolean") {
+    throw httpError(400, `Workflow ${key} must be true or false.`);
+  }
+  return source[key];
+}
+
+function stateScenarioDefinition(scenarioId) {
+  const definitions = {
+    default: {
+      label: "Default",
+      profile: "general",
+      filter: "all"
+    },
+    review: {
+      label: "Review-first",
+      profile: "developer",
+      filter: "review"
+    },
+    healthy: {
+      label: "Healthy queue",
+      profile: "general",
+      filter: "active"
+    },
+    onboarding: {
+      label: "Onboarding",
+      profile: "climate",
+      filter: "all"
+    },
+    "due-view": {
+      label: "Due today",
+      profile: "general",
+      filter: "active"
+    },
+    empty: {
+      label: "Empty state",
+      profile: "general",
+      filter: "all"
+    }
+  };
+  return definitions[scenarioId] || definitions.default;
+}
+
+function scenarioStatePacks(scenarioId, basePacks) {
+  const packs = Array.isArray(basePacks) ? structuredClone(basePacks) : [];
+  if (scenarioId === "review") {
+    return packs.map(reviewScenarioPack);
+  }
+  if (scenarioId === "healthy") {
+    return packs.map(healthyScenarioPack);
+  }
+  if (scenarioId === "onboarding") {
+    return packs
+      .slice()
+      .sort((left, right) => normalizeText(left.title, 200).localeCompare(normalizeText(right.title, 200)))
+      .slice(0, 5)
+      .map(onboardingScenarioPack);
+  }
+  if (scenarioId === "due-view") {
+    return packs.map(dueTodayScenarioPack);
+  }
+  if (scenarioId === "empty") {
+    return [];
+  }
+  return packs;
+}
+
+function reviewScenarioPack(pack) {
+  if (pack.status === "done") {
+    return pack;
+  }
+  if (isMissingNextAction(pack)) {
+    return {
+      ...pack,
+      blocker: "missing Button runs next",
+      next: "",
+      status: "draft"
+    };
+  }
+  return {
+    ...pack,
+    blocker: isUnblockedBlockerValue(pack.blocker) ? "Needs review context" : pack.blocker,
+    next: "Review",
+    status: "blocked"
+  };
+}
+
+function healthyScenarioPack(pack) {
+  if (pack.status === "done") {
+    return pack;
+  }
+  return {
+    ...pack,
+    blocker: DEMO_BLOCKER_NONE,
+    next: isPlaceholderNext(pack.next) ? "Open" : pack.next,
+    status: pack.status === "draft" ? "active" : pack.status
+  };
+}
+
+function onboardingScenarioPack(pack) {
+  return {
+    ...pack,
+    owner: pack.owner === "No owner" ? "Owner pending" : pack.owner
+  };
+}
+
+function dueTodayScenarioPack(pack) {
+  return pack.status === "done"
+    ? pack
+    : {
+        ...pack,
+        due: todayIsoDate()
+      };
+}
+
+function scenarioStatusMessage(scenario) {
+  return `Where: Start. Blocker: None. Button runs next: review ${scenario.label} scenario.`;
+}
+
+function todayIsoDate(date = new Date()) {
+  const localTime = date.getTime() - date.getTimezoneOffset() * 60000;
+  return new Date(localTime).toISOString().slice(0, 10);
+}
+
+function isUnblockedBlockerValue(value) {
+  return normalizeStoredBlocker(value) === DEMO_BLOCKER_NONE;
 }
 
 function filterStatusMessageForState(state, filter) {
@@ -1603,15 +1773,15 @@ function sanitizeState(payload) {
   };
 }
 
-function validateStatePayload(payload) {
+function validateStatePayload(payload, options = {}) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     throw httpError(400, "Demo state must be a JSON object.");
   }
 
   validateStateMetadata(payload);
   validateStateTextFields(payload);
-  const packIds = validateStatePacks(payload.packs);
-  validateSelectedPackId(payload.selectedId, packIds);
+  const packIds = validateStatePacks(payload.packs, options);
+  validateSelectedPackId(payload.selectedId, packIds, options);
   validateActionReceipt(payload);
 }
 
@@ -1669,11 +1839,11 @@ function validateStateTextField(payload, key, maxLength) {
   }
 }
 
-function validateStatePacks(value) {
+function validateStatePacks(value, options = {}) {
   if (!Array.isArray(value)) {
     throw httpError(400, "Demo state packs must be an array.");
   }
-  if (value.length === 0) {
+  if (value.length === 0 && !options.allowEmptyPacks) {
     throw httpError(400, "Demo state must contain at least one work item.");
   }
   if (value.length > MAX_STATE_PACKS) {
@@ -1702,12 +1872,15 @@ function validateStatePacks(value) {
   return packIds;
 }
 
-function validateSelectedPackId(value, packIds) {
+function validateSelectedPackId(value, packIds, options = {}) {
   if (typeof value !== "string") {
     throw httpError(400, "Demo state selected work must be text.");
   }
 
   const selectedId = normalizeText(value, 120);
+  if (!selectedId && options.allowEmptyPacks && packIds.size === 0) {
+    return;
+  }
   if (!selectedId || !packIds.has(selectedId)) {
     throw httpError(400, "Demo state selected work must reference an existing item.");
   }

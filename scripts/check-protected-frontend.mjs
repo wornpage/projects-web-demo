@@ -29,6 +29,7 @@ const leakedTokens = [
   "runBackendPackAction",
   "saveBackendPackNextAction",
   "saveBackendSelectedWork",
+  "saveBackendScenario",
   "loadBackendSeedPacks",
   "loadBackendPackCommandPreview",
   "createBackendPack",

@@ -139,6 +139,7 @@ base instead of the incoming Host header.
 | `POST /api/state/sync` | Copy the current demo snapshot into a newly selected sync-code row. |
 | `POST /api/state/filter` | Save one supported status filter and return the server-owned row state. |
 | `POST /api/state/selected` | Save one existing selected work id and return the server-owned row state. |
+| `POST /api/state/scenario` | Apply one supported scenario transform and return the server-owned row state. |
 | `POST /api/state/erase` | Erase the current keyed demo state row. |
 | `GET /api/packs` | Load only work items. |
 | `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Button runs next` preview for one work item. |
@@ -158,7 +159,9 @@ browser save path; static preview keeps local browser restore.
 Hosted sync-code copies use `POST /api/state/sync` instead of the browser-row
 save path. Hosted filter chips use `POST /api/state/filter` instead of the
 browser-row save path. Hosted selected-work navigation uses
-`POST /api/state/selected` instead of the browser-row save path. Hosted browser rows save through a
+`POST /api/state/selected` instead of the browser-row save path. Hosted
+scenario changes use `POST /api/state/scenario` instead of the browser-row
+save path. Hosted browser rows save through a
 `projects-browser-state-v1` envelope on `PUT /api/state/browser`, omitting
 transient receipt and search text; the older generic `PUT /api/state` write
 path is retired.

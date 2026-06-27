@@ -106,6 +106,8 @@ try {
   check("hosted filter changes use named backend endpoint", hostedFilterSave.ok, hostedFilterSave.detail);
   const hostedSelectedSave = frontendSelectedWorkUsesBackendEndpoint(frontendSource);
   check("hosted selected-work changes use named backend endpoint", hostedSelectedSave.ok, hostedSelectedSave.detail);
+  const hostedScenarioSave = frontendScenarioUsesBackendEndpoint(frontendSource);
+  check("hosted scenario changes use named backend endpoint", hostedScenarioSave.ok, hostedScenarioSave.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -231,6 +233,11 @@ try {
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ selectedId: "source-folder-audit" })
   });
+  const unkeyedScenarioWrite = await request(port, "/api/state/scenario", {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: JSON.stringify({ scenarioId: "empty" })
+  });
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
@@ -239,6 +246,7 @@ try {
   check("unkeyed sync copy rejects missing client key before body parsing", unkeyedSyncCopy.status === 400, unkeyedSyncCopy.status);
   check("unkeyed filter write rejects missing client key before body parsing", unkeyedFilterWrite.status === 400, unkeyedFilterWrite.status);
   check("unkeyed selected-work write rejects missing client key before body parsing", unkeyedSelectedWrite.status === 400, unkeyedSelectedWrite.status);
+  check("unkeyed scenario write rejects missing client key before body parsing", unkeyedScenarioWrite.status === 400, unkeyedScenarioWrite.status);
   check(
     "unkeyed API workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWrites.every(([, status]) => status === 400),
@@ -279,6 +287,7 @@ try {
   const clientA = "demo-00000000-0000-4000-8000-000000000001";
   const clientB = "demo-00000000-0000-4000-8000-000000000002";
   const limitClient = "demo-00000000-0000-4000-8000-000000000003";
+  const scenarioClient = "demo-00000000-0000-4000-8000-000000000005";
   const packTitle = `Boundary check ${Date.now().toString(36)}`;
   const clientBTitle = `Boundary other row ${Date.now().toString(36)}`;
   const seedPacks = await jsonRequest(port, "/api/demo-packs", {
@@ -430,6 +439,25 @@ try {
   });
   const clientAStateAfterSelected = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientA }
+  });
+  const validScenarioWrite = await jsonRequest(port, "/api/state/scenario", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": scenarioClient
+    },
+    body: JSON.stringify({ scenarioId: "empty" })
+  });
+  const invalidScenarioWrite = await request(port, "/api/state/scenario", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": scenarioClient
+    },
+    body: JSON.stringify({ scenarioId: "private-roadmap" })
+  });
+  const scenarioStateAfterWrite = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": scenarioClient }
   });
   const missingPacksStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
@@ -732,6 +760,9 @@ try {
   check("named selected-work endpoint saves existing work", validSelectedWrite.status === 200 && validSelectedWrite.body?.state?.selectedId === "source-folder-audit", `${validSelectedWrite.status} / ${validSelectedWrite.body?.state?.selectedId || "missing"}`);
   check("named selected-work endpoint rejects unknown work", invalidSelectedWrite.status === 400, invalidSelectedWrite.status);
   check("named selected-work endpoint persists the keyed row", clientAStateAfterSelected.body?.selectedId === "source-folder-audit", clientAStateAfterSelected.body?.selectedId || "missing");
+  check("named scenario endpoint saves empty scenario", validScenarioWrite.status === 200 && validScenarioWrite.body?.state?.scenarioId === "empty" && Array.isArray(validScenarioWrite.body?.state?.packs) && validScenarioWrite.body.state.packs.length === 0, `${validScenarioWrite.status} / ${validScenarioWrite.body?.state?.scenarioId || "missing"} / ${validScenarioWrite.body?.state?.packs?.length ?? "missing"}`);
+  check("named scenario endpoint rejects unsupported scenarios", invalidScenarioWrite.status === 400, invalidScenarioWrite.status);
+  check("named scenario endpoint persists the keyed row", scenarioStateAfterWrite.body?.scenarioId === "empty" && Array.isArray(scenarioStateAfterWrite.body?.packs) && scenarioStateAfterWrite.body.packs.length === 0, `${scenarioStateAfterWrite.body?.scenarioId || "missing"} / ${scenarioStateAfterWrite.body?.packs?.length ?? "missing"}`);
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("empty state snapshots are rejected", emptyPacksStateWrite.status === 400, emptyPacksStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
@@ -1026,6 +1057,7 @@ function writeRoutesValidateKeyBeforeBody(source) {
     "if (method === \"POST\" && pathname === \"/api/state/sync\")",
     "if (method === \"POST\" && pathname === \"/api/state/filter\")",
     "if (method === \"POST\" && pathname === \"/api/state/selected\")",
+    "if (method === \"POST\" && pathname === \"/api/state/scenario\")",
     "if (method === \"POST\" && pathname === \"/api/packs\")",
     "if (packPathMatch && method === \"POST\")",
     "if (packNextMatch && method === \"POST\")",
@@ -1163,6 +1195,28 @@ function frontendSelectedWorkUsesBackendEndpoint(source) {
     detail: ok
       ? "hosted selected-work navigation posts to /api/state/selected without falling back to browser-row saves"
       : "hosted selected-work navigation still relies on browser-row snapshot persistence"
+  };
+}
+
+function frontendScenarioUsesBackendEndpoint(source) {
+  const helperBody = functionBody(source, "saveBackendScenario");
+  const applyBody = functionBody(source, "applyScenario");
+  if (!helperBody || !applyBody) {
+    return { ok: false, detail: "saveBackendScenario/applyScenario:missing" };
+  }
+
+  const ok = helperBody.includes('fetch(apiUrl("/api/state/scenario")')
+    && helperBody.includes("JSON.stringify({")
+    && helperBody.includes("scenarioId")
+    && helperBody.includes("loadBackendOwnedState(result.state)")
+    && applyBody.includes("await saveBackendScenario(current.id")
+    && applyBody.includes("clearPendingBackendStateSave()")
+    && !applyBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
+  return {
+    ok,
+    detail: ok
+      ? "hosted scenario changes post to /api/state/scenario without falling back to browser-row saves"
+      : "hosted scenario changes still rely on browser-row snapshot persistence"
   };
 }
 
