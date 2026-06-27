@@ -85,6 +85,14 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const duplicateIdStateStatus = await writeStatus("/api/state", stateWithDuplicatePackIds("live-duplicate-id-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const invalidPackStateStatus = await writeStatus("/api/state", stateWithMissingPackTitle("live-missing-title-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
     actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
   }), {
@@ -206,6 +214,8 @@ try {
   check("hosted state writes reject missing client key before body parsing", unkeyedNonJsonStateWriteStatus === 400, unkeyedNonJsonStateWriteStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
+  check("hosted state rejects duplicate work ids", duplicateIdStateStatus === 400, duplicateIdStateStatus);
+  check("hosted state rejects invalid work items", invalidPackStateStatus === 400, invalidPackStateStatus);
   check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);
@@ -350,6 +360,18 @@ function stateWithGeneratedPacks(count, prefix, options = {}) {
     filter: "all",
     query: ""
   };
+}
+
+function stateWithDuplicatePackIds(prefix) {
+  const state = stateWithGeneratedPacks(2, prefix);
+  state.packs[1].id = state.packs[0].id;
+  return state;
+}
+
+function stateWithMissingPackTitle(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.packs[0].title = "";
+  return state;
 }
 
 function deepActionReceipt(depth) {

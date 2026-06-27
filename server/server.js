@@ -1226,10 +1226,37 @@ function validateStatePayload(payload) {
     return;
   }
 
-  if (Array.isArray(payload.packs) && payload.packs.length > MAX_STATE_PACKS) {
+  validateStatePacks(payload.packs);
+  validatePlainValueShape(payload.actionReceipt);
+}
+
+function validateStatePacks(value) {
+  if (value === undefined) {
+    return;
+  }
+  if (!Array.isArray(value)) {
+    throw httpError(400, "Demo state packs must be an array.");
+  }
+  if (value.length > MAX_STATE_PACKS) {
     throw httpError(400, `Demo state cannot contain more than ${MAX_STATE_PACKS} work items.`);
   }
-  validatePlainValueShape(payload.actionReceipt);
+
+  const packIds = new Set();
+  value.forEach((pack, index) => {
+    if (!pack || typeof pack !== "object" || Array.isArray(pack)) {
+      throw httpError(400, `Demo state work item ${index + 1} must be an object.`);
+    }
+
+    const id = normalizeText(pack.id, 120);
+    const title = normalizeText(pack.title, 200);
+    if (!id || !title) {
+      throw httpError(400, "Demo state work items need an id and title.");
+    }
+    if (packIds.has(id)) {
+      throw httpError(400, "Demo state work item ids must be unique.");
+    }
+    packIds.add(id);
+  });
 }
 
 function sanitizePack(payload) {

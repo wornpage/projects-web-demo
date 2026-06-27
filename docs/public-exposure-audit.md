@@ -72,8 +72,8 @@ creates work under one browser client
 key, confirms another client key cannot read it, confirms unkeyed local API
 state is rejected, confirms weak manual and readable sync-code API client keys
 are rejected, confirms non-JSON state writes are rejected, confirms oversized
-keyed state snapshots, oversized `actionReceipt` shapes, and create requests
-past the state cap are rejected,
+keyed state snapshots, duplicate work ids, invalid work items, oversized
+`actionReceipt` shapes, and create requests past the state cap are rejected,
 confirms public assets stay on the file allowlist, confirms public text assets
 stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
@@ -121,7 +121,8 @@ with a browser client key, rejects weak manual and readable sync-code API client
 keys, keeps generated browser rows separate,
 lets a fixed shared sync key read the same row from another request, restores an
 exported state snapshot to its keyed row, rejects oversized keyed state
-snapshots, uses same-origin API CORS instead of wildcard CORS, rejects
+snapshots, rejects duplicate work ids and invalid work items in state snapshots,
+uses same-origin API CORS instead of wildcard CORS, rejects
 third-party preflights, rejects disallowed preflight methods/headers, and
 rejects forwarded-host CORS spoofing. It also confirms the hosted state write
 path rejects a missing browser key before body parsing, the hosted app shell
@@ -168,6 +169,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Hosted Postgres stores raw browser row keys | Fixed | Hosted reads and writes use only server-side `v2:` SHA-256 state keys; the raw-key read fallback is retired |
 | Unkeyed writes can consume body parsing before ownership is checked | Fixed | Server-owned write routes now validate the browser key before reading JSON, and local/live gates prove missing-key writes return `400` before content-type validation |
 | Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
+| Full-state writes can store ambiguous work identities | Fixed | `PUT /api/state` rejects invalid work items and duplicate work ids before storage |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Full-state writes accept unbounded receipt objects | Fixed | `actionReceipt` objects are depth/key/item bounded before storage |
 | Guessable generated sync or browser row keys | Fixed | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback, sync codes must be hashed before becoming row keys, and local/live gates reject weak manual or readable sync-code API client keys. Anyone with a valid sync code or sync link can still open that shared demo row |
