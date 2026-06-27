@@ -103,6 +103,7 @@ check("public routes use hash patterns", publicRoutedPatterns.every((pattern) =>
 check("pack route requires a work id", routeContract.pack?.acceptsPackId === true && routeContract.pack?.pattern === "#/pack/{packId}", routeContract.pack?.pattern || "missing");
 check("home route surfaces a live sample spotlight", homeSpotlightContractOk(), "homeSpotlightPanel with facts and primary action");
 check("review route surfaces an up-next queue spotlight", reviewSpotlightContractOk(), "reviewQueuePanel with queue stats and actions");
+check("create route surfaces readiness before the form", createReadinessContractOk(), "createReadinessPanel with required field checklist");
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
 
@@ -146,6 +147,20 @@ function reviewSpotlightContractOk() {
   ]);
 }
 
+function createReadinessContractOk() {
+  return includesAll(source, [
+    "${createReadinessPanel(defaults, createState)}",
+    "function createReadinessPanel(values, createState)",
+    "Ready to save",
+    "function createReadinessStep(label, value, id)",
+    "function syncCreateReadinessPanel(values, createState)",
+    "syncCreateReadinessStep(\"create-readiness-title\", values.title)",
+    "syncCreateReadinessStep(\"create-readiness-owner\", values.owner)",
+    "syncCreateReadinessStep(\"create-readiness-button\", values.next)",
+    "bindListActions();"
+  ]);
+}
+
 function spotlightFactsContractOk() {
   return includesAll(source, [
     "function homeSpotlightFacts(pack, command)",
@@ -163,12 +178,15 @@ function spotlightStylesContractOk() {
   return includesAll(styles, [
     ".demo-home-spotlight",
     ".demo-review-spotlight",
+    ".demo-create-spotlight",
     ".demo-home-spotlight-facts",
     "grid-template-columns: repeat(3, minmax(0, 1fr));",
-    ".demo-review-queue-stats"
+    ".demo-review-queue-stats",
+    ".demo-create-readiness-list"
   ]) && includesAll(mobileStyles, [
     ".demo-home-spotlight-facts",
     ".demo-review-queue-stats",
+    ".demo-create-readiness-list",
     "grid-template-columns: 1fr;"
   ]);
 }

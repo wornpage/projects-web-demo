@@ -3044,6 +3044,7 @@ function renderCreate() {
         </div>
         <span class="demo-status">${escapeHtml(persistenceStatusText())}</span>
       </div>
+      ${createReadinessPanel(defaults, createState)}
       <div class="demo-form-grid">
         ${inputField("new-title", "Title", defaults.title, `Name the ${profile().work} before Save can run.`)}
         ${inputField("new-owner", "Owner", defaults.owner, "Name the person, team, or role responsible for the next step.")}
@@ -3057,6 +3058,58 @@ function renderCreate() {
   `;
   el("create-sample").addEventListener("click", createSamplePack);
   bindCreateValidation();
+  bindListActions();
+}
+
+function createReadinessPanel(values, createState) {
+  const action = createReadinessAction(createState);
+  const help = helpCopy(createState.help, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<article class="demo-home-spotlight demo-create-spotlight" aria-label="${escapeAttribute(createState.help)}">
+    <div class="demo-home-spotlight-head demo-create-spotlight-head">
+      <div>
+        <span class="section-label">Ready to save</span>
+        <h3>Create path</h3>
+      </div>
+      <span id="create-readiness-state" class="demo-state-pill" title="${escapeAttribute(createState.help)}">${escapeHtml(createState.canSave ? "Ready" : "Needs field")}</span>
+    </div>
+    <div class="demo-home-spotlight-facts" aria-label="${escapeAttribute(createState.help)}">
+      ${createReadinessFact("Where", profile().newWork, "create-readiness-where")}
+      ${createReadinessFact("Blocker", blockerDisplayValue(createState.blocker), "create-readiness-blocker")}
+      ${createReadinessFact("Button runs next", action.label, "create-readiness-next")}
+    </div>
+    <div class="demo-create-readiness-list" aria-label="Required create fields">
+      ${createReadinessStep("Title", values.title, "create-readiness-title")}
+      ${createReadinessStep("Owner", values.owner, "create-readiness-owner")}
+      ${createReadinessStep("Button", values.next, "create-readiness-button")}
+    </div>
+    <div class="demo-home-spotlight-actions demo-create-spotlight-actions">
+      <button id="create-readiness-action" class="btn" type="button" data-action="${escapeAttribute(action.key)}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">${escapeHtml(action.label)}</button>
+      <small id="create-readiness-note">${escapeHtml(createState.help)}</small>
+    </div>
+  </article>`;
+}
+
+function createReadinessFact(label, value, id) {
+  const copy = copySurface(value || DEMO_BLOCKER_NONE_LABEL, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<div class="demo-home-spotlight-fact">
+    <span>${escapeHtml(label)}</span>
+    <strong id="${escapeAttribute(id)}"${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
+  </div>`;
+}
+
+function createReadinessStep(label, value, id) {
+  const ready = Boolean(normalizeCopy(value));
+  return `<div id="${escapeAttribute(id)}" class="demo-create-readiness-step" data-ready="${ready ? "true" : "false"}">
+    <span>${escapeHtml(label)}</span>
+    <strong>${ready ? "Ready" : "Missing"}</strong>
+  </div>`;
+}
+
+function createReadinessAction(createState) {
+  return {
+    key: createState.canSave ? "create-sample" : createFocusActionForBlocker(createState.blocker),
+    label: createState.canSave ? persistenceVerb() : createActionForBlocker(createState.blocker)
+  };
 }
 
 function renderPackDetail() {
@@ -4904,7 +4957,54 @@ function syncCreateValidation() {
   const stateForSave = createSaveState(createFormValues());
   help.textContent = stateForSave.help;
   syncValidatedActionButton(button, stateForSave);
+  syncCreateReadinessPanel(createFormValues(), stateForSave);
   syncCreateRouteCommand();
+}
+
+function syncCreateReadinessPanel(values, createState) {
+  const action = createReadinessAction(createState);
+  const statePill = el("create-readiness-state");
+  const blocker = el("create-readiness-blocker");
+  const next = el("create-readiness-next");
+  const actionButton = el("create-readiness-action");
+  const note = el("create-readiness-note");
+
+  if (statePill) {
+    statePill.textContent = createState.canSave ? "Ready" : "Needs field";
+    statePill.title = createState.help;
+  }
+  if (blocker) {
+    blocker.textContent = blockerDisplayValue(createState.blocker);
+  }
+  if (next) {
+    next.textContent = action.label;
+  }
+  if (actionButton) {
+    const copy = helpCopy(createState.help, DEMO_COPY_LIMITS.commandFlowHelp);
+    actionButton.dataset.action = action.key;
+    actionButton.textContent = action.label;
+    actionButton.title = copy;
+    actionButton.setAttribute("aria-label", copy);
+  }
+  if (note) {
+    note.textContent = createState.help;
+  }
+
+  syncCreateReadinessStep("create-readiness-title", values.title);
+  syncCreateReadinessStep("create-readiness-owner", values.owner);
+  syncCreateReadinessStep("create-readiness-button", values.next);
+}
+
+function syncCreateReadinessStep(id, value) {
+  const step = el(id);
+  const label = step?.querySelector("strong");
+  const ready = Boolean(normalizeCopy(value));
+  if (!step || !label) {
+    return;
+  }
+
+  step.dataset.ready = ready ? "true" : "false";
+  label.textContent = ready ? "Ready" : "Missing";
 }
 
 function syncCreateRouteCommand() {
