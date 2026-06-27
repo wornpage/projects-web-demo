@@ -144,6 +144,8 @@ base instead of the incoming Host header.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.
+If one of those hosted workflow writes fails, the browser shows a retry/refresh
+blocker and does not continue into the static fallback write path.
 
 API and app responses use `Cache-Control: no-store`, `Referrer-Policy:
 no-referrer`, `X-Content-Type-Options: nosniff`, HSTS, `X-Frame-Options: DENY`,

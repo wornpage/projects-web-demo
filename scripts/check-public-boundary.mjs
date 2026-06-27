@@ -104,6 +104,8 @@ try {
   check("server-owned workflow calls avoid full-state preflight writes", workflowPreflight.ok, workflowPreflight.detail);
   const backendOwnedLoads = frontendBackendOwnedLoadsSuppressGenericSave(frontendSource);
   check("backend-loaded state suppresses immediate generic re-save", backendOwnedLoads.ok, backendOwnedLoads.detail);
+  const backendFailures = frontendBackendWorkflowFailuresStopStaticFallback(frontendSource);
+  check("backend workflow failures stop before static fallback writes", backendFailures.ok, backendFailures.detail);
 
   const sameOrigin = `http://127.0.0.1:${port}`;
   const sameOriginCors = await request(port, "/api/health", {
@@ -1098,6 +1100,91 @@ function frontendBackendOwnedLoadsSuppressGenericSave(source) {
   return {
     ok: failures.length === 0,
     detail: failures.length === 0 ? "backend endpoint responses render without immediately scheduling PUT /api/state" : failures.join(", ")
+  };
+}
+
+function frontendBackendWorkflowFailuresStopStaticFallback(source) {
+  const failures = [];
+  const contracts = [
+    {
+      name: "createSamplePack",
+      request: "await createBackendPack(values)",
+      catchNeedles: ["Projects demo backend create failed.", "retry or refresh", "render();", "return;"],
+      fallback: "state.packs.unshift(pack);"
+    },
+    {
+      name: "savePackForwardPathFromForm",
+      request: "await saveBackendPackPath(pack, values)",
+      catchNeedles: ["Projects demo backend work path action failed.", "retry or refresh", "return false;"],
+      fallback: "const changed = applyPackForwardPathFormValues(pack);"
+    },
+    {
+      name: "savePackMemoryNote",
+      request: "await addBackendPackMemoryNote(pack, note)",
+      catchNeedles: ["Projects demo backend memory action failed.", "retry or refresh", "return null;"],
+      fallback: "const result = addPackMemoryNote(pack, note);"
+    },
+    {
+      name: "applyNextChoice",
+      request: "await saveBackendPackNextAction(pack, choice)",
+      catchNeedles: ["Projects demo backend next action failed.", "retry or refresh", "render();", "return;"],
+      fallback: "const result = setPackNextAction(pack, choice);"
+    },
+    {
+      name: "bindListActions",
+      request: "await saveBackendPackNextAction(pack, input.value)",
+      catchNeedles: ["Projects demo backend next action failed.", "retry or refresh"],
+      fallback: "const result = setPackNextAction(pack, input.value);"
+    },
+    {
+      name: "handlePackAction",
+      request: "await runBackendPackAction(pack, action)",
+      catchNeedles: ["Projects demo backend action failed.", "retry or refresh", "render();", "return;"],
+      fallback: "if (action === \"start\")"
+    }
+  ];
+
+  for (const contract of contracts) {
+    const body = functionBody(source, contract.name);
+    if (!body) {
+      failures.push(`${contract.name}:missing`);
+      continue;
+    }
+
+    const requestIndex = body.indexOf(contract.request);
+    const catchIndex = requestIndex < 0 ? -1 : body.indexOf("catch (error)", requestIndex);
+    const fallbackIndex = body.indexOf(contract.fallback);
+    if (requestIndex < 0) {
+      failures.push(`${contract.name}:missing backend request`);
+      continue;
+    }
+    if (catchIndex < 0) {
+      failures.push(`${contract.name}:missing catch`);
+      continue;
+    }
+    if (fallbackIndex < 0) {
+      failures.push(`${contract.name}:missing static fallback`);
+      continue;
+    }
+
+    const catchSource = body.slice(catchIndex);
+    const missingCatchNeedles = contract.catchNeedles.filter((needle) => !catchSource.includes(needle));
+    if (missingCatchNeedles.length > 0) {
+      failures.push(`${contract.name}:catch missing ${missingCatchNeedles.join(", ")}`);
+    }
+
+    const fallbackAfterCatch = body.indexOf(contract.fallback, catchIndex);
+    if (fallbackAfterCatch >= 0) {
+      const returnIndex = body.indexOf("return", catchIndex);
+      if (returnIndex < 0 || returnIndex > fallbackAfterCatch) {
+        failures.push(`${contract.name}:catch can fall through to static fallback`);
+      }
+    }
+  }
+
+  return {
+    ok: failures.length === 0,
+    detail: failures.length === 0 ? "backend catch paths show retry/refresh and do not continue into local workflow writes" : failures.join(", ")
   };
 }
 

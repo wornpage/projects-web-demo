@@ -186,6 +186,8 @@ fallback.
 Server-owned workflow calls cancel pending generic state saves and call the
 specific backend endpoint directly instead of first writing the full browser
 state through `PUT /api/state`.
+If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
+and does not continue into the static fallback write path.
 Those workflow endpoints reject malformed or overlong request fields before
 storage, including invalid create source lists, action keys, memory notes, next
 values, and work-path text. The work-path endpoint also rejects unsupported
