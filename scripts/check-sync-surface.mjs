@@ -201,6 +201,12 @@ check(
 );
 
 check(
+  "sync section exposes its share warning",
+  html.includes('id="demo-sync" class="demo-sync card" aria-label="Demo sync code" aria-describedby="sync-code-help"'),
+  "demo-sync described by sync-code-help"
+);
+
+check(
   "sync share link and QR use the same generated URL",
   includesAll(renderShare, [
     "const shareUrl = syncShareUrl(syncCode)",
