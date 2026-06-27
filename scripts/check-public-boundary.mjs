@@ -100,6 +100,8 @@ try {
   check("hosted recovery restore uses named backend endpoint", recoveryRestore.ok, recoveryRestore.detail);
   const syncCopy = frontendSyncCopyUsesBackendEndpoint(frontendSource);
   check("hosted sync copy uses named backend endpoint", syncCopy.ok, syncCopy.detail);
+  const browserRowSave = frontendBrowserRowSaveUsesNamedEndpoint(frontendSource);
+  check("hosted browser-row save uses named backend endpoint", browserRowSave.ok, browserRowSave.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -175,6 +177,15 @@ try {
     body: JSON.stringify({ packs: [] })
   });
   check("generic state POST route is retired", retiredStatePost.status === 404, retiredStatePost.status);
+  const retiredStatePut = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": "demo-00000000-0000-4000-8000-000000000001"
+    },
+    body: JSON.stringify({ packs: [] })
+  });
+  check("generic state PUT route is retired", retiredStatePut.status === 404, retiredStatePut.status);
 
   const unkeyedSeedPacks = await request(port, "/api/demo-packs");
   const unkeyedPacks = await request(port, "/api/packs");
@@ -282,7 +293,7 @@ try {
   });
   const clientBStateSeed = stateWithGeneratedPacks(1, "other-row-boundary");
   clientBStateSeed.packs[0].title = clientBTitle;
-  const clientBWrite = await request(port, "/api/state", {
+  const clientBWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -297,14 +308,14 @@ try {
   const readableSyncKeyedState = await request(port, "/api/state", {
     headers: { "x-projects-demo-client": "sync-pass-word-pass" }
   });
-  const unkeyedNonJsonStateWrite = await request(port, "/api/state", {
+  const unkeyedNonJsonStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "text/plain"
     },
     body: JSON.stringify(stateWithGeneratedPacks(1, "unkeyed-non-json-boundary"))
   });
-  const nonJsonStateWrite = await request(port, "/api/state", {
+  const nonJsonStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "text/plain",
@@ -312,7 +323,7 @@ try {
     },
     body: JSON.stringify(stateWithGeneratedPacks(1, "non-json-boundary"))
   });
-  const oversizedBodyStateWrite = await request(port, "/api/state", {
+  const oversizedBodyStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -321,7 +332,7 @@ try {
     body: JSON.stringify(stateWithOversizedBody("oversized-body-boundary"))
   });
   const declaredOversizedBodyStateWrite = await rawRequest(port, [
-    "PUT /api/state HTTP/1.1",
+    "PUT /api/state/browser HTTP/1.1",
     `Host: 127.0.0.1:${port}`,
     "Content-Type: application/json",
     `Content-Length: ${1024 * 1024 + 1}`,
@@ -331,15 +342,15 @@ try {
     ""
   ].join("\r\n"));
   const rateLimitedStateWriteStatuses = await Promise.all(
-    Array.from({ length: RATE_LIMIT_STATE_WRITE_REQUESTS + 1 }, () => request(port, "/api/state", {
-      method: "PUT",
+    Array.from({ length: RATE_LIMIT_STATE_WRITE_REQUESTS + 1 }, () => request(port, "/api/state/browser", {
+    method: "PUT",
       headers: {
         "content-type": "text/plain",
         "x-projects-demo-client": "demo-00000000-0000-4000-8000-000000000004"
       }
     }).then((response) => response.status))
   );
-  const nullStateWrite = await request(port, "/api/state", {
+  const nullStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -347,7 +358,7 @@ try {
     },
     body: JSON.stringify(null)
   });
-  const arrayStateWrite = await request(port, "/api/state", {
+  const arrayStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -355,7 +366,7 @@ try {
     },
     body: JSON.stringify([])
   });
-  const missingPacksStateWrite = await request(port, "/api/state", {
+  const missingPacksStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -363,7 +374,7 @@ try {
     },
     body: JSON.stringify({ status: "Missing packs boundary check." })
   });
-  const emptyPacksStateWrite = await request(port, "/api/state", {
+  const emptyPacksStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -371,7 +382,7 @@ try {
     },
     body: JSON.stringify({ packs: [] })
   });
-  const oversizedStateWrite = await request(port, "/api/state", {
+  const oversizedStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -379,7 +390,7 @@ try {
     },
     body: JSON.stringify(stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "oversized-boundary"))
   });
-  const duplicateIdStateWrite = await request(port, "/api/state", {
+  const duplicateIdStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -387,7 +398,7 @@ try {
     },
     body: JSON.stringify(stateWithDuplicatePackIds("duplicate-id-boundary"))
   });
-  const invalidPackStateWrite = await request(port, "/api/state", {
+  const invalidPackStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -395,7 +406,7 @@ try {
     },
     body: JSON.stringify(stateWithMissingPackTitle("missing-title-boundary"))
   });
-  const invalidStatusStateWrite = await request(port, "/api/state", {
+  const invalidStatusStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -403,7 +414,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidPackStatus("invalid-status-boundary"))
   });
-  const invalidSelectedIdStateWrite = await request(port, "/api/state", {
+  const invalidSelectedIdStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -411,7 +422,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidSelectedId("invalid-selected-boundary"))
   });
-  const invalidSelectedIdTypeStateWrite = await request(port, "/api/state", {
+  const invalidSelectedIdTypeStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -419,7 +430,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidSelectedIdType("invalid-selected-type-boundary"))
   });
-  const invalidStringListStateWrite = await request(port, "/api/state", {
+  const invalidStringListStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -427,7 +438,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStringList("invalid-string-list-boundary"))
   });
-  const invalidTextFieldStateWrite = await request(port, "/api/state", {
+  const invalidTextFieldStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -435,7 +446,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidTextField("invalid-text-field-boundary"))
   });
-  const overlongTextFieldStateWrite = await request(port, "/api/state", {
+  const overlongTextFieldStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -443,7 +454,7 @@ try {
     },
     body: JSON.stringify(stateWithOverlongTextField("overlong-text-field-boundary"))
   });
-  const invalidProfileStateWrite = await request(port, "/api/state", {
+  const invalidProfileStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -451,7 +462,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateMetadata("invalid-profile-boundary", "copyProfile", "private"))
   });
-  const invalidProfileTypeStateWrite = await request(port, "/api/state", {
+  const invalidProfileTypeStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -459,7 +470,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateMetadata("invalid-profile-type-boundary", "copyProfile", ["general"]))
   });
-  const invalidScenarioStateWrite = await request(port, "/api/state", {
+  const invalidScenarioStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -467,7 +478,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateMetadata("invalid-scenario-boundary", "scenarioId", "private-roadmap"))
   });
-  const invalidFilterStateWrite = await request(port, "/api/state", {
+  const invalidFilterStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -475,7 +486,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateMetadata("invalid-filter-boundary", "filter", "private-workflow"))
   });
-  const blankProfileStateWrite = await request(port, "/api/state", {
+  const blankProfileStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -483,7 +494,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateMetadata("blank-profile-boundary", "copyProfile", ""))
   });
-  const invalidStateTextFieldWrite = await request(port, "/api/state", {
+  const invalidStateTextFieldWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -491,7 +502,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateTextField("invalid-state-text-boundary", "query", { text: "not text" }))
   });
-  const overlongStateTextFieldWrite = await request(port, "/api/state", {
+  const overlongStateTextFieldWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -499,7 +510,7 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateTextField("overlong-state-text-boundary", "query", "x".repeat(201)))
   });
-  const deepReceiptStateWrite = await request(port, "/api/state", {
+  const deepReceiptStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -509,7 +520,7 @@ try {
       actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
     }))
   });
-  const malformedReceiptStateWrite = await request(port, "/api/state", {
+  const malformedReceiptStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -519,7 +530,7 @@ try {
       actionReceipt: ["not", "a", "plain", "object"]
     }))
   });
-  const overlongReceiptTextStateWrite = await request(port, "/api/state", {
+  const overlongReceiptTextStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -529,7 +540,7 @@ try {
       actionReceipt: { summary: "x".repeat(2001) }
     }))
   });
-  const wideReceiptStateWrite = await request(port, "/api/state", {
+  const wideReceiptStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -539,7 +550,7 @@ try {
       actionReceipt: wideActionReceipt(MAX_PLAIN_OBJECT_KEYS + 1)
     }))
   });
-  const limitStateWrite = await request(port, "/api/state", {
+  const limitStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -938,7 +949,7 @@ function getHeader(headers, name) {
 
 function writeRoutesValidateKeyBeforeBody(source) {
   const anchors = [
-    "if (method === \"PUT\" && pathname === \"/api/state\")",
+    "if (method === \"PUT\" && pathname === \"/api/state/browser\")",
     "if (method === \"POST\" && pathname === \"/api/state/restore\")",
     "if (method === \"POST\" && pathname === \"/api/state/sync\")",
     "if (method === \"POST\" && pathname === \"/api/packs\")",
@@ -1015,6 +1026,22 @@ function frontendSyncCopyUsesBackendEndpoint(source) {
     detail: missing.length === 0
       ? "new sync-code copy posts to /api/state/sync instead of generic PUT /api/state"
       : missing.join(", ")
+  };
+}
+
+function frontendBrowserRowSaveUsesNamedEndpoint(source) {
+  const body = functionBody(source, "persistBackendStateSnapshot");
+  if (!body) {
+    return { ok: false, detail: "persistBackendStateSnapshot:missing" };
+  }
+
+  const ok = body.includes('sendBackendStateSnapshot("/api/state/browser", "PUT", snapshot, "Save")')
+    && !body.includes('sendBackendStateSnapshot("/api/state", "PUT"');
+  return {
+    ok,
+    detail: ok
+      ? "browser-row snapshots save through /api/state/browser"
+      : "browser-row save still uses generic /api/state PUT"
   };
 }
 

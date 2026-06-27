@@ -35,6 +35,7 @@ const protectedReadableTokens = [
   "prepareBackendWorkflowRequest",
   "backend-command-pending",
   "x-projects-demo-client",
+  "/api/state/browser",
   "/api/state"
 ];
 

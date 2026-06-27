@@ -18,6 +18,7 @@ const protectedStringValues = Object.freeze([
   "/api/demo-packs",
   "/api/state/restore",
   "/api/state/sync",
+  "/api/state/browser",
   "/api/state/erase",
   "/api/state",
   "Backend API",

@@ -55,7 +55,7 @@ try {
     headers: clientAHeaders
   });
   const snapshotState = stateWithCheckPack(initialState.body, "recovery-snapshot-check", snapshotTitle);
-  const savedSnapshot = await jsonRequest(port, "/api/state", {
+  const savedSnapshot = await jsonRequest(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -72,7 +72,7 @@ try {
   check("client A can export saved snapshot", stateHasPackTitle(exportedSnapshot.body, snapshotTitle), exportedSnapshot.status);
 
   const overwrittenState = stateWithCheckPack(exportedSnapshot.body, "recovery-snapshot-check", overwriteTitle);
-  const savedOverwrite = await jsonRequest(port, "/api/state", {
+  const savedOverwrite = await jsonRequest(port, "/api/state/browser", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
@@ -240,7 +240,7 @@ async function checkDefaultStatePath() {
     const initialState = await jsonRequest(defaultPort, "/api/state", {
       headers: { "x-projects-demo-client": defaultClient }
     });
-    const savedState = await jsonRequest(defaultPort, "/api/state", {
+    const savedState = await jsonRequest(defaultPort, "/api/state/browser", {
       method: "PUT",
       headers: {
         "content-type": "application/json",

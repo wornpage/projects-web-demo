@@ -158,7 +158,7 @@ async function routeRequest(request, response, url) {
     return;
   }
 
-  if (method === "PUT" && pathname === "/api/state") {
+  if (method === "PUT" && pathname === "/api/state/browser") {
     const stateKey = stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
     sendJson(request, response, 200, await writeState(payload, stateKey));

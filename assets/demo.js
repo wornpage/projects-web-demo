@@ -716,7 +716,7 @@ function flushBackendStateSave() {
 }
 
 async function persistBackendStateSnapshot(snapshot) {
-  await sendBackendStateSnapshot("/api/state", "PUT", snapshot, "Save");
+  await sendBackendStateSnapshot("/api/state/browser", "PUT", snapshot, "Save");
 }
 
 async function restoreBackendStateSnapshot(snapshot) {

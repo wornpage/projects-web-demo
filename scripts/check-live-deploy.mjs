@@ -81,6 +81,10 @@ try {
     ...apiHeaders,
     "content-type": "application/json"
   }, "POST");
+  const retiredStatePutStatus = await writeStatus("/api/state", { packs: [] }, {
+    ...apiHeaders,
+    "content-type": "application/json"
+  }, "PUT");
   const unkeyedRestoreStatus = await writeStatus("/api/state/restore", stateWithGeneratedPacks(1, "live-unkeyed-restore"), {
     "content-type": "text/plain"
   }, "POST");
@@ -99,78 +103,78 @@ try {
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
   const recoveryOverwriteTitle = `Live recovery overwritten ${isolationStamp}`;
   const pathStatusTitle = `Live path status check ${isolationStamp}`;
-  const unkeyedNonJsonStateWriteStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-unkeyed-non-json-state"), {
+  const unkeyedNonJsonStateWriteStatus = await writeStatus("/api/state/browser", stateWithGeneratedPacks(1, "live-unkeyed-non-json-state"), {
     "content-type": "text/plain"
   }, "PUT");
-  const nonJsonStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-non-json-state"), {
+  const nonJsonStateStatus = await writeStatus("/api/state/browser", stateWithGeneratedPacks(1, "live-non-json-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "text/plain"
   }, "PUT");
-  const oversizedBodyStateStatus = await writeStatus("/api/state", stateWithOversizedBody("live-oversized-body-state"), {
+  const oversizedBodyStateStatus = await writeStatus("/api/state/browser", stateWithOversizedBody("live-oversized-body-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const oversizedStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "live-oversized-state"), {
+  const oversizedStateStatus = await writeStatus("/api/state/browser", stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "live-oversized-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const duplicateIdStateStatus = await writeStatus("/api/state", stateWithDuplicatePackIds("live-duplicate-id-state"), {
+  const duplicateIdStateStatus = await writeStatus("/api/state/browser", stateWithDuplicatePackIds("live-duplicate-id-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidPackStateStatus = await writeStatus("/api/state", stateWithMissingPackTitle("live-missing-title-state"), {
+  const invalidPackStateStatus = await writeStatus("/api/state/browser", stateWithMissingPackTitle("live-missing-title-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidWorkStatusStateStatus = await writeStatus("/api/state", stateWithInvalidPackStatus("live-invalid-status-state"), {
+  const invalidWorkStatusStateStatus = await writeStatus("/api/state/browser", stateWithInvalidPackStatus("live-invalid-status-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidSelectedIdStateStatus = await writeStatus("/api/state", stateWithInvalidSelectedId("live-invalid-selected-state"), {
+  const invalidSelectedIdStateStatus = await writeStatus("/api/state/browser", stateWithInvalidSelectedId("live-invalid-selected-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidSelectedIdTypeStateStatus = await writeStatus("/api/state", stateWithInvalidSelectedIdType("live-invalid-selected-type-state"), {
+  const invalidSelectedIdTypeStateStatus = await writeStatus("/api/state/browser", stateWithInvalidSelectedIdType("live-invalid-selected-type-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidStringListStateStatus = await writeStatus("/api/state", stateWithInvalidStringList("live-invalid-string-list-state"), {
+  const invalidStringListStateStatus = await writeStatus("/api/state/browser", stateWithInvalidStringList("live-invalid-string-list-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidTextFieldStateStatus = await writeStatus("/api/state", stateWithInvalidTextField("live-invalid-text-field-state"), {
+  const invalidTextFieldStateStatus = await writeStatus("/api/state/browser", stateWithInvalidTextField("live-invalid-text-field-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const overlongTextFieldStateStatus = await writeStatus("/api/state", stateWithOverlongTextField("live-overlong-text-field-state"), {
+  const overlongTextFieldStateStatus = await writeStatus("/api/state/browser", stateWithOverlongTextField("live-overlong-text-field-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidProfileStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-profile-state", "copyProfile", "private"), {
+  const invalidProfileStateStatus = await writeStatus("/api/state/browser", stateWithInvalidStateMetadata("live-invalid-profile-state", "copyProfile", "private"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidProfileTypeStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-profile-type-state", "copyProfile", ["general"]), {
+  const invalidProfileTypeStateStatus = await writeStatus("/api/state/browser", stateWithInvalidStateMetadata("live-invalid-profile-type-state", "copyProfile", ["general"]), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidScenarioStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-scenario-state", "scenarioId", "private-roadmap"), {
+  const invalidScenarioStateStatus = await writeStatus("/api/state/browser", stateWithInvalidStateMetadata("live-invalid-scenario-state", "scenarioId", "private-roadmap"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidFilterStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-filter-state", "filter", "private-workflow"), {
+  const invalidFilterStateStatus = await writeStatus("/api/state/browser", stateWithInvalidStateMetadata("live-invalid-filter-state", "filter", "private-workflow"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const blankProfileStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-blank-profile-state", "copyProfile", ""), {
+  const blankProfileStateStatus = await writeStatus("/api/state/browser", stateWithInvalidStateMetadata("live-blank-profile-state", "copyProfile", ""), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const invalidStateTextFieldStatus = await writeStatus("/api/state", stateWithInvalidStateTextField("live-invalid-state-text", "query", { text: "not text" }), {
+  const invalidStateTextFieldStatus = await writeStatus("/api/state/browser", stateWithInvalidStateTextField("live-invalid-state-text", "query", { text: "not text" }), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const overlongStateTextFieldStatus = await writeStatus("/api/state", stateWithInvalidStateTextField("live-overlong-state-text", "query", "x".repeat(201)), {
+  const overlongStateTextFieldStatus = await writeStatus("/api/state/browser", stateWithInvalidStateTextField("live-overlong-state-text", "query", "x".repeat(201)), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
@@ -186,7 +190,7 @@ try {
       "content-type": "text/plain"
     }, "POST")
   ]));
-  await writeJson("/api/state", stateWithCheckPack(liveState, "live-path-status-check", pathStatusTitle), {
+  await writeJson("/api/state/browser", stateWithCheckPack(liveState, "live-path-status-check", pathStatusTitle), {
     "x-projects-demo-client": pathStatusKey
   });
   const invalidWorkPathStatus = await writeStatus("/api/packs/source-folder-audit/path", {
@@ -230,52 +234,52 @@ try {
     "x-projects-demo-client": pathStatusKey,
     "content-type": "application/json"
   }, "POST");
-  const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
+  const deepReceiptStateStatus = await writeStatus("/api/state/browser", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
     actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
   }), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const malformedReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-malformed-receipt-state", {
+  const malformedReceiptStateStatus = await writeStatus("/api/state/browser", stateWithGeneratedPacks(1, "live-malformed-receipt-state", {
     actionReceipt: ["not", "a", "plain", "object"]
   }), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
-  const overlongReceiptTextStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-overlong-receipt-text-state", {
+  const overlongReceiptTextStateStatus = await writeStatus("/api/state/browser", stateWithGeneratedPacks(1, "live-overlong-receipt-text-state", {
     actionReceipt: { summary: "x".repeat(2001) }
   }), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
   const limitStateAfterRejectedWrites = await readJson("/api/state", { "x-projects-demo-client": limitKey });
-  await writeJson("/api/state", stateWithCheckPack(liveState, "live-isolation-check", clientATitle), {
+  await writeJson("/api/state/browser", stateWithCheckPack(liveState, "live-isolation-check", clientATitle), {
     "x-projects-demo-client": clientAKey
   });
-  const nullStateStatus = await writeStatus("/api/state", null, {
+  const nullStateStatus = await writeStatus("/api/state/browser", null, {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
   }, "PUT");
-  const arrayStateStatus = await writeStatus("/api/state", [], {
+  const arrayStateStatus = await writeStatus("/api/state/browser", [], {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
   }, "PUT");
-  const missingPacksStateStatus = await writeStatus("/api/state", { status: "Missing packs live check." }, {
+  const missingPacksStateStatus = await writeStatus("/api/state/browser", { status: "Missing packs live check." }, {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
   }, "PUT");
-  const emptyPacksStateStatus = await writeStatus("/api/state", { packs: [] }, {
+  const emptyPacksStateStatus = await writeStatus("/api/state/browser", { packs: [] }, {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
   }, "PUT");
   await writeJson("/api/state/sync", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
     "x-projects-demo-client": sharedKey
   }, "POST");
-  await writeJson("/api/state", stateWithCheckPack(liveState, "live-recovery-check", recoverySnapshotTitle), {
+  await writeJson("/api/state/browser", stateWithCheckPack(liveState, "live-recovery-check", recoverySnapshotTitle), {
     "x-projects-demo-client": recoveryKey
   });
   const exportedRecoveryState = await readJson("/api/state", { "x-projects-demo-client": recoveryKey });
-  await writeJson("/api/state", stateWithCheckPack(exportedRecoveryState, "live-recovery-check", recoveryOverwriteTitle), {
+  await writeJson("/api/state/browser", stateWithCheckPack(exportedRecoveryState, "live-recovery-check", recoveryOverwriteTitle), {
     "x-projects-demo-client": recoveryKey
   });
   await writeJson("/api/state/restore", exportedRecoveryState, { "x-projects-demo-client": recoveryKey }, "POST");
@@ -411,6 +415,7 @@ try {
   check("hosted command preview rejects missing client key", unkeyedCommandPreviewStatus === 400, unkeyedCommandPreviewStatus);
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
+  check("generic state PUT route is retired", retiredStatePutStatus === 404, retiredStatePutStatus);
   check("hosted recovery restore rejects missing client key before body parsing", unkeyedRestoreStatus === 400, unkeyedRestoreStatus);
   check("hosted sync copy rejects missing client key before body parsing", unkeyedSyncCopyStatus === 400, unkeyedSyncCopyStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);

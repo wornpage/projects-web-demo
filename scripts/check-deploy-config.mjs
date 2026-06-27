@@ -243,7 +243,7 @@ function declaredBodyLimitBeforeStream(source) {
 function apiRateLimitConfigured(source) {
   const stateWriteKey = source.indexOf("function stateWriteKeyForRequest(request)");
   const enforceWrite = source.indexOf("enforceStateWriteRateLimit(request, stateKey)", stateWriteKey);
-  const writeRoute = source.indexOf('if (method === "PUT" && pathname === "/api/state")');
+  const writeRoute = source.indexOf('if (method === "PUT" && pathname === "/api/state/browser")');
   const routeWriteKey = source.indexOf("stateWriteKeyForRequest(request)", writeRoute);
   const bodyRead = source.indexOf("readJsonBody(request)", writeRoute);
   const required = [

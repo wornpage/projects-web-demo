@@ -43,6 +43,7 @@ const leakedTokens = [
   "backend-command-pending",
   "/api/packs",
   "/api/demo-packs",
+  "/api/state/browser",
   "/api/state",
   "projects-static-demo-api-client-v1",
   "x-projects-demo-client"

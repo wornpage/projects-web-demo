@@ -49,6 +49,8 @@ Observed responses:
 | `/api/state` with generated client key | `200` | Demo state loads for that client key |
 | `/api/state` with weak manual client key | `400` | Short/manual row selectors are rejected |
 | `/api/state` with readable sync-code client key | `400` | Sync codes must be hashed before they become row selectors |
+| `PUT /api/state` with generated client key | `404` | Generic full-state writes are retired |
+| `/api/state/browser` without client key | `400` | Browser-row snapshot writes have no unkeyed fallback row |
 | `/api/state/restore` without client key | `400` | Backend recovery restore has no unkeyed fallback row |
 | `/api/state/sync` without client key | `400` | Backend sync-copy has no unkeyed fallback row |
 | `/api/state/erase` without client key | `400` | Backend erase has no unkeyed fallback row |
@@ -205,6 +207,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Server-owned workflow calls pre-send browser full-state snapshots | Fixed | Pack create, next, path, memory, and action endpoints cancel pending generic saves and call their specific API without first writing `PUT /api/state` |
 | Hosted recovery restore uses generic browser save path | Fixed | Recovery restore posts to `POST /api/state/restore` in hosted app mode and rejects missing browser keys before body parsing |
 | Hosted sync-code copy uses generic browser save path | Fixed | New sync-code copies post to `POST /api/state/sync` in hosted app mode and reject missing browser keys before body parsing |
+| Hosted browser-row persistence uses generic state write path | Fixed | Browser-row snapshots now save through `PUT /api/state/browser`; `PUT /api/state` is retired |
 | Server-owned work-path writes accept unsupported workflow status | Fixed | `/api/packs/{id}/path` rejects present blank or unsupported status values before storage, and local/live gates prove it |
 | Backend endpoint responses trigger immediate generic state re-saves | Fixed | Backend-loaded state marks the next render as save-suppressed, so workflow and sync loads are not immediately followed by a generic `PUT /api/state` |
 | Live verifier can miss stale hosted seed data | Fixed | The live gate compares `GET /api/demo-packs` with checkout `data/demo-packs.json` instead of only checking for a non-empty response |
@@ -222,11 +225,11 @@ This table is part of the ship gate. A risk row must be a final state:
 | Local file-backed state defaults inside the repo | Fixed | The no-env local default writes under a user data directory; Docker and tests still use explicit `PROJECTS_STATE_FILE` values |
 | Hosted Postgres stores raw browser row keys | Fixed | Hosted reads and writes use only server-side `v2:` SHA-256 state keys; the raw-key read fallback is retired |
 | Unkeyed writes can consume body parsing before ownership is checked | Fixed | Server-owned state and workflow write routes validate the browser key before reading JSON, and local/live gates prove missing-key writes return `400` before content-type validation |
-| Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
+| Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state/browser` and `POST /api/packs` reject rows above 50 work items |
 | Anonymous API callers can repeatedly consume backend write work | Fixed | The backend keeps per-process source and state-key rate limits; local boundary/source-order gates prove repeated keyed state writes on one app process eventually return `429` before content-type parsing. Hosted live verification does not require observing `429` because Outplane can route requests across processes |
-| Malformed JSON snapshots can wipe a keyed state row | Fixed | `PUT /api/state` requires a JSON object snapshot with at least one item in `packs`; scalar, array, empty-`packs`, and missing-`packs` payloads return `400` and leave the keyed row unchanged |
-| Full-state writes can store ambiguous or malformed work identities | Fixed | `PUT /api/state` rejects invalid work items, invalid work statuses, duplicate work ids, selected work ids that do not reference an existing item, selected work ids with non-text shapes, malformed or overlong work text fields, and malformed work source/memory/activity lists before storage |
-| Full-state writes can store unsupported UI state | Fixed | `PUT /api/state` rejects unsupported or non-text saved profile, scenario, and filter values, plus malformed or overlong top-level status/query text, before storage |
+| Malformed JSON snapshots can wipe a keyed state row | Fixed | `PUT /api/state/browser` requires a JSON object snapshot with at least one item in `packs`; scalar, array, empty-`packs`, and missing-`packs` payloads return `400` and leave the keyed row unchanged |
+| Full-state writes can store ambiguous or malformed work identities | Fixed | `PUT /api/state/browser` rejects invalid work items, invalid work statuses, duplicate work ids, selected work ids that do not reference an existing item, selected work ids with non-text shapes, malformed or overlong work text fields, and malformed work source/memory/activity lists before storage |
+| Full-state writes can store unsupported UI state | Fixed | `PUT /api/state/browser` rejects unsupported or non-text saved profile, scenario, and filter values, plus malformed or overlong top-level status/query text, before storage |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Oversized JSON bodies can consume backend memory | Fixed | Body routes reject declared oversized JSON before reading the request stream, and the local boundary plus deploy-config gates prove that ordering; local streamed oversize reads return `413` once JSON exceeds 1 MiB, while the live gate accepts the hosted platform's `413` or `502` rejection only when the oversized row is not stored |
 | Full-state writes accept malformed or unbounded receipt objects | Fixed | `actionReceipt` values must be plain objects when present, and object depth, key count, array items, key length, and text length are bounded before storage |
@@ -283,20 +286,20 @@ The command preview also returns the selected-work flow hint and primary why
 copy, so hosted app mode uses server-owned command rationale while static mode
 keeps browser-local fallback copy.
 Server-owned workflow calls do not pre-send the browser's full state snapshot
-before those specific endpoints. Generic `PUT /api/state` remains for
-browser-row persistence.
+before those specific endpoints. Hosted browser-row snapshots use the named
+`PUT /api/state/browser` endpoint.
 Hosted recovery restore uses `POST /api/state/restore`; GitHub Pages keeps the
 browser-local restore path.
 Hosted sync-code copy uses `POST /api/state/sync`.
 Backend-loaded state also suppresses the next render's generic save, so a
 specific workflow endpoint response is not immediately re-written through
-`PUT /api/state`.
+`PUT /api/state/browser`.
 The older generic `PATCH /api/packs/{id}` update path is retired so work edits
 must pass through the server-owned workflow endpoints.
-Full demo snapshot persistence through the generic `PUT /api/state` path is
-intentionally limited to browser-row persistence. Hosted recovery restore uses
-`POST /api/state/restore`, and hosted sync-code copy uses `POST
-/api/state/sync`. The older duplicate `POST /api/state` write path is retired.
+Full demo snapshot persistence for browser rows uses `PUT /api/state/browser`.
+Hosted recovery restore uses `POST /api/state/restore`, and hosted sync-code
+copy uses `POST /api/state/sync`. The older duplicate `POST /api/state` and
+generic `PUT /api/state` write paths are retired.
 
 ## Obfuscation Decision
 
