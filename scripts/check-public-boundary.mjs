@@ -127,6 +127,8 @@ try {
   check("hosted status-only failures stay local-only", hostedStatusFailures.ok, hostedStatusFailures.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
+  const backendWaitFeedback = frontendBackendCommandWaitFeedbackStaysLocalOnly(frontendSource);
+  check("hosted command-wait feedback stays local-only", backendWaitFeedback.ok, backendWaitFeedback.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
   check("backend app mode runs next from server command preview", runNextBoundary.ok, runNextBoundary.detail);
   const cardRunNextBoundary = frontendHostedCardRunNextUsesGenericLabel(frontendSource);
@@ -1670,6 +1672,48 @@ function backendCommandPendingMarkers(source) {
   };
 }
 
+function frontendBackendCommandWaitFeedbackStaysLocalOnly(source) {
+  const helperBody = functionBody(source, "setBackendCommandWaitStatus");
+  const contracts = [
+    "runPrimaryAction",
+    "runResolvedPackAction",
+    "runRouteAction"
+  ];
+  const failures = [];
+  if (!helperBody) {
+    failures.push("setBackendCommandWaitStatus:missing");
+  } else {
+    if (!helperBody.includes('routeStatus("Backend command","waiting for server-owned command preview","try again after it loads")')) {
+      failures.push("setBackendCommandWaitStatus:missing wait status");
+    }
+    if (!helperBody.includes("state.suppressNextSave=true")) {
+      failures.push("setBackendCommandWaitStatus:no suppress");
+    }
+  }
+  for (const helperName of contracts) {
+    const body = functionBody(source, helperName);
+    if (!body) {
+      failures.push(`${helperName}:missing`);
+      continue;
+    }
+    const waitIndex = body.indexOf("setBackendCommandWaitStatus();");
+    const renderIndex = body.indexOf("render();", waitIndex);
+    if (waitIndex < 0 || renderIndex < waitIndex) {
+      failures.push(`${helperName}:wait feedback can persist`);
+    }
+    if (body.includes('routeStatus("Backend command", "waiting for server-owned command preview"')) {
+      failures.push(`${helperName}:inline wait status`);
+    }
+  }
+
+  return {
+    ok: failures.length === 0,
+    detail: failures.length === 0
+      ? "server command wait feedback suppresses browser-row persistence before render"
+      : failures.join(", ")
+  };
+}
+
 function frontendRunNextUsesBackendCommandPreview(source) {
   const body = functionBody(source, "runResolvedPackAction");
   if (!body) {
@@ -1680,7 +1724,7 @@ function frontendRunNextUsesBackendCommandPreview(source) {
     "backendPackCommandForSelected(pack) || resolvePrimaryCommandForPack(pack)",
     "if (isBackendCommandPending(resolved))",
     "scheduleBackendPackCommandPreview(pack);",
-    "waiting for server-owned command preview",
+    "setBackendCommandWaitStatus();",
     "return;"
   ];
   const missing = required.filter((needle) => !body.includes(needle));

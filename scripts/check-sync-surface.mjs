@@ -153,7 +153,7 @@ check(
     'id="sync-code-new" class="btn btn-sm" type="button" aria-label="Create sync code">New code</button>',
     'id="sync-code-copy-code" class="btn btn-sm" type="button" aria-label="Copy sync code"',
     'id="sync-code-copy" class="btn btn-sm" type="button" aria-label="Copy sync link"',
-    'id="sync-code-leave" class="btn btn-sm" type="button" aria-label="Leave sync code">Leave code</button>'
+    'id="sync-code-leave" class="btn btn-sm" type="button" aria-label="Stop sync">Stop sync</button>'
   ]),
   "sync button aria-labels and visible labels"
 );

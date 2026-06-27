@@ -2320,7 +2320,7 @@ function commandMemoryHelpText(command, commandMemory) {
     return "No selected work memory context.";
   }
 
-  return `Relevant Memory: none yet. How to fill: use Add memory on selected work or the Memory screen. Button runs next: ${next}.`;
+  return `Relevant Memory: No memory yet. Add memory on selected work or the Memory screen. Button runs next: ${next}.`;
 }
 
 function commandMemoryVisibleText(commandMemory) {
@@ -3412,6 +3412,8 @@ function noSelectedWorkStatus(next = "choose work") {
 
   return `Where: No ${profile().work} selected. Blocker: choose a ${workNoun(1)}. Button runs next: ${next}.`;
 }
+
+function setBackendCommandWaitStatus(){state.status=routeStatus("Backend command","waiting for server-owned command preview","try again after it loads");state.suppressNextSave=true}
 
 function selectedWorkStatus(surface, pack, next = resolvePrimaryCommandForPack(pack).label) {
   return `Where: ${surface} / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next}.`;
@@ -4506,7 +4508,7 @@ function runPrimaryAction(control = el("primary-action")) {
     if (selected) {
       scheduleBackendPackCommandPreview(selected);
     }
-    state.status = routeStatus("Backend command", "waiting for server-owned command preview", "try again after it loads");
+    setBackendCommandWaitStatus();
     render();
     return;
   }
@@ -4553,7 +4555,7 @@ function runResolvedPackAction(pack) {
   const resolved = backendPackCommandForSelected(pack) || resolvePrimaryCommandForPack(pack);
   if (isBackendCommandPending(resolved)) {
     scheduleBackendPackCommandPreview(pack);
-    state.status = routeStatus("Backend command", "waiting for server-owned command preview", "try again after it loads");
+    setBackendCommandWaitStatus();
     render();
     return;
   }
@@ -4647,7 +4649,7 @@ function runRouteAction(action, targetPackId) {
     if (selected) {
       scheduleBackendPackCommandPreview(selected);
     }
-    state.status = routeStatus("Backend command", "waiting for server-owned command preview", "try again after it loads");
+    setBackendCommandWaitStatus();
     render();
     return true;
   }
@@ -6029,7 +6031,7 @@ function relevantMemoryStrip(pack) {
     : "No memory yet";
   const help = latest
     ? `Relevant Memory: ${sentenceValue(latest)}. ${memoryStripNextLine(pack)}.`
-    : `Relevant Memory: none yet. How to fill: add a memory note from the Memory screen. ${memoryStripNextLine(pack)}.`;
+    : `Relevant Memory: No memory yet. Add a memory note from the Memory screen. ${memoryStripNextLine(pack)}.`;
   const actionLabel = memoryStripActionLabel(pack, latest);
   const actionHelp = memoryStripActionHelp(pack, latest);
 
@@ -6038,7 +6040,7 @@ function relevantMemoryStrip(pack) {
       <span>Relevant Memory</span>
       <strong>${escapeHtml(visible)}</strong>
       <small class="demo-memory-next">${escapeHtml(memoryStripNextLine(pack))}</small>
-      ${latest ? "" : `<small>How to fill: add a memory note from here or from the Memory screen.</small>`}
+      ${latest ? "" : `<small>Add a memory note here or from the Memory screen.</small>`}
     </div>
     <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack?.id || "")}"${controlLabelAttributes(actionHelp)}>${escapeHtml(actionLabel)}</button>
   </div>`;
@@ -6056,7 +6058,7 @@ function relevantMemoryCardStrip(pack) {
     : "No memory yet";
   const help = latest
     ? `Relevant Memory: ${sentenceValue(latest)}. ${memoryStripNextLine(pack)}.`
-    : `Relevant Memory: none yet. Add a memory note from the selected work path. ${memoryStripNextLine(pack)}.`;
+    : `Relevant Memory: No memory yet. Add a memory note from the selected work path. ${memoryStripNextLine(pack)}.`;
   const actionLabel = memoryStripActionLabel(pack, latest);
   const actionHelp = memoryStripActionHelp(pack, latest);
 
@@ -6065,7 +6067,7 @@ function relevantMemoryCardStrip(pack) {
       <span>Relevant Memory</span>
       <strong>${escapeHtml(visible)}</strong>
       <small class="demo-memory-next">${escapeHtml(memoryStripNextLine(pack))}</small>
-      ${latest ? "" : `<small>How to fill: open Memory or selected work to add recall.</small>`}
+      ${latest ? "" : `<small>Open Memory or selected work to add recall.</small>`}
     </div>
     <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(actionHelp)}>${escapeHtml(actionLabel)}</button>
   </div>`;

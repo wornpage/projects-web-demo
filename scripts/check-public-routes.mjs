@@ -249,7 +249,7 @@ function memoryNoteInputContractOk() {
 function sidebarNoteContractOk() {
   return includesAll(html, [
     'class="demo-sidebar-note card" role="note" aria-label="Demo idea and starting point"',
-    "<strong>One idea.</strong>",
+    "<strong>Review first.</strong>",
     "Start with Review. Pick a work item, see its blocker, run the next action."
   ]);
 }
@@ -272,7 +272,7 @@ function metadataPreviewContractOk() {
 
 function demoNoticeContractOk() {
   return html.includes('<section id="demo-notice" class="demo-notice card" role="note" aria-label="Starting point and demo data notice">')
-    && html.includes("Start with Review; everything here is sample data. No login or private project data.");
+    && html.includes("Start with Review. Everything here is sample data. No login or private project data.");
 }
 
 function themeToggleContractOk() {
@@ -295,7 +295,8 @@ function emptyMemoryPlaceholderContractOk() {
     && (source.match(/: "No memory yet";/gu) || []).length === 3
     && !html.includes(">none yet")
     && !source.includes(': "none yet"')
-    && !source.includes(': "none yet - add from Memory"');
+    && !source.includes(': "none yet - add from Memory"')
+    && !source.includes("Relevant Memory: none yet");
 }
 
 function spotlightFactsContractOk() {
