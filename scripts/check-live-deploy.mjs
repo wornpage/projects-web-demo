@@ -81,6 +81,11 @@ try {
   ];
   const readableBackendHelpers = backendHelperNames.filter((name) => script.includes(name));
   const readableInternalStrings = internalFrontendStrings.filter((value) => script.includes(value));
+  const readableApiQueryOverride = [
+    "DEMO_API_QUERY_PARAM",
+    ".get(\"api\")",
+    ".get('api')"
+  ].filter((value) => script.includes(value));
   const publicSourceMapReferences = publicAssetTexts
     .filter((asset) => /sourceMappingURL|sourceURL/iu.test(asset.text))
     .map((asset) => asset.pathname);
@@ -106,6 +111,7 @@ try {
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
   check("internal API strings are encoded", readableInternalStrings.length === 0, readableInternalStrings.join(", ") || "hidden");
+  check("API base cannot be overridden from the query string", readableApiQueryOverride.length === 0, readableApiQueryOverride.join(", ") || "absent");
   check("public assets have no source map references", publicSourceMapReferences.length === 0, publicSourceMapReferences.join(", ") || "absent");
   check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
   check("source map files are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
