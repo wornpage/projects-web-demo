@@ -323,7 +323,7 @@ async function jsonRequest(activePort, pathname, options = {}) {
 }
 
 function request(activePort, pathname, options = {}) {
-  const body = options.body || "";
+  const body = requestBodyFor(pathname, options);
   return new Promise((resolve, reject) => {
     const requestOptions = {
       host: "127.0.0.1",
@@ -358,6 +358,28 @@ function request(activePort, pathname, options = {}) {
     }
     req.end();
   });
+}
+
+function requestBodyFor(pathname, options) {
+  const body = options.body || "";
+  if (pathname !== "/api/state/browser" || (options.method || "GET") !== "PUT") {
+    return body;
+  }
+  if (!String(options.headers?.["content-type"] || "").includes("application/json")) {
+    return body;
+  }
+  try {
+    const payload = JSON.parse(body);
+    if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.prototype.hasOwnProperty.call(payload, "kind")) {
+      return body;
+    }
+    return JSON.stringify({
+      kind: "projects-browser-state-v1",
+      state: payload
+    });
+  } catch {
+    return body;
+  }
 }
 
 function freePort() {

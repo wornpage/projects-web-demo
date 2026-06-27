@@ -366,6 +366,17 @@ try {
     },
     body: JSON.stringify([])
   });
+  const unsupportedBrowserStateKindWrite = await request(port, "/api/state/browser", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({
+      kind: "projects-state-v0",
+      state: stateWithGeneratedPacks(1, "unsupported-browser-state-kind-boundary")
+    })
+  });
   const missingPacksStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
@@ -660,6 +671,7 @@ try {
   check("keyed state write rate limit rejects before content-type parsing", rateLimitStatusesOk(rateLimitedStateWriteStatuses), statusCounts(rateLimitedStateWriteStatuses));
   check("null state snapshots are rejected", nullStateWrite.status === 400, nullStateWrite.status);
   check("array state snapshots are rejected", arrayStateWrite.status === 400, arrayStateWrite.status);
+  check("unsupported browser state envelope kinds are rejected", unsupportedBrowserStateKindWrite.status === 400, unsupportedBrowserStateKindWrite.status);
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("empty state snapshots are rejected", emptyPacksStateWrite.status === 400, emptyPacksStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
@@ -1031,17 +1043,22 @@ function frontendSyncCopyUsesBackendEndpoint(source) {
 
 function frontendBrowserRowSaveUsesNamedEndpoint(source) {
   const body = functionBody(source, "persistBackendStateSnapshot");
-  if (!body) {
-    return { ok: false, detail: "persistBackendStateSnapshot:missing" };
+  const snapshotBody = functionBody(source, "browserRowStateSnapshot");
+  if (!body || !snapshotBody) {
+    return { ok: false, detail: "persistBackendStateSnapshot/browserRowStateSnapshot:missing" };
   }
 
   const ok = body.includes('sendBackendStateSnapshot("/api/state/browser", "PUT", snapshot, "Save")')
-    && !body.includes('sendBackendStateSnapshot("/api/state", "PUT"');
+    && !body.includes('sendBackendStateSnapshot("/api/state", "PUT"')
+    && snapshotBody.includes('kind: "projects-browser-state-v1"')
+    && snapshotBody.includes("state: {")
+    && !snapshotBody.includes("actionReceipt")
+    && !snapshotBody.includes("query");
   return {
     ok,
     detail: ok
-      ? "browser-row snapshots save through /api/state/browser"
-      : "browser-row save still uses generic /api/state PUT"
+      ? "browser-row snapshots save through /api/state/browser without transient receipt/query"
+      : "browser-row save still uses the generic or full recovery snapshot"
   };
 }
 
@@ -1401,7 +1418,7 @@ async function jsonRequest(activePort, pathname, options = {}) {
 }
 
 function request(activePort, pathname, options = {}) {
-  const body = options.body || "";
+  const body = requestBodyFor(pathname, options);
   return new Promise((resolve, reject) => {
     const requestOptions = {
       host: "127.0.0.1",
@@ -1436,6 +1453,32 @@ function request(activePort, pathname, options = {}) {
     }
     req.end();
   });
+}
+
+function requestBodyFor(pathname, options) {
+  const body = options.body || "";
+  if (pathname !== "/api/state/browser" || (options.method || "GET") !== "PUT") {
+    return body;
+  }
+  if (!String(options.headers?.["content-type"] || "").includes("application/json")) {
+    return body;
+  }
+  try {
+    const payload = JSON.parse(body);
+    if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.prototype.hasOwnProperty.call(payload, "kind")) {
+      return body;
+    }
+    return JSON.stringify(browserWritePayload(payload));
+  } catch {
+    return body;
+  }
+}
+
+function browserWritePayload(state) {
+  return {
+    kind: "projects-browser-state-v1",
+    state
+  };
 }
 
 function rawRequest(activePort, message) {

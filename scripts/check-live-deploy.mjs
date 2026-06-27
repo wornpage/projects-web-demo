@@ -264,6 +264,13 @@ try {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
   }, "PUT");
+  const unsupportedBrowserStateKindStatus = await writeStatus("/api/state/browser", {
+    kind: "projects-state-v0",
+    state: stateWithGeneratedPacks(1, "live-unsupported-browser-state-kind")
+  }, {
+    "x-projects-demo-client": clientAKey,
+    "content-type": "application/json"
+  }, "PUT");
   const missingPacksStateStatus = await writeStatus("/api/state/browser", { status: "Missing packs live check." }, {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
@@ -431,6 +438,7 @@ try {
   );
   check("hosted state rejects null snapshots", nullStateStatus === 400, nullStateStatus);
   check("hosted state rejects array snapshots", arrayStateStatus === 400, arrayStateStatus);
+  check("hosted state rejects unsupported browser state envelope kinds", unsupportedBrowserStateKindStatus === 400, unsupportedBrowserStateKindStatus);
   check("hosted state rejects snapshots without packs", missingPacksStateStatus === 400, missingPacksStateStatus);
   check("hosted state rejects empty snapshots", emptyPacksStateStatus === 400, emptyPacksStateStatus);
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
@@ -530,7 +538,7 @@ async function writeJson(pathname, payload, headers = {}, method = "PUT") {
       "content-type": "application/json",
       ...headers
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(writePayloadFor(pathname, payload, method))
   });
   if (!response.ok) {
     throw new Error(`${pathname} returned ${response.status}`);
@@ -554,9 +562,22 @@ async function writeStatus(pathname, payload, headers = {}, method = "PUT") {
       "content-type": "application/json",
       ...headers
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(writePayloadFor(pathname, payload, method))
   });
   return response.status;
+}
+
+function writePayloadFor(pathname, payload, method) {
+  if (pathname !== "/api/state/browser" || method !== "PUT") {
+    return payload;
+  }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload) || Object.prototype.hasOwnProperty.call(payload, "kind")) {
+    return payload;
+  }
+  return {
+    kind: "projects-browser-state-v1",
+    state: payload
+  };
 }
 
 function stateWithCheckPack(state, id, title) {

@@ -161,7 +161,7 @@ async function routeRequest(request, response, url) {
   if (method === "PUT" && pathname === "/api/state/browser") {
     const stateKey = stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    sendJson(request, response, 200, await writeState(payload, stateKey));
+    sendJson(request, response, 200, await writeState(browserStatePayload(payload), stateKey));
     return;
   }
 
@@ -1536,6 +1536,19 @@ function validateStatePayload(payload) {
   const packIds = validateStatePacks(payload.packs);
   validateSelectedPackId(payload.selectedId, packIds);
   validateActionReceipt(payload);
+}
+
+function browserStatePayload(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw httpError(400, "Browser state write must be a JSON object.");
+  }
+  if (payload.kind !== "projects-browser-state-v1") {
+    throw httpError(400, "Browser state write kind is not supported.");
+  }
+  if (!payload.state || typeof payload.state !== "object" || Array.isArray(payload.state)) {
+    throw httpError(400, "Browser state write must include a state object.");
+  }
+  return payload.state;
 }
 
 function validateStateMetadata(payload) {

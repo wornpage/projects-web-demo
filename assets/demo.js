@@ -437,7 +437,9 @@ function saveState() {
 
   const snapshot = demoStateSnapshot();
   if (DEMO_API_BASE_URL) {
-    scheduleBackendStateSave(snapshot);
+    delete snapshot.actionReceipt;
+    delete snapshot.query;
+    scheduleBackendStateSave({ kind: "projects-browser-state-v1", state: snapshot });
     return;
   }
 
