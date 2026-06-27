@@ -78,6 +78,11 @@ const steps = [
     args: ["scripts/check-deploy-config.mjs"]
   },
   {
+    label: "North Star audit",
+    command: process.execPath,
+    args: ["scripts/check-north-star-audit.mjs"]
+  },
+  {
     label: "diff whitespace",
     command: "git",
     args: ["diff", "--check"]

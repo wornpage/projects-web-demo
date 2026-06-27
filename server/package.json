@@ -17,6 +17,7 @@
     "recovery:check": "node ../scripts/check-state-recovery.mjs",
     "docker:check": "node ../scripts/check-docker-boundary.mjs",
     "deploy:check": "node ../scripts/check-deploy-config.mjs",
+    "northstar:check": "node ../scripts/check-north-star-audit.mjs",
     "boundary:check": "node ../scripts/check-public-assets.mjs && node ../scripts/check-public-boundary.mjs",
     "ship:check": "node ../scripts/check-ship.mjs"
   },
