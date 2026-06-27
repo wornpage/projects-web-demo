@@ -121,8 +121,8 @@ check("demo notice says no login or private data", html.includes("Demo data only
 check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("No login or private storage.") && source.includes("No private project data.") && !source.includes("not an account") && !source.includes("Do not enter private project data"), "no-login runtime notices");
 check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"'), "demo notice role=note");
 check("sidebar idea note is exposed as supporting context", html.includes('class="demo-sidebar-note card" role="note"'), "sidebar note role=note");
-check("next action panel is labelled by its visible title", html.includes('class="demo-command-brief sidecar" aria-labelledby="command-title" aria-describedby="command-flow"'), "command-title labels next action panel");
-check("next action panel exposes its flow summary", html.includes('aria-describedby="command-flow"') && html.includes('id="command-flow"'), "command-flow describes next action panel");
+check("next action panel is labelled by its visible title", html.includes('class="demo-command-brief sidecar" aria-labelledby="command-title" aria-describedby="command-scope command-flow"'), "command-title labels next action panel");
+check("next action panel exposes scope and flow summary", html.includes('aria-describedby="command-scope command-flow"') && html.includes('id="command-scope"') && html.includes('id="command-flow"'), "command-scope and command-flow describe next action panel");
 check("next action state announces changes politely", html.includes('id="command-state" class="demo-command-state" role="status" aria-live="polite" aria-atomic="true"'), "command-state status region");
 check("command receipt announces complete status updates", html.includes('id="command-receipt"') && html.includes('aria-atomic="true"'), "command receipt aria-atomic");
 check("bottom dock label describes purpose instead of layout", html.includes('class="demo-bottom-brief" aria-label="Next action summary"'), "Next action summary");
