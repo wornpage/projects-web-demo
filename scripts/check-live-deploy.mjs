@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const DEFAULT_URL = "https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app";
+const MAX_STATE_PACKS = 50;
 
 const baseUrl = normalizeBaseUrl(process.argv[2] || DEFAULT_URL);
 
@@ -50,10 +51,15 @@ try {
   const clientBKey = "live-check-browser-b";
   const sharedKey = "sync-live-check-shared";
   const recoveryKey = "live-check-recovery";
+  const limitKey = "live-check-state-limit";
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
   const recoveryOverwriteTitle = `Live recovery overwritten ${isolationStamp}`;
+  const oversizedStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "live-oversized-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   await writeJson("/api/state", stateWithCheckPack(liveState, "live-isolation-check", clientATitle), {
     "x-projects-demo-client": clientAKey
   });
@@ -148,6 +154,7 @@ try {
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
+  check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);
   check("hosted sync key is readable from another request", stateHasPackTitle(sharedStateFromSecondRequest, sharedTitle), sharedTitle);
@@ -263,6 +270,34 @@ function stateWithCheckPack(state, id, title) {
 
 function stateHasPackTitle(state, title) {
   return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
+}
+
+function stateWithGeneratedPacks(count, prefix) {
+  const packs = Array.from({ length: count }, (_, index) => ({
+    id: `${prefix}-${index + 1}`,
+    title: `Generated live work ${index + 1}`,
+    type: "limit-check",
+    status: "active",
+    blocker: "none",
+    next: "Open",
+    due: "",
+    owner: "live verifier",
+    purpose: "Verify hosted state row limits.",
+    doneWhen: "The hosted backend rejects oversized state rows.",
+    sources: ["live-deploy-check"],
+    memory: [],
+    activity: []
+  }));
+  return {
+    packs,
+    selectedId: packs[0]?.id || "",
+    copyProfile: "general",
+    scenarioId: "default",
+    status: "Generated state limit check.",
+    actionReceipt: null,
+    filter: "all",
+    query: ""
+  };
 }
 
 function nonceFromCsp(csp) {

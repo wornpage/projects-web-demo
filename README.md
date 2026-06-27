@@ -117,6 +117,8 @@ file-backed app mode stores each keyed client's state in a separate hashed
 state file beside that path and rejects unkeyed state requests. Hosted deploys
 should still use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres
 environment variables instead of writable container files.
+Each keyed backend row is capped at 50 work items. Oversized full-state writes
+and create requests past that cap are rejected instead of being silently stored.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
 to the same demo row. Use **New** to create a Web Crypto generated 20-character

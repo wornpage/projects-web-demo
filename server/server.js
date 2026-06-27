@@ -21,6 +21,7 @@ const ASSET_VERSION = normalizeAssetVersion(process.env.PROJECTS_ASSET_VERSION
   || `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`);
 const API_CLIENT_HEADER = "x-projects-demo-client";
 const MAX_BODY_BYTES = 1024 * 1024;
+const MAX_STATE_PACKS = 50;
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
@@ -346,6 +347,7 @@ async function readState(stateKey) {
 }
 
 async function writeState(payload, stateKey) {
+  validateStatePayload(payload);
   return stateStorage.write(payload, stateKey);
 }
 
@@ -502,6 +504,10 @@ function fileStatePathForKey(stateKey) {
 }
 
 function createPackFromPayload(state, payload) {
+  if (state.packs.length >= MAX_STATE_PACKS) {
+    throw httpError(400, `Demo state cannot contain more than ${MAX_STATE_PACKS} work items.`);
+  }
+
   const values = createPackValues(payload);
   const workflow = initialWorkflowForCreatedPack(values.title, values.owner, values.next);
   if (!workflow.canSave) {
@@ -1114,7 +1120,7 @@ async function readSeedPacks() {
 
 function sanitizeState(payload) {
   const source = payload && typeof payload === "object" ? payload : {};
-  const packs = Array.isArray(source.packs) ? source.packs.map(sanitizePack).filter((pack) => pack.id) : [];
+  const packs = Array.isArray(source.packs) ? source.packs.slice(0, MAX_STATE_PACKS).map(sanitizePack).filter((pack) => pack.id) : [];
   const selectedId = normalizeText(source.selectedId, 120);
   return {
     packs,
@@ -1127,6 +1133,16 @@ function sanitizeState(payload) {
     query: normalizeText(source.query, 200),
     savedAt: normalizeText(source.savedAt, 80)
   };
+}
+
+function validateStatePayload(payload) {
+  if (!payload || typeof payload !== "object" || !Array.isArray(payload.packs)) {
+    return;
+  }
+
+  if (payload.packs.length > MAX_STATE_PACKS) {
+    throw httpError(400, `Demo state cannot contain more than ${MAX_STATE_PACKS} work items.`);
+  }
 }
 
 function sanitizePack(payload) {

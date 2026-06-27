@@ -9,6 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const MAX_STATE_PACKS = 50;
 const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "projects-public-boundary-"));
 const stateFile = path.join(tmpDir, "state.json");
 const port = await freePort();
@@ -132,6 +133,7 @@ try {
 
   const clientA = "local-check-client-a";
   const clientB = "local-check-client-b";
+  const limitClient = "local-check-limit-client";
   const packTitle = `Boundary check ${Date.now().toString(36)}`;
   const seedPacks = await jsonRequest(port, "/api/demo-packs", {
     headers: { "x-projects-demo-client": clientA }
@@ -160,9 +162,46 @@ try {
     headers: { "x-projects-demo-client": clientB }
   });
   const unkeyedState = await request(port, "/api/state");
+  const oversizedStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "oversized-boundary"))
+  });
+  const limitStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": limitClient
+    },
+    body: JSON.stringify(stateWithGeneratedPacks(MAX_STATE_PACKS, "limit-boundary"))
+  });
+  const overLimitCreate = await request(port, "/api/packs", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": limitClient
+    },
+    body: JSON.stringify({
+      title: "Extra boundary work",
+      owner: "public-boundary-check",
+      next: "Open",
+      purpose: "Verify capped state rows do not grow past the backend limit.",
+      doneWhen: "The backend rejects the create request."
+    })
+  });
+  const clientAStateAfterRejectedWrite = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": clientA }
+  });
   check("client A reads its created work", stateHasPackTitle(clientAState.body, packTitle), clientAState.status);
   check("client B does not read client A work", !stateHasPackTitle(clientBState.body, packTitle), clientBState.status);
   check("unkeyed local API state is rejected", unkeyedState.status === 400, unkeyedState.status);
+  check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
+  check("client A state survives rejected oversized snapshot", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
+  check("state rows can reach the documented work cap", limitStateWrite.status === 200, limitStateWrite.status);
+  check("creating work past the state cap is rejected", overLimitCreate.status === 400, overLimitCreate.status);
 
   const files = await fs.readdir(tmpDir);
   check("keyed local state uses hashed filenames", files.some((file) => /^state\.[a-f0-9]{32}\.json$/u.test(file)), files.join(", "));
@@ -202,6 +241,34 @@ function check(name, ok, detail) {
 
 function stateHasPackTitle(state, title) {
   return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
+}
+
+function stateWithGeneratedPacks(count, prefix) {
+  const packs = Array.from({ length: count }, (_, index) => ({
+    id: `${prefix}-${index + 1}`,
+    title: `Generated boundary work ${index + 1}`,
+    type: "limit-check",
+    status: "active",
+    blocker: "none",
+    next: "Open",
+    due: "",
+    owner: "public-boundary-check",
+    purpose: "Verify backend state row limits.",
+    doneWhen: "The backend accepts only bounded state rows.",
+    sources: ["public-boundary-check"],
+    memory: [],
+    activity: []
+  }));
+  return {
+    packs,
+    selectedId: packs[0]?.id || "",
+    copyProfile: "general",
+    scenarioId: "default",
+    status: "Generated state limit check.",
+    actionReceipt: null,
+    filter: "all",
+    query: ""
+  };
 }
 
 function nonceFromCsp(csp) {

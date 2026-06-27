@@ -10,6 +10,8 @@ without accounts.
 State-changing and state-read API routes require that anonymous browser client
 key in both local file-backed mode and hosted Postgres mode. Missing or invalid
 keys are rejected instead of falling back to one shared row.
+Each anonymous state row is capped at 50 work items. Oversized full-state writes
+and create requests past that cap are rejected.
 
 The frontend can replace the anonymous browser key with a hashed sync code so
 two browsers or devices can share one demo row. New sync codes and anonymous
