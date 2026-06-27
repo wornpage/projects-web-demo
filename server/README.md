@@ -20,6 +20,9 @@ Each anonymous state row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected. Full-state writes require each
 work item to keep a unique id and title, and also reject oversized
 `actionReceipt` object shapes before storage.
+`POST /api/state/erase` removes only the row selected by the current generated
+browser key or hashed sync key. Missing or invalid keys are rejected before any
+storage erase runs.
 
 The frontend can replace the anonymous browser key with a hashed sync code so
 two browsers or devices can share one demo row. New sync codes and anonymous
@@ -116,6 +119,7 @@ incoming Host header.
 | `GET /api/demo-packs` | Load server-side seed demo work with a browser client key. |
 | `GET /api/state` | Load the full demo state. |
 | `PUT /api/state` | Save the full demo state. |
+| `POST /api/state/erase` | Erase the current keyed demo state row. |
 | `GET /api/packs` | Load only work items. |
 | `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Button runs next` preview for one work item. |
 | `POST /api/packs` | Create one work item using server-owned workflow defaults. |

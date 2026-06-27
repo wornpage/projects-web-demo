@@ -74,6 +74,7 @@ const state = {
   clipboardReceipt: null,
   lastRenderedHash: "",
   memoryDraft: "",
+  suppressNextSave: false,
 };
 
 const backendPackCommandCache = new Map();
@@ -423,6 +424,11 @@ function applyScenario(scenario, options = {}) {
 }
 
 function saveState() {
+  if (state.suppressNextSave) {
+    state.suppressNextSave = false;
+    return;
+  }
+
   const snapshot = demoStateSnapshot();
   if (DEMO_API_BASE_URL) {
     scheduleBackendStateSave(snapshot);
@@ -502,6 +508,33 @@ function restoreRecoverySnapshot() {
     render();
   } catch (error) {
     state.status = `Where: Recovery. Blocker: ${error.message || "invalid backup"}. Button runs next: paste a valid demo backup.`;
+    render();
+  }
+}
+
+async function eraseBackendState() {
+  if (!DEMO_API_BASE_URL) {
+    return;
+  }
+
+  try {
+    clearPendingBackendStateSave();
+    const response = await fetch(apiUrl("/api/state/erase"), {
+      method: "POST",
+      headers: await apiHeaders()
+    });
+    if (!response.ok) {
+      throw new Error(`Backend erase failed with ${response.status}`);
+    }
+
+    const result = await response.json();
+    loadState(result.state);
+    state.status = routeStatus("Backend erase", DEMO_BLOCKER_NONE, "review sample state");
+    state.clipboardReceipt = null;
+    state.suppressNextSave = true;
+    render();
+  } catch (error) {
+    state.status = routeStatus("Backend erase", error.message || "erase failed", "try again");
     render();
   }
 }
@@ -2564,7 +2597,19 @@ function renderHome() {
 function recoveryPanel() {
   const snapshot = recoverySnapshotText();
   const restoreHelp = "Restore a Projects demo recovery JSON snapshot into this browser or active sync row.";
-  const shouldOpen = Boolean(clipboardReceiptFor("copy-recovery-state") || state.status.startsWith("Where: Recovery."));
+  const eraseHelp = "Erase the current backend row selected by this browser or active sync code.";
+  const backendEraseControl = DEMO_API_BASE_URL
+    ? `<div class="demo-inline-form demo-recovery-erase">
+        <label for="erase-backend-state">Erase hosted demo state</label>
+        <p>This clears only the current browser or active sync row.</p>
+        <button class="btn btn-sm" type="button" id="erase-backend-state"${controlLabelAttributes(eraseHelp)}>Erase backend row</button>
+      </div>`
+    : "";
+  const shouldOpen = Boolean(
+    clipboardReceiptFor("copy-recovery-state")
+    || state.status.startsWith("Where: Recovery.")
+    || state.status.startsWith("Where: Backend erase.")
+  );
   return `<details class="demo-recovery-panel"${shouldOpen ? " open" : ""}>
     <summary>
       <span>Recovery</span>
@@ -2583,6 +2628,7 @@ function recoveryPanel() {
         <textarea id="demo-recovery-input" class="demo-search-input" spellcheck="false" placeholder="Paste Projects demo recovery JSON here"></textarea>
         <button class="btn btn-sm btn-primary" type="button" id="restore-recovery-state"${controlLabelAttributes(restoreHelp)}>Restore backup</button>
       </div>
+      ${backendEraseControl}
     </div>
   </details>`;
 }
@@ -2590,6 +2636,7 @@ function recoveryPanel() {
 function bindRecoveryControls() {
   el("copy-recovery-state")?.addEventListener("click", copyRecoverySnapshot);
   el("restore-recovery-state")?.addEventListener("click", restoreRecoverySnapshot);
+  el("erase-backend-state")?.addEventListener("click", eraseBackendState);
 }
 
 function renderWork() {

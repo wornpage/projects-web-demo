@@ -137,10 +137,12 @@ function checkRecoverySurfaceSource() {
   check("recovery UI keeps restore input", source.includes('id="demo-recovery-input"'), "demo-recovery-input");
   check("recovery UI keeps copy button", source.includes('id="copy-recovery-state"'), "copy-recovery-state");
   check("recovery UI keeps restore button", source.includes('id="restore-recovery-state"'), "restore-recovery-state");
+  check("recovery UI keeps backend erase button", source.includes('id="erase-backend-state"'), "erase-backend-state");
   check("recovery snapshot has a version marker", source.includes("projectsDemoRecovery: RECOVERY_SNAPSHOT_VERSION"), "projectsDemoRecovery");
   check("recovery snapshot uses current demo state", source.includes("state: demoStateSnapshot()"), "demoStateSnapshot");
   check("recovery restore parses pasted backup", source.includes('parseRecoverySnapshot(valueOf("demo-recovery-input"))'), "parseRecoverySnapshot");
   check("recovery restore persists through normal save path", source.includes("loadState(snapshot)") && source.includes("saveState()"), "loadState/saveState");
+  check("recovery erase uses backend row endpoint", source.includes('apiUrl("/api/state/erase")') && source.includes("state.suppressNextSave = true"), "erase endpoint without immediate resave");
   check("recovery import caps work count", source.includes("const DEMO_STATE_MAX_PACKS = 50") && source.includes("packs.length > DEMO_STATE_MAX_PACKS"), "50 pack cap");
   check("recovery import rejects invalid work items", source.includes("backup work items need an id and title"), "id/title required");
   check("recovery import rejects duplicate work ids", source.includes("backup work item ids must be unique"), "unique ids required");

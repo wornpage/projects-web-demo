@@ -117,6 +117,10 @@ try {
   const clientAState = await readJson("/api/state", { "x-projects-demo-client": clientAKey });
   const clientBState = await readJson("/api/state", { "x-projects-demo-client": clientBKey });
   const sharedStateFromSecondRequest = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
+  const unkeyedEraseStatus = await readStatus("/api/state/erase", {}, "POST");
+  const eraseClientAStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": clientAKey }, "POST");
+  const clientAStateAfterErase = await readJson("/api/state", { "x-projects-demo-client": clientAKey });
+  const sharedStateAfterErase = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
@@ -220,6 +224,10 @@ try {
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);
   check("hosted sync key is readable from another request", stateHasPackTitle(sharedStateFromSecondRequest, sharedTitle), sharedTitle);
+  check("hosted state erase rejects missing client key", unkeyedEraseStatus === 400, unkeyedEraseStatus);
+  check("hosted state erase accepts current client key", eraseClientAStateStatus === 200, eraseClientAStateStatus);
+  check("hosted erased state no longer has client work", !stateHasPackTitle(clientAStateAfterErase, clientATitle), clientATitle);
+  check("hosted state erase keeps shared row", stateHasPackTitle(sharedStateAfterErase, sharedTitle), sharedTitle);
   check("hosted state can restore an exported snapshot", stateHasPackTitle(restoredRecoveryState, recoverySnapshotTitle), recoverySnapshotTitle);
   check("hosted state restore removes later overwrite", !stateHasPackTitle(restoredRecoveryState, recoveryOverwriteTitle), recoveryOverwriteTitle);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);

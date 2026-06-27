@@ -49,6 +49,8 @@ Observed responses:
 | `/api/state` with generated client key | `200` | Demo state loads for that client key |
 | `/api/state` with weak manual client key | `400` | Short/manual row selectors are rejected |
 | `/api/state` with readable sync-code client key | `400` | Sync codes must be hashed before they become row selectors |
+| `/api/state/erase` without client key | `400` | Backend erase has no unkeyed fallback row |
+| `/api/state/erase` with generated client key | `200` | Only the current keyed row is erased |
 | `/api/demo-packs` with client key | `200` | Demo seed data loads through the keyed API |
 
 GitHub evidence:
@@ -74,6 +76,8 @@ state is rejected, confirms weak manual and readable sync-code API client keys
 are rejected, confirms non-JSON state writes are rejected, confirms oversized
 keyed state snapshots, duplicate work ids, invalid work items, oversized
 `actionReceipt` shapes, and create requests past the state cap are rejected,
+confirms the current keyed row can be erased and then no longer contains that
+client's work,
 confirms public assets stay on the file allowlist, confirms public text assets
 stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
@@ -122,6 +126,7 @@ keys, keeps generated browser rows separate,
 lets a fixed shared sync key read the same row from another request, restores an
 exported state snapshot to its keyed row, rejects oversized keyed state
 snapshots, rejects duplicate work ids and invalid work items in state snapshots,
+erases the current keyed row without touching other rows,
 uses same-origin API CORS instead of wildcard CORS, rejects
 third-party preflights, rejects disallowed preflight methods/headers, and
 rejects forwarded-host CORS spoofing. It also confirms the hosted state write
@@ -165,6 +170,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |
 | Local file-backed API users mix state | Fixed | Browser client keys are required and map to separate hashed local state files |
+| Demo users cannot remove hosted anonymous state | Fixed | `POST /api/state/erase` deletes only the current keyed row and rejects missing keys before storage access |
 | Local file-backed state defaults inside the repo | Fixed | The no-env local default writes under a user data directory; Docker and tests still use explicit `PROJECTS_STATE_FILE` values |
 | Hosted Postgres stores raw browser row keys | Fixed | Hosted reads and writes use only server-side `v2:` SHA-256 state keys; the raw-key read fallback is retired |
 | Unkeyed writes can consume body parsing before ownership is checked | Fixed | Server-owned write routes now validate the browser key before reading JSON, and local/live gates prove missing-key writes return `400` before content-type validation |

@@ -150,6 +150,11 @@ async function routeRequest(request, response, url) {
     return;
   }
 
+  if (method === "POST" && pathname === "/api/state/erase") {
+    sendJson(request, response, 200, await eraseState(stateKeyForRequest(request)));
+    return;
+  }
+
   if (method === "GET" && pathname === "/api/packs") {
     const state = await readState(stateKeyForRequest(request));
     sendJson(request, response, 200, state.packs);
@@ -394,6 +399,10 @@ async function writeState(payload, stateKey) {
   return stateStorage.write(payload, stateKey);
 }
 
+async function eraseState(stateKey) {
+  return stateStorage.erase(stateKey);
+}
+
 function createStateStorage() {
   if (STATE_STORAGE === "postgres") {
     return createPostgresStateStorage();
@@ -431,7 +440,8 @@ function createFileStateStorage() {
     label: `file:${STATE_FILE}`,
     ready: Promise.resolve(),
     read: readFileState,
-    write: writeFileState
+    write: writeFileState,
+    erase: eraseFileState
   };
 }
 
@@ -477,6 +487,15 @@ function createPostgresStateStorage() {
         [key, JSON.stringify(state), state.savedAt]
       );
       return state;
+    },
+    async erase(stateKey) {
+      const key = postgresStateKey(stateKey);
+      await pool.query(
+        `DELETE FROM projects_demo_state
+         WHERE state_key = $1`,
+        [key]
+      );
+      return { ok: true, state: await defaultState() };
     }
   };
 }
@@ -575,6 +594,16 @@ async function writeFileState(payload, stateKey) {
   await fs.writeFile(tmpFile, `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await fs.rename(tmpFile, stateFile);
   return state;
+}
+
+async function eraseFileState(stateKey) {
+  const stateFile = fileStatePathForKey(stateKey);
+  await fs.unlink(stateFile).catch((error) => {
+    if (error.code !== "ENOENT") {
+      throw error;
+    }
+  });
+  return { ok: true, state: await defaultState() };
 }
 
 function fileStatePathForKey(stateKey) {

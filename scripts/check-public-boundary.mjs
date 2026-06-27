@@ -87,6 +87,7 @@ try {
   check("Postgres raw state-key fallback is retired", !serverSource.includes("postgresStateKeys(") && !serverSource.includes("WHERE state_key = $1 OR state_key = $2") && !serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "digest-only state_key path");
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
   check("state-changing routes validate client keys before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
+  check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateKeyForRequest required");
 
   const sameOrigin = `http://127.0.0.1:${port}`;
   const sameOriginCors = await request(port, "/api/health", {
@@ -187,6 +188,7 @@ try {
   const clientB = "demo-00000000-0000-4000-8000-000000000002";
   const limitClient = "demo-00000000-0000-4000-8000-000000000003";
   const packTitle = `Boundary check ${Date.now().toString(36)}`;
+  const clientBTitle = `Boundary other row ${Date.now().toString(36)}`;
   const seedPacks = await jsonRequest(port, "/api/demo-packs", {
     headers: { "x-projects-demo-client": clientA }
   });
@@ -212,6 +214,16 @@ try {
   });
   const clientBState = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientB }
+  });
+  const clientBStateSeed = stateWithGeneratedPacks(1, "other-row-boundary");
+  clientBStateSeed.packs[0].title = clientBTitle;
+  const clientBWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientB
+    },
+    body: JSON.stringify(clientBStateSeed)
   });
   const unkeyedState = await request(port, "/api/state");
   const weakKeyedState = await request(port, "/api/state", {
@@ -304,8 +316,22 @@ try {
   const clientAStateAfterRejectedWrite = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientA }
   });
+  const unkeyedErase = await request(port, "/api/state/erase", {
+    method: "POST"
+  });
+  const eraseClientAState = await request(port, "/api/state/erase", {
+    method: "POST",
+    headers: { "x-projects-demo-client": clientA }
+  });
+  const clientAStateAfterErase = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": clientA }
+  });
+  const clientBStateAfterErase = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": clientB }
+  });
   check("client A reads its created work", stateHasPackTitle(clientAState.body, packTitle), clientAState.status);
   check("client B does not read client A work", !stateHasPackTitle(clientBState.body, packTitle), clientBState.status);
+  check("client B can write its own row", clientBWrite.status === 200, clientBWrite.status);
   check("unkeyed local API state is rejected", unkeyedState.status === 400, unkeyedState.status);
   check("weak manual API client keys are rejected", weakKeyedState.status === 400, weakKeyedState.status);
   check("readable sync-code API client keys are rejected", readableSyncKeyedState.status === 400, readableSyncKeyedState.status);
@@ -319,6 +345,10 @@ try {
   check("client A state survives rejected oversized snapshot", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
   check("state rows can reach the documented work cap", limitStateWrite.status === 200, limitStateWrite.status);
   check("creating work past the state cap is rejected", overLimitCreate.status === 400, overLimitCreate.status);
+  check("unkeyed backend state erase is rejected", unkeyedErase.status === 400, unkeyedErase.status);
+  check("current keyed backend state can be erased", eraseClientAState.status === 200 && eraseClientAState.text.includes("\"ok\":true"), eraseClientAState.status);
+  check("erased keyed backend state no longer has client work", !stateHasPackTitle(clientAStateAfterErase.body, packTitle), clientAStateAfterErase.status);
+  check("erasing one keyed state keeps another client row", stateHasPackTitle(clientBStateAfterErase.body, clientBTitle), clientBStateAfterErase.status);
 
   const files = await fs.readdir(tmpDir);
   check("keyed local state uses hashed filenames", files.some((file) => /^state\.[a-f0-9]{32}\.json$/u.test(file)), files.join(", "));
@@ -509,6 +539,17 @@ function writeRoutesValidateKeyBeforeBody(source) {
     ok: failed.length === 0,
     detail: failed.length === 0 ? "stateKeyForRequest before readJsonBody" : failed.join(", ")
   };
+}
+
+function eraseRouteValidatesKey(source) {
+  const routeStart = source.indexOf('if (method === "POST" && pathname === "/api/state/erase")');
+  if (routeStart < 0) {
+    return false;
+  }
+
+  const routeEnd = source.indexOf("\n  }\n\n", routeStart);
+  const routeSource = source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined);
+  return routeSource.includes("eraseState(stateKeyForRequest(request))");
 }
 
 async function waitForHealth(activePort) {

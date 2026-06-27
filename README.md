@@ -159,6 +159,9 @@ bounded JSON snapshot for the current browser or active sync row, and
 **Restore backup** validates pasted Projects demo recovery JSON before loading
 and saving it through the same local or backend state path. This is still demo
 recovery, not account backup or encrypted private storage.
+In hosted app mode, the same Recovery section can erase the current backend row.
+That removes only the row selected by this browser or active sync code and then
+shows the sample state without immediately recreating the deleted row.
 
 ## Docker
 
