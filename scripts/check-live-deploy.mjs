@@ -114,6 +114,22 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const invalidProfileStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-profile-state", "copyProfile", "private"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const invalidScenarioStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-scenario-state", "scenarioId", "private-roadmap"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const invalidFilterStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-filter-state", "filter", "private-workflow"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const blankProfileStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-blank-profile-state", "copyProfile", ""), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   const unkeyedWorkflowWriteStatuses = await Promise.all([
     ["pack create", "/api/packs"],
     ["work path", "/api/packs/source-folder-audit/path"],
@@ -293,6 +309,10 @@ try {
   check("hosted state rejects duplicate work ids", duplicateIdStateStatus === 400, duplicateIdStateStatus);
   check("hosted state rejects invalid work items", invalidPackStateStatus === 400, invalidPackStateStatus);
   check("hosted state rejects invalid work statuses", invalidWorkStatusStateStatus === 400, invalidWorkStatusStateStatus);
+  check("hosted state rejects invalid copy profiles", invalidProfileStateStatus === 400, invalidProfileStateStatus);
+  check("hosted state rejects invalid scenarios", invalidScenarioStateStatus === 400, invalidScenarioStateStatus);
+  check("hosted state rejects invalid filters", invalidFilterStateStatus === 400, invalidFilterStateStatus);
+  check("hosted state rejects blank copy profiles", blankProfileStateStatus === 400, blankProfileStateStatus);
   check(
     "hosted workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWriteStatuses.every(([, status]) => status === 400),
@@ -474,6 +494,12 @@ function stateWithMissingPackTitle(prefix) {
 function stateWithInvalidPackStatus(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.packs[0].status = "waiting-for-private-workflow";
+  return state;
+}
+
+function stateWithInvalidStateMetadata(prefix, key, value) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state[key] = value;
   return state;
 }
 

@@ -34,6 +34,9 @@ const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
 const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"]);
 const VALID_PACK_STATUSES = new Set(["active", "blocked", "draft", "done"]);
+const VALID_COPY_PROFILES = new Set(["climate", "developer", "dj", "general"]);
+const VALID_SCENARIOS = new Set(["default", "due-view", "empty", "healthy", "onboarding", "review"]);
+const VALID_STATE_FILTERS = new Set(["active", "all", "blocked", "done", "draft", "review"]);
 const RUNTIME_CONFIG_PATHNAME = "/assets/runtime-config.js";
 const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
   ["title", "title"],
@@ -1342,8 +1345,26 @@ function validateStatePayload(payload) {
     throw httpError(400, "Demo state must be a JSON object.");
   }
 
+  validateStateMetadata(payload);
   validateStatePacks(payload.packs);
   validatePlainValueShape(payload.actionReceipt);
+}
+
+function validateStateMetadata(payload) {
+  validateStateMetadataValue(payload, "copyProfile", 40, VALID_COPY_PROFILES, "Demo state copy profile is not supported.");
+  validateStateMetadataValue(payload, "scenarioId", 80, VALID_SCENARIOS, "Demo state scenario is not supported.");
+  validateStateMetadataValue(payload, "filter", 40, VALID_STATE_FILTERS, "Demo state filter is not supported.");
+}
+
+function validateStateMetadataValue(payload, key, maxLength, validValues, message) {
+  if (!Object.prototype.hasOwnProperty.call(payload, key)) {
+    return;
+  }
+
+  const value = normalizeText(payload[key], maxLength);
+  if (!value || !validValues.has(value)) {
+    throw httpError(400, message);
+  }
 }
 
 function validateStatePacks(value) {

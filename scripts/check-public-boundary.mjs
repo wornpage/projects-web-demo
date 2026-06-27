@@ -350,6 +350,38 @@ try {
     },
     body: JSON.stringify(stateWithInvalidPackStatus("invalid-status-boundary"))
   });
+  const invalidProfileStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidStateMetadata("invalid-profile-boundary", "copyProfile", "private"))
+  });
+  const invalidScenarioStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidStateMetadata("invalid-scenario-boundary", "scenarioId", "private-roadmap"))
+  });
+  const invalidFilterStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidStateMetadata("invalid-filter-boundary", "filter", "private-workflow"))
+  });
+  const blankProfileStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidStateMetadata("blank-profile-boundary", "copyProfile", ""))
+  });
   const deepReceiptStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -424,6 +456,10 @@ try {
   check("duplicate work ids in keyed state snapshots are rejected", duplicateIdStateWrite.status === 400, duplicateIdStateWrite.status);
   check("invalid work items in keyed state snapshots are rejected", invalidPackStateWrite.status === 400, invalidPackStateWrite.status);
   check("invalid work status snapshots are rejected", invalidStatusStateWrite.status === 400, invalidStatusStateWrite.status);
+  check("invalid copy profiles are rejected", invalidProfileStateWrite.status === 400, invalidProfileStateWrite.status);
+  check("invalid scenarios are rejected", invalidScenarioStateWrite.status === 400, invalidScenarioStateWrite.status);
+  check("invalid filters are rejected", invalidFilterStateWrite.status === 400, invalidFilterStateWrite.status);
+  check("blank copy profiles are rejected", blankProfileStateWrite.status === 400, blankProfileStateWrite.status);
   check("deep action receipts are rejected", deepReceiptStateWrite.status === 400, deepReceiptStateWrite.status);
   check("wide action receipts are rejected", wideReceiptStateWrite.status === 400, wideReceiptStateWrite.status);
   check("client A state survives rejected malformed snapshots", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
@@ -518,6 +554,12 @@ function stateWithMissingPackTitle(prefix) {
 function stateWithInvalidPackStatus(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.packs[0].status = "waiting-for-private-workflow";
+  return state;
+}
+
+function stateWithInvalidStateMetadata(prefix, key, value) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state[key] = value;
   return state;
 }
 
