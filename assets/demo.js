@@ -2793,7 +2793,7 @@ function homeSpotlightPanel() {
     ${homeSpotlightFacts(pack, command)}
     <div class="demo-home-spotlight-actions">
       ${primaryCommandButton(pack)}
-      ${supportActionButton("open", "Open path", pack, "btn")}
+      ${supportActionButton("open", "Open work path", pack, "btn")}
       ${navButton("work", "Work list")}
       <small>${escapeHtml(reason)}</small>
     </div>
@@ -2953,8 +2953,8 @@ function reviewQueuePanel(review, firstReview) {
     ${homeSpotlightFacts(firstReview, command)}
     <div class="demo-home-spotlight-actions demo-review-spotlight-actions">
       ${primaryCommandButton(firstReview)}
-      ${supportActionButton("open", "Open path", firstReview, "btn")}
-      ${supportActionButton("set-next", "Set button", firstReview, "btn")}
+      ${supportActionButton("open", "Open work path", firstReview, "btn")}
+      ${supportActionButton("set-next", "Set Button runs next", firstReview, "btn")}
       <small>${escapeHtml(reason)}</small>
     </div>
   </article>`;

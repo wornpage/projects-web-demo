@@ -171,7 +171,7 @@ function homeSpotlightContractOk() {
     "Live sample",
     "homeSpotlightFacts(pack, command)",
     "primaryCommandButton(pack)",
-    "supportActionButton(\"open\", \"Open path\", pack, \"btn\")",
+    "supportActionButton(\"open\", \"Open work path\", pack, \"btn\")",
     "function homeSpotlightPack()"
   ]);
 }
@@ -185,7 +185,7 @@ function reviewSpotlightContractOk() {
     "reviewQueueStat(\"Missing button\", missingNextCount, \"Needs Button runs next\")",
     "reviewQueueStat(\"Owner gaps\", ownerGapCount, \"Needs owner\")",
     "primaryCommandButton(firstReview)",
-    "supportActionButton(\"set-next\", \"Set button\", firstReview, \"btn\")"
+    "supportActionButton(\"set-next\", \"Set Button runs next\", firstReview, \"btn\")"
   ]);
 }
 
