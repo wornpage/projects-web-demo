@@ -16,16 +16,21 @@ try {
     : "/assets/demo.js";
   const script = await readText(scriptPath);
   const lineCount = script.split(/\r?\n/u).length;
+  const backendHelperNames = [
+    "runBackendPackAction",
+    "saveBackendPackNextAction",
+    "loadBackendPackCommandPreview",
+    "createBackendPack",
+    "addBackendPackMemoryNote",
+    "saveBackendPackPath"
+  ];
+  const readableBackendHelpers = backendHelperNames.filter((name) => script.includes(name));
 
   check("health endpoint reports ok", health.ok === true, health.ok);
   check("hosted state uses Postgres", String(health.stateStorage || "").startsWith("postgres:"), health.stateStorage);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
-  check("backend pack action helper is present", script.includes("runBackendPackAction"), "runBackendPackAction");
-  check("backend next helper is present", script.includes("saveBackendPackNextAction"), "saveBackendPackNextAction");
-  check("backend create helper is present", script.includes("createBackendPack"), "createBackendPack");
-  check("backend memory helper is present", script.includes("addBackendPackMemoryNote"), "addBackendPackMemoryNote");
-  check("backend path helper is present", script.includes("saveBackendPackPath"), "saveBackendPackPath");
+  check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");
   check("private repo and local path strings are absent", !/(github\.com\/jared-bidlow|C:\\|C:\/|\.git\/config|server\/server\.js)/iu.test(script), "private path scan");
 

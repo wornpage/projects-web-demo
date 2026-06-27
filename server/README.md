@@ -106,6 +106,7 @@ GitHub Pages behavior.
 | `GET /api/state` | Load the full demo state. |
 | `PUT /api/state` | Save the full demo state. |
 | `GET /api/packs` | Load only work items. |
+| `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Button runs next` preview for one work item. |
 | `POST /api/packs` | Create one work item using server-owned workflow defaults. |
 | `PATCH /api/packs/{id}` | Update one work item. |
 | `POST /api/packs/{id}/path` | Save one work path and return the server-owned receipt/state. |

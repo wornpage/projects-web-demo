@@ -176,6 +176,15 @@ async function routeRequest(request, response, url) {
     return;
   }
 
+  const packCommandMatch = pathname.match(/^\/api\/packs\/([^/]+)\/command$/u);
+  if (packCommandMatch && method === "GET") {
+    const packId = decodeURIComponent(packCommandMatch[1]);
+    const state = await readState(stateKeyForRequest(request));
+    const pack = findPackOrThrow(state, packId);
+    sendJson(response, 200, packCommandPreview(pack));
+    return;
+  }
+
   const packMatch = pathname.match(/^\/api\/packs\/([^/]+)(?:\/memory)?$/u);
   if (packMatch) {
     const packId = decodeURIComponent(packMatch[1]);
@@ -860,6 +869,23 @@ function actionReceiptForPack(pack, summary, next = resolvePrimaryCommandForPack
   };
 }
 
+function packCommandPreview(pack) {
+  const next = resolvePrimaryCommandForPack(pack);
+  const workflow = workflowStateForPack(pack, next);
+  return {
+    packId: pack.id,
+    signature: packCommandSignature(pack),
+    where: workTitle(pack),
+    blocker: blockerTextForPack(pack),
+    next: next.label,
+    action: next.action,
+    targetPackId: next.targetPackId,
+    stateText: workflow.label,
+    stateHelp: workflow.help || "",
+    proof: proofTargetForPack(pack)
+  };
+}
+
 function actionReceiptSummary(summary, pack, next) {
   return visibleText(`${summary} ${actionReceiptContext(pack, next)}`, 180);
 }
@@ -947,6 +973,16 @@ function packActionSignature(pack) {
     status: pack?.status || "",
     blocker: pack?.blocker || "",
     next: pack?.next || ""
+  });
+}
+
+function packCommandSignature(pack) {
+  return JSON.stringify({
+    title: pack?.title || "",
+    status: pack?.status || "",
+    blocker: pack?.blocker || "",
+    next: pack?.next || "",
+    doneWhen: pack?.doneWhen || ""
   });
 }
 

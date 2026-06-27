@@ -16,7 +16,11 @@ COPY data ./data
 COPY server/server.js ./server/server.js
 
 RUN ./server/node_modules/.bin/terser assets/demo.js \
-    --compress --mangle --comments false --output assets/demo.js \
+    --compress passes=2,toplevel=true \
+    --mangle toplevel=true \
+    --comments false \
+    --output assets/demo.js \
+  && node --check assets/demo.js \
   && npm --prefix server prune --omit=dev
 
 RUN mkdir -p /app/state \

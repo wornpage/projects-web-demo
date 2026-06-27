@@ -131,6 +131,16 @@ The container serves the frontend and `/api` from one Node process. It can use
 local file-backed state for development, but hosted deploys should use managed
 Postgres so app containers stay stateless.
 
+Production Docker builds minify `assets/demo.js` with top-level Terser
+compression and mangling, then syntax-check the generated script. This makes
+the deployed browser script harder to read, but it is still public executable
+JavaScript.
+
+The pinned `nstarke/egodeath` commit
+`ef8ed58fd26eb5cba59cb3a2787660efc7ac5b31` was tested and left disabled for
+production because browser smoke tests showed repeated runtime errors on this
+app.
+
 ## Outplane Dev Deploy
 
 Use Outplane when you want a development deployment of the backend-backed app.

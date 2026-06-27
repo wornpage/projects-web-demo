@@ -86,12 +86,13 @@ Do not rely on obfuscation for security.
 
 The first server-side slice is pack workflow execution. In backend app mode,
 pack creation runs through `POST /api/packs`, `Button runs next` changes run
-through `POST /api/packs/{id}/next`, work-path edits run through
-`POST /api/packs/{id}/path`, memory notes run through
-`POST /api/packs/{id}/memory`, and pack-level actions such as `start`,
-`unblock`, `block`, `done`, and `open` run through
-`POST /api/packs/{id}/actions`. These endpoints update the stored demo state on
-the server and return the resulting receipt to the browser.
+through `POST /api/packs/{id}/next`, selected-work command previews run
+through `GET /api/packs/{id}/command`, work-path edits run through
+`POST /api/packs/{id}/path`, memory notes run through `POST
+/api/packs/{id}/memory`, and pack-level actions such as `start`, `unblock`,
+`block`, `done`, and `open` run through `POST /api/packs/{id}/actions`. These
+endpoints update or read the stored demo state on the server and return the
+resulting command preview or receipt to the browser.
 
 ## Obfuscation Decision
 
@@ -102,8 +103,17 @@ private and can break debugging, accessibility, and interaction flows if it is
 too aggressive.
 
 The production Docker build uses local Terser minification on `assets/demo.js`
-inside the image and prunes the build tool before runtime. This is copy-friction,
-not a security boundary; the browser still receives executable JavaScript.
+with top-level compression and mangling, then syntax-checks the generated
+script before pruning build tools. This hides readable helper names such as the
+backend action helpers while keeping the deployed script small enough to load
+normally.
+
+`nstarke/egodeath` was evaluated at pinned commit
+`ef8ed58fd26eb5cba59cb3a2787660efc7ac5b31`, but it is not enabled for
+production. It produced syntax-valid output at low token targets, but browser
+smoke tests repeatedly emitted runtime `ReferenceError` errors for this app.
+That is not clean enough to ship. This is still copy-friction, not a security
+boundary; the browser receives executable JavaScript either way.
 
 ## Required Publish Boundary
 

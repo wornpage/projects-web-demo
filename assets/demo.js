@@ -83,6 +83,9 @@ const state = {
   memoryDraft: "",
 };
 
+const backendPackCommandCache = new Map();
+const pendingBackendPackCommandRequests = new Set();
+
 const ROUTE_CONTRACT = Object.freeze({
   home: { pattern: "#/home", title: "Start", commandSource: "route", navKey: "1", navLabel: "Start" },
   review: { pattern: "#/review/{packId}", title: "Review", commandSource: "selected-work", acceptsPackId: true, navKey: "2", navLabel: "Review" },
@@ -354,6 +357,7 @@ function loadState(backendState = null) {
   state.selectedId = saved?.selectedId || state.packs[0]?.id || "";
   state.status = normalizeLegacyVisibleCopy(saved?.status || state.status);
   state.actionReceipt = normalizeActionReceipt(normalizeLegacyVisibleCopy(saved?.actionReceipt));
+  backendPackCommandCache.clear();
 }
 
 function purgeLegacyDemoState() {
@@ -642,6 +646,77 @@ async function saveBackendPackPath(pack, values) {
   loadState(result.state);
   state.selectedId = result.pack?.id || pack.id;
   return result;
+}
+
+function backendPackCommandForSelected(pack) {
+  if (!DEMO_API_BASE_URL || !pack?.id) {
+    return null;
+  }
+
+  const key = backendPackCommandCacheKey(pack);
+  const preview = backendPackCommandCache.get(key);
+  if (!preview) {
+    scheduleBackendPackCommandPreview(pack);
+    return null;
+  }
+
+  const localCommand = resolvePrimaryCommandForPack(pack);
+  const localWorkflow = workflowStateForPack(pack, localCommand);
+  return {
+    where: preview.where || workTitle(pack),
+    blocker: preview.blocker || blockerTextForPack(pack),
+    next: preview.next || localCommand.label,
+    stateText: preview.stateText || localWorkflow.label,
+    stateHelp: preview.stateHelp || localWorkflow.help,
+    action: preview.action || localCommand.action,
+    targetPackId: preview.targetPackId || localCommand.targetPackId,
+    memory: latestRelevantMemory(pack)
+  };
+}
+
+function scheduleBackendPackCommandPreview(pack) {
+  if (!DEMO_API_BASE_URL || !pack?.id) {
+    return;
+  }
+
+  const key = backendPackCommandCacheKey(pack);
+  if (backendPackCommandCache.has(key) || pendingBackendPackCommandRequests.has(key)) {
+    return;
+  }
+
+  pendingBackendPackCommandRequests.add(key);
+  loadBackendPackCommandPreview(pack, key)
+    .catch((error) => {
+      console.error("Projects demo backend command preview failed.", error);
+    })
+    .finally(() => {
+      pendingBackendPackCommandRequests.delete(key);
+    });
+}
+
+async function loadBackendPackCommandPreview(pack, key) {
+  const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/command`), {
+    cache: "no-store",
+    headers: await apiHeaders()
+  });
+  if (!response.ok) {
+    throw new Error(`Backend command preview failed with ${response.status}`);
+  }
+
+  const preview = await response.json();
+  const current = findPack(pack.id);
+  if (!current || key !== backendPackCommandCacheKey(current) || preview.signature !== packCommandSignature(current)) {
+    return;
+  }
+
+  backendPackCommandCache.set(key, preview);
+  if (currentPack()?.id === current.id) {
+    renderCommand(current);
+  }
+}
+
+function backendPackCommandCacheKey(pack) {
+  return `${pack.id}:${packCommandSignature(pack)}`;
 }
 
 function updateServiceBoundaryNotice() {
@@ -1839,6 +1914,11 @@ function ownerBlockerFlowHint(pack, title = workTitle(pack)) {
 }
 
 function selectedPackCommand(selected) {
+  const backendCommand = backendPackCommandForSelected(selected);
+  if (backendCommand) {
+    return backendCommand;
+  }
+
   const resolvedAction = resolvePrimaryCommandForPack(selected);
   const workflow = workflowStateForPack(selected, resolvedAction);
   const hasAnyWork = state.packs.length > 0;
@@ -4671,6 +4751,16 @@ function packActionSignature(pack) {
     status: pack?.status || "",
     blocker: pack?.blocker || "",
     next: pack?.next || ""
+  });
+}
+
+function packCommandSignature(pack) {
+  return JSON.stringify({
+    title: pack?.title || "",
+    status: pack?.status || "",
+    blocker: pack?.blocker || "",
+    next: pack?.next || "",
+    doneWhen: pack?.doneWhen || ""
   });
 }
 
