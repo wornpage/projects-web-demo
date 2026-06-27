@@ -129,5 +129,5 @@ app-mode changes:
 pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 ```
 
-That command runs backend syntax, frontend protection, the public boundary
-check, whitespace checks, and the live Outplane verifier.
+That command runs backend syntax, frontend protection, public route-contract,
+public boundary, whitespace, and live Outplane checks.

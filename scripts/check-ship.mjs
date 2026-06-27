@@ -28,6 +28,11 @@ const steps = [
     args: ["scripts/check-protected-frontend.mjs"]
   },
   {
+    label: "public route contract",
+    command: process.execPath,
+    args: ["scripts/check-public-routes.mjs"]
+  },
+  {
     label: "public boundary",
     command: process.execPath,
     args: ["scripts/check-public-boundary.mjs"]
