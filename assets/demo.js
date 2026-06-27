@@ -2609,6 +2609,7 @@ function renderHome() {
       </div>
       <p>Projects is a compact way to keep work honest: each item shows where you are, what is blocking progress, and the one button that should run next. This demo uses sample work so the value is visible without knowing the original project history.</p>
       <p class="demo-home-counts">${state.packs.length} sample ${escapeHtml(workNoun(state.packs.length))}; ${reviewCount} need review.</p>
+      ${homeSpotlightPanel()}
       ${homeEmpty}
       <div class="demo-start-path" aria-label="Primary demo path">
         <div class="demo-start-step">
@@ -2640,8 +2641,49 @@ function renderHome() {
     </section>
   `;
   bindGoButtons();
+  bindListActions();
   el("reset-demo-home")?.addEventListener("click", resetState);
   bindRecoveryControls();
+}
+
+function homeSpotlightPanel() {
+  const pack = homeSpotlightPack();
+  if (!pack) {
+    return "";
+  }
+
+  const command = resolvePrimaryCommandForPack(pack);
+  const workflow = workflowStateForPack(pack, command);
+  const purpose = normalizeCopy(pack.purpose) || `Review this sample ${workNoun(1)}.`;
+  const reason = primaryCommandVisibleReason(pack, command);
+  return `<article class="demo-home-spotlight" data-pack-id="${escapeAttribute(pack.id)}" aria-label="${escapeAttribute(`Sample work: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`)}">
+    <div class="demo-home-spotlight-head">
+      <div>
+        <span class="section-label">Live sample</span>
+        <h3>
+          <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(pack.id)}"${cardTitleButtonAttributes(pack)}>${escapeHtml(workTitle(pack))}</button>
+        </h3>
+      </div>
+      <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
+    </div>
+    <p>${escapeHtml(purpose)}</p>
+    ${selectedWorkTriad(pack, command)}
+    <div class="demo-home-spotlight-actions">
+      ${primaryCommandButton(pack)}
+      ${supportActionButton("review", "Review blocker", pack, "btn")}
+      ${supportActionButton("open", "Open path", pack, "btn")}
+      <small>${escapeHtml(reason)}</small>
+    </div>
+  </article>`;
+}
+
+function homeSpotlightPack() {
+  const selected = currentPack();
+  if (selected && isReview(selected)) {
+    return selected;
+  }
+
+  return state.packs.find(isReview) || selected || state.packs[0] || null;
 }
 
 function recoveryPanel() {
