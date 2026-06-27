@@ -115,10 +115,11 @@ still use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres environment
 variables instead of writable container files.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
-to the same demo row. Use **New** to create a code, then enter that code on the
-other device, copy the sync link, or scan the QR code. Anyone with the code or
-sync link can open that demo state, and the database still stores readable JSON;
-this is convenience sync, not private encrypted storage.
+to the same demo row. Use **New** to create a Web Crypto generated 20-character
+code, then enter that code on the other device, copy the sync link, or scan the
+QR code. Anyone with the code or sync link can open that demo state, and the
+database still stores readable JSON; this is convenience sync, not private
+encrypted storage.
 
 ## Docker
 
@@ -189,8 +190,9 @@ configured without a public IP allow list, so the app uses Render's private
 connection string.
 
 The optional sync code replaces the anonymous browser key with a hashed code so
-two devices can share one demo row. It does not create accounts or encrypt the
-stored JSON.
+two devices can share one demo row. New codes are generated with Web Crypto and
+the app does not fall back to weak random values for sync or browser row keys.
+It does not create accounts or encrypt the stored JSON.
 
 ## Static Preview
 

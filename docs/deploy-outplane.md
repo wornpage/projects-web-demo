@@ -62,12 +62,12 @@ The hosted API also avoids wildcard CORS and only reflects the same-origin
 Outplane app origin.
 
 The app also supports a sync code for personal two-device use. **New** creates a
-code and copies the current demo state to that code's row; **Use** joins that
-row from another device; **Copy link** copies an invite URL; the QR code opens
-the same invite URL on a phone; **Leave** returns to the device's own row.
-Anyone with the code or sync link can open the same demo state. The code is
-hashed before it is sent as the backend row key, but the stored demo JSON is not
-end-to-end encrypted.
+Web Crypto generated 20-character code and copies the current demo state to that
+code's row; **Use** joins that row from another device; **Copy link** copies an
+invite URL; the QR code opens the same invite URL on a phone; **Leave** returns
+to the device's own row. Anyone with the code or sync link can open the same
+demo state. The code is hashed before it is sent as the backend row key, but the
+stored demo JSON is not end-to-end encrypted.
 
 This is demo isolation, not real user security. Add authentication before
 storing private user data, real customer work, or anything that needs account

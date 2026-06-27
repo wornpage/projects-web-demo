@@ -120,6 +120,7 @@ try {
   check("live API rejects third-party preflight", blockedCorsPreflightStatus === 403, blockedCorsPreflightStatus);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
+  check("weak random fallback is absent", !script.includes("Math.random"), script.includes("Math.random") ? "Math.random" : "absent");
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
   check("internal API strings are encoded", readableInternalStrings.length === 0, readableInternalStrings.join(", ") || "hidden");
   check("API base cannot be overridden from the query string", readableApiQueryOverride.length === 0, readableApiQueryOverride.join(", ") || "absent");

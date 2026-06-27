@@ -9,8 +9,9 @@ const API_STATE_SAVE_DEBOUNCE_MS = 300;
 const API_CLIENT_STORAGE_KEY = "projects-static-demo-api-client-v1";
 const SYNC_CODE_STORAGE_KEY = "projects-static-demo-sync-code-v1";
 const SYNC_CODE_QUERY_PARAM = "sync";
-const SYNC_CODE_MIN_COMPACT_LENGTH = 8;
-const SYNC_CODE_MAX_COMPACT_LENGTH = 16;
+const SYNC_CODE_MIN_COMPACT_LENGTH = 12;
+const SYNC_CODE_MAX_COMPACT_LENGTH = 24;
+const SYNC_CODE_GENERATED_COMPACT_LENGTH = 20;
 const SYNC_QR_VERSION = 5;
 const SYNC_QR_SIZE = 21 + ((SYNC_QR_VERSION - 1) * 4);
 const SYNC_QR_DATA_CODEWORDS = 108;
@@ -721,12 +722,14 @@ function bindDemoSyncControls() {
     withSyncControlsBusy(() => activateSyncCode(valueOf("sync-code-input"), { copyCurrentState: false }));
   });
   el("sync-code-new")?.addEventListener("click", () => {
-    const code = generateSyncCode();
-    const input = el("sync-code-input");
-    if (input) {
-      input.value = code;
-    }
-    withSyncControlsBusy(() => activateSyncCode(code, { copyCurrentState: true }));
+    withSyncControlsBusy(() => {
+      const code = generateSyncCode();
+      const input = el("sync-code-input");
+      if (input) {
+        input.value = code;
+      }
+      return activateSyncCode(code, { copyCurrentState: true });
+    });
   });
   el("sync-code-copy")?.addEventListener("click", () => {
     copySyncLink();
@@ -958,15 +961,12 @@ function normalizeSyncCode(value) {
 
 function generateSyncCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = new Uint8Array(12);
-  if (globalThis.crypto?.getRandomValues) {
-    globalThis.crypto.getRandomValues(bytes);
-  } else {
-    for (let index = 0; index < bytes.length; index += 1) {
-      bytes[index] = Math.floor(Math.random() * 256);
-    }
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error("Secure random sync codes need Web Crypto in this browser.");
   }
 
+  const bytes = new Uint8Array(SYNC_CODE_GENERATED_COMPACT_LENGTH);
+  globalThis.crypto.getRandomValues(bytes);
   const compact = Array.from(bytes, (value) => alphabet[value % alphabet.length]).join("");
   return compact.match(/.{1,4}/gu).join("-");
 }
@@ -1347,9 +1347,16 @@ function readApiClientId() {
 }
 
 function generateApiClientId() {
-  const randomValue = globalThis.crypto?.randomUUID?.()
-    || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
-  return `demo-${randomValue}`;
+  if (globalThis.crypto?.randomUUID) {
+    return `demo-${globalThis.crypto.randomUUID()}`;
+  }
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error("Backend state isolation needs Web Crypto in this browser.");
+  }
+
+  const bytes = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(bytes);
+  return `demo-${base64Url(bytes)}`;
 }
 
 function isApiClientId(value) {

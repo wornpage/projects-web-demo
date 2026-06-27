@@ -33,8 +33,9 @@ const requiredHtmlIds = [
 const expectedConstants = new Map([
   ["SYNC_CODE_STORAGE_KEY", "projects-static-demo-sync-code-v1"],
   ["SYNC_CODE_QUERY_PARAM", "sync"],
-  ["SYNC_CODE_MIN_COMPACT_LENGTH", 8],
-  ["SYNC_CODE_MAX_COMPACT_LENGTH", 16],
+  ["SYNC_CODE_MIN_COMPACT_LENGTH", 12],
+  ["SYNC_CODE_MAX_COMPACT_LENGTH", 24],
+  ["SYNC_CODE_GENERATED_COMPACT_LENGTH", 20],
   ["SYNC_QR_VERSION", 5],
   ["SYNC_QR_DATA_CODEWORDS", 108],
   ["SYNC_QR_ERROR_CODEWORDS", 26],
@@ -63,7 +64,8 @@ const requiredFunctions = [
   "syncQrDataCodewords",
   "apiHeaders",
   "apiClientId",
-  "syncClientId"
+  "syncClientId",
+  "generateApiClientId"
 ];
 
 for (const id of requiredHtmlIds) {
@@ -87,10 +89,12 @@ const copyLink = functionSource("copySyncLink");
 const activateCode = functionSource("activateSyncCode");
 const leaveCode = functionSource("leaveSyncCode");
 const normalizeCode = functionSource("normalizeSyncCode");
+const generateCode = functionSource("generateSyncCode");
 const qrData = functionSource("syncQrDataCodewords");
 const apiHeaders = functionSource("apiHeaders");
 const apiClient = functionSource("apiClientId");
 const syncClient = functionSource("syncClientId");
+const apiClientIdGenerator = functionSource("generateApiClientId");
 
 check(
   "backend API base comes only from the server-injected setting",
@@ -199,6 +203,17 @@ check(
 );
 
 check(
+  "generated sync codes use Web Crypto with no weak random fallback",
+  includesAll(generateCode, [
+    "!globalThis.crypto?.getRandomValues",
+    "throw new Error(\"Secure random sync codes need Web Crypto in this browser.\")",
+    "new Uint8Array(SYNC_CODE_GENERATED_COMPACT_LENGTH)",
+    "globalThis.crypto.getRandomValues(bytes)"
+  ]) && !generateCode.includes("Math.random"),
+  "generateSyncCode"
+);
+
+check(
   "built-in QR rejects links beyond its encoded capacity",
   includesAll(qrData, [
     "new TextEncoder().encode(value)",
@@ -215,6 +230,19 @@ check(
     "headers[\"x-projects-demo-client\"] = clientId"
   ]),
   "apiHeaders"
+);
+
+check(
+  "anonymous browser client keys use Web Crypto with no weak random fallback",
+  includesAll(apiClientIdGenerator, [
+    "globalThis.crypto?.randomUUID",
+    "globalThis.crypto.randomUUID()",
+    "!globalThis.crypto?.getRandomValues",
+    "throw new Error(\"Backend state isolation needs Web Crypto in this browser.\")",
+    "globalThis.crypto.getRandomValues(bytes)",
+    "return `demo-${base64Url(bytes)}`"
+  ]) && !source.includes("Math.random"),
+  "generateApiClientId"
 );
 
 check(
