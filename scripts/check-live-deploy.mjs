@@ -120,6 +120,10 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const invalidStringListStateStatus = await writeStatus("/api/state", stateWithInvalidStringList("live-invalid-string-list-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   const invalidProfileStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-profile-state", "copyProfile", "private"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
@@ -340,6 +344,7 @@ try {
   check("hosted state rejects invalid work items", invalidPackStateStatus === 400, invalidPackStateStatus);
   check("hosted state rejects invalid work statuses", invalidWorkStatusStateStatus === 400, invalidWorkStatusStateStatus);
   check("hosted state rejects invalid selected work", invalidSelectedIdStateStatus === 400, invalidSelectedIdStateStatus);
+  check("hosted state rejects invalid work string lists", invalidStringListStateStatus === 400, invalidStringListStateStatus);
   check("hosted state rejects invalid copy profiles", invalidProfileStateStatus === 400, invalidProfileStateStatus);
   check("hosted state rejects invalid scenarios", invalidScenarioStateStatus === 400, invalidScenarioStateStatus);
   check("hosted state rejects invalid filters", invalidFilterStateStatus === 400, invalidFilterStateStatus);
@@ -533,6 +538,12 @@ function stateWithInvalidPackStatus(prefix) {
 function stateWithInvalidSelectedId(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.selectedId = `${prefix}-missing`;
+  return state;
+}
+
+function stateWithInvalidStringList(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.packs[0].memory = [{ note: "not text" }];
   return state;
 }
 

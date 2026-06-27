@@ -1410,6 +1410,7 @@ function validateStatePacks(value) {
     if (packIds.has(id)) {
       throw httpError(400, "Demo state work item ids must be unique.");
     }
+    validatePackStringArrays(pack);
     packIds.add(id);
   });
   return packIds;
@@ -1419,6 +1420,34 @@ function validateSelectedPackId(value, packIds) {
   const selectedId = normalizeText(value, 120);
   if (!selectedId || !packIds.has(selectedId)) {
     throw httpError(400, "Demo state selected work must reference an existing item.");
+  }
+}
+
+function validatePackStringArrays(pack) {
+  validatePackStringArray(pack, "sources", 50, 200);
+  validatePackStringArray(pack, "memory", 100, 2000);
+  validatePackStringArray(pack, "activity", 100, 400);
+}
+
+function validatePackStringArray(pack, key, maxItems, maxLength) {
+  if (!Object.prototype.hasOwnProperty.call(pack, key)) {
+    return;
+  }
+  if (!Array.isArray(pack[key])) {
+    throw httpError(400, `Demo state work item ${key} must be a text array.`);
+  }
+  if (pack[key].length > maxItems) {
+    throw httpError(400, `Demo state work item ${key} cannot contain more than ${maxItems} entries.`);
+  }
+
+  for (const entry of pack[key]) {
+    if (typeof entry !== "string") {
+      throw httpError(400, `Demo state work item ${key} entries must be text.`);
+    }
+    const normalized = normalizeText(entry, maxLength + 1);
+    if (!normalized || normalized.length > maxLength) {
+      throw httpError(400, `Demo state work item ${key} entries must be nonblank text up to ${maxLength} characters.`);
+    }
   }
 }
 

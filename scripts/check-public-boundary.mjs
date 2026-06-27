@@ -358,6 +358,14 @@ try {
     },
     body: JSON.stringify(stateWithInvalidSelectedId("invalid-selected-boundary"))
   });
+  const invalidStringListStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidStringList("invalid-string-list-boundary"))
+  });
   const invalidProfileStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -476,6 +484,7 @@ try {
   check("invalid work items in keyed state snapshots are rejected", invalidPackStateWrite.status === 400, invalidPackStateWrite.status);
   check("invalid work status snapshots are rejected", invalidStatusStateWrite.status === 400, invalidStatusStateWrite.status);
   check("invalid selected work snapshots are rejected", invalidSelectedIdStateWrite.status === 400, invalidSelectedIdStateWrite.status);
+  check("invalid work string-list snapshots are rejected", invalidStringListStateWrite.status === 400, invalidStringListStateWrite.status);
   check("invalid copy profiles are rejected", invalidProfileStateWrite.status === 400, invalidProfileStateWrite.status);
   check("invalid scenarios are rejected", invalidScenarioStateWrite.status === 400, invalidScenarioStateWrite.status);
   check("invalid filters are rejected", invalidFilterStateWrite.status === 400, invalidFilterStateWrite.status);
@@ -581,6 +590,12 @@ function stateWithInvalidPackStatus(prefix) {
 function stateWithInvalidSelectedId(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.selectedId = `${prefix}-missing`;
+  return state;
+}
+
+function stateWithInvalidStringList(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.packs[0].memory = [{ note: "not text" }];
   return state;
 }
 
