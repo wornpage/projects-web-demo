@@ -49,6 +49,7 @@ Observed responses:
 | `/api/state` with generated client key | `200` | Demo state loads for that client key |
 | `/api/state` with weak manual client key | `400` | Short/manual row selectors are rejected |
 | `/api/state` with readable sync-code client key | `400` | Sync codes must be hashed before they become row selectors |
+| `/api/state/restore` without client key | `400` | Backend recovery restore has no unkeyed fallback row |
 | `/api/state/erase` without client key | `400` | Backend erase has no unkeyed fallback row |
 | `/api/state/erase` with generated client key | `200` | Only the current keyed row is erased |
 | `/api/demo-packs` without client key | `400` | Backend seed data has no unkeyed fallback row |
@@ -176,8 +177,8 @@ local and live boundary gates also confirm weak manual and readable sync-code
 API client key values are rejected.
 The recovery gate also confirms the Start screen keeps copy/restore recovery
 controls, recovery JSON includes a version marker and current demo state, pasted
-recovery JSON is capped at 50 work items, and restored snapshots use the normal
-local or backend save path.
+recovery JSON is capped at 50 work items, static restores use the local save
+path, and hosted restores use `POST /api/state/restore`.
 
 ## Risk Decisions
 
@@ -201,6 +202,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Hosted cards expose browser-resolved command labels | Fixed | Card-level run-next buttons stay generic in hosted app mode and defer the specific command choice to the server-preview run-next path |
 | Browser duplicates selected-work command rationale in app mode | Fixed | `/api/packs/{id}/command` returns the selected-work flow hint and primary why copy; browser derivation remains for static mode |
 | Server-owned workflow calls pre-send browser full-state snapshots | Fixed | Pack create, next, path, memory, and action endpoints cancel pending generic saves and call their specific API without first writing `PUT /api/state` |
+| Hosted recovery restore uses generic browser save path | Fixed | Recovery restore posts to `POST /api/state/restore` in hosted app mode and rejects missing browser keys before body parsing |
 | Server-owned work-path writes accept unsupported workflow status | Fixed | `/api/packs/{id}/path` rejects present blank or unsupported status values before storage, and local/live gates prove it |
 | Backend endpoint responses trigger immediate generic state re-saves | Fixed | Backend-loaded state marks the next render as save-suppressed, so workflow and sync loads are not immediately followed by a generic `PUT /api/state` |
 | Live verifier can miss stale hosted seed data | Fixed | The live gate compares `GET /api/demo-packs` with checkout `data/demo-packs.json` instead of only checking for a non-empty response |
@@ -280,15 +282,18 @@ copy, so hosted app mode uses server-owned command rationale while static mode
 keeps browser-local fallback copy.
 Server-owned workflow calls do not pre-send the browser's full state snapshot
 before those specific endpoints. Generic `PUT /api/state` remains for
-browser-row persistence, sync-code copy, and recovery.
+browser-row persistence and sync-code copy.
+Hosted recovery restore uses `POST /api/state/restore`; GitHub Pages keeps the
+browser-local restore path.
 Backend-loaded state also suppresses the next render's generic save, so a
 specific workflow endpoint response is not immediately re-written through
 `PUT /api/state`.
 The older generic `PATCH /api/packs/{id}` update path is retired so work edits
 must pass through the server-owned workflow endpoints.
 Full demo snapshot persistence is intentionally limited to `PUT /api/state` for
-browser-row persistence, sync-code copy, and recovery. The older duplicate
-`POST /api/state` write path is retired.
+browser-row persistence and sync-code copy. Hosted recovery restore uses the
+named `POST /api/state/restore` path. The older duplicate `POST /api/state`
+write path is retired.
 
 ## Obfuscation Decision
 

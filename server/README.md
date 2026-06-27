@@ -132,6 +132,7 @@ base instead of the incoming Host header.
 | `GET /api/demo-packs` | Load server-side seed demo work with a browser client key. |
 | `GET /api/state` | Load the full demo state. |
 | `PUT /api/state` | Save the full demo state. |
+| `POST /api/state/restore` | Restore a bounded recovery snapshot into the current keyed demo state row. |
 | `POST /api/state/erase` | Erase the current keyed demo state row. |
 | `GET /api/packs` | Load only work items. |
 | `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Button runs next` preview for one work item. |
@@ -146,6 +147,8 @@ retry/refresh blocker while the preview is unavailable, instead of resolving the
 primary command only in browser code.
 Hosted card-level run-next buttons use generic copy and defer the specific
 command label to the server-preview run-next path.
+Hosted recovery restores use `POST /api/state/restore` instead of the generic
+browser save path; static preview keeps local browser restore.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.

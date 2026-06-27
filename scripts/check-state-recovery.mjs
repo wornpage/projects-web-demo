@@ -81,8 +81,8 @@ try {
   });
   check("client A can overwrite its row before restore", stateHasPackTitle(savedOverwrite.body, overwriteTitle), savedOverwrite.status);
 
-  const restoredState = await jsonRequest(port, "/api/state", {
-    method: "PUT",
+  const restoredState = await jsonRequest(port, "/api/state/restore", {
+    method: "POST",
     headers: {
       "content-type": "application/json",
       ...clientAHeaders
@@ -141,7 +141,8 @@ function checkRecoverySurfaceSource() {
   check("recovery snapshot has a version marker", source.includes("projectsDemoRecovery: RECOVERY_SNAPSHOT_VERSION"), "projectsDemoRecovery");
   check("recovery snapshot uses current demo state", source.includes("state: demoStateSnapshot()"), "demoStateSnapshot");
   check("recovery restore parses pasted backup", source.includes('parseRecoverySnapshot(valueOf("demo-recovery-input"))'), "parseRecoverySnapshot");
-  check("recovery restore persists through normal save path", source.includes("loadState(snapshot)") && source.includes("saveState()"), "loadState/saveState");
+  check("hosted recovery restore uses named backend endpoint", source.includes('sendBackendStateSnapshot("/api/state/restore", "POST", snapshot, "Restore")') && source.includes("restoreBackendStateSnapshot(snapshot)"), "restore endpoint");
+  check("static recovery restore keeps local save path", source.includes("loadState(snapshot)") && source.includes("saveState()"), "static loadState/saveState");
   check("recovery erase uses backend row endpoint", source.includes('apiUrl("/api/state/erase")') && source.includes("state.suppressNextSave = true"), "erase endpoint without immediate resave");
   check("recovery import caps work count", source.includes("const DEMO_STATE_MAX_PACKS = 50") && source.includes("packs.length > DEMO_STATE_MAX_PACKS"), "50 pack cap");
   check("recovery import rejects invalid work items", source.includes("backup work items need an id and title"), "id/title required");

@@ -81,6 +81,9 @@ try {
     ...apiHeaders,
     "content-type": "application/json"
   }, "POST");
+  const unkeyedRestoreStatus = await writeStatus("/api/state/restore", stateWithGeneratedPacks(1, "live-unkeyed-restore"), {
+    "content-type": "text/plain"
+  }, "POST");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
   const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
@@ -272,7 +275,7 @@ try {
   await writeJson("/api/state", stateWithCheckPack(exportedRecoveryState, "live-recovery-check", recoveryOverwriteTitle), {
     "x-projects-demo-client": recoveryKey
   });
-  await writeJson("/api/state", exportedRecoveryState, { "x-projects-demo-client": recoveryKey });
+  await writeJson("/api/state/restore", exportedRecoveryState, { "x-projects-demo-client": recoveryKey }, "POST");
   const restoredRecoveryState = await readJson("/api/state", { "x-projects-demo-client": recoveryKey });
   const clientAState = await readJson("/api/state", { "x-projects-demo-client": clientAKey });
   const clientBState = await readJson("/api/state", { "x-projects-demo-client": clientBKey });
@@ -405,6 +408,7 @@ try {
   check("hosted command preview rejects missing client key", unkeyedCommandPreviewStatus === 400, unkeyedCommandPreviewStatus);
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
+  check("hosted recovery restore rejects missing client key before body parsing", unkeyedRestoreStatus === 400, unkeyedRestoreStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
@@ -509,9 +513,9 @@ async function readJson(pathname, headers = {}) {
   return JSON.parse(await readText(pathname, headers));
 }
 
-async function writeJson(pathname, payload, headers = {}) {
+async function writeJson(pathname, payload, headers = {}, method = "PUT") {
   const response = await fetch(new URL(pathname, baseUrl), {
-    method: "PUT",
+    method,
     headers: {
       "cache-control": "no-cache",
       "content-type": "application/json",

@@ -96,6 +96,8 @@ try {
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
   check("state-changing routes validate client keys and write limits before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
+  const recoveryRestore = frontendRecoveryRestoreUsesBackendEndpoint(frontendSource);
+  check("hosted recovery restore uses named backend endpoint", recoveryRestore.ok, recoveryRestore.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -192,10 +194,16 @@ try {
     });
     return [name, response.status];
   }));
+  const unkeyedRestore = await request(port, "/api/state/restore", {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: JSON.stringify({ packs: [] })
+  });
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
   check("keyed command preview owns flow and reason copy", commandPreviewOwnsCopy(keyedCommandPreview.body), `${keyedCommandPreview.body?.flowHint || "missing"} / ${keyedCommandPreview.body?.primaryReason || "missing"}`);
+  check("unkeyed recovery restore rejects missing client key before body parsing", unkeyedRestore.status === 400, unkeyedRestore.status);
   check(
     "unkeyed API workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWrites.every(([, status]) => status === 400),
@@ -923,6 +931,7 @@ function getHeader(headers, name) {
 function writeRoutesValidateKeyBeforeBody(source) {
   const anchors = [
     "if (method === \"PUT\" && pathname === \"/api/state\")",
+    "if (method === \"POST\" && pathname === \"/api/state/restore\")",
     "if (method === \"POST\" && pathname === \"/api/packs\")",
     "if (packPathMatch && method === \"POST\")",
     "if (packNextMatch && method === \"POST\")",
@@ -938,6 +947,41 @@ function writeRoutesValidateKeyBeforeBody(source) {
   return {
     ok: failed.length === 0,
     detail: failed.length === 0 ? "stateWriteKeyForRequest before readJsonBody" : failed.join(", ")
+  };
+}
+
+function frontendRecoveryRestoreUsesBackendEndpoint(source) {
+  const body = functionBody(source, "restoreRecoverySnapshot");
+  if (!body) {
+    return { ok: false, detail: "restoreRecoverySnapshot:missing" };
+  }
+
+  const required = [
+    "if (DEMO_API_BASE_URL)",
+    "clearPendingBackendStateSave();",
+    "loadBackendOwnedState(await restoreBackendStateSnapshot(snapshot));",
+    "loadState(snapshot);",
+    "saveState();"
+  ];
+  const missing = required.filter((needle) => !body.includes(needle));
+  const backendIndex = body.indexOf("if (DEMO_API_BASE_URL)");
+  const restoreIndex = body.indexOf("restoreBackendStateSnapshot(snapshot)");
+  const staticLoadIndex = body.indexOf("loadState(snapshot)");
+  const staticSaveIndex = body.indexOf("saveState();");
+  const orderOk = backendIndex >= 0
+    && restoreIndex > backendIndex
+    && staticLoadIndex > restoreIndex
+    && staticSaveIndex > staticLoadIndex;
+  const helperBody = functionBody(source, "restoreBackendStateSnapshot");
+  if (!helperBody.includes('sendBackendStateSnapshot("/api/state/restore", "POST", snapshot, "Restore")')) {
+    missing.push("restoreBackendStateSnapshot:missing restore endpoint");
+  }
+
+  return {
+    ok: missing.length === 0 && orderOk,
+    detail: missing.length === 0 && orderOk
+      ? "hosted restore posts to /api/state/restore while static restore keeps local save"
+      : `missing ${missing.join(", ") || "correct order"}`
   };
 }
 
@@ -1254,7 +1298,7 @@ function frontendBackendWorkflowFailuresStopStaticFallback(source) {
 }
 
 function functionBody(source, name) {
-  const start = source.indexOf(`function ${name}(`);
+  const start = source.search(new RegExp(`(?:^|\\n)(?:async\\s+)?function\\s+${name}\\(`, "u"));
   if (start < 0) {
     return "";
   }

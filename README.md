@@ -191,6 +191,9 @@ fallback.
 Server-owned workflow calls cancel pending generic state saves and call the
 specific backend endpoint directly instead of first writing the full browser
 state through `PUT /api/state`.
+Recovery restores in hosted app mode post to `POST /api/state/restore` instead
+of going through the browser's generic full-state save path. Static mode still
+uses the local browser save path because GitHub Pages has no backend.
 If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
 and does not continue into the static fallback write path.
 Those workflow endpoints reject malformed or overlong request fields before
@@ -215,8 +218,8 @@ after the shared state loads.
 The Start screen also has a collapsed Recovery section. **Copy backup** copies a
 bounded JSON snapshot for the current browser or active sync row, and
 **Restore backup** validates pasted Projects demo recovery JSON before loading
-and saving it through the same local or backend state path. This is still demo
-recovery, not account backup or encrypted private storage.
+and saving it through the local static path or the hosted restore endpoint. This
+is still demo recovery, not account backup or encrypted private storage.
 In hosted app mode, the same Recovery section can erase the current backend row.
 That removes only the row selected by this browser or active sync code and then
 shows the sample state without immediately recreating the deleted row.

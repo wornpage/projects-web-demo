@@ -135,6 +135,11 @@ check("live verifier rejects unkeyed workflow writes before body parsing", inclu
   "unkeyedWorkflowWriteStatuses",
   "hosted workflow writes reject missing client key before body parsing"
 ]), "unkeyed workflow write rejection");
+check("live verifier rejects unkeyed recovery restore before body parsing", includesAll(liveVerifier, [
+  "unkeyedRestoreStatus",
+  "hosted recovery restore rejects missing client key before body parsing",
+  "\"/api/state/restore\""
+]), "unkeyed recovery restore rejection");
 check("live verifier rejects invalid work-path status writes", includesAll(liveVerifier, [
   "invalidWorkPathStatus",
   "hosted work-path rejects invalid statuses"

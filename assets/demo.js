@@ -502,15 +502,24 @@ function copyRecoverySnapshot() {
   );
 }
 
-function restoreRecoverySnapshot() {
+async function restoreRecoverySnapshot() {
   try {
     const snapshot = parseRecoverySnapshot(valueOf("demo-recovery-input"));
-    loadState(snapshot);
-    state.status = "Where: Recovery. Blocker: None. Button runs next: review restored demo state.";
+    const restoredStatus = routeStatus("Recovery", DEMO_BLOCKER_NONE, "review backup");
+    snapshot.status = restoredStatus;
+    snapshot.actionReceipt = null;
+    if (DEMO_API_BASE_URL) {
+      clearPendingBackendStateSave();
+      loadBackendOwnedState(await restoreBackendStateSnapshot(snapshot));
+    } else {
+      loadState(snapshot);
+      saveState();
+    }
+
+    state.status = restoredStatus;
     state.clipboardReceipt = null;
     syncSearchParam("scenario", state.scenarioId === "default" ? null : state.scenarioId);
     syncSearchParam("profile", state.copyProfile === "general" ? null : state.copyProfile);
-    saveState();
     render();
   } catch (error) {
     state.status = `Where: Recovery. Blocker: ${error.message || "invalid backup"}. Button runs next: paste a valid demo backup.`;
@@ -707,14 +716,23 @@ function flushBackendStateSave() {
 }
 
 async function persistBackendStateSnapshot(snapshot) {
-  const response = await fetch(apiUrl("/api/state"), {
-    method: "PUT",
+  await sendBackendStateSnapshot("/api/state", "PUT", snapshot, "Save");
+}
+
+async function restoreBackendStateSnapshot(snapshot) {
+  return sendBackendStateSnapshot("/api/state/restore", "POST", snapshot, "Restore");
+}
+
+async function sendBackendStateSnapshot(path, method, snapshot, label) {
+  const response = await fetch(apiUrl(path), {
+    method,
     headers: await apiHeaders({ "content-type": "application/json" }),
     body: JSON.stringify(snapshot)
   });
   if (!response.ok) {
-    throw new Error(`Backend API save failed with ${response.status}`);
+    throw new Error(`${label} ${response.status}`);
   }
+  return response.json();
 }
 
 async function runBackendPackAction(pack, action) {

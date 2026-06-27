@@ -116,7 +116,8 @@ After deploy:
    URL, the QR code is visible beside the sync link, and opening the sync link
    removes `?sync=` from the address bar after the shared state loads.
 8. Open the Start screen Recovery section, copy a backup, paste it back, and
-   confirm the restored demo state stays in the same browser or active sync row.
+   confirm the hosted restore endpoint keeps the restored demo state in the
+   same browser or active sync row.
 9. Use **Erase backend row** from the Recovery section and confirm the current
    browser or active sync row returns to sample state.
 10. Confirm the app shell points at a current CSS/JS asset query string and
@@ -159,7 +160,8 @@ After deploy:
    work-path writes accept an unsupported status value,
    if two browser client keys can read each other's state, if seed demo work cannot load
    through the keyed API, if a shared sync key cannot be read from a second
-   request, if an exported state snapshot cannot be restored, if the live
+   request, if an exported state snapshot cannot be restored through
+   `POST /api/state/restore`, if the live
    verifier cannot erase the temporary verifier rows it writes, or if public
    assets expose source maps or private path strings.
    It writes only generated-format verifier rows, then erases the temporary
