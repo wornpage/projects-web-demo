@@ -136,7 +136,7 @@ check("primary nav label stays compact and public-facing", html.includes('id="de
 check("brand home link stays public-facing", html.includes('aria-label="Projects demo home"'), "Projects demo home");
 check("metadata preview copy stays public and truthful", metadataPreviewContractOk(), "description omits browser-local-only framing and names no-login demo data");
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
-check("demo notice says no login or private data", html.includes("Demo data only. No login or private project data."), "no login/private data");
+check("demo notice gives a starting cue and privacy boundary", demoNoticeContractOk(), "start with Review plus no-login/private-data boundary");
 check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("Saves to this backend row; no login.") && source.includes("No login or private storage.") && source.includes("No private project data.") && !source.includes("not an account") && !source.includes("Do not enter private project data"), "no-login runtime notices");
 check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"'), "demo notice role=note");
 check("sidebar idea note is exposed as supporting context", sidebarNoteContractOk(), "sidebar note names the idea and starting point");
@@ -246,6 +246,11 @@ function metadataPreviewContractOk() {
   return html.includes('<meta name="description" content="Small Projects demo: pick work, see blockers, run next actions. Demo data only; no login or private project data.">')
     && !html.includes("Small browser-local Projects demo")
     && !html.includes("browser-local Projects demo");
+}
+
+function demoNoticeContractOk() {
+  return html.includes('<section id="demo-notice" class="demo-notice card" role="note" aria-label="Demo notice">')
+    && html.includes("Start with Review. Demo data only; no login or private project data.");
 }
 
 function spotlightFactsContractOk() {
