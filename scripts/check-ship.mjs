@@ -73,6 +73,11 @@ const steps = [
     args: ["scripts/check-docker-boundary.mjs"]
   },
   {
+    label: "deploy config",
+    command: process.execPath,
+    args: ["scripts/check-deploy-config.mjs"]
+  },
+  {
     label: "diff whitespace",
     command: "git",
     args: ["diff", "--check"]

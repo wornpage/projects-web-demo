@@ -110,8 +110,10 @@ After deploy:
 
    The ship verifier runs local syntax, protected frontend, public
    asset-disclosure, public route, sync sharing, state recovery, public-boundary,
-   Docker deploy-boundary, whitespace, and live Outplane checks. Its live step
-   fails if Outplane is still serving an old frontend bundle, if the app shell is
+   Docker deploy-boundary, deploy-config, whitespace, and live Outplane checks.
+   The deploy-config step keeps this checklist, Docker defaults, ignored local
+   state paths, and the live verifier target aligned. Its live step fails if
+   Outplane is still serving an old frontend bundle, if the app shell is
    missing its same-origin runtime config script or no-inline CSP, if app/API
    responses are missing the noindex/noarchive robots header, if production
    minification did not run, if the backend-backed frontend helpers are missing,
