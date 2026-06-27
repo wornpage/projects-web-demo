@@ -120,8 +120,10 @@ check("live verifier rejects invalid work-path status writes", includesAll(liveV
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",
+  "erasePathStatusStateStatus",
   "hosted verifier cleanup erases shared row",
-  "hosted verifier cleanup erases recovery row"
+  "hosted verifier cleanup erases recovery row",
+  "hosted verifier cleanup erases path-status row"
 ]), "live verifier cleanup");
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
 check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, clean git state, and live/u.test(readme), "README ship summary");

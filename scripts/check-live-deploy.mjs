@@ -87,10 +87,12 @@ try {
   const sharedKey = "sync-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
   const recoveryKey = "demo-00000000-0000-4000-8000-000000000204";
   const limitKey = "demo-00000000-0000-4000-8000-000000000205";
+  const pathStatusKey = "demo-00000000-0000-4000-8000-000000000206";
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
   const recoveryOverwriteTitle = `Live recovery overwritten ${isolationStamp}`;
+  const pathStatusTitle = `Live path status check ${isolationStamp}`;
   const unkeyedNonJsonStateWriteStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-unkeyed-non-json-state"), {
     "content-type": "text/plain"
   }, "PUT");
@@ -142,11 +144,14 @@ try {
       "content-type": "text/plain"
     }, "POST")
   ]));
+  await writeJson("/api/state", stateWithCheckPack(liveState, "live-path-status-check", pathStatusTitle), {
+    "x-projects-demo-client": pathStatusKey
+  });
   const invalidWorkPathStatus = await writeStatus("/api/packs/source-folder-audit/path", {
     status: "private-workflow",
     next: "Open"
   }, {
-    "x-projects-demo-client": limitKey,
+    "x-projects-demo-client": pathStatusKey,
     "content-type": "application/json"
   }, "POST");
   const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
@@ -197,6 +202,8 @@ try {
   const sharedStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
   const eraseRecoveryStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": recoveryKey }, "POST");
   const recoveryStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": recoveryKey });
+  const erasePathStatusStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": pathStatusKey }, "POST");
+  const pathStatusStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": pathStatusKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
@@ -351,6 +358,7 @@ try {
   check("hosted state restore removes later overwrite", !stateHasPackTitle(restoredRecoveryState, recoveryOverwriteTitle), recoveryOverwriteTitle);
   check("hosted verifier cleanup erases shared row", eraseSharedStateStatus === 200 && !stateHasPackTitle(sharedStateAfterCleanup, sharedTitle), `${eraseSharedStateStatus} / ${sharedTitle}`);
   check("hosted verifier cleanup erases recovery row", eraseRecoveryStateStatus === 200 && !stateHasPackTitle(recoveryStateAfterCleanup, recoverySnapshotTitle), `${eraseRecoveryStateStatus} / ${recoverySnapshotTitle}`);
+  check("hosted verifier cleanup erases path-status row", erasePathStatusStateStatus === 200 && !stateHasPackTitle(pathStatusStateAfterCleanup, pathStatusTitle), `${erasePathStatusStateStatus} / ${pathStatusTitle}`);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("API command route returns selected-work flow copy", commandPreviewOwnsCopy(commandPreview), `${commandPreview.flowHint || "missing"} / ${commandPreview.primaryReason || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");
