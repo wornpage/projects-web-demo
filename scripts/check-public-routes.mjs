@@ -312,6 +312,7 @@ function mobileDockContractOk() {
     "grid-template-columns: repeat(2, minmax(0, 1fr));",
     ".demo-bottom-next",
     "grid-column: 1 / -1;",
+    "overflow-wrap: anywhere;",
     "white-space: normal;"
   ]);
 }
