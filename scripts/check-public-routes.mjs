@@ -106,6 +106,7 @@ check("review route surfaces an up-next queue spotlight", reviewSpotlightContrac
 check("create route surfaces readiness before the form", createReadinessContractOk(), "createReadinessPanel with required field checklist");
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
+check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
@@ -190,6 +191,18 @@ function spotlightStylesContractOk() {
     ".demo-review-queue-stats",
     ".demo-create-readiness-list",
     "grid-template-columns: 1fr;"
+  ]);
+}
+
+function mobileDockContractOk() {
+  const mobileDockStart = styles.indexOf("Mobile dock gives the primary next action a full row");
+  const mobileDock = mobileDockStart < 0 ? "" : styles.slice(mobileDockStart);
+  return includesAll(mobileDock, [
+    ".demo-bottom-brief",
+    "grid-template-columns: repeat(2, minmax(0, 1fr));",
+    ".demo-bottom-next",
+    "grid-column: 1 / -1;",
+    "white-space: normal;"
   ]);
 }
 
