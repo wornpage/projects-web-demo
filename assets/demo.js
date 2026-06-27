@@ -3636,9 +3636,17 @@ function cardFact(label, value) {
 }
 
 function primaryCommandButton(pack, className = "btn btn-primary") {
-  const command = resolvePrimaryCommandForPack(pack);
-  const copy = helpCopy(primaryCommandReason(pack, command), DEMO_COPY_LIMITS.commandFlowHelp);
-  return `<button class="${escapeAttribute(className)}" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(command.label)}</button>`;
+  const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);
+  const label = command?.label || "Run next";
+  const reason = command
+    ? primaryCommandReason(pack, command)
+    : backendCardRunNextReason(pack);
+  const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<button class="${escapeAttribute(className)}" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
+}
+
+function backendCardRunNextReason(pack) {
+  return `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: server preview before running.`;
 }
 
 function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)) {

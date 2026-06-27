@@ -100,6 +100,8 @@ try {
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
   check("backend app mode runs next from server command preview", runNextBoundary.ok, runNextBoundary.detail);
+  const cardRunNextBoundary = frontendHostedCardRunNextUsesGenericLabel(frontendSource);
+  check("hosted card run-next buttons avoid browser command labels", cardRunNextBoundary.ok, cardRunNextBoundary.detail);
   const serverPreviewMarkers = serverCommandPreviewCopyMarkers(serverSource);
   check("server command preview owns selected-work flow copy", serverPreviewMarkers.ok, serverPreviewMarkers.detail);
   const workflowPreflight = frontendWorkflowHelpersAvoidFullStatePreflight(frontendSource);
@@ -1033,6 +1035,36 @@ function frontendRunNextUsesBackendCommandPreview(source) {
     detail: missing.length === 0 && orderOk
       ? "run-next waits for API-owned command before local route/action dispatch"
       : `missing ${missing.join(", ") || "correct order"}`
+  };
+}
+
+function frontendHostedCardRunNextUsesGenericLabel(source) {
+  const body = functionBody(source, "primaryCommandButton");
+  if (!body) {
+    return { ok: false, detail: "primaryCommandButton:missing" };
+  }
+
+  const required = [
+    "const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);",
+    "const label = command?.label || \"Run next\";",
+    "backendCardRunNextReason(pack)",
+    "${escapeHtml(label)}"
+  ];
+  const missing = required.filter((needle) => !body.includes(needle));
+  if (body.includes("${escapeHtml(command.label)}")) {
+    missing.push("direct command label still rendered");
+  }
+
+  const helperBody = functionBody(source, "backendCardRunNextReason");
+  if (!helperBody.includes("server preview before running")) {
+    missing.push("backendCardRunNextReason:missing server-preview copy");
+  }
+
+  return {
+    ok: missing.length === 0,
+    detail: missing.length === 0
+      ? "hosted card buttons stay generic and defer command choice to preview-backed run-next"
+      : missing.join(", ")
   };
 }
 

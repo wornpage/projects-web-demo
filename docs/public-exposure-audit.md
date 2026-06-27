@@ -198,6 +198,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Hosted seed API accepts unkeyed reads | Fixed | Local and live gates prove `/api/demo-packs` rejects missing browser keys |
 | Server-owned workflow reads accept unkeyed requests | Fixed | Local and live gates prove `/api/packs` and `/api/packs/{id}/command` reject missing browser keys |
 | Backend app mode can briefly run browser fallback commands | Fixed | Selected-work command controls wait in a disabled state until `/api/packs/{id}/command` returns |
+| Hosted cards expose browser-resolved command labels | Fixed | Card-level run-next buttons stay generic in hosted app mode and defer the specific command choice to the server-preview run-next path |
 | Browser duplicates selected-work command rationale in app mode | Fixed | `/api/packs/{id}/command` returns the selected-work flow hint and primary why copy; browser derivation remains for static mode |
 | Server-owned workflow calls pre-send browser full-state snapshots | Fixed | Pack create, next, path, memory, and action endpoints cancel pending generic saves and call their specific API without first writing `PUT /api/state` |
 | Server-owned work-path writes accept unsupported workflow status | Fixed | `/api/packs/{id}/path` rejects present blank or unsupported status values before storage, and local/live gates prove it |
@@ -271,6 +272,9 @@ resulting command preview or receipt to the browser.
 While a selected-work command preview is loading in backend app mode, the
 primary command controls show a disabled waiting state instead of running the
 browser-local workflow fallback.
+Card-level run-next buttons stay generic in backend app mode instead of
+rendering browser-resolved command labels, and pressing one still uses the
+server-preview run-next path before dispatch.
 The command preview also returns the selected-work flow hint and primary why
 copy, so hosted app mode uses server-owned command rationale while static mode
 keeps browser-local fallback copy.

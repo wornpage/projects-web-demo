@@ -182,6 +182,9 @@ before enabling the primary command buttons, so the browser does not briefly run
 the local workflow fallback while `/api/packs/{id}/command` is loading.
 Run-next dispatch also uses that server command preview in hosted app mode and
 stops at a retry/refresh blocker while the preview is unavailable.
+Card-level run-next buttons stay generic in hosted app mode instead of
+rendering browser-resolved command labels; pressing one still enters the same
+server-preview run-next path.
 That same command preview owns the selected-work flow hint and primary "why"
 copy in hosted app mode; the browser-side copy remains only as the static
 fallback.

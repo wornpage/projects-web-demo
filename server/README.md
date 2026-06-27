@@ -144,6 +144,8 @@ base instead of the incoming Host header.
 Hosted run-next dispatch reads from the server command preview and stops at a
 retry/refresh blocker while the preview is unavailable, instead of resolving the
 primary command only in browser code.
+Hosted card-level run-next buttons use generic copy and defer the specific
+command label to the server-preview run-next path.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.
