@@ -149,6 +149,9 @@ Each keyed backend row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected instead of being silently stored.
 Full-state writes also require each work item to keep a unique id and title, so
 backup or sync restores cannot silently create ambiguous duplicate work rows.
+Selected-work commands in hosted app mode wait for the server command preview
+before enabling the primary command buttons, so the browser does not briefly run
+the local workflow fallback while `/api/packs/{id}/command` is loading.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
 to the same demo row. Use **New** to create a Web Crypto generated 20-character

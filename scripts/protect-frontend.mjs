@@ -28,6 +28,7 @@ const protectedStringValues = Object.freeze([
   "Projects demo backend work path action failed.",
   "Save to backend",
   "Sync codes need the backend app mode.",
+  "backend-command-pending",
   "backend API could not load",
   "projects-static-demo-api-client-v1",
   "x-projects-demo-client"
@@ -48,7 +49,12 @@ const bannedReadableNames = Object.freeze([
   "loadBackendPackCommandPreview",
   "createBackendPack",
   "addBackendPackMemoryNote",
-  "saveBackendPackPath"
+  "saveBackendPackPath",
+  "backendCommandPendingForPack",
+  "isBackendCommandPending",
+  "backendCommandPendingReason",
+  "backendCommandPendingFlowHint",
+  "syncCommandActionButton"
 ]);
 
 const source = await fs.readFile(inputPath, "utf8");

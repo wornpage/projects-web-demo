@@ -41,6 +41,7 @@ try {
   await waitForHealth(port);
 
   const serverSource = await fs.readFile(path.join(repoRoot, "server/server.js"), "utf8");
+  const frontendSource = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
   const health = await jsonRequest(port, "/api/health");
   const appShell = await request(port, "/");
   const runtimeConfigPath = runtimeConfigPathFromHtml(appShell.text);
@@ -91,6 +92,8 @@ try {
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
   check("state-changing routes validate client keys before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateKeyForRequest required");
+  const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
+  check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
 
   const sameOrigin = `http://127.0.0.1:${port}`;
   const sameOriginCors = await request(port, "/api/health", {
@@ -600,6 +603,25 @@ function eraseRouteValidatesKey(source) {
   const routeEnd = source.indexOf("\n  }\n\n", routeStart);
   const routeSource = source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined);
   return routeSource.includes("eraseState(stateKeyForRequest(request))");
+}
+
+function backendCommandPendingMarkers(source) {
+  const markers = [
+    "function backendCommandPendingForPack(pack)",
+    "return backendCommandPendingForPack(pack);",
+    "function isBackendCommandPending(command)",
+    "action: \"backend-command-pending\"",
+    "syncCommandActionButton(el(\"primary-action\"), command);",
+    "syncCommandActionButton(el(\"dock-next\"), command);",
+    "syncCommandActionButton(button, command);",
+    "control.disabled = pending;",
+    "data-action=\"${escapeAttribute(pending ? \"\" : command.action || \"\")}\""
+  ];
+  const missing = markers.filter((marker) => !source.includes(marker));
+  return {
+    ok: missing.length === 0,
+    detail: missing.length === 0 ? "selected work controls wait while preview loads" : missing.join(", ")
+  };
 }
 
 async function waitForHealth(activePort) {

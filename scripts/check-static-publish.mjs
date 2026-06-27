@@ -27,6 +27,11 @@ const protectedReadableTokens = [
   "loadBackendSeedPacks",
   "loadBackendPackCommandPreview",
   "createBackendPack",
+  "backendCommandPendingForPack",
+  "backendCommandPendingReason",
+  "backendCommandPendingFlowHint",
+  "syncCommandActionButton",
+  "backend-command-pending",
   "x-projects-demo-client",
   "/api/state"
 ];

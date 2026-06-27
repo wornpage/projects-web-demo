@@ -838,7 +838,7 @@ function backendPackCommandForSelected(pack) {
   const preview = backendPackCommandCache.get(key);
   if (!preview) {
     scheduleBackendPackCommandPreview(pack);
-    return null;
+    return backendCommandPendingForPack(pack);
   }
 
   const localCommand = resolvePrimaryCommandForPack(pack);
@@ -853,6 +853,32 @@ function backendPackCommandForSelected(pack) {
     targetPackId: preview.targetPackId || localCommand.targetPackId,
     memory: latestRelevantMemory(pack)
   };
+}
+
+function backendCommandPendingForPack(pack) {
+  return {
+    where: workTitle(pack),
+    blocker: blockerTextForPack(pack),
+    next: "Loading backend command",
+    stateText: "Syncing",
+    stateHelp: backendCommandPendingReason(),
+    action: "backend-command-pending",
+    targetPackId: pack.id,
+    memory: latestRelevantMemory(pack),
+    backendPending: true
+  };
+}
+
+function isBackendCommandPending(command) {
+  return command?.backendPending === true || command?.action === "backend-command-pending";
+}
+
+function backendCommandPendingReason() {
+  return "Waiting for the server-owned command preview.";
+}
+
+function backendCommandPendingFlowHint() {
+  return "Flow: wait for the backend command preview, then run next.";
 }
 
 function scheduleBackendPackCommandPreview(pack) {
@@ -1867,9 +1893,13 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   };
 
   const selectedBlocker = selected ? blockerTextForPack(selected) : "";
-  const selectedActionCommand = selected ? resolvePrimaryCommandForPack(selected) : null;
+  const selectedActionCommand = selected
+    ? (isBackendCommandPending(selectedWorkCommand) ? selectedWorkCommand : resolvePrimaryCommandForPack(selected))
+    : null;
   const selectedActionFlow = selected
-    ? selectedFlowHintForPack(selected, selectedActionCommand, selectedBlocker)
+    ? (isBackendCommandPending(selectedWorkCommand)
+      ? backendCommandPendingFlowHint(selectedWorkCommand)
+      : selectedFlowHintForPack(selected, selectedActionCommand, selectedBlocker))
     : "";
 
   const routeCommandsHints = {
@@ -2165,19 +2195,33 @@ function updateCommand(command) {
     el("command-memory-text").textContent = commandMemoryVisibleText(commandMemory);
   }
   setCopySurface(el("primary-action"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
-  el("primary-action").dataset.action = command.action || "";
-  el("primary-action").dataset.pack = command.targetPackId || "";
-  el("primary-action").setAttribute("aria-label", commandRunLabel(command));
-  el("primary-action").title = commandRunLabel(command);
+  syncCommandActionButton(el("primary-action"), command);
   setCopySurface(el("dock-where"), command.where, "Where", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   setCopySurface(el("dock-blocker"), command.blocker, "Blocker", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   setCopySurface(el("dock-next-label"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
-  el("dock-next").dataset.action = command.action || "";
-  el("dock-next").dataset.pack = command.targetPackId || "";
-  el("dock-next").setAttribute("aria-label", commandRunLabel(command));
-  el("dock-next").title = commandRunLabel(command);
+  syncCommandActionButton(el("dock-next"), command);
   updateActionReceipt();
   scheduleBottomDockVisibility();
+}
+
+function syncCommandActionButton(control, command) {
+  if (!control) {
+    return;
+  }
+
+  const pending = isBackendCommandPending(command);
+  const copy = pending ? backendCommandPendingReason(command) : commandRunLabel(command);
+  control.dataset.action = pending ? "" : command.action || "";
+  control.dataset.pack = command.targetPackId || "";
+  control.disabled = pending;
+  control.setAttribute("aria-label", copy);
+  if (pending) {
+    syncDisabledReasonMetadata(control, true, copy);
+    return;
+  }
+
+  syncDisabledReasonMetadata(control, false, "");
+  control.title = copy;
 }
 
 function commandFlowCopy(flowHint) {
@@ -3453,6 +3497,10 @@ function primaryCommandReasonNote(pack, command = resolvePrimaryCommandForPack(p
 }
 
 function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPack(pack)) {
+  if (isBackendCommandPending(command)) {
+    return "Why: waiting for backend command.";
+  }
+
   if (isMissingNextAction(pack)) {
     return "Why: setup comes first.";
   }
@@ -3469,9 +3517,13 @@ function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPac
 }
 
 function packPrimaryActionButton(command) {
-  const copy = commandRunLabel(command);
+  const pending = isBackendCommandPending(command);
+  const copy = pending ? backendCommandPendingReason(command) : commandRunLabel(command);
   const label = command.next || "Open work list";
-  return `<button id="pack-primary-action" class="btn btn-primary demo-pack-primary-action" type="button" data-action="${escapeAttribute(command.action || "")}" data-pack="${escapeAttribute(command.targetPackId || "")}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
+  const stateAttributes = pending
+    ? `${disabledReasonAttributes(true, copy)} aria-label="${escapeAttribute(copy)}"`
+    : ` title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}"`;
+  return `<button id="pack-primary-action" class="btn btn-primary demo-pack-primary-action" type="button" data-action="${escapeAttribute(pending ? "" : command.action || "")}" data-pack="${escapeAttribute(command.targetPackId || "")}"${stateAttributes}>${escapeHtml(label)}</button>`;
 }
 
 function syncPackPrimaryAction(command) {
@@ -3481,10 +3533,7 @@ function syncPackPrimaryAction(command) {
   }
 
   setCopySurface(button, command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
-  button.dataset.action = command.action || "";
-  button.dataset.pack = command.targetPackId || "";
-  button.setAttribute("aria-label", commandRunLabel(command));
-  button.title = commandRunLabel(command);
+  syncCommandActionButton(button, command);
 }
 
 function supportActionButton(action, label, pack, className = "btn") {
@@ -4296,8 +4345,18 @@ async function handlePackAction(id, action) {
 }
 
 function runPrimaryAction(control = el("primary-action")) {
-  const action = control?.dataset.action || el("primary-action").dataset.action;
   const targetPackId = control?.dataset.pack || el("primary-action").dataset.pack;
+  if (control?.disabled) {
+    const selected = findPack(targetPackId) || currentPack();
+    if (selected) {
+      scheduleBackendPackCommandPreview(selected);
+    }
+    state.status = routeStatus("Backend command", "waiting for server-owned command preview", "try again after it loads");
+    render();
+    return;
+  }
+
+  const action = control?.dataset.action || el("primary-action").dataset.action;
   if (pendingForwardPathBlocksAction(targetPackId)) {
     return;
   }
@@ -4421,6 +4480,16 @@ function pendingForwardPathBlocksAction(targetPackId) {
 }
 
 function runRouteAction(action, targetPackId) {
+  if (action === "backend-command-pending") {
+    const selected = findPack(targetPackId) || currentPack();
+    if (selected) {
+      scheduleBackendPackCommandPreview(selected);
+    }
+    state.status = routeStatus("Backend command", "waiting for server-owned command preview", "try again after it loads");
+    render();
+    return true;
+  }
+
   if (action === "clear-owner-blocker") {
     const selected = findPack(targetPackId) || currentPack();
     if (selected) {

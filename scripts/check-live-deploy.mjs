@@ -161,14 +161,20 @@ try {
     "loadBackendPackCommandPreview",
     "createBackendPack",
     "addBackendPackMemoryNote",
-    "saveBackendPackPath"
+    "saveBackendPackPath",
+    "backendCommandPendingForPack",
+    "isBackendCommandPending",
+    "backendCommandPendingReason",
+    "backendCommandPendingFlowHint",
+    "syncCommandActionButton"
   ];
   const internalFrontendStrings = [
     "/api/packs",
     "/api/demo-packs",
     "/api/state",
     "x-projects-demo-client",
-    "projects-static-demo-api-client-v1"
+    "projects-static-demo-api-client-v1",
+    "backend-command-pending"
   ];
   const readableBackendHelpers = backendHelperNames.filter((name) => script.includes(name));
   const readableInternalStrings = internalFrontendStrings.filter((value) => script.includes(value));
