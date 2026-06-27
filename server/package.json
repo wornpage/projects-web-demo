@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "preview": "node static.js",
-    "check": "node --check server.js && node --check static.js"
+    "check": "node --check server.js && node --check static.js",
+    "protect:check": "node ../scripts/check-protected-frontend.mjs"
   },
   "engines": {
     "node": ">=18"

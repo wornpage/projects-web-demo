@@ -30,6 +30,13 @@ const protectedStringValues = Object.freeze([
   "x-projects-demo-client"
 ]);
 
+const protectedSubstringValues = Object.freeze([
+  "/api/packs",
+  "/api/state",
+  "projects-static-demo-api-client-v1",
+  "x-projects-demo-client"
+]);
+
 const bannedReadableNames = Object.freeze([
   "runBackendPackAction",
   "saveBackendPackNextAction",
@@ -81,6 +88,12 @@ const leakedStrings = findStringLiteralLeaks(protectedResult.code, protectedStri
 if (leakedStrings.length > 0) {
   await fs.rm(tmpPath, { force: true });
   throw new Error(`Protected frontend still exposes internal strings: ${leakedStrings.join(", ")}`);
+}
+
+const leakedSubstrings = protectedSubstringValues.filter((value) => protectedResult.code.includes(value));
+if (leakedSubstrings.length > 0) {
+  await fs.rm(tmpPath, { force: true });
+  throw new Error(`Protected frontend still exposes internal substrings: ${leakedSubstrings.join(", ")}`);
 }
 
 if (protectedResult.replacementCount === 0) {

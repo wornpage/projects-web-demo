@@ -16,6 +16,10 @@ try {
     : "/assets/demo.js";
   const script = await readText(scriptPath);
   const lineCount = script.split(/\r?\n/u).length;
+  const liveClientKey = `live-check-${Date.now().toString(36)}`;
+  const apiHeaders = { "x-projects-demo-client": liveClientKey };
+  const liveState = await readJson("/api/state", apiHeaders);
+  const commandPreview = await readJson("/api/packs/source-folder-audit/command", apiHeaders);
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
@@ -39,6 +43,8 @@ try {
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
   check("internal API strings are encoded", readableInternalStrings.length === 0, readableInternalStrings.join(", ") || "hidden");
+  check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
+  check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");
   check("private repo and local path strings are absent", !/(github\.com\/jared-bidlow|C:\\|C:\/|\.git\/config|server\/server\.js)/iu.test(script), "private path scan");
 
@@ -62,9 +68,9 @@ function check(name, ok, detail) {
   checks.push({ name, ok: Boolean(ok), detail: String(detail ?? "") });
 }
 
-async function readText(pathname) {
+async function readText(pathname, headers = {}) {
   const response = await fetch(new URL(pathname, baseUrl), {
-    headers: { "cache-control": "no-cache" }
+    headers: { "cache-control": "no-cache", ...headers }
   });
   if (!response.ok) {
     throw new Error(`${pathname} returned ${response.status}`);
@@ -72,8 +78,8 @@ async function readText(pathname) {
   return response.text();
 }
 
-async function readJson(pathname) {
-  return JSON.parse(await readText(pathname));
+async function readJson(pathname, headers = {}) {
+  return JSON.parse(await readText(pathname, headers));
 }
 
 function normalizeBaseUrl(value) {

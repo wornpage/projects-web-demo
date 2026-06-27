@@ -35,6 +35,7 @@ Keep this repo focused on the public portfolio demo.
 | `data/demo-packs.json` | Fake browser-local work data. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
+| `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
 | `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app is serving the protected current frontend. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
 | `render.yaml` | Render Blueprint for hosting the Docker app with managed Postgres state. |
@@ -212,6 +213,7 @@ Before pushing, run:
 
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'node --check "assets/demo.js"'
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run protect:check'
 ```
 
 Then smoke the main routes locally in light and dark mode:
