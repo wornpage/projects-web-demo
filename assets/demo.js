@@ -2751,7 +2751,7 @@ function renderHome() {
           <span>3</span>
           <strong>Next</strong>
           <small>Set the action the main button will run.</small>
-          ${navButton("next", "Set next action")}
+          ${navButton("next", "Set Button runs next")}
         </div>
       </div>
       <div class="demo-quick-actions demo-secondary-paths" aria-label="Small demo actions">
@@ -2947,7 +2947,7 @@ function reviewQueuePanel(review, firstReview) {
     </div>
     <div class="demo-review-queue-stats" aria-label="Review queue status">
       ${reviewQueueStat("Blocked", blockedCount, "Needs blocker decision")}
-      ${reviewQueueStat("Missing button", missingNextCount, "Needs Button runs next")}
+      ${reviewQueueStat("Missing action", missingNextCount, "Needs Button runs next")}
       ${reviewQueueStat("Owner gaps", ownerGapCount, "Needs owner")}
     </div>
     ${homeSpotlightFacts(firstReview, command)}

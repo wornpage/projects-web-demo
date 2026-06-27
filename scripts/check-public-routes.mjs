@@ -182,7 +182,7 @@ function reviewSpotlightContractOk() {
     "function reviewQueuePanel(review, firstReview)",
     "Up next",
     "reviewQueueStat(\"Blocked\", blockedCount, \"Needs blocker decision\")",
-    "reviewQueueStat(\"Missing button\", missingNextCount, \"Needs Button runs next\")",
+    "reviewQueueStat(\"Missing action\", missingNextCount, \"Needs Button runs next\")",
     "reviewQueueStat(\"Owner gaps\", ownerGapCount, \"Needs owner\")",
     "primaryCommandButton(firstReview)",
     "supportActionButton(\"set-next\", \"Set Button runs next\", firstReview, \"btn\")"
