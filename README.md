@@ -34,6 +34,7 @@ Keep this repo focused on the public portfolio demo.
 | `assets/favicon.png` | Demo favicon. |
 | `data/demo-packs.json` | Fake browser-local work data. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
+| `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app is serving the protected current frontend. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
 | `render.yaml` | Render Blueprint for hosting the Docker app with managed Postgres state. |
 | `docs/deploy-outplane.md` | Outplane development deploy checklist. |

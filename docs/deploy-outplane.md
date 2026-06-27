@@ -88,6 +88,15 @@ After deploy:
    `assets/demo.js` includes the latest frontend code. The Node app rewrites
    asset query strings at startup so stale cached assets are bypassed after a
    deploy.
+9. Run the live deploy verifier from the repo root:
+
+   ```powershell
+   pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
+   ```
+
+   The verifier fails if Outplane is still serving an old frontend bundle, if
+   production minification did not run, if the backend-backed frontend helpers
+   are missing, or if retired triage code is still public.
 
 ## Notes
 
