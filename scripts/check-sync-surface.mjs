@@ -98,6 +98,10 @@ const apiHeaders = functionSource("apiHeaders");
 const apiClient = functionSource("apiClientId");
 const syncClient = functionSource("syncClientId");
 const apiClientIdGenerator = functionSource("generateApiClientId");
+const startupSource = source.slice(
+  source.indexOf('document.addEventListener("DOMContentLoaded"'),
+  source.indexOf("async function loadInitialDemoState()")
+);
 
 check(
   "backend API base comes only from the server-injected setting",
@@ -129,6 +133,18 @@ check(
     "apiSessionClientId = \"\""
   ]),
   "applyLaunchSyncCode"
+);
+
+check(
+  "launch sync code is cleared after shared state loads",
+  sourceOrder(startupSource, [
+    "const launchedSyncCode = applyLaunchSyncCode()",
+    "await loadInitialDemoState()",
+    "if (launchedSyncCode)",
+    "clearLaunchSyncCodeParam()",
+    "routeFromHash()"
+  ]),
+  "startup clears ?sync after load"
 );
 
 check(

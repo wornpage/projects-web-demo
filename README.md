@@ -176,7 +176,9 @@ code, then copy that code, enter it on the other device, copy the sync link, or
 scan the QR code. Anyone with the code or sync link can open that demo state,
 and the database still stores readable JSON; this is convenience sync, not
 private encrypted storage. Browsers must support Web Crypto hashing for sync
-codes; the app will not send readable sync codes as backend row keys.
+codes; the app will not send readable sync codes as backend row keys. Sync
+links use `?sync=` only as a launch parameter and remove it from the address bar
+after the shared state loads.
 
 The Start screen also has a collapsed Recovery section. **Copy backup** copies a
 bounded JSON snapshot for the current browser or active sync row, and

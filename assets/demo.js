@@ -252,6 +252,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyLaunchConfiguration();
     if (launchedSyncCode) {
       state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "review shared demo state");
+      clearLaunchSyncCodeParam();
     }
     routeFromHash();
     render();

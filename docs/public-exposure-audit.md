@@ -159,9 +159,10 @@ The full ship gate also refuses to run the live verifier from a dirty working
 tree or from a branch that is not synced with its upstream, so local and live
 evidence cannot silently describe different commits.
 The sync gate confirms generated sync codes and anonymous browser row keys use
-Web Crypto and do not fall back to weak random values. The local and live
-boundary gates also confirm weak manual and readable sync-code API client key
-values are rejected.
+Web Crypto and do not fall back to weak random values. It also confirms sync
+link codes are removed from the address bar after the shared state loads. The
+local and live boundary gates also confirm weak manual and readable sync-code
+API client key values are rejected.
 The recovery gate also confirms the Start screen keeps copy/restore recovery
 controls, recovery JSON includes a version marker and current demo state, pasted
 recovery JSON is capped at 50 work items, and restored snapshots use the normal
@@ -210,6 +211,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Full-state writes accept unbounded receipt objects | Fixed | `actionReceipt` objects are depth/key/item bounded before storage |
 | Guessable generated sync or browser row keys | Fixed | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback, sync codes must be hashed before becoming row keys, and local/live gates reject weak manual or readable sync-code API client keys. Anyone with a valid sync code or sync link can still open that shared demo row |
+| Sync invite code remains in the URL after launch | Fixed | Sync links use `?sync=` only as a launch parameter; after shared state loads the frontend removes it from the address bar |
 | Backend app shell allows arbitrary inline script/style | Fixed | The Node app serves the API-base setting through same-origin `assets/runtime-config.js`, uses `script-src 'self'`, and blocks unsafe inline styles |
 | App shell CSP leaves unused loaders to fallback behavior | Fixed | CSP now explicitly denies frames, workers, manifests, and media loaders the demo does not use |
 | App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener/embedder isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |

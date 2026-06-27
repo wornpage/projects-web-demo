@@ -79,7 +79,8 @@ the code or sync link can open the same demo state. The code is hashed before it
 is sent to the API, and the server hashes API client keys again before Postgres
 storage, but the stored demo JSON is not end-to-end encrypted. Browsers must
 support Web Crypto hashing for sync; the app will not send readable sync codes
-as backend row keys.
+as backend row keys. Sync links use `?sync=` only as a launch parameter and
+remove it from the address bar after the shared state loads.
 
 This is demo isolation, not real user security. Add authentication before
 storing private user data, real customer work, or anything that needs account
@@ -97,7 +98,8 @@ After deploy:
 6. Create a sync code, use it in a second browser, and confirm both browsers see
    the same demo state.
 7. Confirm **Copy code** copies the short code, **Copy link** copies a `?sync=`
-   URL, and the QR code is visible beside the sync link.
+   URL, the QR code is visible beside the sync link, and opening the sync link
+   removes `?sync=` from the address bar after the shared state loads.
 8. Open the Start screen Recovery section, copy a backup, paste it back, and
    confirm the restored demo state stays in the same browser or active sync row.
 9. Use **Erase backend row** from the Recovery section and confirm the current

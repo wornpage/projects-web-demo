@@ -28,7 +28,9 @@ The frontend can replace the anonymous browser key with a hashed sync code so
 two browsers or devices can share one demo row. New sync codes and anonymous
 browser row keys require Web Crypto instead of weak random fallbacks. Sync codes
 also require Web Crypto hashing; the frontend does not send readable sync codes
-as backend row keys. That is a convenience feature, not authentication or
+as backend row keys. Sync links use `?sync=` only as a launch parameter and
+remove it from the address bar after the shared state loads. That is a
+convenience feature, not authentication or
 encryption of the stored JSON.
 
 ## App Mode
