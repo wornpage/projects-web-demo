@@ -8,7 +8,11 @@ const checks = [];
 
 try {
   const health = await readJson("/api/health");
-  const html = await readText("/");
+  const htmlResponse = await readResponse("/");
+  const html = htmlResponse.text;
+  const csp = htmlResponse.headers.get("content-security-policy") || "";
+  const cspNonce = nonceFromCsp(csp);
+  const htmlNonce = nonceFromHtml(html);
   const assetMatch = html.match(/assets\/demo\.js\?v=([^"']+)/u);
   const assetVersion = assetMatch?.[1] || "";
   const scriptPath = assetVersion
@@ -55,6 +59,11 @@ try {
 
   check("health endpoint reports ok", health.ok === true, health.ok);
   check("hosted state uses Postgres", String(health.stateStorage || "").startsWith("postgres:"), health.stateStorage);
+  check("app shell sends CSP", csp.includes("default-src 'self'") && csp.includes("object-src 'none'"), csp || "missing");
+  check("app shell blocks framing", csp.includes("frame-ancestors 'none'"), csp || "missing");
+  check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
+  check("runtime API script nonce matches CSP", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
+  check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
@@ -89,13 +98,20 @@ function check(name, ok, detail) {
 }
 
 async function readText(pathname, headers = {}) {
+  return (await readResponse(pathname, headers)).text;
+}
+
+async function readResponse(pathname, headers = {}) {
   const response = await fetch(new URL(pathname, baseUrl), {
     headers: { "cache-control": "no-cache", ...headers }
   });
   if (!response.ok) {
     throw new Error(`${pathname} returned ${response.status}`);
   }
-  return response.text();
+  return {
+    headers: response.headers,
+    text: await response.text()
+  };
 }
 
 async function readJson(pathname, headers = {}) {
@@ -153,6 +169,20 @@ function stateWithCheckPack(state, id, title) {
 
 function stateHasPackTitle(state, title) {
   return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
+}
+
+function nonceFromCsp(csp) {
+  const match = csp.match(/script-src[^;]*'nonce-([^']+)'/u);
+  return match?.[1] || "";
+}
+
+function nonceFromHtml(html) {
+  const match = html.match(/<script nonce="([^"]+)">window\.PROJECTS_API_BASE_URL/u);
+  return match?.[1] || "";
+}
+
+function scriptSrcDirective(csp) {
+  return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("script-src")) || "";
 }
 
 function normalizeBaseUrl(value) {
