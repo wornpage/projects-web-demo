@@ -20,6 +20,7 @@ const SYNC_QR_DATA_CODEWORDS = 108;
 const SYNC_QR_ERROR_CODEWORDS = 26;
 const SYNC_QR_QUIET_MODULES = 4;
 const SYNC_QR_MAX_BYTES = 106;
+const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"]);
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
@@ -532,6 +533,35 @@ async function persistBackendStateSnapshot(snapshot) {
   if (!response.ok) {
     throw new Error(`Backend API save failed with ${response.status}`);
   }
+}
+
+async function runBackendPackAction(pack, action) {
+  if (!DEMO_API_BASE_URL || !pack?.id || !SERVER_PACK_ACTIONS.has(action)) {
+    return false;
+  }
+
+  clearPendingBackendStateSave();
+  await persistBackendStateSnapshot(demoStateSnapshot());
+  const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/actions`), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify({ action })
+  });
+  if (!response.ok) {
+    throw new Error(`Backend action failed with ${response.status}`);
+  }
+
+  const result = await response.json();
+  loadState(result.state);
+  state.selectedId = result.pack?.id || pack.id;
+  if (action === "open") {
+    queueFocus("pack-detail", state.selectedId);
+    go("pack", state.selectedId);
+    return true;
+  }
+
+  render();
+  return true;
 }
 
 function updateServiceBoundaryNotice() {
@@ -5115,7 +5145,7 @@ function bindGoButton(button) {
   });
 }
 
-function handlePackAction(id, action) {
+async function handlePackAction(id, action) {
   const pack = findPack(id);
   if (!pack) return;
   state.selectedId = pack.id;
@@ -5133,7 +5163,22 @@ function handlePackAction(id, action) {
     state.status = selectedWorkStatus("Next setup", pack, "choose Button runs next");
     go("next", pack.id);
     return;
-  } else if (action === "start") {
+  }
+
+  if (SERVER_PACK_ACTIONS.has(action)) {
+    try {
+      if (await runBackendPackAction(pack, action)) {
+        return;
+      }
+    } catch (error) {
+      console.error("Projects demo backend action failed.", error);
+      state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+      render();
+      return;
+    }
+  }
+
+  if (action === "start") {
     const before = packActionSignature(pack);
     pack.status = "active";
     pack.blocker = pack.blocker === "missing setup" ? DEMO_BLOCKER_NONE : pack.blocker;

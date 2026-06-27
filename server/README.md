@@ -108,6 +108,7 @@ GitHub Pages behavior.
 | `GET /api/packs` | Load only work items. |
 | `POST /api/packs` | Create one work item. |
 | `PATCH /api/packs/{id}` | Update one work item. |
+| `POST /api/packs/{id}/actions` | Run a server-owned pack action such as `start`, `unblock`, `block`, `done`, or `open`. |
 | `POST /api/packs/{id}/memory` | Add one memory note. |
 
 API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:

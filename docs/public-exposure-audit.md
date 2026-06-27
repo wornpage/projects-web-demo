@@ -84,6 +84,19 @@ Use a thinner frontend:
 
 Do not rely on obfuscation for security.
 
+The first server-side slice is pack action execution. In backend app mode,
+pack-level actions such as `start`, `unblock`, `block`, `done`, and `open` run
+through `POST /api/packs/{id}/actions`, which updates the stored demo state on
+the server and returns the resulting receipt to the browser.
+
+## Obfuscation Decision
+
+Do not paste this app into third-party web obfuscators. Use local build tooling
+only, after behavior has been moved server-side and browser smoke tests pass.
+Obfuscation can add copy-friction, but it does not make browser-delivered code
+private and can break debugging, accessibility, and interaction flows if it is
+too aggressive.
+
 ## Required Publish Boundary
 
 For any static publish target, publish only:

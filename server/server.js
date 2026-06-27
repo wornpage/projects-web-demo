@@ -23,6 +23,10 @@ const ASSET_VERSION = normalizeAssetVersion(process.env.PROJECTS_ASSET_VERSION
   || `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`);
 const API_CLIENT_HEADER = "x-projects-demo-client";
 const MAX_BODY_BYTES = 1024 * 1024;
+const DEMO_BLOCKER_NONE = "none";
+const DEMO_BLOCKER_NONE_LABEL = "None";
+const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
+const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"]);
 const publicStaticFiles = new Set([
   "/index.html",
   "/data/demo-packs.json"
@@ -130,6 +134,18 @@ async function routeRequest(request, response, url) {
     state.packs.unshift(pack);
     await writeState(state, stateKey);
     sendJson(response, 201, pack);
+    return;
+  }
+
+  const packActionMatch = pathname.match(/^\/api\/packs\/([^/]+)\/actions$/u);
+  if (packActionMatch && method === "POST") {
+    const packId = decodeURIComponent(packActionMatch[1]);
+    const payload = await readJsonBody(request);
+    const stateKey = stateKeyForRequest(request);
+    const state = await readState(stateKey);
+    const result = runPackAction(state, packId, payload.action);
+    await writeState(state, stateKey);
+    sendJson(response, 200, result);
     return;
   }
 
@@ -431,6 +447,294 @@ async function writeFileState(payload) {
   await fs.writeFile(tmpFile, `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await fs.rename(tmpFile, STATE_FILE);
   return state;
+}
+
+function runPackAction(state, packId, rawAction) {
+  const action = normalizeText(rawAction, 40).toLowerCase();
+  if (!SERVER_PACK_ACTIONS.has(action)) {
+    throw httpError(400, `Unsupported pack action: ${action || "missing"}`);
+  }
+
+  const pack = findPackOrThrow(state, packId);
+  const before = packActionSignature(pack);
+  let changed = false;
+
+  if (action === "start") {
+    pack.status = "active";
+    pack.blocker = pack.blocker === "missing setup" ? DEMO_BLOCKER_NONE : pack.blocker;
+    pack.next = isPlaceholderNext(pack.next) ? "Open" : pack.next;
+    changed = packActionSignature(pack) !== before;
+    if (changed) {
+      addPackActivity(pack, "Started.");
+    }
+  } else if (action === "unblock") {
+    pack.status = "active";
+    pack.blocker = DEMO_BLOCKER_NONE;
+    pack.next = "Open";
+    changed = packActionSignature(pack) !== before;
+    if (changed) {
+      addPackActivity(pack, "Blocker set to None.");
+    }
+  } else if (action === "block") {
+    pack.status = "blocked";
+    pack.blocker = "blocked in this demo";
+    pack.next = "Set Blocker: None";
+    changed = packActionSignature(pack) !== before;
+    if (changed) {
+      addPackActivity(pack, "Blocked.");
+    }
+  } else if (action === "done") {
+    pack.status = "done";
+    pack.blocker = DEMO_BLOCKER_NONE;
+    pack.next = "Open";
+    changed = packActionSignature(pack) !== before;
+    if (changed) {
+      addPackActivity(pack, proofSavedActivity(pack));
+    }
+  } else if (action === "open") {
+    changed = addPackActivity(pack, "Opened.");
+  }
+
+  state.selectedId = pack.id;
+  const next = resolvePrimaryCommandForPack(pack);
+  const summary = packActionSummary(pack, action, actionLabelFromKey(action), changed);
+  const receipt = actionReceiptForPack(pack, summary, next);
+  state.status = receipt.summary;
+  state.actionReceipt = receipt;
+
+  return {
+    action,
+    changed,
+    pack: sanitizePack(pack),
+    receipt,
+    state: sanitizeState(state)
+  };
+}
+
+function packActionSummary(pack, action, actionLabel, changed) {
+  const title = workTitle(pack);
+  if (action === "done") {
+    const proof = proofTargetSentence(pack);
+    return changed
+      ? `Done saved for ${title}. ${proof}`
+      : `Done already saved for ${title}. ${proof}`;
+  }
+
+  if (action === "open") {
+    return changed
+      ? `Work path opened for ${title}.`
+      : `Work path already open for ${title}.`;
+  }
+
+  if (action === "start") {
+    return changed
+      ? `Started ${title}.`
+      : `${title} is already active.`;
+  }
+
+  if (action === "unblock") {
+    return changed
+      ? `Blocker cleared for ${title}.`
+      : `Blocker already clear for ${title}.`;
+  }
+
+  if (action === "block") {
+    return changed
+      ? `Blocker added for ${title}.`
+      : `${title} is already blocked.`;
+  }
+
+  return changed
+    ? `${actionLabel} saved for ${title}.`
+    : `${actionLabel} is already saved for ${title}.`;
+}
+
+function actionReceiptForPack(pack, summary, next = resolvePrimaryCommandForPack(pack)) {
+  const workflow = workflowStateForPack(pack, next);
+  const fullSummary = actionReceiptSummary(summary, pack, next);
+  return {
+    kind: "action",
+    tone: "success",
+    packId: pack.id,
+    summary: fullSummary,
+    visibleSummary: visibleText(summary || fullSummary, 96),
+    where: `${workTitle(pack)} / ${workflow.label}`,
+    blocker: blockerTextForPack(pack),
+    next: next.label,
+    proof: proofTargetForPack(pack)
+  };
+}
+
+function actionReceiptSummary(summary, pack, next) {
+  return visibleText(`${summary} ${actionReceiptContext(pack, next)}`, 180);
+}
+
+function actionReceiptContext(pack, next) {
+  return `Where: ${sentenceValue(workTitle(pack))}. Blocker: ${sentenceValue(blockerTextForPack(pack))}. Button runs next: ${sentenceValue(next.label)}. Proof target: ${sentenceValue(proofTargetForPack(pack))}.`;
+}
+
+function workflowStateForPack(pack, command = null) {
+  const resolved = command || resolvePrimaryCommandForPack(pack);
+  if (pack.status === "done") {
+    return { label: "Done" };
+  }
+  if (isMissingNextAction(pack)) {
+    return { label: "Needs setup" };
+  }
+  if (hasBlocker(pack)) {
+    return { label: "Blocked" };
+  }
+  if (resolved.action === "done") {
+    return { label: "Proof ready" };
+  }
+  if (pack.status === "draft") {
+    return { label: "Draft" };
+  }
+  return { label: "Ready" };
+}
+
+function resolvePrimaryCommandForPack(pack) {
+  if (isMissingNextAction(pack)) {
+    return { label: "Set Button runs next", action: "set-next", targetPackId: pack.id };
+  }
+
+  const action = commandActionForLabel(pack.next || "Open");
+  if (hasBlocker(pack)) {
+    if (action.action === "unblock") {
+      return { label: "Set Blocker: None", action: "unblock", targetPackId: pack.id };
+    }
+    return { label: "Review blocker", action: "review", targetPackId: pack.id };
+  }
+
+  return { ...action, targetPackId: pack.id };
+}
+
+function commandActionForLabel(label) {
+  const value = normalizeText(label || "Open", 120) || "Open";
+  const normalized = value.toLowerCase();
+  if (normalized === "review blocker") {
+    return { label: "Review blocker", action: "review" };
+  }
+  if (normalized === "review" || normalized === "review work") {
+    return { label: "Review work", action: "review-work" };
+  }
+  if (normalized === "set next" || normalized === "set button runs next" || normalized === "choose next action") {
+    return { label: "Set Button runs next", action: "set-next" };
+  }
+  if (normalized === "focus") {
+    return { label: value, action: "focus" };
+  }
+  if (normalized === "unblock" || normalized === "set blocker: none" || normalized === "set blocker none") {
+    return { label: "Set Blocker: None", action: "unblock" };
+  }
+  if (normalized === "start") {
+    return { label: value, action: "start" };
+  }
+  if (normalized === "done" || normalized === "complete" || normalized === "finish with proof") {
+    return { label: "Finish with proof", action: "done" };
+  }
+  return { label: value === "Open" ? "Open" : value, action: "open" };
+}
+
+function actionLabelFromKey(action) {
+  const labels = {
+    start: "Start",
+    unblock: "Set Blocker: None",
+    block: "Block",
+    done: "Finish with proof",
+    open: "Open"
+  };
+  return labels[action] || normalizeText(action, 40) || "Button";
+}
+
+function packActionSignature(pack) {
+  return JSON.stringify({
+    status: pack?.status || "",
+    blocker: pack?.blocker || "",
+    next: pack?.next || ""
+  });
+}
+
+function addPackActivity(pack, message) {
+  const copy = normalizeText(message, 400);
+  if (!pack || !copy) {
+    return false;
+  }
+
+  pack.activity = Array.isArray(pack.activity) ? pack.activity : [];
+  if (pack.activity[0] === copy) {
+    return false;
+  }
+
+  pack.activity.unshift(copy);
+  return true;
+}
+
+function proofTargetForPack(pack) {
+  return normalizeText(pack?.doneWhen, 1000) || DEMO_PROOF_TARGET_MISSING;
+}
+
+function proofTargetSentence(pack) {
+  return `Proof target: ${sentenceValue(proofTargetForPack(pack))}.`;
+}
+
+function proofSavedActivity(pack) {
+  return `Done saved with proof target: ${sentenceValue(proofTargetForPack(pack))}.`;
+}
+
+function sentenceValue(value) {
+  return (normalizeText(value) || DEMO_PROOF_TARGET_MISSING).replace(/[.!?]+$/u, "");
+}
+
+function workTitle(pack) {
+  return normalizeText(pack?.title, 200) || "selected work";
+}
+
+function blockerTextForPack(pack) {
+  if (!pack) {
+    return "choose work";
+  }
+  if (hasBlocker(pack)) {
+    return normalizeStoredBlocker(pack.blocker) !== DEMO_BLOCKER_NONE
+      ? normalizeStoredBlocker(pack.blocker)
+      : "blocked";
+  }
+  if (isMissingNextAction(pack)) {
+    return "missing Button runs next";
+  }
+  return DEMO_BLOCKER_NONE_LABEL;
+}
+
+function hasBlocker(pack) {
+  if (!pack) {
+    return false;
+  }
+  const storage = normalizeStoredBlocker(pack.blocker);
+  return storage !== DEMO_BLOCKER_NONE || normalizeText(pack.status, 40).toLowerCase() === "blocked";
+}
+
+function isMissingNextAction(pack) {
+  return isPlaceholderNext(pack?.next);
+}
+
+function isPlaceholderNext(label) {
+  const value = normalizeText(label, 120).toLowerCase();
+  return !value || value === "choose action" || value === "choose next action" || value === "set button runs next" || value === "set next";
+}
+
+function normalizeStoredBlocker(value) {
+  const blocker = normalizeText(value, 200);
+  return blocker && blocker.toLowerCase() !== DEMO_BLOCKER_NONE
+    ? blocker
+    : DEMO_BLOCKER_NONE;
+}
+
+function visibleText(value, limit) {
+  const text = normalizeText(value, 2000);
+  if (text.length <= limit) {
+    return text;
+  }
+  return `${text.slice(0, Math.max(1, limit - 3)).trimEnd()}...`;
 }
 
 async function defaultState() {
