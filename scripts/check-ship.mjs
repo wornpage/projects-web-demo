@@ -33,6 +33,11 @@ const steps = [
     args: ["scripts/check-public-assets.mjs"]
   },
   {
+    label: "static publish artifact",
+    command: process.execPath,
+    args: ["scripts/check-static-publish.mjs"]
+  },
+  {
     label: "static preview boundary",
     command: process.execPath,
     args: ["scripts/check-static-preview.mjs"]

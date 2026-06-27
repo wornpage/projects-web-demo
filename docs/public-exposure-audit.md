@@ -99,6 +99,15 @@ routing:
 pwsh -NoLogo -NoProfile -Command 'npm --prefix server run static:check'
 ```
 
+The static publish gate builds a temporary filtered artifact, protects
+`assets/demo.js`, proves the artifact has no repo root, server, docs, package
+manifest, build script, or source-map files, then removes the temporary
+artifact:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run publish:check'
+```
+
 Repeatable live gate:
 
 ```powershell
@@ -163,7 +172,7 @@ values are rejected.
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin or explicit configured origins and does not trust forwarded-host for authorization |
 | API preflight accepts retired methods or unlisted headers | Fixed | CORS preflights validate the requested method and header list before returning authorization headers |
 | Host header parsing can bypass the normal error path | Fixed | Request routing parses against a fixed internal base and the boundary gate sends an invalid Host header through `/api/health` |
-| GitHub Pages root publish could expose repo files | Possible if enabled | Keep Pages disabled or publish only a filtered artifact |
+| GitHub Pages root publish could expose repo files | Fixed | Pages publishing must use `dist/static-publish`, and `scripts/check-static-publish.mjs` proves the artifact contains only the static allowlist and protected frontend output |
 
 ## What Cannot Be Hidden
 
@@ -236,4 +245,5 @@ data/demo-packs.json
 ```
 
 Do not publish the repository root if it contains server code, deployment docs,
-or private project files.
+or private project files. Use `scripts/build-static-publish.mjs` to produce the
+filtered `dist/static-publish` artifact.

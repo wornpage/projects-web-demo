@@ -35,6 +35,8 @@ Keep this repo focused on the public portfolio demo.
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
 | `scripts/check-public-assets.mjs` | Local proof that public assets stay allowlisted and public text assets stay budgeted without source maps or private path strings. |
+| `scripts/build-static-publish.mjs` | Builds a filtered static publish artifact under `dist/static-publish`. |
+| `scripts/check-static-publish.mjs` | Local proof that the static publish artifact contains only the allowlist and protected frontend output. |
 | `scripts/check-static-preview.mjs` | Local proof that the static preview serves only the static allowlist and sends defensive headers. |
 | `scripts/check-public-routes.mjs` | Local proof that the visible route set stays small and retired route code stays absent. |
 | `scripts/check-sync-surface.mjs` | Local proof that sync links, QR sharing, and sync client keys stay wired. |
@@ -227,9 +229,16 @@ headers.
 
 ## GitHub Pages
 
-The published site is this static repository. Keep the Pages branch/folder
-pointing at these checked-in files. Do not publish local state files from
-`server/data/` or a user data directory.
+Do not point Pages at the repository root. Build a filtered static artifact and
+publish only that folder:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'node "scripts/build-static-publish.mjs"'
+```
+
+The artifact is written to `dist/static-publish/`. It contains only the static
+allowlist, uses protected `assets/demo.js`, and excludes server code, docs,
+package manifests, build scripts, and local state files.
 
 Before shipping, run the full local plus live gate:
 
@@ -238,9 +247,9 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 ```
 
 That command runs frontend syntax, backend syntax, protected frontend, public
-asset-disclosure, public route-contract, sync sharing, state recovery,
-public-boundary, Docker deploy-boundary, whitespace, and live Outplane checks,
-including rejection of weak manual API client keys.
+asset-disclosure, static publish artifact, public route-contract, sync sharing,
+state recovery, public-boundary, Docker deploy-boundary, whitespace, and live
+Outplane checks, including rejection of weak manual API client keys.
 For UI-only work, also smoke the main routes locally in light and dark mode:
 
 - `#/home`
