@@ -28,11 +28,13 @@ await fs.rm(outputPath, { force: true });
 const leakedTokens = [
   "runBackendPackAction",
   "saveBackendPackNextAction",
+  "loadBackendSeedPacks",
   "loadBackendPackCommandPreview",
   "createBackendPack",
   "addBackendPackMemoryNote",
   "saveBackendPackPath",
   "/api/packs",
+  "/api/demo-packs",
   "/api/state",
   "projects-static-demo-api-client-v1",
   "x-projects-demo-client"

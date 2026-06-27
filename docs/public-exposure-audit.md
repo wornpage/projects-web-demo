@@ -11,8 +11,9 @@ web server. The public surface is the browser app itself:
 - `assets/demo.css`
 - `assets/demo.js`
 - `assets/favicon.png`
-- `data/demo-packs.json`
 - `/api/health`
+- `/api/demo-packs` and related API routes only when the browser sends a demo
+  client key
 - `/api/state` and related API routes only when the browser sends a demo client
   key
 
@@ -34,7 +35,7 @@ Observed responses:
 |---|---:|---|
 | `/` | `200` | Public app shell |
 | `/assets/demo.js` | `200` | Public browser logic |
-| `/data/demo-packs.json` | `200` | Public sample data |
+| `/data/demo-packs.json` | `404` | Static sample data file is not served by the hosted app |
 | `/README.md` | `404` | Repo docs not served by Outplane |
 | `/Dockerfile` | `404` | Deploy file not served by Outplane |
 | `/.git/config` | `404` | Git metadata not served |
@@ -46,6 +47,7 @@ Observed responses:
 | `/assets/%2e%2e/server/server.js` | `404` | Encoded traversal attempt denied |
 | `/api/state` without client key | `400` | Backend state has no unkeyed fallback row |
 | `/api/state` with client key | `200` | Demo state loads for that client key |
+| `/api/demo-packs` with client key | `200` | Demo seed data loads through the keyed API |
 
 GitHub evidence:
 
@@ -82,7 +84,8 @@ pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
 ```
 
 The live gate confirms the hosted app uses Postgres, serves the app shell with a
-nonce-based CSP, rejects `/api/state` without a browser client key, keeps fixed
+nonce-based CSP, rejects `/api/state` without a browser client key, loads seed
+demo work through `/api/demo-packs` with a browser client key, keeps fixed
 `live-check-*` browser rows separate, lets a fixed shared sync key read the same
 row from another request, restores an exported state snapshot to its keyed row,
 uses same-origin API CORS instead of wildcard CORS, and rejects a third-party
@@ -99,12 +102,13 @@ Web Crypto and do not fall back to weak random values.
 | Risk | Current status | Decision |
 |---|---|---|
 | Browser JS is visible | True | Accept for demo; move valuable logic server-side if it becomes proprietary |
-| Public sample data is visible | True | Accept; keep fake demo data only |
-| Private repo files served by Outplane | Not observed | App allowlist only serves app assets and sample data |
+| Static sample data is visible on static targets | True | Accept for GitHub Pages/static preview; hosted app mode loads seed data through the keyed API |
+| Private repo files served by Outplane | Not observed | App allowlist only serves app assets and keyed API routes |
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
 | Broad shared app stylesheet is public | Fixed | Removed `assets/app.css`; demo-owned tokens now live in `assets/demo.css` |
+| Hosted app serves static sample JSON directly | Fixed | `/data/demo-packs.json` is no longer served by the app server; seed work loads through `GET /api/demo-packs` with the browser client key |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |

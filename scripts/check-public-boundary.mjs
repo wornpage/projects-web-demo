@@ -43,8 +43,7 @@ try {
     "/index.html",
     "/assets/demo.js",
     "/assets/demo.css",
-    "/assets/favicon.png",
-    "/data/demo-packs.json"
+    "/assets/favicon.png"
   ]) {
     const response = await request(port, pathname);
     check(`public asset allowed: ${pathname}`, response.status === 200, response.status);
@@ -97,6 +96,9 @@ try {
   });
   check("generic state POST route is retired", retiredStatePost.status === 404, retiredStatePost.status);
 
+  const unkeyedSeedPacks = await request(port, "/api/demo-packs");
+  check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
+
   for (const pathname of [
     "/README.md",
     "/Dockerfile",
@@ -110,10 +112,11 @@ try {
     "/assets/%2e%2e/server/server.js",
     "/assets/not-allowlisted.txt",
     "/assets/private/demo.js",
+    "/data/demo-packs.json",
     "/data/not-allowlisted.json"
   ]) {
     const response = await request(port, pathname);
-    check(`private repo file blocked: ${pathname}`, response.status === 404, response.status);
+    check(`non-public app file blocked: ${pathname}`, response.status === 404, response.status);
   }
 
   for (const pathname of [
@@ -130,6 +133,10 @@ try {
   const clientA = "local-check-client-a";
   const clientB = "local-check-client-b";
   const packTitle = `Boundary check ${Date.now().toString(36)}`;
+  const seedPacks = await jsonRequest(port, "/api/demo-packs", {
+    headers: { "x-projects-demo-client": clientA }
+  });
+  check("client A can load keyed API seed data", Array.isArray(seedPacks.body) && seedPacks.body.length > 0, seedPacks.status);
   const createResponse = await request(port, "/api/packs", {
     method: "POST",
     headers: {

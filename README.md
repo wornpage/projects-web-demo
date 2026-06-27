@@ -30,7 +30,7 @@ Keep this repo focused on the public portfolio demo.
 | `assets/demo.js` | Hash routing, demo state, button behavior, and backend app-mode calls. |
 | `assets/demo.css` | Public demo layout and interaction styling. |
 | `assets/favicon.png` | Demo favicon. |
-| `data/demo-packs.json` | Fake browser-local work data. |
+| `data/demo-packs.json` | Fake browser-local work data for static publishing; app mode reads it server-side and does not serve the JSON URL directly. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
@@ -98,6 +98,11 @@ The same Node process serves the frontend and `/api`. In app mode,
 `assets/demo.js` at the same-origin API, so no `?api=` query parameter is
 needed.
 
+In app mode, seed demo work loads through `GET /api/demo-packs` with the same
+anonymous browser client key as the rest of the API. The static
+`data/demo-packs.json` file remains in the repo for GitHub Pages and static
+preview, but the Node app does not serve that URL directly.
+
 The Node app also rewrites the CSS/JS asset query string at startup using
 `PROJECTS_ASSET_VERSION`, a known commit environment variable, or a generated
 startup value. That keeps hosted deploys from serving stale cached frontend
@@ -141,10 +146,10 @@ http://localhost:5179/#/home
 ```
 
 The container serves the frontend and `/api` from one Node process. The image
-copies only the named public frontend files, not the whole repository, broad
-asset directories, or the retired shared app stylesheet. It can use local
-file-backed state for development, but hosted deploys should use managed
-Postgres so app containers stay stateless.
+copies only the named frontend files, the server seed JSON, and the app server,
+not the whole repository, broad asset directories, or the retired shared app
+stylesheet. It can use local file-backed state for development, but hosted
+deploys should use managed Postgres so app containers stay stateless.
 
 Production Docker builds run `scripts/protect-frontend.mjs` against
 `assets/demo.js`. The script minifies with top-level Terser compression and

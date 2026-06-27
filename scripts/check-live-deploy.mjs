@@ -28,12 +28,12 @@ try {
   const publicAssetTexts = [
     { pathname: "/", text: html },
     { pathname: scriptPath, text: script },
-    { pathname: "/assets/demo.css", text: await readText("/assets/demo.css") },
-    { pathname: "/data/demo-packs.json", text: await readText("/data/demo-packs.json") }
+    { pathname: "/assets/demo.css", text: await readText("/assets/demo.css") }
   ];
   const lineCount = script.split(/\r?\n/u).length;
   const liveClientKey = `live-check-${Date.now().toString(36)}`;
   const apiHeaders = { "x-projects-demo-client": liveClientKey };
+  const liveSeedPacks = await readJson("/api/demo-packs", apiHeaders);
   const liveState = await readJson("/api/state", apiHeaders);
   const commandPreview = await readJson("/api/packs/source-folder-audit/command", apiHeaders);
   const unkeyedStateStatus = await readStatus("/api/state");
@@ -75,6 +75,7 @@ try {
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
+    "loadBackendSeedPacks",
     "loadBackendPackCommandPreview",
     "createBackendPack",
     "addBackendPackMemoryNote",
@@ -82,6 +83,7 @@ try {
   ];
   const internalFrontendStrings = [
     "/api/packs",
+    "/api/demo-packs",
     "/api/state",
     "x-projects-demo-client",
     "projects-static-demo-api-client-v1"
@@ -114,6 +116,7 @@ try {
     "/assets/demo-metadata.json",
     "/assets/not-allowlisted.txt",
     "/assets/private/demo.js",
+    "/data/demo-packs.json",
     "/data/not-allowlisted.json",
     "/render.yaml"
   ].map(async (pathname) => [pathname, await readStatus(pathname)]));
@@ -139,8 +142,9 @@ try {
   check("retired browser diagnostics are absent", retiredDiagnosticTokens.length === 0, retiredDiagnosticTokens.join(", ") || "absent");
   check("public assets have no source map references", publicSourceMapReferences.length === 0, publicSourceMapReferences.join(", ") || "absent");
   check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
-  check("source map, retired metadata, unlisted public files, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
+  check("source map, retired metadata, unlisted public files, direct seed JSON, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
+  check("API seed data route returns demo packs", Array.isArray(liveSeedPacks) && liveSeedPacks.length > 0, `${liveSeedPacks?.length || 0} pack(s)`);
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);

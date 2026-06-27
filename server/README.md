@@ -31,6 +31,11 @@ http://localhost:5179/#/home
 In app mode, the frontend is served with a same-origin API setting, so no
 `?api=` query parameter is needed.
 
+Seed demo work loads through `GET /api/demo-packs` with the same anonymous
+browser client key as other API requests. The Node app keeps
+`data/demo-packs.json` as a server-side seed file and does not serve that JSON
+path directly.
+
 The app shell is served with a Content Security Policy. The only inline script
 is the server-injected API-base setting, and the server gives that script a
 fresh nonce on each response.
@@ -90,6 +95,7 @@ at `http://localhost:5179/#/home` when you need backend-backed persistence.
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/health` | Check that the backend is running. |
+| `GET /api/demo-packs` | Load server-side seed demo work with a browser client key. |
 | `GET /api/state` | Load the full demo state. |
 | `PUT /api/state` | Save the full demo state. |
 | `GET /api/packs` | Load only work items. |

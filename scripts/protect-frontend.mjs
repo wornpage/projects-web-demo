@@ -15,8 +15,10 @@ const outputPath = path.resolve(process.argv[3] || inputPath);
 const protectedStringValues = Object.freeze([
   "/api/packs",
   "/api/packs/",
+  "/api/demo-packs",
   "/api/state",
   "Backend API",
+  "Backend demo data failed",
   "Projects demo backend action failed.",
   "Projects demo backend command preview failed.",
   "Projects demo backend create failed.",
@@ -32,6 +34,7 @@ const protectedStringValues = Object.freeze([
 
 const protectedSubstringValues = Object.freeze([
   "/api/packs",
+  "/api/demo-packs",
   "/api/state",
   "projects-static-demo-api-client-v1",
   "x-projects-demo-client"
@@ -40,6 +43,7 @@ const protectedSubstringValues = Object.freeze([
 const bannedReadableNames = Object.freeze([
   "runBackendPackAction",
   "saveBackendPackNextAction",
+  "loadBackendSeedPacks",
   "loadBackendPackCommandPreview",
   "createBackendPack",
   "addBackendPackMemoryNote",

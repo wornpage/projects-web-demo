@@ -39,8 +39,7 @@ const publicStaticFiles = new Set([
   "/index.html",
   "/assets/demo.css",
   "/assets/demo.js",
-  "/assets/favicon.png",
-  "/data/demo-packs.json"
+  "/assets/favicon.png"
 ]);
 
 const contentTypes = {
@@ -115,6 +114,12 @@ async function routeRequest(request, response, url) {
 
   if (method === "GET" && pathname === "/api/state") {
     sendJson(request, response, 200, await readState(stateKeyForRequest(request)));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/api/demo-packs") {
+    stateKeyForRequest(request);
+    sendJson(request, response, 200, await readSeedPacks());
     return;
   }
 
@@ -1090,7 +1095,7 @@ function visibleText(value, limit) {
 }
 
 async function defaultState() {
-  const packs = JSON.parse(await fs.readFile(SEED_PACKS_FILE, "utf8"));
+  const packs = await readSeedPacks();
   return sanitizeState({
     packs,
     copyProfile: "general",
@@ -1101,6 +1106,10 @@ async function defaultState() {
     filter: "all",
     query: "",
   });
+}
+
+async function readSeedPacks() {
+  return JSON.parse(await fs.readFile(SEED_PACKS_FILE, "utf8"));
 }
 
 function sanitizeState(payload) {

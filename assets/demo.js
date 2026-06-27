@@ -243,15 +243,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateServiceBoundaryNotice();
 
   try {
-    const [packsResponse, backendState] = await Promise.all([
-      fetch("data/demo-packs.json", { cache: "no-store" }),
-      loadBackendState()
-    ]);
-    if (!packsResponse.ok) {
-      throw new Error(`Demo data failed with ${packsResponse.status}`);
-    }
-
-    state.basePacks = normalizeLegacyVisibleCopy(await packsResponse.json());
+    const [seedPacks, backendState] = await loadInitialDemoState();
+    state.basePacks = normalizeLegacyVisibleCopy(seedPacks);
     loadState(backendState);
     applyLaunchConfiguration();
     if (launchedSyncCode) {
@@ -276,6 +269,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     el("screen-content").innerHTML = `<div class="demo-empty">${escapeHtml(error.message)}</div>`;
   }
 });
+
+async function loadInitialDemoState() {
+  if (DEMO_API_BASE_URL) {
+    const headers = await apiHeaders();
+    return Promise.all([
+      loadBackendSeedPacks(headers),
+      loadBackendState(headers)
+    ]);
+  }
+
+  return [await loadStaticSeedPacks(), null];
+}
+
+async function loadStaticSeedPacks() {
+  const response = await fetch("data/demo-packs.json", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Demo data failed with ${response.status}`);
+  }
+  return response.json();
+}
 
 window.addEventListener("hashchange", () => {
   routeFromHash();
@@ -456,17 +469,33 @@ function apiUrl(path) {
   return `${DEMO_API_BASE_URL}${suffix}`;
 }
 
-async function loadBackendState() {
+async function loadBackendState(headers = null) {
   if (!DEMO_API_BASE_URL) {
     return null;
   }
 
   const response = await fetch(apiUrl("/api/state"), {
     cache: "no-store",
-    headers: await apiHeaders()
+    headers: headers || await apiHeaders()
   });
   if (!response.ok) {
     throw new Error(`Backend API failed with ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function loadBackendSeedPacks(headers = null) {
+  if (!DEMO_API_BASE_URL) {
+    return [];
+  }
+
+  const response = await fetch(apiUrl("/api/demo-packs"), {
+    cache: "no-store",
+    headers: headers || await apiHeaders()
+  });
+  if (!response.ok) {
+    throw new Error(`Backend demo data failed with ${response.status}`);
   }
 
   return response.json();
