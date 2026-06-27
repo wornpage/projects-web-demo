@@ -133,7 +133,7 @@ check("work search reports visible result context", workSearchContractOk(), "sea
 check("empty states expose semantic context", source.includes('class="demo-empty" role="note" aria-label="${escapeAttribute(label)}"') && source.includes("Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Button runs next: ${context.next}."), "empty state note labels include triad");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 check("primary nav label stays compact and public-facing", html.includes('id="demo-nav"') && html.includes('aria-label="Demo screens"'), "Demo screens");
-check("brand home link stays public-facing", html.includes('aria-label="Projects demo home"'), "Projects demo home");
+check("brand home link stays portfolio-facing", brandHomeLinkContractOk(), "Projects portfolio demo home");
 check("metadata preview copy stays public and truthful", metadataPreviewContractOk(), "description omits browser-local-only framing and names no-login demo data");
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
 check("demo notice gives a starting cue and privacy boundary", demoNoticeContractOk(), "start with Review plus no-login/private-data boundary");
@@ -240,6 +240,14 @@ function sidebarNoteContractOk() {
     'class="demo-sidebar-note card" role="note" aria-label="Demo idea and starting point"',
     "<strong>One idea.</strong>",
     "Start with Review. Pick work, see the blocker, run the next action."
+  ]);
+}
+
+function brandHomeLinkContractOk() {
+  return includesAll(html, [
+    'class="demo-brand nav-rail-brand-link" href="#/home" aria-label="Projects portfolio demo home"',
+    "<strong>Projects</strong>",
+    "<small>Portfolio demo</small>"
   ]);
 }
 
