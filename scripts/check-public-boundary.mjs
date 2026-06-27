@@ -84,7 +84,7 @@ try {
   check("invalid Host header stays inside normal request handling", invalidHostHealth.status === 200 && /projects-web-demo-api/u.test(invalidHostHealth.text), invalidHostHealth.status);
   check("API health sends shared security headers", sharedSecurityHeadersOk(health.headers), sharedSecurityHeaderDetail(health.headers));
   check("Postgres state keys are hashed before storage", /function postgresStateKey\(stateKey\)[\s\S]*v2:\$\{crypto\.createHash\("sha256"\)\.update\(normalized\)\.digest\("hex"\)\}/u.test(serverSource), "postgresStateKey");
-  check("Postgres raw state-key path is migration-only", serverSource.includes("WHERE state_key = $1 OR state_key = $2") && serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "legacy read fallback plus delete");
+  check("Postgres raw state-key fallback is retired", !serverSource.includes("postgresStateKeys(") && !serverSource.includes("WHERE state_key = $1 OR state_key = $2") && !serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "digest-only state_key path");
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
   check("state-changing routes validate client keys before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
 

@@ -63,8 +63,8 @@ The API accepts only generated `demo-...` browser keys or hashed `sync-...`
 share keys, and rejects weak manual header values or readable
 sync-code-shaped headers.
 The server stores a digest of the browser client key in Postgres `state_key`,
-not the raw request header value. It can read old raw-key rows long enough to
-migrate them on the next write.
+not the raw request header value. It does not use the older raw-key read
+fallback.
 The hosted API also avoids wildcard CORS and only reflects the same-origin
 Outplane app origin or an explicitly configured `PROJECTS_PUBLIC_ORIGIN` /
 `PROJECTS_ALLOWED_ORIGINS` value. It does not use forwarding headers to authorize

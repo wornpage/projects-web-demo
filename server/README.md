@@ -14,8 +14,8 @@ State-changing routes validate that key before reading JSON payloads.
 The API accepts only generated `demo-...` browser keys or hashed `sync-...`
 share keys, and rejects weak manual header values or readable
 sync-code-shaped headers.
-Hosted Postgres stores a server-side digest of that key in `state_key`; local
-file-backed mode stores hashed filenames.
+Hosted Postgres stores and reads a server-side digest of that key in
+`state_key`; local file-backed mode stores hashed filenames.
 Each anonymous state row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected. Full-state writes also reject
 oversized `actionReceipt` object shapes before storage.

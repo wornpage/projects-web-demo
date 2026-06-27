@@ -133,7 +133,7 @@ hashed state file beside that path and rejects unkeyed state requests. Hosted
 deploys should still use `PROJECTS_STATE_STORAGE=postgres` with managed
 Postgres environment variables instead of writable container files.
 Hosted Postgres stores a server-side digest of the browser client key rather
-than the raw request header value.
+than the raw request header value, and hosted reads use only that digest key.
 State-changing API routes validate that client key before reading JSON payloads.
 The API accepts only generated `demo-...` browser keys or hashed `sync-...`
 share keys; weak manual header values and readable sync-code-shaped headers are

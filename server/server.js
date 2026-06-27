@@ -454,19 +454,18 @@ function createPostgresStateStorage() {
       )
     `),
     async read(stateKey) {
-      const keys = postgresStateKeys(stateKey);
+      const key = postgresStateKey(stateKey);
       const result = await pool.query(
-        `SELECT state_key, state_json
+        `SELECT state_json
          FROM projects_demo_state
-         WHERE state_key = $1 OR state_key = $2
-         ORDER BY CASE WHEN state_key = $1 THEN 0 ELSE 1 END
+         WHERE state_key = $1
          LIMIT 1`,
-        [keys.primary, keys.legacy]
+        [key]
       );
       return result.rows[0]?.state_json ? sanitizeState(result.rows[0].state_json) : defaultState();
     },
     async write(payload, stateKey) {
-      const keys = postgresStateKeys(stateKey);
+      const key = postgresStateKey(stateKey);
       const state = sanitizeState(payload);
       state.savedAt = new Date().toISOString();
       await pool.query(
@@ -475,24 +474,10 @@ function createPostgresStateStorage() {
          ON CONFLICT (state_key) DO UPDATE
          SET state_json = EXCLUDED.state_json,
              saved_at = EXCLUDED.saved_at`,
-        [keys.primary, JSON.stringify(state), state.savedAt]
+        [key, JSON.stringify(state), state.savedAt]
       );
-      if (keys.legacy !== keys.primary) {
-        await pool.query(
-          "DELETE FROM projects_demo_state WHERE state_key = $1",
-          [keys.legacy]
-        );
-      }
       return state;
     }
-  };
-}
-
-function postgresStateKeys(stateKey) {
-  const legacy = normalizeText(stateKey, 120);
-  return {
-    primary: postgresStateKey(legacy),
-    legacy
   };
 }
 
