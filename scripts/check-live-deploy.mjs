@@ -68,6 +68,8 @@ try {
   const liveState = await readJson("/api/state", apiHeaders);
   const commandPreview = await readJson("/api/packs/source-folder-audit/command", apiHeaders);
   const unkeyedSeedPacksStatus = await readStatus("/api/demo-packs");
+  const unkeyedPacksStatus = await readStatus("/api/packs");
+  const unkeyedCommandPreviewStatus = await readStatus("/api/packs/source-folder-audit/command");
   const unkeyedStateStatus = await readStatus("/api/state");
   const weakKeyedStateStatus = await readStatus("/api/state", { "x-projects-demo-client": "password1" });
   const readableSyncKeyedStateStatus = await readStatus("/api/state", { "x-projects-demo-client": "sync-pass-word-pass" });
@@ -234,6 +236,8 @@ try {
   check("API seed data route returns demo packs", Array.isArray(liveSeedPacks) && liveSeedPacks.length > 0, `${liveSeedPacks?.length || 0} pack(s)`);
   check("API seed data matches this checkout", liveSeedPacksHash === expectedFrontend.seedPacksHash, `live=${liveSeedPacksHash} expected=${expectedFrontend.seedPacksHash}`);
   check("hosted seed data rejects missing client key", unkeyedSeedPacksStatus === 400, unkeyedSeedPacksStatus);
+  check("hosted pack list rejects missing client key", unkeyedPacksStatus === 400, unkeyedPacksStatus);
+  check("hosted command preview rejects missing client key", unkeyedCommandPreviewStatus === 400, unkeyedCommandPreviewStatus);
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);

@@ -53,6 +53,8 @@ Observed responses:
 | `/api/state/erase` with generated client key | `200` | Only the current keyed row is erased |
 | `/api/demo-packs` without client key | `400` | Backend seed data has no unkeyed fallback row |
 | `/api/demo-packs` with client key | `200` | Demo seed data loads through the keyed API |
+| `/api/packs` without client key | `400` | Backend pack list has no unkeyed fallback row |
+| `/api/packs/{id}/command` without client key | `400` | Server-owned command previews require the current browser key |
 
 GitHub evidence:
 
@@ -73,9 +75,10 @@ confirms only the named public file allowlist is served, confirms repository
 files, unlisted asset/data paths, and path traversal attempts return `404`,
 creates work under one browser client
 key, confirms another client key cannot read it, confirms unkeyed local API
-state and seed data are rejected, confirms weak manual and readable sync-code
-API client keys are rejected, confirms non-JSON state writes are rejected,
-confirms oversized keyed state snapshots, duplicate work ids, invalid work items, oversized
+state, seed data, pack lists, and command previews are rejected, confirms weak
+manual and readable sync-code API client keys are rejected, confirms non-JSON
+state writes are rejected, confirms oversized keyed state snapshots, duplicate
+work ids, invalid work items, oversized
 `actionReceipt` shapes, and create requests past the state cap are rejected,
 confirms the current keyed row can be erased and then no longer contains that
 client's work,
@@ -125,8 +128,9 @@ CSS content, and API seed data match before it checks app behavior. It also
 confirms the hosted app uses Postgres, serves the app shell with a same-origin
 runtime config script and no-inline script CSP, rejects `/api/state`
 without a browser client key, rejects unkeyed `/api/demo-packs`, loads seed
-demo work through `/api/demo-packs` with a browser client key, rejects weak
-manual and readable sync-code API client keys, keeps generated browser rows separate,
+demo work through `/api/demo-packs` with a browser client key, rejects unkeyed
+pack lists and command previews, rejects weak manual and readable sync-code API
+client keys, keeps generated browser rows separate,
 lets a fixed shared sync key read the same row from another request, restores an
 exported state snapshot to its keyed row, rejects oversized keyed state
 snapshots, rejects duplicate work ids and invalid work items in state snapshots,
@@ -175,6 +179,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Broad shared app stylesheet is public | Fixed | Removed `assets/app.css`; demo-owned tokens now live in `assets/demo.css` |
 | Hosted app serves static sample JSON directly | Fixed | `/data/demo-packs.json` is no longer served by the app server; seed work loads through `GET /api/demo-packs` with the browser client key |
 | Hosted seed API accepts unkeyed reads | Fixed | Local and live gates prove `/api/demo-packs` rejects missing browser keys |
+| Server-owned workflow reads accept unkeyed requests | Fixed | Local and live gates prove `/api/packs` and `/api/packs/{id}/command` reject missing browser keys |
 | Live verifier can miss stale hosted seed data | Fixed | The live gate compares `GET /api/demo-packs` with checkout `data/demo-packs.json` instead of only checking for a non-empty response |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Ship verification can mix local edits with an older live deploy | Fixed | `scripts/check-git-ship-state.mjs` requires a clean branch synced with upstream before the live Outplane check runs |

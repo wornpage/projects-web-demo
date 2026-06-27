@@ -97,6 +97,12 @@ check("live verifier rejects unkeyed API seed data", includesAll(liveVerifier, [
   "unkeyedSeedPacksStatus",
   "hosted seed data rejects missing client key"
 ]), "unkeyed seed data rejection");
+check("live verifier rejects unkeyed pack reads", includesAll(liveVerifier, [
+  "unkeyedPacksStatus",
+  "unkeyedCommandPreviewStatus",
+  "hosted pack list rejects missing client key",
+  "hosted command preview rejects missing client key"
+]), "unkeyed pack read rejection");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",

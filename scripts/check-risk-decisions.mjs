@@ -20,6 +20,8 @@ try {
   requireObservedResult(observedByPath, "/data/demo-packs.json", "404");
   requireObservedResult(observedByPath, "/api/demo-packs without client key", "400");
   requireObservedResult(observedByPath, "/api/demo-packs with client key", "200");
+  requireObservedResult(observedByPath, "/api/packs without client key", "400");
+  requireObservedResult(observedByPath, "/api/packs/{id}/command without client key", "400");
 
   check("risk table is present", rows.length > 0, `${rows.length} row(s)`);
 

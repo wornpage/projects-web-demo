@@ -154,7 +154,11 @@ try {
   check("generic state POST route is retired", retiredStatePost.status === 404, retiredStatePost.status);
 
   const unkeyedSeedPacks = await request(port, "/api/demo-packs");
+  const unkeyedPacks = await request(port, "/api/packs");
+  const unkeyedCommandPreview = await request(port, "/api/packs/source-folder-audit/command");
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
+  check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
+  check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
 
   for (const pathname of [
     "/README.md",
