@@ -14,6 +14,7 @@ const stateFile = path.join(tmpDir, "state.json");
 const port = await freePort();
 const checks = [];
 const source = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+const styles = await fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8");
 const server = spawn(process.execPath, ["server/server.js"], {
   cwd: repoRoot,
   env: {
@@ -132,12 +133,17 @@ function check(name, ok, detail) {
   checks.push({ name, ok: Boolean(ok), detail: String(detail ?? "") });
 }
 
+function includesAll(text, needles) {
+  return needles.every((needle) => text.includes(needle));
+}
+
 function checkRecoverySurfaceSource() {
   check("recovery UI keeps copy output", source.includes('id="demo-recovery-output"'), "demo-recovery-output");
   check("recovery UI keeps restore input", source.includes('id="demo-recovery-input"'), "demo-recovery-input");
   check("recovery UI keeps copy button", source.includes('id="copy-recovery-state"'), "copy-recovery-state");
   check("recovery UI keeps restore button", source.includes('id="restore-recovery-state"'), "restore-recovery-state");
   check("recovery UI keeps backend erase button", source.includes('id="erase-backend-state"'), "erase-backend-state");
+  check("recovery panel keeps grouped mobile-ready actions", recoveryPanelStylesOk(), "grouped cards plus full-width mobile buttons");
   check("recovery snapshot has a version marker", source.includes("projectsDemoRecovery: RECOVERY_SNAPSHOT_VERSION"), "projectsDemoRecovery");
   check("recovery snapshot uses current demo state", source.includes("state: demoStateSnapshot()"), "demoStateSnapshot");
   check("recovery restore parses pasted backup", source.includes('parseRecoverySnapshot(valueOf("demo-recovery-input"))'), "parseRecoverySnapshot");
@@ -147,6 +153,26 @@ function checkRecoverySurfaceSource() {
   check("recovery import caps work count", source.includes("const DEMO_STATE_MAX_PACKS = 50") && source.includes("packs.length > DEMO_STATE_MAX_PACKS"), "50 pack cap");
   check("recovery import rejects invalid work items", source.includes("backup work items need an id and title"), "id/title required");
   check("recovery import rejects duplicate work ids", source.includes("backup work item ids must be unique"), "unique ids required");
+}
+
+function recoveryPanelStylesOk() {
+  const mobileStart = styles.indexOf("@media (max-width: 560px)");
+  const mobileEnd = mobileStart < 0 ? -1 : styles.indexOf("@media", mobileStart + 1);
+  const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
+  return includesAll(styles, [
+    ".demo-recovery-panel summary:focus-visible",
+    "outline: 3px solid var(--demo-focus-ring);",
+    ".demo-recovery-panel .demo-inline-form",
+    "background: var(--demo-card-field-bg);",
+    "border: 1px solid var(--demo-card-inner-border);",
+    ".demo-recovery-panel .btn",
+    "justify-self: start;"
+  ]) && includesAll(mobileStyles, [
+    ".demo-recovery-grid",
+    "grid-template-columns: 1fr;",
+    ".demo-recovery-panel .btn",
+    "width: 100%;"
+  ]);
 }
 
 function stateWithCheckPack(state, id, title) {

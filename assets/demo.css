@@ -853,6 +853,7 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-recovery-panel {
+  background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
   border-radius: var(--cockpit-radius);
   display: grid;
@@ -869,6 +870,13 @@ html[data-theme="dark"] .demo-header-metadata {
   gap: 10px;
   justify-content: space-between;
   list-style: none;
+  min-height: 38px;
+  padding: 2px 4px;
+}
+
+.demo-recovery-panel summary:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
 }
 
 .demo-recovery-panel summary::-webkit-details-marker {
@@ -910,8 +918,17 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-recovery-panel .demo-inline-form {
   align-items: stretch;
+  background: var(--demo-card-field-bg);
+  border: 1px solid var(--demo-card-inner-border);
+  border-radius: var(--cockpit-radius-sm);
   display: grid;
   gap: 8px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.demo-recovery-panel .btn {
+  justify-self: start;
 }
 
 .demo-recovery-panel textarea.demo-search-input {
@@ -4366,6 +4383,15 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
   .demo-command-brief {
     gap: 4px;
+  }
+
+  .demo-recovery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-recovery-panel .btn {
+    justify-self: stretch;
+    width: 100%;
   }
 
   .demo-command-footer {
