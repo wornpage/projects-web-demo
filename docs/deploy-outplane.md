@@ -94,10 +94,10 @@ After deploy:
    pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
    ```
 
-   The ship verifier runs local syntax, protected frontend, public route,
-   public-boundary, Docker deploy-boundary, whitespace, and live Outplane
-   checks. Its live step fails if Outplane is still serving an old frontend
-   bundle, if the app shell is missing its nonce-based CSP, if production
+   The ship verifier runs local syntax, protected frontend, public route, sync
+   sharing, public-boundary, Docker deploy-boundary, whitespace, and live
+   Outplane checks. Its live step fails if Outplane is still serving an old
+   frontend bundle, if the app shell is missing its nonce-based CSP, if production
    minification did not run, if the backend-backed frontend helpers are missing,
    if retired triage code is still public, if hosted state accepts a request
    without a browser client key, if two browser client keys can read each

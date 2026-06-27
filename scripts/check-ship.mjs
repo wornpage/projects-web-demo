@@ -33,6 +33,11 @@ const steps = [
     args: ["scripts/check-public-routes.mjs"]
   },
   {
+    label: "sync sharing surface",
+    command: process.execPath,
+    args: ["scripts/check-sync-surface.mjs"]
+  },
+  {
     label: "public boundary",
     command: process.execPath,
     args: ["scripts/check-public-boundary.mjs"]
