@@ -526,8 +526,8 @@ function updateServiceBoundaryNotice() {
   }
 
   notice.textContent = DEMO_API_BASE_URL
-    ? `Connected to backend API at ${DEMO_API_BASE_URL}. Demo state saves through the API for this browser.`
-    : "Browser-local sample. No account, backend, or real project data.";
+    ? "Demo data only. Saves through the API for this browser, not an account. Do not enter private project data."
+    : "Demo data only. Saves in this browser, not an account. Do not enter private project data.";
 }
 
 function apiHeaders(values = {}) {
