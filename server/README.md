@@ -17,11 +17,12 @@ sync-code-shaped headers.
 Hosted Postgres stores and reads a server-side digest of that key in
 `state_key`; local file-backed mode stores hashed filenames.
 Each anonymous state row is capped at 50 work items. Oversized full-state writes
-and create requests past that cap are rejected. Full-state writes require each
-work item to keep bounded text fields with a unique id and title, require the
-selected work id to be text and reference an existing item, reject malformed
-top-level state fields, reject malformed source, memory, and activity lists, and
-also reject malformed or oversized `actionReceipt` object shapes before storage.
+and create requests past that cap are rejected. JSON body writes are capped at
+1 MiB and return `413` before storage if the request is too large. Full-state
+writes require each work item to keep bounded text fields with a unique id and
+title, require the selected work id to be text and reference an existing item,
+reject malformed top-level state fields, reject malformed source, memory, and
+activity lists, and also reject malformed or oversized `actionReceipt` object shapes before storage.
 `POST /api/state/erase` removes only the row selected by the current generated
 browser key or hashed sync key. Missing or invalid keys are rejected before any
 storage erase runs.
@@ -149,7 +150,8 @@ restrictive `Permissions-Policy` headers. They also send a cookie-clearing
 `Clear-Site-Data` header so the demo cannot accidentally create a hidden
 cookie-backed identity path, plus `X-Robots-Tag: noindex, nofollow, noarchive`
 so public dev deployments are not invited into search indexes or archives. API body routes require
-`Content-Type: application/json`; non-JSON body writes are rejected with `415`.
+`Content-Type: application/json`; non-JSON body writes are rejected with `415`,
+and bodies above 1 MiB are rejected with `413`.
 API CORS reflects only same-origin app requests. Preflights with retired methods
 or unlisted request headers are rejected. This is still demo isolation, not
 private account security. The app-shell CSP blocks inline scripts and styles

@@ -77,13 +77,14 @@ creates work under one browser client
 key, confirms another client key cannot read it, confirms unkeyed local API
 state, seed data, pack lists, and command previews are rejected, confirms weak
 manual and readable sync-code API client keys are rejected, confirms non-JSON,
-scalar JSON, array JSON, empty-`packs`, and missing-`packs` state writes are
-rejected, confirms oversized keyed state snapshots, duplicate work ids, invalid
-work items, invalid work statuses, invalid selected work ids and selected id
-types, malformed work text fields and string lists, malformed top-level
-metadata or text fields, unsupported profile/scenario/filter values, malformed
-or oversized `actionReceipt` shapes, create requests past the state cap, and
-malformed or unsupported server-owned workflow writes are rejected,
+oversized JSON bodies, scalar JSON, array JSON, empty-`packs`, and
+missing-`packs` state writes are rejected, confirms oversized keyed state
+snapshots, duplicate work ids, invalid work items, invalid work statuses,
+invalid selected work ids and selected id types, malformed work text fields and
+string lists, malformed top-level metadata or text fields, unsupported
+profile/scenario/filter values, malformed or oversized `actionReceipt` shapes,
+create requests past the state cap, and malformed or unsupported server-owned
+workflow writes are rejected,
 confirms the current keyed row can be erased and then no longer contains that
 client's work,
 confirms public assets stay on the file allowlist, confirms public text assets
@@ -215,6 +216,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Full-state writes can store ambiguous or malformed work identities | Fixed | `PUT /api/state` rejects invalid work items, invalid work statuses, duplicate work ids, selected work ids that do not reference an existing item, selected work ids with non-text shapes, malformed or overlong work text fields, and malformed work source/memory/activity lists before storage |
 | Full-state writes can store unsupported UI state | Fixed | `PUT /api/state` rejects unsupported or non-text saved profile, scenario, and filter values, plus malformed or overlong top-level status/query text, before storage |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
+| Oversized JSON bodies can consume backend memory | Fixed | Body routes stop reading and return `413` once a JSON body exceeds 1 MiB, and local/live gates prove oversized state writes are rejected before storage |
 | Full-state writes accept malformed or unbounded receipt objects | Fixed | `actionReceipt` values must be plain objects when present, and object depth, key count, array items, key length, and text length are bounded before storage |
 | Server-owned workflow writes can coerce malformed request fields | Fixed | `POST /api/packs`, `/path`, `/actions`, `/next`, and `/memory` require JSON object payloads and reject malformed or overlong create source lists, action keys, memory notes, next values, path text fields, and unsupported work-path statuses before storage |
 | Guessable generated sync or browser row keys | Fixed | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback, sync codes must be hashed before becoming row keys, and local/live gates reject weak manual or readable sync-code API client keys. Anyone with a valid sync code or sync link can still open that shared demo row |

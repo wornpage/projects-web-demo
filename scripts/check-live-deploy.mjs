@@ -100,6 +100,10 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "text/plain"
   }, "PUT");
+  const oversizedBodyStateStatus = await writeStatus("/api/state", stateWithOversizedBody("live-oversized-body-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   const oversizedStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "live-oversized-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
@@ -405,6 +409,7 @@ try {
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
   check("hosted state writes reject missing client key before body parsing", unkeyedNonJsonStateWriteStatus === 400, unkeyedNonJsonStateWriteStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
+  check("hosted state rejects oversized JSON bodies", oversizedBodyStateStatus === 413, oversizedBodyStateStatus);
   check("hosted state rejects null snapshots", nullStateStatus === 400, nullStateStatus);
   check("hosted state rejects array snapshots", arrayStateStatus === 400, arrayStateStatus);
   check("hosted state rejects snapshots without packs", missingPacksStateStatus === 400, missingPacksStateStatus);
@@ -603,6 +608,12 @@ function stateWithGeneratedPacks(count, prefix, options = {}) {
 function stateWithDuplicatePackIds(prefix) {
   const state = stateWithGeneratedPacks(2, prefix);
   state.packs[1].id = state.packs[0].id;
+  return state;
+}
+
+function stateWithOversizedBody(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.status = "x".repeat(1024 * 1024);
   return state;
 }
 

@@ -4534,6 +4534,11 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   max-width: 960px;
 }
 
+.demo-header-inner {
+  padding: 14px 24px;
+  width: 100%;
+}
+
 .demo-kicker {
   color: var(--cockpit-text-muted);
   font-size: 12px;

@@ -286,6 +286,14 @@ try {
     },
     body: JSON.stringify(stateWithGeneratedPacks(1, "non-json-boundary"))
   });
+  const oversizedBodyStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithOversizedBody("oversized-body-boundary"))
+  });
   const nullStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -591,6 +599,7 @@ try {
   check("readable sync-code API client keys are rejected", readableSyncKeyedState.status === 400, readableSyncKeyedState.status);
   check("unkeyed local API state writes are rejected before body parsing", unkeyedNonJsonStateWrite.status === 400, unkeyedNonJsonStateWrite.status);
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
+  check("oversized JSON bodies are rejected before storage", oversizedBodyStateWrite.status === 413, oversizedBodyStateWrite.status);
   check("null state snapshots are rejected", nullStateWrite.status === 400, nullStateWrite.status);
   check("array state snapshots are rejected", arrayStateWrite.status === 400, arrayStateWrite.status);
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
@@ -701,6 +710,12 @@ function stateWithGeneratedPacks(count, prefix, options = {}) {
 function stateWithDuplicatePackIds(prefix) {
   const state = stateWithGeneratedPacks(2, prefix);
   state.packs[1].id = state.packs[0].id;
+  return state;
+}
+
+function stateWithOversizedBody(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.status = "x".repeat(1024 * 1024);
   return state;
 }
 
