@@ -18,6 +18,7 @@ const protectedStringValues = Object.freeze([
   "/api/demo-packs",
   "/api/state/restore",
   "/api/state/sync",
+  "/api/state/filter",
   "/api/state/browser",
   "/api/state/erase",
   "/api/state",
@@ -48,6 +49,7 @@ const protectedSubstringValues = Object.freeze([
 const bannedReadableNames = Object.freeze([
   "runBackendPackAction",
   "saveBackendPackNextAction",
+  "saveBackendStateFilter",
   "loadBackendSeedPacks",
   "loadBackendPackCommandPreview",
   "createBackendPack",
