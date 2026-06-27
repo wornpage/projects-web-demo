@@ -5658,8 +5658,11 @@ html[data-theme="dark"] .demo-app-shell {
   text-align: left;
 }
 
+.demo-work-card .demo-card-facts {
+  margin-bottom: 12px;
+}
+
 .demo-command-row {
-  border-color: var(--demo-card-inner-border);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 

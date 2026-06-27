@@ -3556,6 +3556,10 @@ function workCard(pack) {
       <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${escapeHtml(workTitle(pack))}</button>
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
+    <div class="demo-card-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}.`)}">
+      ${cardFact("Where", workTitle(pack))}
+      ${cardFact("Blocker", blockerTextForPack(pack))}
+    </div>
     <div class="demo-command-row">
       <div>
         <span>Button runs next</span>
@@ -3565,7 +3569,6 @@ function workCard(pack) {
       ${primaryCommandReasonNote(pack, command)}
     </div>
     <div class="demo-card-meta">
-      <span>${escapeHtml(`Blocker: ${blockerDisplayValue(pack.blocker)}`)}</span>
       <span>${escapeHtml(formatDue(pack))}</span>
       <span>${escapeHtml(pack.owner)}</span>
     </div>

@@ -122,6 +122,7 @@ check("runtime status copy avoids retired settings and check screens", !source.i
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
+check("work cards expose where and blocker before the next button", workCardTriadContractOk(), "structured work-card facts precede Button runs next");
 check("card support actions stay readable and tappable", cardSupportActionStylesContractOk(), "grid tiles plus single-column mobile actions");
 check("card title buttons keep a readable hit area", cardTitleButtonStylesContractOk(), "title buttons keep padding and focus radius");
 check("card state pills stay compact in headers", cardStatePillStylesContractOk(), "desktop badge cap plus mobile start alignment");
@@ -267,6 +268,28 @@ function homePathFlowStylesContractOk() {
     ".demo-start-step > small",
     "grid-column: 2;"
   ]);
+}
+
+function workCardTriadContractOk() {
+  const start = source.indexOf("function workCard(pack)");
+  const end = source.indexOf("\nfunction reviewCard(pack)", start);
+  const body = start >= 0 ? source.slice(start, end > start ? end : undefined) : "";
+  const factsIndex = body.indexOf("demo-card-facts");
+  const commandIndex = body.indexOf("demo-command-row");
+  return factsIndex >= 0
+    && commandIndex > factsIndex
+    && includesAll(body, [
+      "cardFact(\"Where\", workTitle(pack))",
+      "cardFact(\"Blocker\", blockerTextForPack(pack))",
+      "`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}.`",
+      "<span>${escapeHtml(formatDue(pack))}</span>",
+      "<span>${escapeHtml(pack.owner)}</span>"
+    ])
+    && !body.includes("`Blocker: ${blockerDisplayValue(pack.blocker)}`")
+    && includesAll(styles, [
+      ".demo-work-card .demo-card-facts",
+      "margin-bottom: 12px;"
+    ]);
 }
 
 function cardSupportActionStylesContractOk() {
