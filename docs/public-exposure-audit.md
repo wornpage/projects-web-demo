@@ -80,7 +80,7 @@ manual and readable sync-code API client keys are rejected, confirms non-JSON,
 scalar JSON, array JSON, empty-`packs`, and missing-`packs` state writes are
 rejected, confirms oversized keyed state snapshots, duplicate work ids, invalid
 work items, invalid work statuses, invalid selected work ids, malformed work
-string lists, unsupported profile/scenario/filter values,
+text fields and string lists, unsupported profile/scenario/filter values,
 oversized
 `actionReceipt` shapes, create requests past the state cap, and unsupported
 server-owned work-path statuses are rejected,
@@ -138,7 +138,7 @@ client keys, keeps generated browser rows separate,
 lets a fixed shared sync key read the same row from another request, restores an
 exported state snapshot to its keyed row, rejects oversized keyed state
 snapshots, rejects duplicate work ids, invalid work items, invalid selected
-work ids, and malformed work string lists in state snapshots,
+work ids, and malformed or overlong work text fields or malformed string lists in state snapshots,
 erases the current keyed row without touching other rows, then erases the
 temporary shared and recovery verifier rows,
 uses same-origin API CORS instead of wildcard CORS, rejects
@@ -209,7 +209,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Unkeyed writes can consume body parsing before ownership is checked | Fixed | Server-owned state and workflow write routes validate the browser key before reading JSON, and local/live gates prove missing-key writes return `400` before content-type validation |
 | Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
 | Malformed JSON snapshots can wipe a keyed state row | Fixed | `PUT /api/state` requires a JSON object snapshot with at least one item in `packs`; scalar, array, empty-`packs`, and missing-`packs` payloads return `400` and leave the keyed row unchanged |
-| Full-state writes can store ambiguous or malformed work identities | Fixed | `PUT /api/state` rejects invalid work items, invalid work statuses, duplicate work ids, selected work ids that do not reference an existing item, and malformed work source/memory/activity lists before storage |
+| Full-state writes can store ambiguous or malformed work identities | Fixed | `PUT /api/state` rejects invalid work items, invalid work statuses, duplicate work ids, selected work ids that do not reference an existing item, malformed or overlong work text fields, and malformed work source/memory/activity lists before storage |
 | Full-state writes can store unsupported UI state | Fixed | `PUT /api/state` rejects unsupported saved profile, scenario, and filter values before storage |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Full-state writes accept unbounded receipt objects | Fixed | `actionReceipt` objects are depth/key/item bounded before storage |

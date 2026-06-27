@@ -1398,9 +1398,7 @@ function validateStatePacks(value) {
       throw httpError(400, `Demo state work item ${index + 1} must be an object.`);
     }
 
-    const id = normalizeText(pack.id, 120);
-    const title = normalizeText(pack.title, 200);
-    const status = normalizeText(pack.status, 40);
+    const { id, title, status } = validatePackTextFields(pack);
     if (!id || !title) {
       throw httpError(400, "Demo state work items need an id and title.");
     }
@@ -1421,6 +1419,41 @@ function validateSelectedPackId(value, packIds) {
   if (!selectedId || !packIds.has(selectedId)) {
     throw httpError(400, "Demo state selected work must reference an existing item.");
   }
+}
+
+function validatePackTextFields(pack) {
+  const id = validatePackTextField(pack, "id", 120, true);
+  const title = validatePackTextField(pack, "title", 200, true);
+  const status = validatePackTextField(pack, "status", 40, true);
+  validatePackTextField(pack, "type", 80);
+  validatePackTextField(pack, "blocker", 200);
+  validatePackTextField(pack, "next", 120);
+  validatePackTextField(pack, "due", 40);
+  validatePackTextField(pack, "owner", 120);
+  validatePackTextField(pack, "purpose", 1000);
+  validatePackTextField(pack, "doneWhen", 1000);
+  return { id, title, status };
+}
+
+function validatePackTextField(pack, key, maxLength, required = false) {
+  if (!Object.prototype.hasOwnProperty.call(pack, key)) {
+    if (required) {
+      throw httpError(400, `Demo state work items need ${key} text.`);
+    }
+    return "";
+  }
+  if (typeof pack[key] !== "string") {
+    throw httpError(400, `Demo state work item ${key} must be text.`);
+  }
+
+  const value = normalizeText(pack[key], maxLength + 1);
+  if (required && !value) {
+    throw httpError(400, `Demo state work items need ${key} text.`);
+  }
+  if (value.length > maxLength) {
+    throw httpError(400, `Demo state work item ${key} cannot be more than ${maxLength} characters.`);
+  }
+  return value;
 }
 
 function validatePackStringArrays(pack) {

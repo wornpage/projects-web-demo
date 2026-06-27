@@ -124,6 +124,14 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const invalidTextFieldStateStatus = await writeStatus("/api/state", stateWithInvalidTextField("live-invalid-text-field-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const overlongTextFieldStateStatus = await writeStatus("/api/state", stateWithOverlongTextField("live-overlong-text-field-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   const invalidProfileStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-profile-state", "copyProfile", "private"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
@@ -345,6 +353,8 @@ try {
   check("hosted state rejects invalid work statuses", invalidWorkStatusStateStatus === 400, invalidWorkStatusStateStatus);
   check("hosted state rejects invalid selected work", invalidSelectedIdStateStatus === 400, invalidSelectedIdStateStatus);
   check("hosted state rejects invalid work string lists", invalidStringListStateStatus === 400, invalidStringListStateStatus);
+  check("hosted state rejects invalid work text fields", invalidTextFieldStateStatus === 400, invalidTextFieldStateStatus);
+  check("hosted state rejects overlong work text fields", overlongTextFieldStateStatus === 400, overlongTextFieldStateStatus);
   check("hosted state rejects invalid copy profiles", invalidProfileStateStatus === 400, invalidProfileStateStatus);
   check("hosted state rejects invalid scenarios", invalidScenarioStateStatus === 400, invalidScenarioStateStatus);
   check("hosted state rejects invalid filters", invalidFilterStateStatus === 400, invalidFilterStateStatus);
@@ -544,6 +554,18 @@ function stateWithInvalidSelectedId(prefix) {
 function stateWithInvalidStringList(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.packs[0].memory = [{ note: "not text" }];
+  return state;
+}
+
+function stateWithInvalidTextField(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.packs[0].owner = { name: "not text" };
+  return state;
+}
+
+function stateWithOverlongTextField(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.packs[0].owner = "x".repeat(121);
   return state;
 }
 
