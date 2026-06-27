@@ -27,10 +27,9 @@ Keep this repo focused on the public portfolio demo.
 | Path | Purpose |
 |---|---|
 | `index.html` | Public app shell served by GitHub Pages. |
-| `assets/demo.js` | Hash routing, demo state, button behavior, and smoke checks. |
+| `assets/demo.js` | Hash routing, demo state, button behavior, and backend app-mode calls. |
 | `assets/demo.css` | Public demo layout and interaction styling. |
 | `assets/app.css` | Shared visual tokens and base component rules used by the demo. |
-| `assets/demo-metadata.json` | Release metadata kept with the static export. |
 | `assets/favicon.png` | Demo favicon. |
 | `data/demo-packs.json` | Fake browser-local work data. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |

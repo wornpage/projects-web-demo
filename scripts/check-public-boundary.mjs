@@ -92,10 +92,11 @@ try {
   for (const pathname of [
     "/assets/demo.js.map",
     "/assets/demo.css.map",
-    "/assets/app.css.map"
+    "/assets/app.css.map",
+    "/assets/demo-metadata.json"
   ]) {
     const response = await request(port, pathname);
-    check(`source map not served: ${pathname}`, response.status === 404, response.status);
+    check(`retired public asset not served: ${pathname}`, response.status === 404, response.status);
   }
 
   const clientA = "local-check-client-a";

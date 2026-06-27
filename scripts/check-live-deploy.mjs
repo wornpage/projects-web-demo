@@ -86,6 +86,13 @@ try {
     ".get(\"api\")",
     ".get('api')"
   ].filter((value) => script.includes(value));
+  const retiredDiagnosticTokens = [
+    "assets/demo-metadata.json",
+    "Build snapshot",
+    "Demo script measured",
+    "File check",
+    "style audit"
+  ].filter((value) => script.includes(value));
   const publicSourceMapReferences = publicAssetTexts
     .filter((asset) => /sourceMappingURL|sourceURL/iu.test(asset.text))
     .map((asset) => asset.pathname);
@@ -95,7 +102,8 @@ try {
   const sourceMapStatuses = await Promise.all([
     "/assets/demo.js.map",
     "/assets/demo.css.map",
-    "/assets/app.css.map"
+    "/assets/app.css.map",
+    "/assets/demo-metadata.json"
   ].map(async (pathname) => [pathname, await readStatus(pathname)]));
 
   check("health endpoint reports ok", health.ok === true, health.ok);
@@ -112,9 +120,10 @@ try {
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
   check("internal API strings are encoded", readableInternalStrings.length === 0, readableInternalStrings.join(", ") || "hidden");
   check("API base cannot be overridden from the query string", readableApiQueryOverride.length === 0, readableApiQueryOverride.join(", ") || "absent");
+  check("retired browser diagnostics are absent", retiredDiagnosticTokens.length === 0, retiredDiagnosticTokens.join(", ") || "absent");
   check("public assets have no source map references", publicSourceMapReferences.length === 0, publicSourceMapReferences.join(", ") || "absent");
   check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
-  check("source map files are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
+  check("source map and retired metadata files are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);

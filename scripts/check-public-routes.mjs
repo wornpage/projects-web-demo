@@ -73,11 +73,17 @@ const blockedRenderFunctions = [
 const blockedRetiredHelpers = [
   "bindLabControls",
   "copyFeedbackContext",
+  "collectDiagnosticContext",
+  "collectLabSnapshot",
+  "collectStyleAudit",
   "feedbackIssueBody",
+  "labSmokeChecks",
   "labNoPackReason",
   "labPackSelectReason",
   "labRunActionHelp",
   "labSetNextActionHelp",
+  "refreshMetaDiagnostics",
+  "styleAuditChecks",
   "syncLabRenderedSmokeChecks"
 ].filter((name) => source.includes(`function ${name}(`));
 

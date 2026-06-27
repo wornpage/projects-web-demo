@@ -8,13 +8,15 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const checks = [];
 const publicTextAssets = [
   { pathname: "index.html", maxBytes: 12000 },
-  { pathname: "assets/demo.js", maxBytes: 300000 },
+  { pathname: "assets/demo.js", maxBytes: 240000 },
   { pathname: "assets/demo.css", maxBytes: 130000 },
   { pathname: "assets/app.css", maxBytes: 490000 },
-  { pathname: "assets/demo-metadata.json", maxBytes: 2000 },
   { pathname: "data/demo-packs.json", maxBytes: 15000 }
 ];
-const totalPublicTextBudgetBytes = 900000;
+const totalPublicTextBudgetBytes = 830000;
+const retiredPublicFiles = [
+  "assets/demo-metadata.json"
+];
 const forbiddenPatterns = [
   {
     name: "source map hints",
@@ -65,6 +67,9 @@ check("public text assets stay under total budget", totalBytes <= totalPublicTex
 
 const publicMapFiles = await findPublicMapFiles();
 check("public asset tree contains no source map files", publicMapFiles.length === 0, publicMapFiles.join(", ") || "absent");
+for (const pathname of retiredPublicFiles) {
+  check(`${pathname} is not shipped`, !(await fileExists(path.join(repoRoot, pathname))), "absent");
+}
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
@@ -88,6 +93,18 @@ async function findPublicMapFiles() {
     await walk(path.join(repoRoot, root), matches);
   }
   return matches.map((file) => path.relative(repoRoot, file).replace(/\\/gu, "/"));
+}
+
+async function fileExists(file) {
+  try {
+    const stats = await fs.stat(file);
+    return stats.isFile();
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
 }
 
 async function walk(directory, matches) {

@@ -82,7 +82,8 @@ nonce-based CSP, rejects `/api/state` without a browser client key, keeps fixed
 row from another request, restores an exported state snapshot to its keyed row,
 uses same-origin API CORS instead of wildcard CORS, and rejects a third-party
 preflight. It also confirms the hosted public assets have no source-map
-references, private path strings, or served source-map files.
+references, private path strings, served source-map files, or retired metadata
+asset.
 
 ## Risk Decisions
 
@@ -92,6 +93,7 @@ references, private path strings, or served source-map files.
 | Public sample data is visible | True | Accept; keep fake demo data only |
 | Private repo files served by Outplane | Not observed | App allowlist only serves app assets and sample data |
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
+| Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
 | Local file-backed API users mix state | Fixed | Browser client keys map to separate hashed local state files |
 | Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
