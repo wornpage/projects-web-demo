@@ -163,6 +163,9 @@ fallback.
 Server-owned workflow calls cancel pending generic state saves and call the
 specific backend endpoint directly instead of first writing the full browser
 state through `PUT /api/state`.
+The work-path endpoint rejects unsupported saved status values before storage,
+so hosted workflow writes cannot silently normalize private or off-contract
+statuses.
 When those endpoints return backend-owned state, the next render is marked
 save-suppressed so the browser does not immediately re-upload that response
 through the generic state endpoint.
@@ -284,8 +287,8 @@ asset-disclosure, static publish artifact, public route-contract, sync sharing,
 state recovery, public-boundary, Docker deploy-boundary, deploy-config,
 whitespace, clean git state, and live Outplane checks, including app shell and
 protected frontend content matching, seed-data matching, unkeyed seed data
-rejection, hosted repo-file blocking, and rejection of weak manual API client
-keys.
+rejection, hosted repo-file blocking, invalid work-path status rejection, and
+rejection of weak manual API client keys.
 For UI-only work, also smoke the main routes locally in light and dark mode:
 
 - `#/home`

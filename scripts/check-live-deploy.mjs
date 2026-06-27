@@ -142,6 +142,13 @@ try {
       "content-type": "text/plain"
     }, "POST")
   ]));
+  const invalidWorkPathStatus = await writeStatus("/api/packs/source-folder-audit/path", {
+    status: "private-workflow",
+    next: "Open"
+  }, {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "POST");
   const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
     actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
   }), {
@@ -330,6 +337,7 @@ try {
     unkeyedWorkflowWriteStatuses.every(([, status]) => status === 400),
     unkeyedWorkflowWriteStatuses.map(([name, status]) => `${name}:${status}`).join(", ")
   );
+  check("hosted work-path rejects invalid statuses", invalidWorkPathStatus === 400, invalidWorkPathStatus);
   check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);
   check("hosted client A survives rejected malformed snapshots", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);

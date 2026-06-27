@@ -113,6 +113,10 @@ check("live verifier rejects unkeyed workflow writes before body parsing", inclu
   "unkeyedWorkflowWriteStatuses",
   "hosted workflow writes reject missing client key before body parsing"
 ]), "unkeyed workflow write rejection");
+check("live verifier rejects invalid work-path status writes", includesAll(liveVerifier, [
+  "invalidWorkPathStatus",
+  "hosted work-path rejects invalid statuses"
+]), "invalid work-path status rejection");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",

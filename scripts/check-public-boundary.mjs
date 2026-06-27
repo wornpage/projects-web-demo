@@ -424,6 +424,17 @@ try {
       doneWhen: "The backend rejects the create request."
     })
   });
+  const invalidWorkPathStatusWrite = await request(port, "/api/packs/source-folder-audit/path", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({
+      status: "private-workflow",
+      next: "Open"
+    })
+  });
   const clientAStateAfterRejectedWrite = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientA }
   });
@@ -466,6 +477,7 @@ try {
   check("client A state survives rejected oversized snapshot", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
   check("state rows can reach the documented work cap", limitStateWrite.status === 200, limitStateWrite.status);
   check("creating work past the state cap is rejected", overLimitCreate.status === 400, overLimitCreate.status);
+  check("invalid work-path statuses are rejected", invalidWorkPathStatusWrite.status === 400, invalidWorkPathStatusWrite.status);
   check("unkeyed backend state erase is rejected", unkeyedErase.status === 400, unkeyedErase.status);
   check("current keyed backend state can be erased", eraseClientAState.status === 200 && eraseClientAState.text.includes("\"ok\":true"), eraseClientAState.status);
   check("erased keyed backend state no longer has client work", !stateHasPackTitle(clientAStateAfterErase.body, packTitle), clientAStateAfterErase.status);

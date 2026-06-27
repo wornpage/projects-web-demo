@@ -129,7 +129,7 @@ incoming Host header.
 | `GET /api/packs` | Load only work items. |
 | `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Button runs next` preview for one work item. |
 | `POST /api/packs` | Create one work item using server-owned workflow defaults. |
-| `POST /api/packs/{id}/path` | Save one work path and return the server-owned receipt/state. |
+| `POST /api/packs/{id}/path` | Save one work path with a supported status and return the server-owned receipt/state. |
 | `POST /api/packs/{id}/actions` | Run a server-owned pack action such as `start`, `unblock`, `block`, `done`, or `open`. |
 | `POST /api/packs/{id}/next` | Set the server-owned `Button runs next` value for one work item. |
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
@@ -160,5 +160,5 @@ That command runs backend syntax, frontend protection, public asset-disclosure,
 public route-contract, sync sharing, state recovery, public boundary, Docker
 deploy-boundary, deploy-config, whitespace, clean git state, and live Outplane
 checks, including app shell and protected frontend content matching, seed-data
-matching, unkeyed seed data rejection, hosted repo-file blocking, and rejection
-of weak manual API client keys.
+matching, unkeyed seed data rejection, hosted repo-file blocking, invalid
+work-path status rejection, and rejection of weak manual API client keys.

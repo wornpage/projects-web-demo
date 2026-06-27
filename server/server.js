@@ -841,7 +841,7 @@ function savePackPathAction(state, packId, payload) {
 
 function packPathValues(payload, pack) {
   const source = payload && typeof payload === "object" ? payload : {};
-  const requestedStatus = normalizeText(source.status, 40) || pack.status || "active";
+  const requestedStatus = packPathStatusValue(source, pack.status);
   const next = normalizeText(source.next, 120) || pack.next || "Open";
   const sourceHasBlocker = Object.prototype.hasOwnProperty.call(source, "blocker");
   const rawBlocker = requestedStatus === "done"
@@ -857,6 +857,18 @@ function packPathValues(payload, pack) {
     doneWhen: normalizeText(source.doneWhen, 1000) || pack.doneWhen,
     purpose: normalizeText(source.purpose, 1000) || pack.purpose
   };
+}
+
+function packPathStatusValue(source, fallbackStatus) {
+  if (!Object.prototype.hasOwnProperty.call(source, "status")) {
+    return normalizeText(fallbackStatus, 40) || "active";
+  }
+
+  const status = normalizeText(source.status, 40);
+  if (!status || !VALID_PACK_STATUSES.has(status)) {
+    throw httpError(400, "Work path status is not supported.");
+  }
+  return status;
 }
 
 function packPathSnapshot(pack) {

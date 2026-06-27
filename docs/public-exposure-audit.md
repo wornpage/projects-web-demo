@@ -81,7 +81,8 @@ scalar JSON, array JSON, empty-`packs`, and missing-`packs` state writes are
 rejected, confirms oversized keyed state snapshots, duplicate work ids, invalid
 work items, invalid work statuses, unsupported profile/scenario/filter values,
 oversized
-`actionReceipt` shapes, and create requests past the state cap are rejected,
+`actionReceipt` shapes, create requests past the state cap, and unsupported
+server-owned work-path statuses are rejected,
 confirms the current keyed row can be erased and then no longer contains that
 client's work,
 confirms public assets stay on the file allowlist, confirms public text assets
@@ -142,7 +143,8 @@ uses same-origin API CORS instead of wildcard CORS, rejects
 third-party preflights, rejects disallowed preflight methods/headers, and
 rejects forwarded-host CORS spoofing. It also confirms the hosted state write
 path and server-owned workflow write paths reject a missing browser key before
-body parsing, the hosted app shell sends HSTS, frame-deny, same-origin
+body parsing, the hosted work-path endpoint rejects unsupported status values,
+the hosted app shell sends HSTS, frame-deny, same-origin
 resource/opener isolation, embedder
 isolation, origin-agent clustering, restrictive Permissions-Policy headers, a
 noindex/noarchive robots header, a style policy without unsafe inline styles,
@@ -186,6 +188,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Backend app mode can briefly run browser fallback commands | Fixed | Selected-work command controls wait in a disabled state until `/api/packs/{id}/command` returns |
 | Browser duplicates selected-work command rationale in app mode | Fixed | `/api/packs/{id}/command` returns the selected-work flow hint and primary why copy; browser derivation remains for static mode |
 | Server-owned workflow calls pre-send browser full-state snapshots | Fixed | Pack create, next, path, memory, and action endpoints cancel pending generic saves and call their specific API without first writing `PUT /api/state` |
+| Server-owned work-path writes accept unsupported workflow status | Fixed | `/api/packs/{id}/path` rejects present blank or unsupported status values before storage, and local/live gates prove it |
 | Backend endpoint responses trigger immediate generic state re-saves | Fixed | Backend-loaded state marks the next render as save-suppressed, so workflow and sync loads are not immediately followed by a generic `PUT /api/state` |
 | Live verifier can miss stale hosted seed data | Fixed | The live gate compares `GET /api/demo-packs` with checkout `data/demo-packs.json` instead of only checking for a non-empty response |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
