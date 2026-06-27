@@ -116,7 +116,7 @@ single Node app for backend-backed local testing; preflights with retired
 methods or unlisted request headers are rejected. The static preview remains
 browser-local.
 
-The Node app also sends no-store, no-referrer, nosniff, frame-deny,
+The Node app also sends no-store, no-referrer, nosniff, HSTS, frame-deny,
 same-origin resource/opener isolation, restrictive Permissions-Policy headers,
 and a CSP that blocks unsafe inline scripts and styles on served app and API
 responses.
@@ -210,7 +210,7 @@ Use app mode at `http://localhost:5179/#/home` when you need backend-backed
 persistence.
 The preview server still uses the public file allowlist, a fixed internal URL
 base that does not depend on the incoming Host header, and defensive no-store,
-no-referrer, nosniff, frame-deny,
+no-referrer, nosniff, HSTS, frame-deny,
 same-origin isolation, Permissions-Policy, and CSP headers.
 
 ## GitHub Pages

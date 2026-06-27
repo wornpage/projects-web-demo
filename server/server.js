@@ -71,6 +71,7 @@ const securityHeaders = {
   "origin-agent-cluster": "?1",
   "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
   "referrer-policy": "no-referrer",
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
   "x-content-type-options": "nosniff",
   "x-frame-options": "DENY",
   "x-permitted-cross-domain-policies": "none"

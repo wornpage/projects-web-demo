@@ -118,7 +118,7 @@ incoming Host header.
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
 API and app responses use `Cache-Control: no-store`, `Referrer-Policy:
-no-referrer`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+no-referrer`, `X-Content-Type-Options: nosniff`, HSTS, `X-Frame-Options: DENY`,
 same-origin resource/opener isolation, and restrictive `Permissions-Policy`
 headers. API body routes require `Content-Type: application/json`; non-JSON body
 writes are rejected with `415`. API CORS reflects only same-origin app requests.

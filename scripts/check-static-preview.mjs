@@ -162,6 +162,7 @@ function sharedSecurityHeadersOk(headers) {
     && getHeader(headers, "x-frame-options") === "DENY"
     && getHeader(headers, "cross-origin-resource-policy") === "same-origin"
     && getHeader(headers, "cross-origin-opener-policy") === "same-origin"
+    && getHeader(headers, "strict-transport-security") === "max-age=31536000; includeSubDomains"
     && permissionsPolicyDisables(getHeader(headers, "permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]);
 }
 
@@ -173,6 +174,7 @@ function sharedSecurityHeaderDetail(headers) {
     "x-frame-options",
     "cross-origin-resource-policy",
     "cross-origin-opener-policy",
+    "strict-transport-security",
     "permissions-policy"
   ].map((name) => `${name}=${getHeader(headers, name) || "missing"}`).join("; ");
 }
