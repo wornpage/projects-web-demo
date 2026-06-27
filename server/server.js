@@ -124,16 +124,21 @@ async function routeRequest(request, response, url) {
     const payload = await readJsonBody(request);
     const stateKey = stateKeyForRequest(request);
     const state = await readState(stateKey);
-    const pack = sanitizePack(payload);
-    if (!pack.id) {
-      pack.id = uniquePackId(state.packs, slugify(pack.title || "sample-work"));
-    }
-    if (state.packs.some((item) => item.id === pack.id)) {
-      throw httpError(409, `Pack already exists: ${pack.id}`);
-    }
-    state.packs.unshift(pack);
+    const result = createPackFromPayload(state, payload);
     await writeState(state, stateKey);
-    sendJson(response, 201, pack);
+    sendJson(response, 201, result);
+    return;
+  }
+
+  const packNextMatch = pathname.match(/^\/api\/packs\/([^/]+)\/next$/u);
+  if (packNextMatch && method === "POST") {
+    const packId = decodeURIComponent(packNextMatch[1]);
+    const payload = await readJsonBody(request);
+    const stateKey = stateKeyForRequest(request);
+    const state = await readState(stateKey);
+    const result = setPackNextAction(state, packId, payload.next);
+    await writeState(state, stateKey);
+    sendJson(response, 200, result);
     return;
   }
 
@@ -447,6 +452,160 @@ async function writeFileState(payload) {
   await fs.writeFile(tmpFile, `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await fs.rename(tmpFile, STATE_FILE);
   return state;
+}
+
+function createPackFromPayload(state, payload) {
+  const values = createPackValues(payload);
+  const workflow = initialWorkflowForCreatedPack(values.title, values.owner, values.next);
+  if (!workflow.canSave) {
+    throw httpError(400, workflow.help);
+  }
+
+  const pack = sanitizePack({
+    id: uniquePackId(state.packs, slugify(values.title || "sample-work")),
+    title: values.title,
+    type: normalizeText(payload?.type, 80) || state.copyProfile || "general",
+    status: workflow.status,
+    blocker: workflow.blocker,
+    next: values.next,
+    due: values.due,
+    owner: values.owner,
+    purpose: values.purpose || "Work created in the backend demo.",
+    doneWhen: values.doneWhen || "Result is described.",
+    sources: normalizeStringArray(payload?.sources, 50, 200),
+    memory: normalizeStringArray(payload?.memory, 100, 2000),
+    activity: [persistenceCreatedActivity()]
+  });
+
+  if (pack.sources.length === 0) {
+    pack.sources = ["backend-state"];
+  }
+  state.packs.unshift(pack);
+  state.selectedId = pack.id;
+  const next = resolvePrimaryCommandForPack(pack);
+  const receipt = actionReceiptForPack(
+    pack,
+    `Created ${workTitle(pack)}. State: ${workflowStateForPack(pack, next).label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`,
+    next
+  );
+  state.status = receipt.summary;
+  state.actionReceipt = receipt;
+  return {
+    created: true,
+    pack: sanitizePack(pack),
+    receipt,
+    state: sanitizeState(state)
+  };
+}
+
+function createPackValues(payload) {
+  const source = payload && typeof payload === "object" ? payload : {};
+  return {
+    title: normalizeText(source.title, 200),
+    owner: normalizeText(source.owner, 120),
+    next: normalizeText(source.next, 120),
+    due: normalizeText(source.due, 40),
+    purpose: normalizeText(source.purpose, 1000),
+    doneWhen: normalizeText(source.doneWhen, 1000)
+  };
+}
+
+function initialWorkflowForCreatedPack(title, owner, next) {
+  if (!normalizeText(title, 200)) {
+    return createBlockedWorkflow("missing title", "Fill title");
+  }
+  if (isPlaceholderNext(next)) {
+    return createBlockedWorkflow("missing Button runs next", "Choose Button runs next");
+  }
+  if (isMissingOwnerValue(owner)) {
+    return createBlockedWorkflow("missing owner", "Fill owner");
+  }
+  return {
+    status: "active",
+    blocker: DEMO_BLOCKER_NONE,
+    canSave: true,
+    help: "Where: Create. Blocker: None. Button runs next: save work."
+  };
+}
+
+function createBlockedWorkflow(blocker, next) {
+  return {
+    status: "draft",
+    blocker,
+    canSave: false,
+    help: `Where: Create. Blocker: ${blocker}. Button runs next: ${next}.`
+  };
+}
+
+function persistenceCreatedActivity() {
+  return "Created through backend API.";
+}
+
+function isMissingOwnerValue(value) {
+  const owner = normalizeText(value, 120).toLowerCase();
+  return !owner || owner === "no owner" || owner === "unassigned" || owner === "owner pending";
+}
+
+function setPackNextAction(state, packId, rawNext) {
+  const pack = findPackOrThrow(state, packId);
+  const next = normalizeText(rawNext, 120) || "Open";
+  const before = packActionSignature(pack);
+  const forwardPath = nextChoiceForwardPath(pack, next);
+  pack.next = forwardPath.next;
+  pack.blocker = forwardPath.blocker;
+  pack.status = forwardPath.status;
+  const changed = packActionSignature(pack) !== before;
+  const label = buttonRunsNextDisplayLabel(pack.next);
+  if (changed) {
+    addPackActivity(pack, `Button runs next changed to ${label}.`);
+  }
+
+  state.selectedId = pack.id;
+  const command = resolvePrimaryCommandForPack(pack);
+  const summary = changed
+    ? `Button runs next set to ${label} for ${workTitle(pack)}.`
+    : `Button already runs ${label} for ${workTitle(pack)}.`;
+  const receipt = actionReceiptForPack(pack, summary, command);
+  state.status = receipt.summary;
+  state.actionReceipt = receipt;
+  return {
+    changed,
+    next: pack.next,
+    label,
+    pack: sanitizePack(pack),
+    receipt,
+    state: sanitizeState(state)
+  };
+}
+
+function nextChoiceForwardPath(pack, value) {
+  const next = normalizeText(value, 120) || "Open";
+  const blocker = normalizeStoredBlocker(pack?.blocker) === "missing Button runs next"
+    ? DEMO_BLOCKER_NONE
+    : normalizeStoredBlocker(pack?.blocker);
+  return {
+    next,
+    blocker,
+    status: forwardPathStatusForBlocker(pack?.status, blocker, next)
+  };
+}
+
+function forwardPathStatusForBlocker(status, blocker, next = "") {
+  const normalizedStatus = normalizeText(status, 40) || "active";
+  if (normalizedStatus === "done") {
+    return "done";
+  }
+  if (isPlaceholderNext(next)) {
+    return "draft";
+  }
+  if (normalizeStoredBlocker(blocker) !== DEMO_BLOCKER_NONE) {
+    return "blocked";
+  }
+  return "active";
+}
+
+function buttonRunsNextDisplayLabel(value) {
+  return commandActionForLabel(value || "Open").label;
 }
 
 function runPackAction(state, packId, rawAction) {

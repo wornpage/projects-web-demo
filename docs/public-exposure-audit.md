@@ -84,10 +84,12 @@ Use a thinner frontend:
 
 Do not rely on obfuscation for security.
 
-The first server-side slice is pack action execution. In backend app mode,
-pack-level actions such as `start`, `unblock`, `block`, `done`, and `open` run
-through `POST /api/packs/{id}/actions`, which updates the stored demo state on
-the server and returns the resulting receipt to the browser.
+The first server-side slice is pack workflow execution. In backend app mode,
+pack creation runs through `POST /api/packs`, `Button runs next` changes run
+through `POST /api/packs/{id}/next`, and pack-level actions such as `start`,
+`unblock`, `block`, `done`, and `open` run through
+`POST /api/packs/{id}/actions`. These endpoints update the stored demo state on
+the server and return the resulting receipt to the browser.
 
 ## Obfuscation Decision
 
@@ -96,6 +98,10 @@ only, after behavior has been moved server-side and browser smoke tests pass.
 Obfuscation can add copy-friction, but it does not make browser-delivered code
 private and can break debugging, accessibility, and interaction flows if it is
 too aggressive.
+
+The production Docker build uses local Terser minification on `assets/demo.js`
+inside the image and prunes the build tool before runtime. This is copy-friction,
+not a security boundary; the browser still receives executable JavaScript.
 
 ## Required Publish Boundary
 

@@ -8,12 +8,16 @@ ENV PORT=5179
 ENV PROJECTS_STATE_FILE=/app/state/state.json
 
 COPY server/package*.json ./server/
-RUN npm --prefix server ci --omit=dev
+RUN npm --prefix server ci
 
 COPY index.html ./
 COPY assets ./assets
 COPY data ./data
 COPY server/server.js ./server/server.js
+
+RUN ./server/node_modules/.bin/terser assets/demo.js \
+    --compress --mangle --comments false --output assets/demo.js \
+  && npm --prefix server prune --omit=dev
 
 RUN mkdir -p /app/state \
   && addgroup -S app \

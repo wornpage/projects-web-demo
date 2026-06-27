@@ -564,6 +564,50 @@ async function runBackendPackAction(pack, action) {
   return true;
 }
 
+async function saveBackendPackNextAction(pack, next) {
+  if (!DEMO_API_BASE_URL || !pack?.id) {
+    return null;
+  }
+
+  clearPendingBackendStateSave();
+  await persistBackendStateSnapshot(demoStateSnapshot());
+  const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/next`), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify({ next })
+  });
+  if (!response.ok) {
+    throw new Error(`Backend next action failed with ${response.status}`);
+  }
+
+  const result = await response.json();
+  loadState(result.state);
+  state.selectedId = result.pack?.id || pack.id;
+  return result;
+}
+
+async function createBackendPack(values) {
+  if (!DEMO_API_BASE_URL) {
+    return null;
+  }
+
+  clearPendingBackendStateSave();
+  await persistBackendStateSnapshot(demoStateSnapshot());
+  const response = await fetch(apiUrl("/api/packs"), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify(values)
+  });
+  if (!response.ok) {
+    throw new Error(`Backend create failed with ${response.status}`);
+  }
+
+  const result = await response.json();
+  loadState(result.state);
+  state.selectedId = result.pack?.id || state.selectedId;
+  return result;
+}
+
 function updateServiceBoundaryNotice() {
   const notice = el("demo-notice");
   if (!notice) {
@@ -4587,7 +4631,7 @@ function bindListActions() {
       return;
     }
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const action = button.dataset.action;
       if (action === "set-due-today") {
         const dueState = setDueTodayState(screenTitleForRoute());
@@ -4615,8 +4659,16 @@ function bindListActions() {
           const input = el(`next-${pack.id}`);
           state.selectedId = pack.id;
           if (input) {
-            const result = setPackNextAction(pack, input.value);
-            setNextConfirmation(pack, result);
+            try {
+              const backendResult = await saveBackendPackNextAction(pack, input.value);
+              if (!backendResult) {
+                const result = setPackNextAction(pack, input.value);
+                setNextConfirmation(pack, result);
+              }
+            } catch (error) {
+              console.error("Projects demo backend next action failed.", error);
+              state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+            }
           } else {
             state.status = selectedWorkStatus("Next setup", pack, "choose Button runs next");
             go("next", pack.id);
@@ -5117,11 +5169,24 @@ function packActionSignature(pack) {
   });
 }
 
-function applyNextChoice(id) {
+async function applyNextChoice(id) {
   const pack = findPack(id);
   if (!pack) return;
 
   const choice = valueOf("next-action-choice") || "Open";
+  try {
+    const backendResult = await saveBackendPackNextAction(pack, choice);
+    if (backendResult?.pack?.id) {
+      go("work", backendResult.pack.id);
+      return;
+    }
+  } catch (error) {
+    console.error("Projects demo backend next action failed.", error);
+    state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+    render();
+    return;
+  }
+
   const result = setPackNextAction(pack, choice);
   state.selectedId = pack.id;
   setNextConfirmation(pack, result);
@@ -6318,12 +6383,25 @@ function syncValidatedActionButton(button, stateForAction) {
   button.dataset.disabledReason = copy;
 }
 
-function createSamplePack() {
+async function createSamplePack() {
   const values = createFormValues();
   const stateForSave = createSaveState(values);
   if (!stateForSave.canSave) {
     state.status = stateForSave.help;
     syncCreateValidation();
+    return;
+  }
+
+  try {
+    const backendResult = await createBackendPack(values);
+    if (backendResult?.pack?.id) {
+      go("pack", backendResult.pack.id);
+      return;
+    }
+  } catch (error) {
+    console.error("Projects demo backend create failed.", error);
+    state.status = `Where: Backend create. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+    render();
     return;
   }
 

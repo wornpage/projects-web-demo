@@ -106,9 +106,10 @@ GitHub Pages behavior.
 | `GET /api/state` | Load the full demo state. |
 | `PUT /api/state` | Save the full demo state. |
 | `GET /api/packs` | Load only work items. |
-| `POST /api/packs` | Create one work item. |
+| `POST /api/packs` | Create one work item using server-owned workflow defaults. |
 | `PATCH /api/packs/{id}` | Update one work item. |
 | `POST /api/packs/{id}/actions` | Run a server-owned pack action such as `start`, `unblock`, `block`, `done`, or `open`. |
+| `POST /api/packs/{id}/next` | Set the server-owned `Button runs next` value for one work item. |
 | `POST /api/packs/{id}/memory` | Add one memory note. |
 
 API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:
