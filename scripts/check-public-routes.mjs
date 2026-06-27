@@ -228,7 +228,10 @@ function cardSupportActionStylesContractOk() {
     ".demo-card-support > .demo-card-actions",
     "grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));",
     ".demo-card-support > .demo-card-actions .demo-support-action",
-    "width: 100%;"
+    "width: 100%;",
+    ".demo-card-support summary:focus-visible",
+    ".demo-row-support summary:focus-visible",
+    "outline: 3px solid var(--demo-focus-ring);"
   ]) && includesAll(mobileStyles, [
     ".demo-card-support > .demo-card-actions",
     "grid-template-columns: 1fr;"

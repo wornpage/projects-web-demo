@@ -2668,6 +2668,12 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   text-transform: uppercase;
 }
 
+.demo-card-support summary:focus-visible,
+.demo-row-support summary:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
+}
+
 .demo-card-support summary::-webkit-details-marker {
   display: none;
 }
