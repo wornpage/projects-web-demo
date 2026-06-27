@@ -6567,7 +6567,8 @@ function clipboardBlockedStatus() {
 }
 
 function emptyState(text, help = "Use the nearby controls or reset demo data.", context = emptyStateContext()) {
-  return `<div class="demo-empty">
+  const label = `Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Button runs next: ${context.next}.`;
+  return `<div class="demo-empty" role="note" aria-label="${escapeAttribute(label)}">
     <strong>${escapeHtml(text)}</strong>
     <span><b>How to fill:</b> ${escapeHtml(help)}</span>
     <small><b>Where:</b> ${escapeHtml(context.where)}</small>
