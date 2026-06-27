@@ -21,6 +21,8 @@ try {
   check("hosted state uses Postgres", String(health.stateStorage || "").startsWith("postgres:"), health.stateStorage);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
+  check("backend pack action helper is present", script.includes("runBackendPackAction"), "runBackendPackAction");
+  check("backend next helper is present", script.includes("saveBackendPackNextAction"), "saveBackendPackNextAction");
   check("backend create helper is present", script.includes("createBackendPack"), "createBackendPack");
   check("backend memory helper is present", script.includes("addBackendPackMemoryNote"), "addBackendPackMemoryNote");
   check("backend path helper is present", script.includes("saveBackendPackPath"), "saveBackendPackPath");
