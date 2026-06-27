@@ -27,6 +27,16 @@ const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
 const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"]);
+const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
+  ["title", "title"],
+  ["status", "status"],
+  ["blocker", "blocker"],
+  ["owner", "owner"],
+  ["due", "due date"],
+  ["next", "Button runs next"],
+  ["doneWhen", "proof target"],
+  ["purpose", "purpose"]
+]);
 const publicStaticFiles = new Set([
   "/index.html",
   "/data/demo-packs.json"
@@ -127,6 +137,18 @@ async function routeRequest(request, response, url) {
     const result = createPackFromPayload(state, payload);
     await writeState(state, stateKey);
     sendJson(response, 201, result);
+    return;
+  }
+
+  const packPathMatch = pathname.match(/^\/api\/packs\/([^/]+)\/path$/u);
+  if (packPathMatch && method === "POST") {
+    const packId = decodeURIComponent(packPathMatch[1]);
+    const payload = await readJsonBody(request);
+    const stateKey = stateKeyForRequest(request);
+    const state = await readState(stateKey);
+    const result = savePackPathAction(state, packId, payload);
+    await writeState(state, stateKey);
+    sendJson(response, 200, result);
     return;
   }
 
@@ -597,6 +619,99 @@ function addPackMemoryAction(state, packId, rawNote) {
     receipt,
     state: sanitizeState(state)
   };
+}
+
+function savePackPathAction(state, packId, payload) {
+  const pack = findPackOrThrow(state, packId);
+  const before = packPathSnapshot(pack);
+  const values = packPathValues(payload, pack);
+  pack.title = values.title || pack.title;
+  pack.status = values.status || pack.status;
+  pack.blocker = values.blocker;
+  pack.owner = values.owner || pack.owner;
+  pack.due = values.due;
+  pack.next = values.next || pack.next;
+  pack.doneWhen = values.doneWhen || pack.doneWhen;
+  pack.purpose = values.purpose || pack.purpose;
+  pack.blocker = pack.status === "done" ? DEMO_BLOCKER_NONE : normalizeStoredBlocker(pack.blocker);
+  if (pack.status === "blocked" && normalizeStoredBlocker(pack.blocker) === DEMO_BLOCKER_NONE) {
+    pack.status = "active";
+  }
+
+  const after = packPathSnapshot(pack);
+  const changed = JSON.stringify(before) !== JSON.stringify(after);
+  if (changed) {
+    addPackActivity(pack, "Work path changed.");
+  }
+
+  state.selectedId = pack.id;
+  const changeSummary = packPathChangeSummary(before, after);
+  const summary = changed
+    ? `Work path saved for ${workTitle(pack)}. ${changeSummary}. ${proofTargetSentence(pack)}`
+    : `No work path changes for ${workTitle(pack)}. ${proofTargetSentence(pack)}`;
+  const receipt = actionReceiptForPack(pack, summary, resolvePrimaryCommandForPack(pack));
+  state.status = receipt.summary;
+  state.actionReceipt = receipt;
+  return {
+    changed,
+    summary: changeSummary,
+    pack: sanitizePack(pack),
+    receipt,
+    state: sanitizeState(state)
+  };
+}
+
+function packPathValues(payload, pack) {
+  const source = payload && typeof payload === "object" ? payload : {};
+  const requestedStatus = normalizeText(source.status, 40) || pack.status || "active";
+  const next = normalizeText(source.next, 120) || pack.next || "Open";
+  const sourceHasBlocker = Object.prototype.hasOwnProperty.call(source, "blocker");
+  const rawBlocker = requestedStatus === "done"
+    ? DEMO_BLOCKER_NONE
+    : normalizeStoredBlocker(sourceHasBlocker ? source.blocker : pack.blocker);
+  return {
+    title: normalizeText(source.title, 200) || pack.title,
+    status: forwardPathStatusForBlocker(requestedStatus, rawBlocker, next),
+    blocker: rawBlocker,
+    owner: normalizeText(source.owner, 120) || pack.owner,
+    due: normalizeText(source.due, 40),
+    next,
+    doneWhen: normalizeText(source.doneWhen, 1000) || pack.doneWhen,
+    purpose: normalizeText(source.purpose, 1000) || pack.purpose
+  };
+}
+
+function packPathSnapshot(pack) {
+  return {
+    title: normalizeText(pack?.title, 200),
+    status: normalizeText(pack?.status, 40),
+    blocker: normalizeStoredBlocker(pack?.blocker),
+    owner: normalizeText(pack?.owner, 120),
+    due: normalizeText(pack?.due, 40),
+    next: normalizeText(pack?.next, 120),
+    doneWhen: normalizeText(pack?.doneWhen, 1000),
+    purpose: normalizeText(pack?.purpose, 1000)
+  };
+}
+
+function packPathChangeSummary(before, after) {
+  const changes = FORWARD_PATH_CHANGE_FIELDS
+    .map(([field, label]) => {
+      const oldValue = normalizeText(before?.[field]);
+      const newValue = normalizeText(after?.[field]);
+      return oldValue === newValue ? "" : `${label} to ${sentenceValue(newValue || "blank")}`;
+    })
+    .filter(Boolean);
+
+  if (changes.length === 0) {
+    return "Edit a work path field before saving";
+  }
+
+  const visible = changes.slice(0, 3).join("; ");
+  const remaining = changes.length - 3;
+  return remaining > 0
+    ? `Changed ${visible}; ${remaining} more`
+    : `Changed ${visible}`;
 }
 
 function nextChoiceForwardPath(pack, value) {

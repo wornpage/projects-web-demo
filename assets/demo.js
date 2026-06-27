@@ -630,6 +630,28 @@ async function addBackendPackMemoryNote(pack, note) {
   return result;
 }
 
+async function saveBackendPackPath(pack, values) {
+  if (!DEMO_API_BASE_URL || !pack?.id) {
+    return null;
+  }
+
+  clearPendingBackendStateSave();
+  await persistBackendStateSnapshot(demoStateSnapshot());
+  const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/path`), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify(values)
+  });
+  if (!response.ok) {
+    throw new Error(`Backend work path action failed with ${response.status}`);
+  }
+
+  const result = await response.json();
+  loadState(result.state);
+  state.selectedId = result.pack?.id || pack.id;
+  return result;
+}
+
 function updateServiceBoundaryNotice() {
   const notice = el("demo-notice");
   if (!notice) {
@@ -5452,8 +5474,7 @@ function savePendingForwardPathForAction(targetPackId) {
     return true;
   }
 
-  savePackForwardPathFromForm(pack);
-  render();
+  savePackForwardPathFromForm(pack).then(() => render());
   return true;
 }
 
@@ -5489,8 +5510,7 @@ function runRouteAction(action, targetPackId) {
         return true;
       }
 
-      savePackForwardPathFromForm(selected);
-      render();
+      savePackForwardPathFromForm(selected).then(() => render());
     }
     return true;
   }
@@ -6496,8 +6516,20 @@ function uniquePackId(baseId) {
   return id;
 }
 
-function savePackForwardPathFromForm(pack) {
+async function savePackForwardPathFromForm(pack) {
   const before = packForwardPathSnapshot(pack);
+  const values = packForwardPathFormValues(pack);
+  try {
+    const backendResult = await saveBackendPackPath(pack, values);
+    if (backendResult) {
+      return backendResult.changed;
+    }
+  } catch (error) {
+    console.error("Projects demo backend work path action failed.", error);
+    state.status = `Where: Backend work path. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+    return false;
+  }
+
   const changed = applyPackForwardPathFormValues(pack);
   const after = packForwardPathSnapshot(pack);
   setSaveConfirmation(pack, {
