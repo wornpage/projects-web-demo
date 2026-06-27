@@ -147,6 +147,8 @@ share keys; weak manual header values and readable sync-code-shaped headers are
 rejected.
 Each keyed backend row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected instead of being silently stored.
+Full-state writes must be JSON object snapshots; scalar or array JSON payloads
+are rejected before they can sanitize into an empty row.
 Full-state writes also require each work item to keep a unique id and title, so
 backup or sync restores cannot silently create ambiguous duplicate work rows.
 Selected-work commands in hosted app mode wait for the server command preview

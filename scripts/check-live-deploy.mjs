@@ -131,6 +131,14 @@ try {
   await writeJson("/api/state", stateWithCheckPack(liveState, "live-isolation-check", clientATitle), {
     "x-projects-demo-client": clientAKey
   });
+  const nullStateStatus = await writeStatus("/api/state", null, {
+    "x-projects-demo-client": clientAKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const arrayStateStatus = await writeStatus("/api/state", [], {
+    "x-projects-demo-client": clientAKey,
+    "content-type": "application/json"
+  }, "PUT");
   await writeJson("/api/state", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
     "x-projects-demo-client": sharedKey
   });
@@ -265,6 +273,8 @@ try {
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
   check("hosted state writes reject missing client key before body parsing", unkeyedNonJsonStateWriteStatus === 400, unkeyedNonJsonStateWriteStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
+  check("hosted state rejects null snapshots", nullStateStatus === 400, nullStateStatus);
+  check("hosted state rejects array snapshots", arrayStateStatus === 400, arrayStateStatus);
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
   check("hosted state rejects duplicate work ids", duplicateIdStateStatus === 400, duplicateIdStateStatus);
   check("hosted state rejects invalid work items", invalidPackStateStatus === 400, invalidPackStateStatus);
@@ -274,6 +284,7 @@ try {
     unkeyedWorkflowWriteStatuses.map(([name, status]) => `${name}:${status}`).join(", ")
   );
   check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);
+  check("hosted client A survives rejected malformed snapshots", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);
   check("hosted sync key is readable from another request", stateHasPackTitle(sharedStateFromSecondRequest, sharedTitle), sharedTitle);

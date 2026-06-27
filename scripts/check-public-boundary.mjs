@@ -286,6 +286,22 @@ try {
     },
     body: JSON.stringify(stateWithGeneratedPacks(1, "non-json-boundary"))
   });
+  const nullStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(null)
+  });
+  const arrayStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify([])
+  });
   const oversizedStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -376,11 +392,14 @@ try {
   check("readable sync-code API client keys are rejected", readableSyncKeyedState.status === 400, readableSyncKeyedState.status);
   check("unkeyed local API state writes are rejected before body parsing", unkeyedNonJsonStateWrite.status === 400, unkeyedNonJsonStateWrite.status);
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
+  check("null state snapshots are rejected", nullStateWrite.status === 400, nullStateWrite.status);
+  check("array state snapshots are rejected", arrayStateWrite.status === 400, arrayStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
   check("duplicate work ids in keyed state snapshots are rejected", duplicateIdStateWrite.status === 400, duplicateIdStateWrite.status);
   check("invalid work items in keyed state snapshots are rejected", invalidPackStateWrite.status === 400, invalidPackStateWrite.status);
   check("deep action receipts are rejected", deepReceiptStateWrite.status === 400, deepReceiptStateWrite.status);
   check("wide action receipts are rejected", wideReceiptStateWrite.status === 400, wideReceiptStateWrite.status);
+  check("client A state survives rejected malformed snapshots", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
   check("client A state survives rejected oversized snapshot", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
   check("state rows can reach the documented work cap", limitStateWrite.status === 200, limitStateWrite.status);
   check("creating work past the state cap is rejected", overLimitCreate.status === 400, overLimitCreate.status);

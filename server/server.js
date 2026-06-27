@@ -1337,8 +1337,8 @@ function sanitizeState(payload) {
 }
 
 function validateStatePayload(payload) {
-  if (!payload || typeof payload !== "object") {
-    return;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw httpError(400, "Demo state must be a JSON object.");
   }
 
   validateStatePacks(payload.packs);
