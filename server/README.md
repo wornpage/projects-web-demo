@@ -42,9 +42,9 @@ browser client key as other API requests. The Node app keeps
 `data/demo-packs.json` as a server-side seed file and does not serve that JSON
 path directly.
 
-The app shell is served with a Content Security Policy. The only inline script
-is the server-injected API-base setting, and the server gives that script a
-fresh nonce on each response.
+The app shell is served with a Content Security Policy. The backend API-base
+setting is served through a same-origin `assets/runtime-config.js` response, so
+the app shell does not need inline scripts.
 
 Use `PROJECTS_STATE_STORAGE=postgres` and managed Postgres environment variables
 when deploying this app to a host where local files are ephemeral. Without
@@ -125,8 +125,9 @@ restrictive `Permissions-Policy` headers. API body routes require
 `Content-Type: application/json`; non-JSON body writes are rejected with `415`.
 API CORS reflects only same-origin app requests. Preflights with retired methods
 or unlisted request headers are rejected. This is still demo isolation, not
-private account security. The app-shell CSP also denies frames, workers,
-manifests, and media loaders the demo does not use.
+private account security. The app-shell CSP blocks inline scripts and styles
+and also denies frames, workers, manifests, and media loaders the demo does not
+use.
 
 ## Checks
 

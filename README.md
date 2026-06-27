@@ -121,6 +121,8 @@ same-origin resource/opener/embedder isolation, restrictive
 Permissions-Policy headers, and a CSP that blocks unsafe inline scripts and
 styles on served app and API responses. The CSP also denies frames, workers,
 manifests, and media loaders the demo does not use.
+The hosted app serves the backend API-base setting through
+`assets/runtime-config.js` instead of an inline script.
 
 The local state path defaults to a user data directory outside the repository,
 but backend API state routes still require the browser's anonymous client key.

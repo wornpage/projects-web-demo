@@ -74,9 +74,9 @@ requests past the state cap are rejected,
 confirms public assets stay on the file allowlist, confirms public text assets
 stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
-and confirms the backend-served app shell sends a nonce-based Content Security
-Policy for the injected runtime API script and blocks unsafe inline styles. It
-also confirms the app shell blocks unused frame, worker, manifest, and media
+and confirms the backend-served app shell uses a same-origin runtime config
+script instead of inline JavaScript and blocks unsafe inline styles. It also
+confirms the app shell blocks unused frame, worker, manifest, and media
 loaders, and sends legacy frame denial, HSTS, same-origin
 resource/opener/embedder isolation, origin-agent clustering, and restrictive
 Permissions-Policy headers. API CORS uses the exact same-origin app origin
@@ -103,18 +103,19 @@ pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
 ```
 
 The live gate confirms the hosted app uses Postgres, serves the app shell with a
-nonce-based CSP, rejects `/api/state` without a browser client key, loads seed
-demo work through `/api/demo-packs` with a browser client key, keeps fixed
-`live-check-*` browser rows separate, lets a fixed shared sync key read the same
-row from another request, restores an exported state snapshot to its keyed row,
-rejects oversized keyed state snapshots, uses same-origin API CORS instead of
-wildcard CORS, rejects third-party preflights, rejects disallowed preflight
-methods/headers, and rejects forwarded-host CORS spoofing. It also confirms the
-hosted state write path rejects a missing browser key before body parsing, the
-hosted app shell sends HSTS, frame-deny, same-origin resource/opener isolation,
-embedder isolation, origin-agent clustering, restrictive Permissions-Policy
-headers, a style policy without unsafe inline styles, and explicit denials for
-unused frame, worker, manifest, and media loaders, and that
+same-origin runtime config script and no-inline script CSP, rejects `/api/state`
+without a browser client key, loads seed demo work through `/api/demo-packs`
+with a browser client key, keeps fixed `live-check-*` browser rows separate,
+lets a fixed shared sync key read the same row from another request, restores an
+exported state snapshot to its keyed row, rejects oversized keyed state
+snapshots, uses same-origin API CORS instead of wildcard CORS, rejects
+third-party preflights, rejects disallowed preflight methods/headers, and
+rejects forwarded-host CORS spoofing. It also confirms the hosted state write
+path rejects a missing browser key before body parsing, the hosted app shell
+sends HSTS, frame-deny, same-origin resource/opener isolation, embedder
+isolation, origin-agent clustering, restrictive Permissions-Policy headers, a
+style policy without unsafe inline styles, and explicit denials for unused
+frame, worker, manifest, and media loaders, and that
 hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
 asset, or unlisted public asset/data paths.
@@ -146,7 +147,7 @@ Web Crypto and do not fall back to weak random values.
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Full-state writes accept unbounded receipt objects | Fixed | `actionReceipt` objects are depth/key/item bounded before storage |
 | Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |
-| Backend app shell allows arbitrary inline script/style | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script and blocks unsafe inline styles |
+| Backend app shell allows arbitrary inline script/style | Fixed | The Node app serves the API-base setting through same-origin `assets/runtime-config.js`, uses `script-src 'self'`, and blocks unsafe inline styles |
 | App shell CSP leaves unused loaders to fallback behavior | Fixed | CSP now explicitly denies frames, workers, manifests, and media loaders the demo does not use |
 | App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener/embedder isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
 | Shared security headers can drift unverified | Fixed | Local, static-preview, and live gates now assert embedder policy, origin-agent clustering, and cross-domain policy denial |

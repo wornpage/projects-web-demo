@@ -33,6 +33,7 @@ const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
 const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"]);
+const RUNTIME_CONFIG_PATHNAME = "/assets/runtime-config.js";
 const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
   ["title", "title"],
   ["status", "status"],
@@ -238,16 +239,25 @@ async function routeRequest(request, response, url) {
 }
 
 async function serveStaticRequest(request, response, url) {
-  const file = await resolveStaticFile(url.pathname);
+  const pathname = normalizePublicStaticPathname(url.pathname);
+  if (pathname === RUNTIME_CONFIG_PATHNAME) {
+    response.writeHead(200, {
+      ...securityHeaders,
+      "content-type": contentTypes[".js"]
+    });
+    response.end(request.method === "HEAD" ? "" : runtimeConfigScript());
+    return;
+  }
+
+  const file = await resolveStaticFile(pathname);
   const extension = path.extname(file).toLowerCase();
   const contentType = contentTypes[extension] || "application/octet-stream";
 
   if (isIndexFile(file)) {
-    const nonce = crypto.randomBytes(16).toString("base64");
-    const html = injectAppApiBase(await fs.readFile(file, "utf8"), nonce);
+    const html = injectAppApiBase(await fs.readFile(file, "utf8"));
     response.writeHead(200, {
       ...securityHeaders,
-      "content-security-policy": contentSecurityPolicy(nonce),
+      "content-security-policy": contentSecurityPolicy(),
       "content-type": contentType
     });
     response.end(request.method === "HEAD" ? "" : html);
@@ -323,7 +333,7 @@ function isIndexFile(file) {
   return path.resolve(file) === path.join(ROOT_DIR, "index.html");
 }
 
-function contentSecurityPolicy(nonce) {
+function contentSecurityPolicy() {
   return [
     "default-src 'self'",
     "base-uri 'none'",
@@ -331,7 +341,7 @@ function contentSecurityPolicy(nonce) {
     "frame-ancestors 'none'",
     "frame-src 'none'",
     "worker-src 'none'",
-    `script-src 'self' 'nonce-${nonce}'`,
+    "script-src 'self'",
     "style-src 'self'",
     "font-src 'self'",
     "img-src 'self' data:",
@@ -342,19 +352,28 @@ function contentSecurityPolicy(nonce) {
   ].join("; ");
 }
 
-function injectAppApiBase(html, nonce) {
+function injectAppApiBase(html) {
   const versionedHtml = html
     .replace(/(href="assets\/demo\.css\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
+    .replace(/(src="assets\/runtime-config\.js\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
     .replace(/(src="assets\/demo\.js\?v=)[^"]*/u, `$1${ASSET_VERSION}`);
-  const script = `<script nonce="${escapeHtmlAttribute(nonce)}">window.PROJECTS_API_BASE_URL = window.PROJECTS_API_BASE_URL || location.origin;</script>`;
-  if (versionedHtml.includes("window.PROJECTS_API_BASE_URL")) {
-    return versionedHtml.replace(/<script[^>]*>window\.PROJECTS_API_BASE_URL = window\.PROJECTS_API_BASE_URL \|\| location\.origin;<\/script>/u, script);
+  const script = `<script src="assets/runtime-config.js?v=${escapeHtmlAttribute(ASSET_VERSION)}" defer></script>`;
+  if (versionedHtml.includes("assets/runtime-config.js")) {
+    return versionedHtml.replace(/<script[^>]*src="assets\/runtime-config\.js[^"]*"[^>]*><\/script>/u, script);
   }
 
   return versionedHtml.replace(
     /(\s*<script src="assets\/demo\.js[^>]*><\/script>)/u,
     `  ${script}\n$1`
   );
+}
+
+function runtimeConfigScript() {
+  return [
+    "\"use strict\";",
+    "window.PROJECTS_API_BASE_URL = location.origin;",
+    ""
+  ].join("\n");
 }
 
 function escapeHtmlAttribute(value) {

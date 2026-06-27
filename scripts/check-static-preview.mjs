@@ -74,6 +74,7 @@ try {
     "/.git/config",
     "/assets/../server/server.js",
     "/assets/%2e%2e/server/server.js",
+    "/assets/runtime-config.js",
     "/assets/not-allowlisted.txt",
     "/assets/private/demo.js",
     "/data/not-allowlisted.json",

@@ -33,16 +33,17 @@ try {
     "access-control-request-method": "PUT",
     "access-control-request-headers": "content-type, x-projects-demo-client, x-extra-demo-header"
   }, "OPTIONS");
-  const cspNonce = nonceFromCsp(csp);
-  const htmlNonce = nonceFromHtml(html);
+  const runtimeConfigPath = runtimeConfigPathFromHtml(html);
   const assetMatch = html.match(/assets\/demo\.js\?v=([^"']+)/u);
   const assetVersion = assetMatch?.[1] || "";
   const scriptPath = assetVersion
     ? `/assets/demo.js?v=${encodeURIComponent(assetVersion)}`
     : "/assets/demo.js";
+  const runtimeConfig = await readText(`/${runtimeConfigPath}`);
   const script = await readText(scriptPath);
   const publicAssetTexts = [
     { pathname: "/", text: html },
+    { pathname: `/${runtimeConfigPath}`, text: runtimeConfig },
     { pathname: scriptPath, text: script },
     { pathname: "/assets/demo.css", text: await readText("/assets/demo.css") }
   ];
@@ -168,8 +169,10 @@ try {
   check("app shell requires cross-origin embedder policy", htmlResponse.headers.get("cross-origin-embedder-policy") === "require-corp", htmlResponse.headers.get("cross-origin-embedder-policy") || "missing");
   check("app shell disables sensitive browser permissions", permissionsPolicyDisables(htmlResponse.headers.get("permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]), htmlResponse.headers.get("permissions-policy") || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
-  check("runtime API script nonce matches CSP", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
-  check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
+  check("runtime API config loads before the frontend script", runtimeConfigPath && html.indexOf("assets/runtime-config.js") < html.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
+  check("runtime API config is served as same-origin JavaScript", runtimeConfig.includes("window.PROJECTS_API_BASE_URL = location.origin;"), runtimeConfig.trim() || "missing");
+  check("app shell contains no inline scripts", !hasInlineScript(html), "external scripts only");
+  check("script policy avoids unsafe inline scripts", scriptSrcDirective(csp) === "script-src 'self'", scriptSrcDirective(csp) || "missing");
   check("style policy avoids unsafe inline styles", styleSrcDirective(csp) === "style-src 'self'", styleSrcDirective(csp) || "missing");
   check("content policy blocks unused loaders", cspBlocksUnusedLoaders(csp), unusedLoaderDirectiveDetail(csp));
   check("live API CORS is same-origin only", sameOriginCors.headers.get("access-control-allow-origin") === baseUrl.origin, sameOriginCors.headers.get("access-control-allow-origin") || "missing");
@@ -350,14 +353,13 @@ function deepActionReceipt(depth) {
   return value;
 }
 
-function nonceFromCsp(csp) {
-  const match = csp.match(/script-src[^;]*'nonce-([^']+)'/u);
+function runtimeConfigPathFromHtml(html) {
+  const match = html.match(/<script src="(assets\/runtime-config\.js\?v=[^"]+)" defer><\/script>/u);
   return match?.[1] || "";
 }
 
-function nonceFromHtml(html) {
-  const match = html.match(/<script nonce="([^"]+)">window\.PROJECTS_API_BASE_URL/u);
-  return match?.[1] || "";
+function hasInlineScript(html) {
+  return /<script(?![^>]*\bsrc=)[^>]*>/iu.test(html);
 }
 
 function scriptSrcDirective(csp) {
