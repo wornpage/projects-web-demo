@@ -114,7 +114,10 @@ After deploy:
 
    The ship verifier runs local syntax, protected frontend, public
    asset-disclosure, public route, sync sharing, state recovery, public-boundary,
-   Docker deploy-boundary, deploy-config, whitespace, and live Outplane checks.
+   Docker deploy-boundary, deploy-config, whitespace, clean git state, and live
+   Outplane checks.
+   The git-state step fails if the branch has uncommitted work or is not synced
+   with its upstream.
    The deploy-config step keeps this checklist, Docker defaults, ignored local
    state paths, and the live verifier target aligned. Its live step fails if
    Outplane is still serving an old frontend bundle, if the app shell is

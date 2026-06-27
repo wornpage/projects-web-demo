@@ -83,6 +83,11 @@ const steps = [
     args: ["diff", "--check"]
   },
   {
+    label: "git ship state",
+    command: process.execPath,
+    args: ["scripts/check-git-ship-state.mjs"]
+  },
+  {
     label: "live Outplane deploy",
     command: process.execPath,
     args: ["scripts/check-live-deploy.mjs", ...liveArgs]

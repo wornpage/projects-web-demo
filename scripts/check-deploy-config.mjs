@@ -62,11 +62,13 @@ check("git ignores generated static artifacts", gitignoreLineExists(gitignore, "
 check("server package exposes deploy check", packageJson.scripts?.["deploy:check"] === "node ../scripts/check-deploy-config.mjs", packageJson.scripts?.["deploy:check"] || "missing");
 check("ship gate runs deploy config before live", sourceOrder(shipGate, [
   'label: "deploy config"',
+  'label: "git ship state"',
   'label: "live Outplane deploy"'
-]), "deploy config before live");
+]), "deploy config and git state before live");
+check("ship gate verifies clean synced git state", shipGate.includes('args: ["scripts/check-git-ship-state.mjs"]'), "check-git-ship-state.mjs");
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
-check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, and live/u.test(readme), "README ship summary");
-check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, and live/u.test(serverReadme), "server README ship summary");
+check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, clean git state, and live/u.test(readme), "README ship summary");
+check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, clean git state, and live/u.test(serverReadme), "server README ship summary");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);

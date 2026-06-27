@@ -44,6 +44,7 @@ Keep this repo focused on the public portfolio demo.
 | `scripts/check-public-boundary.mjs` | Local proof that the app server only serves public files and keyed demo states do not mix. |
 | `scripts/check-docker-boundary.mjs` | Local proof that the Docker image copies only the deploy allowlist and runs protected output. |
 | `scripts/check-deploy-config.mjs` | Local proof that the Outplane docs, Docker defaults, ignored state paths, and live verifier target stay aligned. |
+| `scripts/check-git-ship-state.mjs` | Local proof that the ship gate is running from a clean branch synced with its upstream. |
 | `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app is serving the protected current frontend. |
 | `scripts/check-ship.mjs` | Runs the local gates plus live Outplane verification before a ship. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
@@ -261,8 +262,8 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 That command runs frontend syntax, backend syntax, protected frontend, public
 asset-disclosure, static publish artifact, public route-contract, sync sharing,
 state recovery, public-boundary, Docker deploy-boundary, deploy-config,
-whitespace, and live Outplane checks, including rejection of weak manual API
-client keys.
+whitespace, clean git state, and live Outplane checks, including rejection of
+weak manual API client keys.
 For UI-only work, also smoke the main routes locally in light and dark mode:
 
 - `#/home`
