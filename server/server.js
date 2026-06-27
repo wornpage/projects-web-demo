@@ -185,12 +185,18 @@ async function serveStaticRequest(request, response, url) {
 
   if (isIndexFile(file)) {
     const html = injectAppApiBase(await fs.readFile(file, "utf8"));
-    response.writeHead(200, { "content-type": contentType });
+    response.writeHead(200, {
+      ...securityHeaders,
+      "content-type": contentType
+    });
     response.end(request.method === "HEAD" ? "" : html);
     return;
   }
 
-  response.writeHead(200, { "content-type": contentType });
+  response.writeHead(200, {
+    ...securityHeaders,
+    "content-type": contentType
+  });
   if (request.method === "HEAD") {
     response.end();
     return;
