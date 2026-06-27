@@ -2,6 +2,7 @@
 
 const DEFAULT_URL = "https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app";
 const MAX_STATE_PACKS = 50;
+const MAX_PLAIN_VALUE_DEPTH = 6;
 
 const baseUrl = normalizeBaseUrl(process.argv[2] || DEFAULT_URL);
 
@@ -61,6 +62,12 @@ try {
     "content-type": "text/plain"
   }, "PUT");
   const oversizedStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "live-oversized-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
+    actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
+  }), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
@@ -160,6 +167,7 @@ try {
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
+  check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);
   check("hosted sync key is readable from another request", stateHasPackTitle(sharedStateFromSecondRequest, sharedTitle), sharedTitle);
@@ -277,7 +285,7 @@ function stateHasPackTitle(state, title) {
   return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
 }
 
-function stateWithGeneratedPacks(count, prefix) {
+function stateWithGeneratedPacks(count, prefix, options = {}) {
   const packs = Array.from({ length: count }, (_, index) => ({
     id: `${prefix}-${index + 1}`,
     title: `Generated live work ${index + 1}`,
@@ -299,10 +307,18 @@ function stateWithGeneratedPacks(count, prefix) {
     copyProfile: "general",
     scenarioId: "default",
     status: "Generated state limit check.",
-    actionReceipt: null,
+    actionReceipt: options.actionReceipt ?? null,
     filter: "all",
     query: ""
   };
+}
+
+function deepActionReceipt(depth) {
+  let value = { summary: "Deep action receipt" };
+  for (let index = 0; index < depth; index += 1) {
+    value = { nested: value };
+  }
+  return value;
 }
 
 function nonceFromCsp(csp) {

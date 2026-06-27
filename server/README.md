@@ -13,7 +13,8 @@ keys are rejected instead of falling back to one shared row.
 Hosted Postgres stores a server-side digest of that key in `state_key`; local
 file-backed mode stores hashed filenames.
 Each anonymous state row is capped at 50 work items. Oversized full-state writes
-and create requests past that cap are rejected.
+and create requests past that cap are rejected. Full-state writes also reject
+oversized `actionReceipt` object shapes before storage.
 
 The frontend can replace the anonymous browser key with a hashed sync code so
 two browsers or devices can share one demo row. New sync codes and anonymous

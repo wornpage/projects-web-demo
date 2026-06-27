@@ -10,6 +10,8 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MAX_STATE_PACKS = 50;
+const MAX_PLAIN_VALUE_DEPTH = 6;
+const MAX_PLAIN_OBJECT_KEYS = 40;
 const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "projects-public-boundary-"));
 const stateFile = path.join(tmpDir, "state.json");
 const port = await freePort();
@@ -181,6 +183,26 @@ try {
     },
     body: JSON.stringify(stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "oversized-boundary"))
   });
+  const deepReceiptStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithGeneratedPacks(1, "deep-receipt-boundary", {
+      actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
+    }))
+  });
+  const wideReceiptStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithGeneratedPacks(1, "wide-receipt-boundary", {
+      actionReceipt: wideActionReceipt(MAX_PLAIN_OBJECT_KEYS + 1)
+    }))
+  });
   const limitStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -211,6 +233,8 @@ try {
   check("unkeyed local API state is rejected", unkeyedState.status === 400, unkeyedState.status);
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
+  check("deep action receipts are rejected", deepReceiptStateWrite.status === 400, deepReceiptStateWrite.status);
+  check("wide action receipts are rejected", wideReceiptStateWrite.status === 400, wideReceiptStateWrite.status);
   check("client A state survives rejected oversized snapshot", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
   check("state rows can reach the documented work cap", limitStateWrite.status === 200, limitStateWrite.status);
   check("creating work past the state cap is rejected", overLimitCreate.status === 400, overLimitCreate.status);
@@ -255,7 +279,7 @@ function stateHasPackTitle(state, title) {
   return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
 }
 
-function stateWithGeneratedPacks(count, prefix) {
+function stateWithGeneratedPacks(count, prefix, options = {}) {
   const packs = Array.from({ length: count }, (_, index) => ({
     id: `${prefix}-${index + 1}`,
     title: `Generated boundary work ${index + 1}`,
@@ -277,10 +301,24 @@ function stateWithGeneratedPacks(count, prefix) {
     copyProfile: "general",
     scenarioId: "default",
     status: "Generated state limit check.",
-    actionReceipt: null,
+    actionReceipt: options.actionReceipt ?? null,
     filter: "all",
     query: ""
   };
+}
+
+function deepActionReceipt(depth) {
+  let value = { summary: "Deep action receipt" };
+  for (let index = 0; index < depth; index += 1) {
+    value = { nested: value };
+  }
+  return value;
+}
+
+function wideActionReceipt(keyCount) {
+  return Object.fromEntries(
+    Array.from({ length: keyCount }, (_, index) => [`key${index + 1}`, index + 1])
+  );
 }
 
 function nonceFromCsp(csp) {

@@ -22,6 +22,9 @@ const ASSET_VERSION = normalizeAssetVersion(process.env.PROJECTS_ASSET_VERSION
 const API_CLIENT_HEADER = "x-projects-demo-client";
 const MAX_BODY_BYTES = 1024 * 1024;
 const MAX_STATE_PACKS = 50;
+const MAX_PLAIN_VALUE_DEPTH = 6;
+const MAX_PLAIN_OBJECT_KEYS = 40;
+const MAX_PLAIN_ARRAY_ITEMS = 100;
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
@@ -1165,13 +1168,14 @@ function sanitizeState(payload) {
 }
 
 function validateStatePayload(payload) {
-  if (!payload || typeof payload !== "object" || !Array.isArray(payload.packs)) {
+  if (!payload || typeof payload !== "object") {
     return;
   }
 
-  if (payload.packs.length > MAX_STATE_PACKS) {
+  if (Array.isArray(payload.packs) && payload.packs.length > MAX_STATE_PACKS) {
     throw httpError(400, `Demo state cannot contain more than ${MAX_STATE_PACKS} work items.`);
   }
+  validatePlainValueShape(payload.actionReceipt);
 }
 
 function sanitizePack(payload) {
@@ -1193,25 +1197,32 @@ function sanitizePack(payload) {
   };
 }
 
-function sanitizePlainObject(value) {
+function sanitizePlainObject(value, depth = 0) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  if (depth >= MAX_PLAIN_VALUE_DEPTH) {
     return null;
   }
 
   return Object.fromEntries(
     Object.entries(value)
+      .slice(0, MAX_PLAIN_OBJECT_KEYS)
       .filter(([key]) => typeof key === "string" && key.length <= 80)
-      .map(([key, entry]) => [key, sanitizePlainValue(entry)])
+      .map(([key, entry]) => [key, sanitizePlainValue(entry, depth + 1)])
   );
 }
 
-function sanitizePlainValue(value) {
+function sanitizePlainValue(value, depth = 0) {
   if (Array.isArray(value)) {
-    return value.slice(0, 100).map(sanitizePlainValue);
+    if (depth >= MAX_PLAIN_VALUE_DEPTH) {
+      return [];
+    }
+    return value.slice(0, MAX_PLAIN_ARRAY_ITEMS).map((entry) => sanitizePlainValue(entry, depth + 1));
   }
 
   if (value && typeof value === "object") {
-    return sanitizePlainObject(value);
+    return sanitizePlainObject(value, depth);
   }
 
   if (typeof value === "number" || typeof value === "boolean" || value === null) {
@@ -1219,6 +1230,28 @@ function sanitizePlainValue(value) {
   }
 
   return normalizeText(value, 2000);
+}
+
+function validatePlainValueShape(value, depth = 0) {
+  if (!value || typeof value !== "object") {
+    return;
+  }
+  if (depth >= MAX_PLAIN_VALUE_DEPTH) {
+    throw httpError(400, `Action receipt cannot be more than ${MAX_PLAIN_VALUE_DEPTH} levels deep.`);
+  }
+  if (Array.isArray(value)) {
+    if (value.length > MAX_PLAIN_ARRAY_ITEMS) {
+      throw httpError(400, `Action receipt arrays cannot contain more than ${MAX_PLAIN_ARRAY_ITEMS} items.`);
+    }
+    value.forEach((entry) => validatePlainValueShape(entry, depth + 1));
+    return;
+  }
+
+  const entries = Object.entries(value);
+  if (entries.length > MAX_PLAIN_OBJECT_KEYS) {
+    throw httpError(400, `Action receipt objects cannot contain more than ${MAX_PLAIN_OBJECT_KEYS} keys.`);
+  }
+  entries.forEach(([, entry]) => validatePlainValueShape(entry, depth + 1));
 }
 
 function normalizeStringArray(value, maxItems, maxLength) {
