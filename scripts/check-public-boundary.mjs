@@ -88,6 +88,16 @@ try {
   });
   check("generic pack PATCH route is retired", retiredPatch.status === 404, retiredPatch.status);
 
+  const retiredStatePost = await request(port, "/api/state", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": "local-check-client-a"
+    },
+    body: JSON.stringify({ packs: [] })
+  });
+  check("generic state POST route is retired", retiredStatePost.status === 404, retiredStatePost.status);
+
   for (const pathname of [
     "/README.md",
     "/Dockerfile",

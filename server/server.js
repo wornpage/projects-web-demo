@@ -120,7 +120,7 @@ async function routeRequest(request, response, url) {
     return;
   }
 
-  if ((method === "PUT" || method === "POST") && pathname === "/api/state") {
+  if (method === "PUT" && pathname === "/api/state") {
     const payload = await readJsonBody(request);
     sendJson(request, response, 200, await writeState(payload, stateKeyForRequest(request)));
     return;

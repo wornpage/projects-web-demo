@@ -144,6 +144,9 @@ endpoints update or read the stored demo state on the server and return the
 resulting command preview or receipt to the browser.
 The older generic `PATCH /api/packs/{id}` update path is retired so work edits
 must pass through the server-owned workflow endpoints.
+Full demo snapshot persistence is intentionally limited to `PUT /api/state` for
+browser-row persistence, sync-code copy, and recovery. The older duplicate
+`POST /api/state` write path is retired.
 
 ## Obfuscation Decision
 

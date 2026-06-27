@@ -42,6 +42,10 @@ try {
     ...apiHeaders,
     "content-type": "application/json"
   }, "PATCH");
+  const retiredStatePostStatus = await writeStatus("/api/state", { packs: [] }, {
+    ...apiHeaders,
+    "content-type": "application/json"
+  }, "POST");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "live-check-browser-a";
   const clientBKey = "live-check-browser-b";
@@ -138,6 +142,7 @@ try {
   check("source map, retired metadata, unlisted public files, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
+  check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);
@@ -209,6 +214,19 @@ async function readStatus(pathname, headers = {}, method = "GET") {
   const response = await fetch(new URL(pathname, baseUrl), {
     method,
     headers: { "cache-control": "no-cache", ...headers }
+  });
+  return response.status;
+}
+
+async function writeStatus(pathname, payload, headers = {}, method = "PUT") {
+  const response = await fetch(new URL(pathname, baseUrl), {
+    method,
+    headers: {
+      "cache-control": "no-cache",
+      "content-type": "application/json",
+      ...headers
+    },
+    body: JSON.stringify(payload)
   });
   return response.status;
 }
