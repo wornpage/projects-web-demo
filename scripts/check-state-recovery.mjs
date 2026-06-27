@@ -149,7 +149,7 @@ function checkRecoverySurfaceSource() {
   check("recovery restore parses pasted backup", source.includes('parseRecoverySnapshot(valueOf("demo-recovery-input"))'), "parseRecoverySnapshot");
   check("hosted recovery restore uses named backend endpoint", source.includes('sendBackendStateSnapshot("/api/state/restore", "POST", snapshot, "Restore")') && source.includes("restoreBackendStateSnapshot(snapshot)"), "restore endpoint");
   check("static recovery restore keeps local save path", source.includes("loadState(snapshot)") && source.includes("saveState()"), "static loadState/saveState");
-  check("recovery erase uses backend row endpoint", source.includes('apiUrl("/api/state/erase")') && source.includes("state.suppressNextSave = true"), "erase endpoint without immediate resave");
+  check("recovery erase uses backend row endpoint", source.includes('apiUrl("/api/state/erase")') && (source.includes("state.suppressNextSave=true") || source.includes("state.suppressNextSave = true")), "erase endpoint without immediate resave");
   check("recovery import caps work count", source.includes("const DEMO_STATE_MAX_PACKS = 50") && source.includes("packs.length > DEMO_STATE_MAX_PACKS"), "50 pack cap");
   check("recovery import rejects invalid work items", source.includes("backup work items need an id and title"), "id/title required");
   check("recovery import rejects duplicate work ids", source.includes("backup work item ids must be unique"), "unique ids required");
