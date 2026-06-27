@@ -14,6 +14,10 @@ try {
   const html = htmlResponse.text;
   const csp = htmlResponse.headers.get("content-security-policy") || "";
   const sameOriginCors = await readResponse("/api/health", { origin: baseUrl.origin });
+  const spoofedForwardedCors = await readResponse("/api/health", {
+    origin: "https://spoofed.example",
+    "x-forwarded-host": "spoofed.example"
+  });
   const blockedCorsPreflightStatus = await readStatus("/api/state", {
     origin: "https://untrusted.example",
     "access-control-request-method": "PUT",
@@ -149,6 +153,7 @@ try {
   check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
   check("live API CORS is same-origin only", sameOriginCors.headers.get("access-control-allow-origin") === baseUrl.origin, sameOriginCors.headers.get("access-control-allow-origin") || "missing");
   check("live API CORS omits retired PATCH method", !String(sameOriginCors.headers.get("access-control-allow-methods") || "").includes("PATCH"), sameOriginCors.headers.get("access-control-allow-methods") || "missing");
+  check("live API rejects forwarded-host CORS spoofing", !spoofedForwardedCors.headers.get("access-control-allow-origin"), spoofedForwardedCors.headers.get("access-control-allow-origin") || "no cors");
   check("live API rejects third-party preflight", blockedCorsPreflightStatus === 403, blockedCorsPreflightStatus);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);

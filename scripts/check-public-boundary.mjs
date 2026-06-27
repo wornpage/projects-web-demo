@@ -78,9 +78,16 @@ try {
       "access-control-request-headers": "content-type, x-projects-demo-client"
     }
   });
+  const spoofedForwardedCors = await request(port, "/api/health", {
+    headers: {
+      origin: "https://spoofed.example",
+      "x-forwarded-host": "spoofed.example"
+    }
+  });
   check("same-origin API CORS is exact, not wildcard", sameOriginCors.headers["access-control-allow-origin"] === sameOrigin, sameOriginCors.headers["access-control-allow-origin"] || "missing");
   check("same-origin API CORS omits retired PATCH method", !String(sameOriginCors.headers["access-control-allow-methods"] || "").includes("PATCH"), sameOriginCors.headers["access-control-allow-methods"] || "missing");
   check("third-party API preflight is rejected", blockedPreflight.status === 403 && !blockedPreflight.headers["access-control-allow-origin"], `${blockedPreflight.status} / ${blockedPreflight.headers["access-control-allow-origin"] || "no cors"}`);
+  check("forwarded host cannot authorize API CORS", !spoofedForwardedCors.headers["access-control-allow-origin"], spoofedForwardedCors.headers["access-control-allow-origin"] || "no cors");
 
   const retiredPatch = await request(port, "/api/packs/source-folder-audit", {
     method: "PATCH",

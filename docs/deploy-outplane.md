@@ -48,6 +48,7 @@ smoke test passed through `/api/state`.
 | `PGUSER` | Outplane-provided database role |
 | `PGPASSWORD` | Outplane-provided database password |
 | `PGSSLMODE` | `require` |
+| `PROJECTS_PUBLIC_ORIGIN` | Optional explicit app origin, such as `https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app` |
 
 If Outplane gives you a single connection URI instead, you can use
 `DATABASE_URL` in place of the `PG*` variables.
@@ -62,7 +63,9 @@ The server stores a digest of the browser client key in Postgres `state_key`,
 not the raw request header value. It can read old raw-key rows long enough to
 migrate them on the next write.
 The hosted API also avoids wildcard CORS and only reflects the same-origin
-Outplane app origin.
+Outplane app origin or an explicitly configured `PROJECTS_PUBLIC_ORIGIN` /
+`PROJECTS_ALLOWED_ORIGINS` value. It does not use forwarding headers to authorize
+CORS.
 
 The app also supports a sync code for personal two-device use. **New** creates a
 Web Crypto generated 20-character code and copies the current demo state to that

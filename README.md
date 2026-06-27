@@ -108,8 +108,11 @@ The Node app also rewrites the CSS/JS asset query string at startup using
 startup value. That keeps hosted deploys from serving stale cached frontend
 assets after a push.
 
-API CORS is bounded to same-origin app requests. Use the single Node app for
-backend-backed local testing; the static preview remains browser-local.
+API CORS is bounded to same-origin app requests using the request `Host`, not
+forwarding headers. Hosted deploys can also pin explicit allowed origins with
+`PROJECTS_PUBLIC_ORIGIN` or comma-separated `PROJECTS_ALLOWED_ORIGINS`. Use the
+single Node app for backend-backed local testing; the static preview remains
+browser-local.
 
 The local state path defaults to `server/data/state.json`, but backend API
 state routes still require the browser's anonymous client key. Local

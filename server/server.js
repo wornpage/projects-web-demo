@@ -20,6 +20,10 @@ const ASSET_VERSION = normalizeAssetVersion(process.env.PROJECTS_ASSET_VERSION
   || process.env.COMMIT_SHA
   || `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`);
 const API_CLIENT_HEADER = "x-projects-demo-client";
+const EXPLICIT_CORS_ORIGINS = parseCorsOrigins([
+  process.env.PROJECTS_PUBLIC_ORIGIN,
+  process.env.PROJECTS_ALLOWED_ORIGINS
+].filter(Boolean).join(","));
 const MAX_BODY_BYTES = 1024 * 1024;
 const MAX_STATE_PACKS = 50;
 const MAX_PLAIN_VALUE_DEPTH = 6;
@@ -1341,6 +1345,15 @@ function normalizedCorsOrigin(value) {
   }
 }
 
+function parseCorsOrigins(value) {
+  return new Set(
+    String(value || "")
+      .split(/[\s,]+/u)
+      .map((origin) => normalizedCorsOrigin(origin))
+      .filter(Boolean)
+  );
+}
+
 function isCorsRequestAllowed(request) {
   const origin = normalizedCorsOrigin(request.headers.origin);
   return !origin || Boolean(allowedCorsOrigin(origin, request));
@@ -1369,6 +1382,9 @@ function allowedCorsOrigin(origin, request) {
   if (!origin) {
     return "";
   }
+  if (EXPLICIT_CORS_ORIGINS.has(origin)) {
+    return origin;
+  }
   return isSameHostOrigin(origin, request) ? origin : "";
 }
 
@@ -1385,8 +1401,7 @@ function isSameHostOrigin(origin, request) {
 
 function requestHostValues(request) {
   const values = [
-    request.headers.host,
-    request.headers["x-forwarded-host"]
+    request.headers.host
   ];
   return values
     .flatMap((value) => String(value || "").split(","))
