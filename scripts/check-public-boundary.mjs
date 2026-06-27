@@ -1043,17 +1043,17 @@ function frontendSyncCopyUsesBackendEndpoint(source) {
 
 function frontendBrowserRowSaveUsesNamedEndpoint(source) {
   const body = functionBody(source, "persistBackendStateSnapshot");
-  const saveBody = functionBody(source, "saveState");
-  if (!body || !saveBody) {
-    return { ok: false, detail: "persistBackendStateSnapshot/saveState:missing" };
+  const snapshotBody = functionBody(source, "browserRowStateSnapshot");
+  if (!body || !snapshotBody) {
+    return { ok: false, detail: "persistBackendStateSnapshot/browserRowStateSnapshot:missing" };
   }
 
   const ok = body.includes('sendBackendStateSnapshot("/api/state/browser", "PUT", snapshot, "Save")')
     && !body.includes('sendBackendStateSnapshot("/api/state", "PUT"')
-    && saveBody.includes('kind: "projects-browser-state-v1"')
-    && saveBody.includes("state: snapshot")
-    && saveBody.includes("delete snapshot.actionReceipt")
-    && saveBody.includes("delete snapshot.query");
+    && snapshotBody.includes('"projects-browser-state-v1"')
+    && snapshotBody.includes("state:s")
+    && snapshotBody.includes("delete s.actionReceipt")
+    && snapshotBody.includes("delete s.query");
   return {
     ok,
     detail: ok

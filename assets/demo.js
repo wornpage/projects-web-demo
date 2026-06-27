@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     routeFromHash();
     render();
     if (launchedSyncCode) {
-      renderDemoSyncControls("Sync link is active. This device now opens the shared demo state.");
+      renderDemoSyncControls("Sync link active. This device opens shared demo state.");
     }
   } catch (error) {
     const blocker = DEMO_API_BASE_URL ? "backend API could not load" : "static JSON could not load";
@@ -374,9 +374,7 @@ function purgeLegacyDemoState() {
       if (key !== DEMO_STORAGE_KEY && localStorage.getItem(key) !== null) {
         localStorage.removeItem(key);
       }
-    } catch {
-      // LocalStorage access can be restricted in some embedded contexts.
-    }
+    } catch {}
   }
 }
 
@@ -435,15 +433,12 @@ function saveState() {
     return;
   }
 
-  const snapshot = demoStateSnapshot();
   if (DEMO_API_BASE_URL) {
-    delete snapshot.actionReceipt;
-    delete snapshot.query;
-    scheduleBackendStateSave({ kind: "projects-browser-state-v1", state: snapshot });
+    scheduleBackendStateSave(browserRowStateSnapshot());
     return;
   }
 
-  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(snapshot));
+  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(demoStateSnapshot()));
 }
 
 function demoStateSnapshot() {
@@ -458,6 +453,8 @@ function demoStateSnapshot() {
     query: state.query,
   };
 }
+
+function browserRowStateSnapshot(){const s=demoStateSnapshot();delete s.actionReceipt;delete s.query;return{kind:"projects-browser-state-v1",state:s}}
 
 function recoverySnapshotText() {
   return JSON.stringify({
@@ -1044,7 +1041,7 @@ function renderDemoSyncControls(message = "") {
   if (help) {
     help.textContent = message || (syncCode
       ? "Anyone with this code can open this demo state. No private data."
-      : "Use a code to sync this demo across devices. No login or private storage.");
+      : "Use a code to sync devices. No login or private storage.");
   }
 }
 
@@ -1095,7 +1092,7 @@ async function copySyncLink() {
     await navigator.clipboard.writeText(shareUrl);
     state.status = routeStatus("Sync link", DEMO_BLOCKER_NONE, "open on another device");
     render();
-    renderDemoSyncControls("Sync link copied. Anyone with it can open this demo state.");
+    renderDemoSyncControls("Sync link copied. Anyone with it can open this state.");
   } catch {
     renderDemoSyncControls("Copy blocked. Use the visible sync link or scan the QR code.");
   }
@@ -1112,7 +1109,7 @@ async function copySyncCode() {
     await navigator.clipboard.writeText(syncCode);
     state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "enter code on another device");
     render();
-    renderDemoSyncControls("Sync code copied. Anyone with it can open this demo state.");
+    renderDemoSyncControls("Sync code copied. Anyone with it can open this state.");
   } catch {
     renderDemoSyncControls("Copy blocked. Use the visible sync code or scan the QR code.");
   }
@@ -1165,8 +1162,8 @@ async function activateSyncCode(value, options = {}) {
   updateServiceBoundaryNotice();
   render();
   renderDemoSyncControls(options.copyCurrentState
-    ? "New code is active. Use it on another device to open this demo state."
-    : "Code is active. This device now opens the shared demo state.");
+    ? "New code active. Use it on another device to open this state."
+    : "Code active. This device opens shared demo state.");
 }
 
 async function leaveSyncCode() {
@@ -1202,17 +1199,13 @@ function readSyncCode() {
 function writeSyncCode(code) {
   try {
     localStorage.setItem(SYNC_CODE_STORAGE_KEY, code);
-  } catch {
-    // LocalStorage access can be restricted in some embedded contexts.
-  }
+  } catch {}
 }
 
 function clearSyncCode() {
   try {
     localStorage.removeItem(SYNC_CODE_STORAGE_KEY);
-  } catch {
-    // LocalStorage access can be restricted in some embedded contexts.
-  }
+  } catch {}
 }
 
 function clearLaunchSyncCodeParam() {
@@ -1573,9 +1566,7 @@ async function apiClientId() {
   apiSessionClientId = next;
   try {
     localStorage.setItem(API_CLIENT_STORAGE_KEY, next);
-  } catch {
-    // LocalStorage access can be restricted in some embedded contexts.
-  }
+  } catch {}
   return next;
 }
 
