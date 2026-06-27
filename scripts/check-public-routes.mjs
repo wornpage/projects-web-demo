@@ -141,6 +141,7 @@ check("brand home link stays portfolio-facing", brandHomeLinkContractOk(), "Proj
 check("metadata preview copy stays public and truthful", metadataPreviewContractOk(), "description omits browser-local-only framing and names no-login demo data");
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
 check("demo notice gives a starting cue and privacy boundary", demoNoticeContractOk(), "start with Review plus no-login/private-data boundary");
+check("sync help keeps sample-data boundary", html.includes('<p id="sync-code-help">Share sample data only. Anyone with this code can open this state.</p>'), "Share sample data only");
 check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("Saves to this backend row; no login.") && source.includes("No login or private storage.") && source.includes("No private project data.") && !source.includes("not an account") && !source.includes("Do not enter private project data"), "no-login runtime notices");
 check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"') && html.includes('aria-label="Starting point and demo data notice"'), "demo notice role=note with specific label");
 check("sidebar idea note is exposed as supporting context", sidebarNoteContractOk(), "sidebar note names the idea and starting point");
