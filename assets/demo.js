@@ -1550,65 +1550,20 @@ function render() {
   renderCommand(currentPack());
 
   switch (state.route) {
-    case "health":
-      renderHealth();
-      break;
     case "home":
       renderHome();
-      break;
-    case "today":
-      renderToday();
-      break;
-    case "board":
-      renderBoard();
       break;
     case "review":
       renderReview();
       break;
-    case "focus":
-      renderFocus();
-      break;
     case "next":
       renderNext();
-      break;
-    case "check":
-      renderCheck();
-      break;
-    case "search":
-      renderSearch();
-      break;
-    case "stats":
-      renderStats();
-      break;
-    case "notes":
-      renderNotes();
-      break;
-    case "timeline":
-      renderTimeline();
-      break;
-    case "files":
-      renderFiles();
-      break;
-    case "calendar":
-      renderCalendar();
       break;
     case "create":
       renderCreate();
       break;
     case "memory":
       renderMemory();
-      break;
-    case "lab":
-      renderLab();
-      break;
-    case "settings":
-      renderSettings();
-      break;
-    case "feedback":
-      renderFeedback();
-      break;
-    case "meta":
-      renderMeta();
       break;
     case "pack":
       renderPackDetail();
@@ -1674,12 +1629,6 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     : DEMO_BLOCKER_NONE_LABEL;
   const reviewTarget = preferredReviewPack();
   const selectedWorkCommand = selectedPackCommand(selected);
-  const searchQuery = normalizeCopy(state.query);
-  const searchNext = searchQuery ? "Refine search" : "Focus search";
-  const searchBlocker = searchQuery
-    ? `${visibleCount} match(es) for ${searchQuery}`
-    : "type title, owner, Button runs next, or due date";
-  const validateState = validateSampleState();
   const hasSampleWork = state.packs.length > 0;
   const noSampleWorkCommand = (title, where, stateHelp) => ({
     title,
@@ -1691,46 +1640,19 @@ function commandForRoute(selected, visibleCount, reviewCount) {
     action: "open-create",
     targetPackId: ""
   });
-  const checkCommand = validateState.canRun
-    ? { title: "Check", where: "Check", blocker: `${reviewCount} ${reviewWorkNoun} still need decisions`, next: `Check ${profile().work}`, stateText: "Ready", action: "validate-sample", targetPackId: "" }
-    : noSampleWorkCommand("Check", "Check", validateState.help);
   const homeCommand = hasSampleWork
     ? { title: workOverviewTitle, where: "Start", blocker: reviewSummary, next: `Review ${workNoun(2)}`, stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
     : noSampleWorkCommand(workOverviewTitle, "Start", `${profile().newWork} or reset demo data before reviewing.`);
-  const searchCommand = hasSampleWork
-    ? { title: "Search", where: "Search", blocker: searchBlocker, next: searchNext, stateText: searchQuery ? "Filtering" : "Ready", action: "search-demo", targetPackId: "" }
-    : noSampleWorkCommand("Search", "Search", `${profile().newWork} or reset demo data before searching.`);
-  const statsCommand = hasSampleWork
-    ? { title: "Stats", where: "Stats", blocker: "counts are calculated in this browser", next: `Review ${workNoun(2)}`, stateText: "Ready", action: "route-review", targetPackId: reviewTarget?.id || "" }
-    : noSampleWorkCommand("Stats", "Stats", `${profile().newWork} or reset demo data before reviewing stats.`);
-  const notesCommand = selected
-    ? { title: "Notes", ...selectedWorkCommand, blocker: "notes stay with this browser", next: "Open memory", stateText: "Ready", stateHelp: `Saved notes for ${workTitle(selected)} stay in this browser.`, action: "memory", targetPackId: selectedWorkCommand.targetPackId }
-    : { title: "Notes", ...selectedWorkCommand };
   const createCommand = createRouteCommand();
   const memoryCommand = memoryRouteCommand(selected, selectedWorkCommand);
 
   const routeCommands = {
     home: homeCommand,
     work: { title: workListTitle, ...selectedWorkCommand },
-    today: { title: "Today", ...selectedWorkCommand },
-    board: { title: "Board", ...selectedWorkCommand },
     review: { title: "Review", ...selectedWorkCommand },
-    focus: { title: "Focus", ...selectedWorkCommand },
     next: { title: "Next setup", ...selectedWorkCommand },
-    check: checkCommand,
-    search: searchCommand,
-    stats: statsCommand,
-    notes: notesCommand,
-    timeline: { title: "Timeline", where: "Timeline", blocker: "activity stays with this browser", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
-    files: { title: profile().sources, where: profile().sources, blocker: "source links are references only", next: selectedWorkCommand.next, stateText: "Ready", action: selectedWorkCommand.action, targetPackId: selectedWorkCommand.targetPackId },
-    calendar: { title: "Calendar", ...selectedWorkCommand },
     create: createCommand,
     memory: memoryCommand,
-    lab: { title: "Demo Lab", ...selectedWorkCommand },
-    meta: { title: "Meta", where: "Meta", blocker: "checks are calculated in this browser", next: "Refresh", stateText: "Ready", action: "refresh-meta", targetPackId: "" },
-    feedback: { title: "Feedback", where: "Feedback", blocker: `Version ${stateVersionLabel()} is active`, next: "Copy context", stateText: "Ready", action: "copy-feedback-context", targetPackId: "" },
-    health: { title: "Health", where: "Health", blocker: "navigation, saved work, data, and build checks are running", next: "Refresh", stateText: "Ready", action: "refresh-health", targetPackId: "" },
-    settings: { title: "Settings", where: "Settings", blocker: "copy profile changes labels only in this static demo", next: "Choose copy profile", stateText: "Ready", action: "choose-profile", targetPackId: "" },
     pack: { title: `${workLabelTitle()} path`, ...selectedWorkCommand }
   };
 
@@ -1743,46 +1665,15 @@ function commandForRoute(selected, visibleCount, reviewCount) {
   const routeCommandsHints = {
     home: hasSampleWork ? "Review blocked work first." : "Create work, then review it.",
     work: selectedActionFlow ? `${selectedActionFlow}` : "Flow: choose work, run next.",
-    today: selectedActionFlow ? `${selectedActionFlow}` : "Flow: due work, run next.",
-    board: selectedActionFlow ? `${selectedActionFlow}` : "Flow: choose status, work, run next.",
     review: selectedActionFlow
       ? `${selectedActionFlow}`
       : "Flow: resolve blockers first.",
-    focus: selectedActionFlow
-      ? `${selectedActionFlow}`
-      : "Flow: confirm work path, run next.",
     next: "Flow: set button, return, run next.",
-    check: validateState.canRun ? "Flow: check work, fix gaps." : "Flow: create work, check.",
-    search: hasSampleWork
-      ? (searchQuery ? "Flow: refine search, open work." : "Flow: type search, open work.")
-      : "Flow: create work, search.",
-    stats: hasSampleWork ? "Flow: review counts, choose work." : "Flow: create work, review stats.",
-    notes: selected
-      ? `Flow: open memory for ${workTitle(selected)}.`
-      : (hasSampleWork ? "Flow: choose work, open memory." : "Flow: create work, add memory."),
-    timeline: selected
-      ? `${selectedActionFlow}`
-      : "Flow: choose work, review activity, run next.",
-    calendar: selected
-      ? `${selectedActionFlow}`
-      : "Flow: set due date, run next.",
-    files: selected
-      ? `${selectedActionFlow}`
-      : "Flow: choose work, review sources, run next.",
     memory: selected
       ? memoryRouteFlowHint(selected)
       : (hasSampleWork ? "Flow: choose work, add memory." : "Flow: create work, add memory."),
-    lab: selected
-      ? `${selectedActionFlow}`
-      : "Flow: choose work, preview button, run next.",
     pack: selected ? `${selectedActionFlow}` : "Flow: review work, run next.",
-    create: createRouteFlowHint(createCommand),
-    meta: "Flow: inspect checks, copy proof.",
-    feedback: "Flow: copy context, then open issue.",
-    health: "Flow: verify, return to work.",
-    settings: "Flow: choose copy profile, apply.",
-    settingsProfile: "Flow: choose copy profile, apply.",
-    settingsScenario: "Flow: choose scenario, continue."
+    create: createRouteFlowHint(createCommand)
   };
 
   const routeCommand = routeCommands[state.route] || routeCommands.work;
@@ -2196,15 +2087,9 @@ function commandIsRouteIntentAction(action) {
     "focus-create-title",
     "focus-create-owner",
     "focus-create-next",
-    "search-demo",
-    "validate-sample",
     "memory",
     "add-note",
-    "type-memory-note",
-    "choose-profile",
-    "refresh-health",
-    "refresh-meta",
-    "copy-feedback-context"
+    "type-memory-note"
   ].includes(action || "");
 }
 
@@ -2455,10 +2340,6 @@ function focusKindForAction(action, packId = "") {
 
   if (action === "add-note" || action === "type-memory-note") {
     return "memory-note";
-  }
-
-  if (action === "copy-feedback-context") {
-    return "feedback-context";
   }
 
   if (action === "edit") {
@@ -4201,27 +4082,7 @@ function bindListActions() {
 
     button.addEventListener("click", async () => {
       const action = button.dataset.action;
-      if (action === "set-due-today") {
-        const dueState = setDueTodayState(screenTitleForRoute());
-        if (!dueState.canRun) {
-          state.status = dueState.help;
-          render();
-          return;
-        }
-        const today = todayIsoDate();
-        const updated = state.packs.filter((pack) => pack.status !== "done");
-        updated.forEach((pack) => { pack.due = today; });
-        state.status = dueTodayStatus(today, updated.length);
-      } else if (action === "validate-sample") {
-        const validateState = validateSampleState();
-        if (!validateState.canRun) {
-          state.status = validateState.help;
-          render();
-          return;
-        }
-        const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
-        state.status = validationStatus(attention);
-      } else if (action === "set-next") {
+      if (action === "set-next") {
         const pack = findPack(button.dataset.pack);
         if (pack) {
           const input = el(`next-${pack.id}`);
@@ -5167,33 +5028,6 @@ function runRouteAction(action, targetPackId) {
     return true;
   }
 
-  if (action === "search-demo") {
-    if (state.route !== "search") {
-      queueFocus("search-input");
-      state.status = routeStatus("Search", "search field is not open", "focus search");
-      go("search");
-      return true;
-    }
-
-    queueFocus("search-input");
-    state.status = routeStatus("Search", state.query ? `${filteredPacks().length} match(es) visible` : "no search text yet", state.query ? "refine search" : "type search text");
-    render();
-    return true;
-  }
-
-  if (action === "validate-sample") {
-    const validateState = validateSampleState();
-    if (!validateState.canRun) {
-      state.status = validateState.help;
-      render();
-      return true;
-    }
-    const attention = sampleChecks().reduce((sum, [, count]) => sum + count, 0);
-    state.status = validationStatus(attention);
-    render();
-    return true;
-  }
-
   if (action === "memory") {
     const pack = findPack(targetPackId) || currentPack();
     if (pack) {
@@ -5242,42 +5076,6 @@ function runRouteAction(action, targetPackId) {
     return true;
   }
 
-  if (action === "choose-profile") {
-    if (state.route !== "settings") {
-      queueFocus("settings-profile");
-      state.status = routeStatus("Settings", "copy profile chooser is not open", "choose copy profile");
-      go("settings");
-      return true;
-    }
-
-    queueFocus("settings-profile");
-    state.status = routeStatus("Settings", "choose one copy profile card", "use selected profile labels");
-    render();
-    return true;
-  }
-
-  if (action === "refresh-health") {
-      state.status = routeStatus("Health", DEMO_BLOCKER_NONE, "review current demo checks");
-    render();
-    return true;
-  }
-
-  if (action === "copy-feedback-context") {
-    if (state.route !== "feedback") {
-      queueFocus("feedback-context");
-      state.status = routeStatus("Feedback", "feedback context is not open", "copy context");
-      go("feedback");
-      return true;
-    }
-    copyFeedbackContext();
-    return true;
-  }
-
-  if (action === "refresh-meta") {
-    refreshMetaDiagnostics();
-    return true;
-  }
-
   return false;
 }
 
@@ -5308,10 +5106,6 @@ function commandActionForLabel(label) {
 
   if (normalized === "set next" || normalized === "set button runs next" || normalized === "choose next action") {
     return { label: "Set Button runs next", action: "set-next" };
-  }
-
-  if (normalized === "validate sample") {
-    return { label, action: "validate-sample" };
   }
 
   if (normalized === "focus") {

@@ -43,6 +43,16 @@ const navLabels = navRoutes.map((route) => routeContract[route]?.navLabel || "")
 const publicRoutedPatterns = navRoutes.map((route) => routeContract[route]?.pattern || "");
 const blockedInContract = blockedPublicRoutes.filter((route) => contractRoutes.includes(route));
 const blockedInNav = blockedPublicRoutes.filter((route) => navRoutes.includes(route));
+const blockedDispatchCases = blockedPublicRoutes.filter((route) => source.includes(`case "${route}":`));
+const blockedGoCalls = blockedPublicRoutes.filter((route) => source.includes(`go("${route}"`));
+const blockedRouteActions = [
+  "choose-profile",
+  "copy-feedback-context",
+  "refresh-health",
+  "refresh-meta",
+  "search-demo",
+  "validate-sample"
+].filter((action) => source.includes(`action === "${action}"`) || source.includes(`action: "${action}"`));
 
 check("route contract contains only the public routes plus pack detail", arraysEqual(contractRoutes, expectedContractRoutes), contractRoutes.join(", "));
 check("visible nav routes stay intentionally small", arraysEqual(navRoutes, expectedNavRoutes), navRoutes.join(", "));
@@ -50,6 +60,9 @@ check("visible nav labels stay portfolio-facing", arraysEqual(navLabels, expecte
 check("pack detail route is not visible in nav", routeContract.pack && !navRoutes.includes("pack"), navRoutes.join(", "));
 check("internal routes are absent from route contract", blockedInContract.length === 0, blockedInContract.join(", ") || "absent");
 check("internal routes are absent from visible nav", blockedInNav.length === 0, blockedInNav.join(", ") || "absent");
+check("internal routes are absent from render dispatch", blockedDispatchCases.length === 0, blockedDispatchCases.join(", ") || "absent");
+check("internal routes are absent from go() entrypoints", blockedGoCalls.length === 0, blockedGoCalls.join(", ") || "absent");
+check("retired route actions are absent", blockedRouteActions.length === 0, blockedRouteActions.join(", ") || "absent");
 check("public routes use hash patterns", publicRoutedPatterns.every((pattern) => pattern.startsWith("#/")), publicRoutedPatterns.join(", "));
 check("pack route requires a work id", routeContract.pack?.acceptsPackId === true && routeContract.pack?.pattern === "#/pack/{packId}", routeContract.pack?.pattern || "missing");
 
