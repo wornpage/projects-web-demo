@@ -58,6 +58,9 @@ only for local file-backed development, and it implies container or volume state
 The browser sends an anonymous client key with API requests, so hosted demo
 edits are separated per browser without accounts. Hosted Postgres API requests
 without that browser key are rejected instead of sharing one fallback row.
+The server stores a digest of the browser client key in Postgres `state_key`,
+not the raw request header value. It can read old raw-key rows long enough to
+migrate them on the next write.
 The hosted API also avoids wildcard CORS and only reflects the same-origin
 Outplane app origin.
 
@@ -66,8 +69,9 @@ Web Crypto generated 20-character code and copies the current demo state to that
 code's row; **Use** joins that row from another device; **Copy link** copies an
 invite URL; the QR code opens the same invite URL on a phone; **Leave** returns
 to the device's own row. Anyone with the code or sync link can open the same
-demo state. The code is hashed before it is sent as the backend row key, but the
-stored demo JSON is not end-to-end encrypted.
+demo state. The code is hashed before it is sent to the API, and the server
+hashes API client keys again before Postgres storage, but the stored demo JSON
+is not end-to-end encrypted.
 
 This is demo isolation, not real user security. Add authentication before
 storing private user data, real customer work, or anything that needs account

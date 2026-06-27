@@ -37,6 +37,7 @@ server.stderr.on("data", (chunk) => {
 try {
   await waitForHealth(port);
 
+  const serverSource = await fs.readFile(path.join(repoRoot, "server/server.js"), "utf8");
   const health = await jsonRequest(port, "/api/health");
   const appShell = await request(port, "/");
   for (const pathname of [
@@ -60,6 +61,8 @@ try {
   const healthText = JSON.stringify(health.body);
   check("health endpoint reports only storage kind", health.body?.ok === true && health.body?.storage === "file", healthText);
   check("health endpoint hides storage internals", !("stateStorage" in health.body) && !healthText.includes(stateFile) && !/state\.json|projects_demo_state|DATABASE_URL|PGHOST|PGPASSWORD/iu.test(healthText), healthText);
+  check("Postgres state keys are hashed before storage", /function postgresStateKey\(stateKey\)[\s\S]*v2:\$\{crypto\.createHash\("sha256"\)\.update\(normalized\)\.digest\("hex"\)\}/u.test(serverSource), "postgresStateKey");
+  check("Postgres raw state-key path is migration-only", serverSource.includes("WHERE state_key = $1 OR state_key = $2") && serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "legacy read fallback plus delete");
 
   const sameOrigin = `http://127.0.0.1:${port}`;
   const sameOriginCors = await request(port, "/api/health", {
