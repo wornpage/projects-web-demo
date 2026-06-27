@@ -138,7 +138,7 @@ check("skip link names the current screen target", html.includes('href="#demo-ma
 check("demo notice says no login or private data", html.includes("Demo data only. No login or private project data."), "no login/private data");
 check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("Saves to this backend row; no login.") && source.includes("No login or private storage.") && source.includes("No private project data.") && !source.includes("not an account") && !source.includes("Do not enter private project data"), "no-login runtime notices");
 check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"'), "demo notice role=note");
-check("sidebar idea note is exposed as supporting context", html.includes('class="demo-sidebar-note card" role="note"'), "sidebar note role=note");
+check("sidebar idea note is exposed as supporting context", sidebarNoteContractOk(), "sidebar note names the idea and starting point");
 check("next action panel is labelled by its visible title", html.includes('class="demo-command-brief sidecar" aria-labelledby="command-title" aria-describedby="command-scope command-flow"'), "command-title labels next action panel");
 check("next action panel exposes scope and flow summary", html.includes('aria-describedby="command-scope command-flow"') && html.includes('id="command-scope"') && html.includes('id="command-flow"'), "command-scope and command-flow describe next action panel");
 check("next action state announces changes politely", html.includes('id="command-state" class="demo-command-state" role="status" aria-live="polite" aria-atomic="true"'), "command-state status region");
@@ -230,6 +230,14 @@ function memoryNoteInputContractOk() {
     'autocomplete="off" aria-describedby="memory-note-help"',
     'id="memory-note-help" class="demo-field-help" aria-live="polite"',
     'button id="add-memory" class="btn btn-primary" type="button" aria-describedby="memory-note-help"'
+  ]);
+}
+
+function sidebarNoteContractOk() {
+  return includesAll(html, [
+    'class="demo-sidebar-note card" role="note" aria-label="Demo idea and starting point"',
+    "<strong>One idea.</strong>",
+    "Start with Review. Pick work, see the blocker, run the next action."
   ]);
 }
 
