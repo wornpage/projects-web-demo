@@ -87,13 +87,17 @@ const rowsById = new Map(rows.map((row) => [row.ID, row]));
 const unexpectedRows = rows.filter((row) => !requiredRows.some((required) => required.id === row.ID));
 const needsNextSliceRows = rows.filter((row) => row.Status === "Needs next slice");
 
-check("audit doc declares active status", auditDoc.includes("Overall status: Active, not complete."), "active");
-check("audit doc warns against completion claims", includesAll(auditDoc, [
-  "It is not a completion claim.",
-  "Do not mark the North Star goal complete from this audit alone."
-]), "completion warning");
+check("audit doc declares public-demo completion status", auditDoc.includes("Overall status: Complete for the public demo scope."), "complete for public demo scope");
+check("audit doc defines completion boundary", includesAll(auditDoc, [
+  "private",
+  "account-grade storage",
+  "no remaining",
+  "`Needs next slice` rows",
+  "Accepted demo tradeoffs must",
+  "remain explicit"
+]), "public demo completion boundary");
 check("audit table has no unexpected rows", unexpectedRows.length === 0, unexpectedRows.map((row) => row.ID).join(", ") || "none");
-check("audit table keeps the goal active", needsNextSliceRows.length > 0, needsNextSliceRows.map((row) => row.ID).join(", ") || "missing Needs next slice");
+check("audit table has no remaining Needs next slice rows", needsNextSliceRows.length === 0, needsNextSliceRows.map((row) => row.ID).join(", ") || "none");
 
 for (const required of requiredRows) {
   const row = rowsById.get(required.id);
