@@ -1043,8 +1043,6 @@ async function defaultState() {
     actionReceipt: null,
     filter: "all",
     query: "",
-    triageInput: "",
-    triageRows: []
   });
 }
 
@@ -1061,8 +1059,6 @@ function sanitizeState(payload) {
     actionReceipt: sanitizePlainObject(source.actionReceipt),
     filter: normalizeText(source.filter, 40) || "all",
     query: normalizeText(source.query, 200),
-    triageInput: normalizeText(source.triageInput, 10000),
-    triageRows: Array.isArray(source.triageRows) ? source.triageRows.map(sanitizePlainObject) : [],
     savedAt: normalizeText(source.savedAt, 80)
   };
 }
