@@ -98,7 +98,7 @@
             <span id="command-scope">Loading sample work.</span>
             <p id="command-flow" class="demo-command-flow">Next step: review blocked work.</p>
             <div class="demo-command-actions">
-              <button id="primary-action" class="btn btn-primary" type="button" data-action="route-review" data-pack="" title="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-label="Where: Work list. Blocker: Loading demo data. Button runs next: Review work.">Review work</button>
+              <button id="primary-action" class="btn btn-primary" type="button" data-action="route-review" data-pack="" title="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-label="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-controls="screen-content">Review work</button>
             </div>
           </div>
           <div id="command-receipt" class="demo-command-receipt" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></div>
@@ -107,15 +107,15 @@
         <section id="screen-content" class="demo-screen" aria-live="polite" aria-labelledby="screen-title"></section>
 
         <aside class="demo-bottom-brief" aria-label="Next action summary" aria-describedby="dock-where dock-blocker dock-next-label">
-          <a id="dock-where-item" class="demo-bottom-item" href="#/work">
+          <a id="dock-where-item" class="demo-bottom-item" href="#/work" aria-controls="screen-content">
             <span>Where</span>
             <strong id="dock-where">Work list</strong>
           </a>
-          <a id="dock-review-item" class="demo-bottom-item" href="#/review">
+          <a id="dock-review-item" class="demo-bottom-item" href="#/review" aria-controls="screen-content">
             <span>Blocker</span>
             <strong id="dock-blocker">Loading demo data.</strong>
           </a>
-          <button id="dock-next" class="demo-bottom-item demo-bottom-next" type="button" data-action="route-review" data-pack="" title="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-label="Where: Work list. Blocker: Loading demo data. Button runs next: Review work.">
+          <button id="dock-next" class="demo-bottom-item demo-bottom-next" type="button" data-action="route-review" data-pack="" title="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-label="Where: Work list. Blocker: Loading demo data. Button runs next: Review work." aria-controls="screen-content">
             <span>Button runs next</span>
             <strong id="dock-next-label">Review work</strong>
           </button>
