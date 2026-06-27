@@ -754,6 +754,25 @@ async function saveBackendStateFilter(filter) {
   return result;
 }
 
+async function saveBackendSelectedWork(selectedId) {
+  if (!DEMO_API_BASE_URL) {
+    return null;
+  }
+
+  const response = await fetch(apiUrl("/api/state/selected"), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify({ selectedId })
+  });
+  if (!response.ok) {
+    throw new Error(`Backend selected work failed with ${response.status}`);
+  }
+
+  const result = await response.json();
+  loadBackendOwnedState(result.state);
+  return result;
+}
+
 async function runBackendPackAction(pack, action) {
   if (!DEMO_API_BASE_URL || !pack?.id || !SERVER_PACK_ACTIONS.has(action)) {
     return false;
@@ -1718,6 +1737,7 @@ function navGroupIdForRoute(route) {
 
 function routeFromHash() {
   const parsedRoute = parseHashRoute(location.hash);
+  const previousSelectedId = state.selectedId;
   state.route = parsedRoute.route;
 
   if (parsedRoute.fallback) {
@@ -1730,6 +1750,15 @@ function routeFromHash() {
     state.selectedId = preferredReviewPack()?.id || state.selectedId;
   } else if (state.route === "next") {
     state.selectedId = preferredNextSetupPack()?.id || state.selectedId;
+  }
+
+  if (DEMO_API_BASE_URL && state.selectedId !== previousSelectedId && findPack(state.selectedId)) {
+    state.suppressNextSave = true;
+    saveBackendSelectedWork(state.selectedId).catch((error) => {
+      state.status = `Where: Selected work. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+      state.suppressNextSave = true;
+      render();
+    });
   }
 }
 

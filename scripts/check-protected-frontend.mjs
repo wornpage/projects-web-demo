@@ -28,6 +28,7 @@ await fs.rm(outputPath, { force: true });
 const leakedTokens = [
   "runBackendPackAction",
   "saveBackendPackNextAction",
+  "saveBackendSelectedWork",
   "loadBackendSeedPacks",
   "loadBackendPackCommandPreview",
   "createBackendPack",

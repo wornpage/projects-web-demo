@@ -94,6 +94,9 @@ try {
   const unkeyedFilterWriteStatus = await writeStatus("/api/state/filter", { filter: "review" }, {
     "content-type": "text/plain"
   }, "POST");
+  const unkeyedSelectedWriteStatus = await writeStatus("/api/state/selected", { selectedId: "source-folder-audit" }, {
+    "content-type": "text/plain"
+  }, "POST");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
   const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
@@ -102,6 +105,7 @@ try {
   const limitKey = "demo-00000000-0000-4000-8000-000000000205";
   const pathStatusKey = "demo-00000000-0000-4000-8000-000000000206";
   const filterKey = `demo-${crypto.randomUUID()}`;
+  const selectedKey = `demo-${crypto.randomUUID()}`;
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
@@ -188,6 +192,14 @@ try {
   }, "POST");
   const invalidNamedFilterStatus = await writeStatus("/api/state/filter", { filter: "private-workflow" }, {
     "x-projects-demo-client": filterKey,
+    "content-type": "application/json"
+  }, "POST");
+  const validSelectedWrite = await writeJson("/api/state/selected", { selectedId: "source-folder-audit" }, {
+    "x-projects-demo-client": selectedKey,
+    "content-type": "application/json"
+  }, "POST");
+  const invalidNamedSelectedStatus = await writeStatus("/api/state/selected", { selectedId: "private-workflow" }, {
+    "x-projects-demo-client": selectedKey,
     "content-type": "application/json"
   }, "POST");
   const unkeyedWorkflowWriteStatuses = await Promise.all([
@@ -318,6 +330,8 @@ try {
   const pathStatusStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": pathStatusKey });
   const eraseFilterStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": filterKey }, "POST");
   const filterStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": filterKey });
+  const eraseSelectedStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": selectedKey }, "POST");
+  const selectedStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": selectedKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
@@ -440,6 +454,7 @@ try {
   check("hosted recovery restore rejects missing client key before body parsing", unkeyedRestoreStatus === 400, unkeyedRestoreStatus);
   check("hosted sync copy rejects missing client key before body parsing", unkeyedSyncCopyStatus === 400, unkeyedSyncCopyStatus);
   check("hosted filter write rejects missing client key before body parsing", unkeyedFilterWriteStatus === 400, unkeyedFilterWriteStatus);
+  check("hosted selected-work write rejects missing client key before body parsing", unkeyedSelectedWriteStatus === 400, unkeyedSelectedWriteStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
@@ -471,6 +486,8 @@ try {
   check("hosted state rejects invalid filters", invalidFilterStateStatus === 400, invalidFilterStateStatus);
   check("hosted named filter endpoint saves supported filters", validFilterWrite.state?.filter === "review" && /Needs review filter applied:/u.test(validFilterWrite.state?.status || ""), validFilterWrite.state?.filter || "missing");
   check("hosted named filter endpoint rejects unsupported filters", invalidNamedFilterStatus === 400, invalidNamedFilterStatus);
+  check("hosted named selected-work endpoint saves existing work", validSelectedWrite.state?.selectedId === "source-folder-audit", validSelectedWrite.state?.selectedId || "missing");
+  check("hosted named selected-work endpoint rejects unknown work", invalidNamedSelectedStatus === 400, invalidNamedSelectedStatus);
   check("hosted state rejects blank copy profiles", blankProfileStateStatus === 400, blankProfileStateStatus);
   check("hosted state rejects invalid top-level text fields", invalidStateTextFieldStatus === 400, invalidStateTextFieldStatus);
   check("hosted state rejects overlong top-level text fields", overlongStateTextFieldStatus === 400, overlongStateTextFieldStatus);
@@ -502,6 +519,7 @@ try {
   check("hosted verifier cleanup erases recovery row", eraseRecoveryStateStatus === 200 && !stateHasPackTitle(recoveryStateAfterCleanup, recoverySnapshotTitle), `${eraseRecoveryStateStatus} / ${recoverySnapshotTitle}`);
   check("hosted verifier cleanup erases path-status row", erasePathStatusStateStatus === 200 && !stateHasPackTitle(pathStatusStateAfterCleanup, pathStatusTitle), `${erasePathStatusStateStatus} / ${pathStatusTitle}`);
   check("hosted verifier cleanup erases filter row", eraseFilterStateStatus === 200 && filterStateAfterCleanup.filter !== "review", `${eraseFilterStateStatus} / ${filterStateAfterCleanup.filter || "none"}`);
+  check("hosted verifier cleanup erases selected-work row", eraseSelectedStateStatus === 200 && selectedStateAfterCleanup.selectedId !== "source-folder-audit", `${eraseSelectedStateStatus} / ${selectedStateAfterCleanup.selectedId || "none"}`);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("API command route returns selected-work flow copy", commandPreviewOwnsCopy(commandPreview), `${commandPreview.flowHint || "missing"} / ${commandPreview.primaryReason || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");

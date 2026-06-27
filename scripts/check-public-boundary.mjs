@@ -104,6 +104,8 @@ try {
   check("hosted browser-row save uses named backend endpoint", browserRowSave.ok, browserRowSave.detail);
   const hostedFilterSave = frontendFilterUsesBackendEndpoint(frontendSource);
   check("hosted filter changes use named backend endpoint", hostedFilterSave.ok, hostedFilterSave.detail);
+  const hostedSelectedSave = frontendSelectedWorkUsesBackendEndpoint(frontendSource);
+  check("hosted selected-work changes use named backend endpoint", hostedSelectedSave.ok, hostedSelectedSave.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -224,6 +226,11 @@ try {
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ filter: "review" })
   });
+  const unkeyedSelectedWrite = await request(port, "/api/state/selected", {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: JSON.stringify({ selectedId: "source-folder-audit" })
+  });
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
@@ -231,6 +238,7 @@ try {
   check("unkeyed recovery restore rejects missing client key before body parsing", unkeyedRestore.status === 400, unkeyedRestore.status);
   check("unkeyed sync copy rejects missing client key before body parsing", unkeyedSyncCopy.status === 400, unkeyedSyncCopy.status);
   check("unkeyed filter write rejects missing client key before body parsing", unkeyedFilterWrite.status === 400, unkeyedFilterWrite.status);
+  check("unkeyed selected-work write rejects missing client key before body parsing", unkeyedSelectedWrite.status === 400, unkeyedSelectedWrite.status);
   check(
     "unkeyed API workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWrites.every(([, status]) => status === 400),
@@ -402,6 +410,25 @@ try {
     body: JSON.stringify({ filter: "private-workflow" })
   });
   const clientAStateAfterFilter = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": clientA }
+  });
+  const validSelectedWrite = await jsonRequest(port, "/api/state/selected", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ selectedId: "source-folder-audit" })
+  });
+  const invalidSelectedWrite = await request(port, "/api/state/selected", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ selectedId: "private-workflow" })
+  });
+  const clientAStateAfterSelected = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientA }
   });
   const missingPacksStateWrite = await request(port, "/api/state/browser", {
@@ -702,6 +729,9 @@ try {
   check("named filter endpoint saves supported filters", validFilterWrite.status === 200 && validFilterWrite.body?.state?.filter === "review" && /Needs review filter applied:/u.test(validFilterWrite.body?.state?.status || ""), `${validFilterWrite.status} / ${validFilterWrite.body?.state?.filter || "missing"}`);
   check("named filter endpoint rejects unsupported filters", invalidFilterWrite.status === 400, invalidFilterWrite.status);
   check("named filter endpoint persists the keyed row", clientAStateAfterFilter.body?.filter === "review", clientAStateAfterFilter.body?.filter || "missing");
+  check("named selected-work endpoint saves existing work", validSelectedWrite.status === 200 && validSelectedWrite.body?.state?.selectedId === "source-folder-audit", `${validSelectedWrite.status} / ${validSelectedWrite.body?.state?.selectedId || "missing"}`);
+  check("named selected-work endpoint rejects unknown work", invalidSelectedWrite.status === 400, invalidSelectedWrite.status);
+  check("named selected-work endpoint persists the keyed row", clientAStateAfterSelected.body?.selectedId === "source-folder-audit", clientAStateAfterSelected.body?.selectedId || "missing");
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("empty state snapshots are rejected", emptyPacksStateWrite.status === 400, emptyPacksStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
@@ -995,6 +1025,7 @@ function writeRoutesValidateKeyBeforeBody(source) {
     "if (method === \"POST\" && pathname === \"/api/state/restore\")",
     "if (method === \"POST\" && pathname === \"/api/state/sync\")",
     "if (method === \"POST\" && pathname === \"/api/state/filter\")",
+    "if (method === \"POST\" && pathname === \"/api/state/selected\")",
     "if (method === \"POST\" && pathname === \"/api/packs\")",
     "if (packPathMatch && method === \"POST\")",
     "if (packNextMatch && method === \"POST\")",
@@ -1111,6 +1142,27 @@ function frontendFilterUsesBackendEndpoint(source) {
     detail: ok
       ? "hosted filter changes post to /api/state/filter without falling back to browser-row saves"
       : "hosted filter changes still rely on browser-row snapshot persistence"
+  };
+}
+
+function frontendSelectedWorkUsesBackendEndpoint(source) {
+  const helperBody = functionBody(source, "saveBackendSelectedWork");
+  const routeBody = functionBody(source, "routeFromHash");
+  if (!helperBody || !routeBody) {
+    return { ok: false, detail: "saveBackendSelectedWork/routeFromHash:missing" };
+  }
+
+  const ok = helperBody.includes('fetch(apiUrl("/api/state/selected")')
+    && helperBody.includes("JSON.stringify({ selectedId })")
+    && helperBody.includes("loadBackendOwnedState(result.state)")
+    && routeBody.includes("saveBackendSelectedWork(state.selectedId)")
+    && routeBody.includes("state.suppressNextSave = true")
+    && !routeBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
+  return {
+    ok,
+    detail: ok
+      ? "hosted selected-work navigation posts to /api/state/selected without falling back to browser-row saves"
+      : "hosted selected-work navigation still relies on browser-row snapshot persistence"
   };
 }
 

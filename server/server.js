@@ -189,6 +189,16 @@ async function routeRequest(request, response, url) {
     return;
   }
 
+  if (method === "POST" && pathname === "/api/state/selected") {
+    const stateKey = stateWriteKeyForRequest(request);
+    const payload = await readJsonBody(request);
+    const state = await readState(stateKey);
+    const result = saveStateSelectedAction(state, payload);
+    await writeState(state, stateKey);
+    sendJson(request, response, 200, result);
+    return;
+  }
+
   if (method === "POST" && pathname === "/api/state/erase") {
     sendJson(request, response, 200, await eraseState(stateWriteKeyForRequest(request)));
     return;
@@ -835,6 +845,18 @@ function saveStateFilterAction(state, payload) {
   state.status = filterStatusMessageForState(state, filter);
   state.actionReceipt = null;
   return { filter, state };
+}
+
+function saveStateSelectedAction(state, payload) {
+  const source = workflowPayloadObject(payload);
+  const selectedId = workflowTextField(source, "selectedId", 120, { required: true });
+  if (!state.packs.some((pack) => pack.id === selectedId)) {
+    throw httpError(400, "Demo selected work is not available.");
+  }
+
+  state.selectedId = selectedId;
+  state.actionReceipt = null;
+  return { selectedId, state };
 }
 
 function filterStatusMessageForState(state, filter) {

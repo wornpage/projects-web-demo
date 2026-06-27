@@ -205,6 +205,9 @@ or search text; the older generic `PUT /api/state` write path is retired.
 Hosted filter changes post to `POST /api/state/filter` so that supported filter
 values and the saved filter status copy are owned by the backend instead of the
 browser-row snapshot path.
+Hosted selected-work navigation posts to `POST /api/state/selected` so the
+current work context is saved as a named backend field update instead of a
+browser-row snapshot.
 If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
 and does not continue into the static fallback write path.
 Those workflow endpoints reject malformed or overlong request fields before
