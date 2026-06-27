@@ -139,7 +139,7 @@ check("metadata preview copy stays public and truthful", metadataPreviewContract
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
 check("demo notice gives a starting cue and privacy boundary", demoNoticeContractOk(), "start with Review plus no-login/private-data boundary");
 check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("Saves to this backend row; no login.") && source.includes("No login or private storage.") && source.includes("No private project data.") && !source.includes("not an account") && !source.includes("Do not enter private project data"), "no-login runtime notices");
-check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"'), "demo notice role=note");
+check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"') && html.includes('aria-label="Starting point and demo data notice"'), "demo notice role=note with specific label");
 check("sidebar idea note is exposed as supporting context", sidebarNoteContractOk(), "sidebar note names the idea and starting point");
 check("next action panel is labelled by its visible title", html.includes('class="demo-command-brief sidecar" aria-labelledby="command-title" aria-describedby="command-scope command-flow"'), "command-title labels next action panel");
 check("next action panel exposes scope and flow summary", html.includes('aria-describedby="command-scope command-flow"') && html.includes('id="command-scope"') && html.includes('id="command-flow"'), "command-scope and command-flow describe next action panel");
@@ -261,7 +261,7 @@ function metadataPreviewContractOk() {
 }
 
 function demoNoticeContractOk() {
-  return html.includes('<section id="demo-notice" class="demo-notice card" role="note" aria-label="Demo notice">')
+  return html.includes('<section id="demo-notice" class="demo-notice card" role="note" aria-label="Starting point and demo data notice">')
     && html.includes("Start with Review. Demo data only; no login or private project data.");
 }
 
