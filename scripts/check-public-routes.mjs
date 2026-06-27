@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const requireFromServer = createRequire(new URL("../server/package.json", import.meta.url));
 const acorn = requireFromServer("acorn");
+const html = await fs.readFile(path.join(repoRoot, "index.html"), "utf8");
 const source = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
 const styles = await fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8");
 const ast = acorn.parse(source, {
@@ -113,6 +114,7 @@ check("card state pills stay compact in headers", cardStatePillStylesContractOk(
 check("panel forms group labels controls and help", panelFormFieldStylesContractOk(), "field-card grouping plus focus state");
 check("work filters stay scannable and tappable", workFilterStylesContractOk(), "equal-width chip grid plus compact mobile columns");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
+check("screen content region is labelled by the visible title", html.includes('id="screen-content"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels live content");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
