@@ -717,8 +717,7 @@ async function runBackendPackAction(pack, action) {
     return false;
   }
 
-  clearPendingBackendStateSave();
-  await persistBackendStateSnapshot(demoStateSnapshot());
+  prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/actions`), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -746,8 +745,7 @@ async function saveBackendPackNextAction(pack, next) {
     return null;
   }
 
-  clearPendingBackendStateSave();
-  await persistBackendStateSnapshot(demoStateSnapshot());
+  prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/next`), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -768,8 +766,7 @@ async function createBackendPack(values) {
     return null;
   }
 
-  clearPendingBackendStateSave();
-  await persistBackendStateSnapshot(demoStateSnapshot());
+  prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl("/api/packs"), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -790,8 +787,7 @@ async function addBackendPackMemoryNote(pack, note) {
     return null;
   }
 
-  clearPendingBackendStateSave();
-  await persistBackendStateSnapshot(demoStateSnapshot());
+  prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/memory`), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -812,8 +808,7 @@ async function saveBackendPackPath(pack, values) {
     return null;
   }
 
-  clearPendingBackendStateSave();
-  await persistBackendStateSnapshot(demoStateSnapshot());
+  prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/path`), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -827,6 +822,10 @@ async function saveBackendPackPath(pack, values) {
   loadState(result.state);
   state.selectedId = result.pack?.id || pack.id;
   return result;
+}
+
+function prepareBackendWorkflowRequest() {
+  clearPendingBackendStateSave();
 }
 
 function backendPackCommandForSelected(pack) {

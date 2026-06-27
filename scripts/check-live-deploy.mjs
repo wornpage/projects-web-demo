@@ -166,7 +166,8 @@ try {
     "isBackendCommandPending",
     "backendCommandPendingReason",
     "backendCommandPendingFlowHint",
-    "syncCommandActionButton"
+    "syncCommandActionButton",
+    "prepareBackendWorkflowRequest"
   ];
   const internalFrontendStrings = [
     "/api/packs",

@@ -54,7 +54,8 @@ const bannedReadableNames = Object.freeze([
   "isBackendCommandPending",
   "backendCommandPendingReason",
   "backendCommandPendingFlowHint",
-  "syncCommandActionButton"
+  "syncCommandActionButton",
+  "prepareBackendWorkflowRequest"
 ]);
 
 const source = await fs.readFile(inputPath, "utf8");

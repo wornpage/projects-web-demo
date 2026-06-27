@@ -96,6 +96,8 @@ try {
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const serverPreviewMarkers = serverCommandPreviewCopyMarkers(serverSource);
   check("server command preview owns selected-work flow copy", serverPreviewMarkers.ok, serverPreviewMarkers.detail);
+  const workflowPreflight = frontendWorkflowHelpersAvoidFullStatePreflight(frontendSource);
+  check("server-owned workflow calls avoid full-state preflight writes", workflowPreflight.ok, workflowPreflight.detail);
 
   const sameOrigin = `http://127.0.0.1:${port}`;
   const sameOriginCors = await request(port, "/api/health", {
@@ -642,6 +644,47 @@ function serverCommandPreviewCopyMarkers(source) {
     ok: missing.length === 0,
     detail: missing.length === 0 ? "server preview includes selected-work flow and why copy" : missing.join(", ")
   };
+}
+
+function frontendWorkflowHelpersAvoidFullStatePreflight(source) {
+  const helperNames = [
+    "runBackendPackAction",
+    "saveBackendPackNextAction",
+    "createBackendPack",
+    "addBackendPackMemoryNote",
+    "saveBackendPackPath"
+  ];
+  const failures = [];
+  for (const helperName of helperNames) {
+    const body = functionBody(source, helperName);
+    if (!body) {
+      failures.push(`${helperName}:missing`);
+      continue;
+    }
+    if (!body.includes("prepareBackendWorkflowRequest();")) {
+      failures.push(`${helperName}:no prepare`);
+    }
+    if (body.includes("persistBackendStateSnapshot(demoStateSnapshot())")) {
+      failures.push(`${helperName}:full-state preflight`);
+    }
+  }
+
+  return {
+    ok: failures.length === 0,
+    detail: failures.length === 0 ? "workflow endpoints call specific APIs without pre-sending PUT /api/state" : failures.join(", ")
+  };
+}
+
+function functionBody(source, name) {
+  const start = source.indexOf(`function ${name}(`);
+  if (start < 0) {
+    return "";
+  }
+
+  const nextDeclaration = source.slice(start + 1).search(/\n(?:async\s+)?function\s+\w+\(/u);
+  return nextDeclaration < 0
+    ? source.slice(start)
+    : source.slice(start, start + 1 + nextDeclaration);
 }
 
 function commandPreviewOwnsCopy(preview) {

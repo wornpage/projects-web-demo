@@ -155,6 +155,9 @@ the local workflow fallback while `/api/packs/{id}/command` is loading.
 That same command preview owns the selected-work flow hint and primary "why"
 copy in hosted app mode; the browser-side copy remains only as the static
 fallback.
+Server-owned workflow calls cancel pending generic state saves and call the
+specific backend endpoint directly instead of first writing the full browser
+state through `PUT /api/state`.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
 to the same demo row. Use **New** to create a Web Crypto generated 20-character

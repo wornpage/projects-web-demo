@@ -31,6 +31,7 @@ const protectedReadableTokens = [
   "backendCommandPendingReason",
   "backendCommandPendingFlowHint",
   "syncCommandActionButton",
+  "prepareBackendWorkflowRequest",
   "backend-command-pending",
   "x-projects-demo-client",
   "/api/state"
