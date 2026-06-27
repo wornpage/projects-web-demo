@@ -1654,7 +1654,19 @@ html[data-theme="dark"] .demo-header-metadata {
   display: grid;
   gap: 8px;
   min-width: 0;
+  overflow: visible;
   padding: 12px;
+  position: relative;
+}
+
+.demo-start-step:not(:last-child)::after {
+  background: var(--cockpit-border-strong);
+  content: "";
+  height: 2px;
+  position: absolute;
+  right: -11px;
+  top: 23px;
+  width: 10px;
 }
 
 .demo-start-step > span {
@@ -2556,6 +2568,7 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   gap: 3px;
   justify-content: center;
   line-height: 1.15;
+  min-height: 46px;
   text-align: left;
   white-space: normal;
 }
@@ -2689,8 +2702,14 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
 
 .demo-card-support > .demo-card-actions {
   border-top: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   margin-top: 8px;
   padding-top: 0;
+}
+
+.demo-card-support > .demo-card-actions .demo-support-action {
+  width: 100%;
 }
 
 .demo-card-support > .demo-card-actions + .demo-inline-form {
@@ -4107,7 +4126,27 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 
   .demo-start-step {
+    align-items: center;
+    grid-template-columns: auto minmax(0, 1fr);
     padding: 10px;
+  }
+
+  .demo-start-step:not(:last-child)::after {
+    bottom: -11px;
+    height: 10px;
+    left: 21px;
+    right: auto;
+    top: auto;
+    width: 2px;
+  }
+
+  .demo-start-step > span {
+    grid-row: 1 / span 3;
+  }
+
+  .demo-start-step > small,
+  .demo-start-step .btn {
+    grid-column: 2;
   }
 
   .demo-command-line,
@@ -4472,6 +4511,10 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   .demo-row-actions .btn {
     justify-content: center;
     width: 100%;
+  }
+
+  .demo-card-support > .demo-card-actions {
+    grid-template-columns: 1fr;
   }
 
   .demo-meta-row {

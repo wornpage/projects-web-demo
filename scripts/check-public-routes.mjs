@@ -106,6 +106,8 @@ check("review route surfaces an up-next queue spotlight", reviewSpotlightContrac
 check("create route surfaces readiness before the form", createReadinessContractOk(), "createReadinessPanel with required field checklist");
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
+check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
+check("card support actions stay readable and tappable", cardSupportActionStylesContractOk(), "grid tiles plus single-column mobile actions");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 
 for (const row of checks) {
@@ -190,6 +192,41 @@ function spotlightStylesContractOk() {
     ".demo-home-spotlight-facts",
     ".demo-review-queue-stats",
     ".demo-create-readiness-list",
+    "grid-template-columns: 1fr;"
+  ]);
+}
+
+function homePathFlowStylesContractOk() {
+  const mobileStart = styles.indexOf("@media (max-width: 700px)");
+  const mobileEnd = mobileStart < 0 ? -1 : styles.indexOf("@media", mobileStart + 1);
+  const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
+  return includesAll(styles, [
+    ".demo-start-step:not(:last-child)::after",
+    "right: -11px;",
+    "top: 23px;"
+  ]) && includesAll(mobileStyles, [
+    ".demo-start-step",
+    "grid-template-columns: auto minmax(0, 1fr);",
+    ".demo-start-step:not(:last-child)::after",
+    "bottom: -11px;",
+    ".demo-start-step > small",
+    "grid-column: 2;"
+  ]);
+}
+
+function cardSupportActionStylesContractOk() {
+  const mobileStart = styles.indexOf("@media (max-width: 560px)");
+  const mobileEnd = mobileStart < 0 ? -1 : styles.indexOf("@media", mobileStart + 1);
+  const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
+  return includesAll(styles, [
+    ".demo-support-action",
+    "min-height: 46px;",
+    ".demo-card-support > .demo-card-actions",
+    "grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));",
+    ".demo-card-support > .demo-card-actions .demo-support-action",
+    "width: 100%;"
+  ]) && includesAll(mobileStyles, [
+    ".demo-card-support > .demo-card-actions",
     "grid-template-columns: 1fr;"
   ]);
 }
