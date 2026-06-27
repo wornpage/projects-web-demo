@@ -212,6 +212,12 @@ check(
 );
 
 check(
+  "sync share link keeps a clear accessible name",
+  html.includes('id="sync-code-link" href="#/home" aria-label="Open sync link"'),
+  "Open sync link"
+);
+
+check(
   "sync share URL uses ?sync= and lands on home",
   includesAll(shareUrl, [
     "new URL(location.href)",
