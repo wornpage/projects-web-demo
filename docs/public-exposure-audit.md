@@ -51,6 +51,7 @@ Observed responses:
 | `/api/state` with readable sync-code client key | `400` | Sync codes must be hashed before they become row selectors |
 | `/api/state/erase` without client key | `400` | Backend erase has no unkeyed fallback row |
 | `/api/state/erase` with generated client key | `200` | Only the current keyed row is erased |
+| `/api/demo-packs` without client key | `400` | Backend seed data has no unkeyed fallback row |
 | `/api/demo-packs` with client key | `200` | Demo seed data loads through the keyed API |
 
 GitHub evidence:
@@ -72,9 +73,9 @@ confirms only the named public file allowlist is served, confirms repository
 files, unlisted asset/data paths, and path traversal attempts return `404`,
 creates work under one browser client
 key, confirms another client key cannot read it, confirms unkeyed local API
-state is rejected, confirms weak manual and readable sync-code API client keys
-are rejected, confirms non-JSON state writes are rejected, confirms oversized
-keyed state snapshots, duplicate work ids, invalid work items, oversized
+state and seed data are rejected, confirms weak manual and readable sync-code
+API client keys are rejected, confirms non-JSON state writes are rejected,
+confirms oversized keyed state snapshots, duplicate work ids, invalid work items, oversized
 `actionReceipt` shapes, and create requests past the state cap are rejected,
 confirms the current keyed row can be erased and then no longer contains that
 client's work,

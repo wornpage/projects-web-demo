@@ -106,7 +106,9 @@ needed.
 In app mode, seed demo work loads through `GET /api/demo-packs` with the same
 anonymous browser client key as the rest of the API. The static
 `data/demo-packs.json` file remains in the repo for GitHub Pages and static
-preview, but the Node app does not serve that URL directly.
+preview, but the Node app does not serve that URL directly. Seed data requests
+without the browser client key are rejected instead of falling back to a public
+API row.
 
 The Node app also rewrites the CSS/JS asset query string at startup using
 `PROJECTS_ASSET_VERSION`, a known commit environment variable, or a
@@ -264,8 +266,8 @@ That command runs frontend syntax, backend syntax, protected frontend, public
 asset-disclosure, static publish artifact, public route-contract, sync sharing,
 state recovery, public-boundary, Docker deploy-boundary, deploy-config,
 whitespace, clean git state, and live Outplane checks, including app shell and
-protected frontend content matching, seed-data matching, and rejection of weak
-manual API client keys.
+protected frontend content matching, seed-data matching, unkeyed seed data
+rejection, and rejection of weak manual API client keys.
 For UI-only work, also smoke the main routes locally in light and dark mode:
 
 - `#/home`

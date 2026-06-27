@@ -107,8 +107,10 @@ check("README lists deploy config check", readme.includes("`scripts/check-deploy
 check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, clean git state, and live/u.test(readme), "README ship summary");
 check("README documents live app-shell matching", /app shell and\s+protected frontend content matching/u.test(readme), "app shell matching");
 check("README documents live seed-data matching", /seed-data matching/u.test(readme), "seed-data matching");
+check("README documents unkeyed seed-data rejection", /unkeyed seed data\s+rejection/u.test(readme), "unkeyed seed data rejection");
 check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, clean git state, and live/u.test(serverReadme), "server README ship summary");
+check("server README documents unkeyed seed-data rejection", /unkeyed seed data\s+rejection/u.test(serverReadme), "unkeyed seed data rejection");
 check("deploy doc documents content-derived asset fallback", deployDoc.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("deploy doc documents live app-shell matching", /app shell content,\s+protected JS, or CSS content/u.test(deployDoc), "app shell matching");
 check("deploy doc documents live seed-data matching", /hosted seed data does not match this checkout/u.test(deployDoc), "seed-data matching");

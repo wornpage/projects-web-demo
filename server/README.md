@@ -49,7 +49,8 @@ In app mode, the frontend is served with a same-origin API setting, so no
 Seed demo work loads through `GET /api/demo-packs` with the same anonymous
 browser client key as other API requests. The Node app keeps
 `data/demo-packs.json` as a server-side seed file and does not serve that JSON
-path directly.
+path directly. Seed data requests without that browser client key are rejected
+instead of falling back to a public API row.
 
 The app shell is served with a Content Security Policy. The backend API-base
 setting is served through a same-origin `assets/runtime-config.js` response, so
@@ -159,4 +160,4 @@ That command runs backend syntax, frontend protection, public asset-disclosure,
 public route-contract, sync sharing, state recovery, public boundary, Docker
 deploy-boundary, deploy-config, whitespace, clean git state, and live Outplane
 checks, including app shell and protected frontend content matching, seed-data
-matching, and rejection of weak manual API client keys.
+matching, unkeyed seed data rejection, and rejection of weak manual API client keys.

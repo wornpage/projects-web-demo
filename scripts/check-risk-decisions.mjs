@@ -11,8 +11,15 @@ const checks = [];
 
 try {
   const auditText = await fs.readFile(auditPath, "utf8");
+  const observedRows = parseObservedRows(auditText);
+  const observedByPath = new Map(observedRows.map((row) => [row.path, row]));
   const rows = parseRiskRows(auditText);
   const byRisk = new Map(rows.map((row) => [row.risk, row]));
+
+  check("observed response table is present", observedRows.length > 0, `${observedRows.length} row(s)`);
+  requireObservedResult(observedByPath, "/data/demo-packs.json", "404");
+  requireObservedResult(observedByPath, "/api/demo-packs without client key", "400");
+  requireObservedResult(observedByPath, "/api/demo-packs with client key", "200");
 
   check("risk table is present", rows.length > 0, `${rows.length} row(s)`);
 
@@ -88,9 +95,42 @@ function parseRiskRows(text) {
   return rows;
 }
 
+function parseObservedRows(text) {
+  const section = sectionBetween(text, "Observed responses:", "GitHub evidence:");
+  const rows = [];
+
+  for (const line of section.split(/\r?\n/u)) {
+    if (!line.startsWith("|") || line.includes("|---")) {
+      continue;
+    }
+
+    const cells = line
+      .slice(1, line.endsWith("|") ? -1 : undefined)
+      .split("|")
+      .map((cell) => cell.trim());
+
+    if (cells.length !== 3 || cells[0] === "Path") {
+      continue;
+    }
+
+    rows.push({
+      path: stripTicks(cells[0]),
+      result: stripTicks(cells[1]),
+      meaning: cells[2]
+    });
+  }
+
+  return rows;
+}
+
 function requireRiskStatus(byRisk, risk, expectedStatus) {
   const row = byRisk.get(risk);
   check(`${risk} is ${expectedStatus}`, row?.status === expectedStatus, row?.status ?? "missing");
+}
+
+function requireObservedResult(byPath, pathLabel, expectedResult) {
+  const row = byPath.get(pathLabel);
+  check(`observed ${pathLabel} is ${expectedResult}`, row?.result === expectedResult, row?.result ?? "missing");
 }
 
 function check(name, ok, detail) {
@@ -99,4 +139,17 @@ function check(name, ok, detail) {
 
 function formatRows(rows) {
   return rows.map((row) => `${row.risk}: ${row.status}`).join(", ");
+}
+
+function sectionBetween(text, startMarker, endMarker) {
+  const start = text.indexOf(startMarker);
+  if (start === -1) {
+    return "";
+  }
+  const end = text.indexOf(endMarker, start + startMarker.length);
+  return text.slice(start, end === -1 ? undefined : end);
+}
+
+function stripTicks(value) {
+  return value.replace(/`/gu, "");
 }
