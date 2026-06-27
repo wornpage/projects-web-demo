@@ -150,6 +150,7 @@ check("next action panel is labelled by its visible title", html.includes('class
 check("next action panel exposes scope and flow summary", html.includes('aria-describedby="command-scope command-flow"') && html.includes('id="command-scope"') && html.includes('id="command-flow"'), "command-scope and command-flow describe next action panel");
 check("next action state announces changes politely", html.includes('id="command-state" class="demo-command-state" role="status" aria-live="polite" aria-atomic="true"'), "command-state status region");
 check("command receipt announces complete status updates", html.includes('id="command-receipt"') && html.includes('aria-atomic="true"'), "command receipt aria-atomic");
+check("empty memory placeholders use sentence-case visible copy", emptyMemoryPlaceholderContractOk(), "No memory yet");
 check("bottom dock label describes purpose instead of layout", html.includes('class="demo-bottom-brief" aria-label="Next Action summary" aria-describedby="dock-where dock-blocker dock-next-label"'), "Next Action summary");
 check("bottom dock exposes where blocker and next labels", html.includes('aria-describedby="dock-where dock-blocker dock-next-label"') && html.includes('id="dock-where"') && html.includes('id="dock-blocker"') && html.includes('id="dock-next-label"'), "dock summary fields describe bottom dock");
 check("next action controls declare the content region they update", html.includes('id="primary-action"') && html.includes('id="dock-where-item" class="demo-bottom-item" href="#/work" aria-controls="screen-content"') && html.includes('id="dock-review-item" class="demo-bottom-item" href="#/review" aria-controls="screen-content"') && html.includes('id="dock-next"') && html.includes('aria-controls="screen-content"'), "screen-content controlled by action controls");
@@ -287,6 +288,14 @@ function themeToggleContractOk() {
     'toggle.setAttribute("title", help)',
     'toggle.setAttribute("aria-label", "Dark mode")'
   ]) && !source.includes('"Light mode"');
+}
+
+function emptyMemoryPlaceholderContractOk() {
+  return html.includes('<strong id="command-memory-text">No memory yet</strong>')
+    && (source.match(/: "No memory yet";/gu) || []).length === 3
+    && !html.includes(">none yet")
+    && !source.includes(': "none yet"')
+    && !source.includes(': "none yet - add from Memory"');
 }
 
 function spotlightFactsContractOk() {

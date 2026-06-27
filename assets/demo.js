@@ -2326,7 +2326,7 @@ function commandMemoryHelpText(command, commandMemory) {
 function commandMemoryVisibleText(commandMemory) {
   return commandMemory
     ? visibleCopy(commandMemory, DEMO_COPY_LIMITS.memoryVisible)
-    : "none yet - add from Memory";
+    : "No memory yet";
 }
 
 function bindBottomDockVisibility() {
@@ -6026,7 +6026,7 @@ function relevantMemoryStrip(pack) {
   const stateClass = latest ? "has-memory" : "is-empty";
   const visible = latest
     ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
-    : "none yet";
+    : "No memory yet";
   const help = latest
     ? `Relevant Memory: ${sentenceValue(latest)}. ${memoryStripNextLine(pack)}.`
     : `Relevant Memory: none yet. How to fill: add a memory note from the Memory screen. ${memoryStripNextLine(pack)}.`;
@@ -6053,7 +6053,7 @@ function relevantMemoryCardStrip(pack) {
   const stateClass = latest ? "has-memory" : "is-empty";
   const visible = latest
     ? visibleCopy(latest, DEMO_COPY_LIMITS.memoryVisible)
-    : "none yet";
+    : "No memory yet";
   const help = latest
     ? `Relevant Memory: ${sentenceValue(latest)}. ${memoryStripNextLine(pack)}.`
     : `Relevant Memory: none yet. Add a memory note from the selected work path. ${memoryStripNextLine(pack)}.`;
