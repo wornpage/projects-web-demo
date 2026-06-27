@@ -172,6 +172,8 @@ instead of the browser-row save path. Hosted reset uses `POST
 transient receipt, search, and browser-derived status text; the older generic
 `PUT /api/state` write path is retired. Browser-row writes preserve the current
 backend-owned status instead of accepting browser status copy.
+Hosted search text stays local-only; search input changes re-render the work
+list without scheduling backend browser-row persistence.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.

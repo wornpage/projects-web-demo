@@ -105,6 +105,8 @@ try {
   check("hosted sync copy uses named backend endpoint", syncCopy.ok, syncCopy.detail);
   const browserRowSave = frontendBrowserRowSaveUsesNamedEndpoint(frontendSource);
   check("hosted browser-row save uses named backend endpoint", browserRowSave.ok, browserRowSave.detail);
+  const hostedSearch = frontendSearchStaysLocalOnly(frontendSource);
+  check("hosted search stays local-only", hostedSearch.ok, hostedSearch.detail);
   const hostedFilterSave = frontendFilterUsesBackendEndpoint(frontendSource);
   check("hosted filter changes use named backend endpoint", hostedFilterSave.ok, hostedFilterSave.detail);
   const hostedSelectedSave = frontendSelectedWorkUsesBackendEndpoint(frontendSource);
@@ -1245,6 +1247,35 @@ function frontendBrowserRowSaveUsesNamedEndpoint(source) {
     detail: ok
       ? "browser-row snapshots save through /api/state/browser without transient receipt/query/status"
       : "browser-row save still uses the generic or full recovery snapshot"
+  };
+}
+
+function frontendSearchStaysLocalOnly(source) {
+  const toolbarBody = functionBody(source, "bindToolbar");
+  if (!toolbarBody) {
+    return { ok: false, detail: "bindToolbar:missing" };
+  }
+
+  const inputIndex = toolbarBody.indexOf('search.addEventListener("input"');
+  const filterIndex = toolbarBody.indexOf('document.querySelectorAll(".demo-chip")');
+  const searchBody = inputIndex < 0
+    ? ""
+    : toolbarBody.slice(inputIndex, filterIndex > inputIndex ? filterIndex : undefined);
+  const queryIndex = searchBody.indexOf("state.query = event.currentTarget.value");
+  const suppressIndex = searchBody.indexOf("state.suppressNextSave = true");
+  const renderIndex = searchBody.indexOf("render();");
+  const ok = queryIndex >= 0
+    && suppressIndex > queryIndex
+    && renderIndex > suppressIndex
+    && !searchBody.includes("saveBackend")
+    && !searchBody.includes("scheduleBackendStateSave")
+    && !searchBody.includes("saveState();");
+
+  return {
+    ok,
+    detail: ok
+      ? "search input re-renders as transient browser UI without scheduling backend persistence"
+      : "search input can still reach backend or durable state save path"
   };
 }
 

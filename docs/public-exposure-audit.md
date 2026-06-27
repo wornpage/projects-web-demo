@@ -55,6 +55,7 @@ Observed responses:
 | `/api/state/sync` without client key | `400` | Backend sync-copy has no unkeyed fallback row |
 | `/api/state/erase` without client key | `400` | Backend erase has no unkeyed fallback row |
 | `/api/state/erase` with generated client key | `200` | Only the current keyed row is erased |
+| Work-list search input | Local only | Search text re-renders the browser UI without scheduling a backend browser-row save |
 | `/api/demo-packs` without client key | `400` | Backend seed data has no unkeyed fallback row |
 | `/api/demo-packs` with client key | `200` | Demo seed data loads through the keyed API |
 | `/api/packs` without client key | `400` | Backend pack list has no unkeyed fallback row |

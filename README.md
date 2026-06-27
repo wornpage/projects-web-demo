@@ -207,6 +207,8 @@ through the typed `PUT /api/state/browser` envelope without transient receipt,
 search, or browser-derived status text; the older generic `PUT /api/state`
 write path is retired. Browser-row writes preserve the current backend-owned
 status instead of accepting browser status copy.
+Hosted search text is treated as transient browser UI: typing in the work-list
+search box re-renders locally without scheduling a backend browser-row save.
 Hosted filter changes post to `POST /api/state/filter` so that supported filter
 values and the saved filter status copy are owned by the backend instead of the
 browser-row snapshot path.
