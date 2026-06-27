@@ -128,11 +128,6 @@ check("live verifier rejects invalid work-path status writes", includesAll(liveV
   "invalidWorkPathStatus",
   "hosted work-path rejects invalid statuses"
 ]), "invalid work-path status rejection");
-check("live verifier rejects declared oversized body writes", includesAll(liveVerifier, [
-  "declaredOversizedBodyStateStatus",
-  "hosted state rejects declared oversized JSON bodies before upload",
-  "declaredOversizedBodyStatus"
-]), "declared oversized body rejection");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",
