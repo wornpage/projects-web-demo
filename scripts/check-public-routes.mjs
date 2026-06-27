@@ -118,7 +118,7 @@ check("primary nav label stays compact and public-facing", html.includes('id="de
 check("brand home link stays public-facing", html.includes('aria-label="Projects demo home"'), "Projects demo home");
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
 check("demo notice says no login or private data", html.includes("Demo data only. No login or private project data."), "no login/private data");
-check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("No login or private storage.") && !source.includes("not an account"), "no-login runtime notices");
+check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("No login or private storage.") && source.includes("No private project data.") && !source.includes("not an account") && !source.includes("Do not enter private project data"), "no-login runtime notices");
 check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"'), "demo notice role=note");
 check("sidebar idea note is exposed as supporting context", html.includes('class="demo-sidebar-note card" role="note"'), "sidebar note role=note");
 check("next action panel is labelled by its visible title", html.includes('class="demo-command-brief sidecar" aria-labelledby="command-title"'), "command-title labels next action panel");

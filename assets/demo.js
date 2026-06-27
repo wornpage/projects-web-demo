@@ -960,10 +960,10 @@ function updateServiceBoundaryNotice() {
 
   const syncCode = readSyncCode();
   notice.textContent = DEMO_API_BASE_URL && syncCode
-    ? "Sync code active. Anyone with the code can open this demo state. Do not enter private project data."
+    ? "Sync code active. Anyone with the code can open this demo state. No private project data."
     : DEMO_API_BASE_URL
-      ? "Demo data only. Saves through the API for this browser; no login. Do not enter private project data."
-      : "Demo data only. Saves in this browser; no login. Do not enter private project data.";
+      ? "Demo data only. Saves through the API for this browser; no login. No private project data."
+      : "Demo data only. Saves in this browser; no login. No private project data.";
   renderDemoSyncControls();
 }
 
