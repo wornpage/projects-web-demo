@@ -139,6 +139,10 @@ try {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
   }, "PUT");
+  const missingPacksStateStatus = await writeStatus("/api/state", { status: "Missing packs live check." }, {
+    "x-projects-demo-client": clientAKey,
+    "content-type": "application/json"
+  }, "PUT");
   await writeJson("/api/state", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
     "x-projects-demo-client": sharedKey
   });
@@ -275,6 +279,7 @@ try {
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
   check("hosted state rejects null snapshots", nullStateStatus === 400, nullStateStatus);
   check("hosted state rejects array snapshots", arrayStateStatus === 400, arrayStateStatus);
+  check("hosted state rejects snapshots without packs", missingPacksStateStatus === 400, missingPacksStateStatus);
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
   check("hosted state rejects duplicate work ids", duplicateIdStateStatus === 400, duplicateIdStateStatus);
   check("hosted state rejects invalid work items", invalidPackStateStatus === 400, invalidPackStateStatus);

@@ -1346,9 +1346,6 @@ function validateStatePayload(payload) {
 }
 
 function validateStatePacks(value) {
-  if (value === undefined) {
-    return;
-  }
   if (!Array.isArray(value)) {
     throw httpError(400, "Demo state packs must be an array.");
   }

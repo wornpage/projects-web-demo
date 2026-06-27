@@ -302,6 +302,14 @@ try {
     },
     body: JSON.stringify([])
   });
+  const missingPacksStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ status: "Missing packs boundary check." })
+  });
   const oversizedStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -394,6 +402,7 @@ try {
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
   check("null state snapshots are rejected", nullStateWrite.status === 400, nullStateWrite.status);
   check("array state snapshots are rejected", arrayStateWrite.status === 400, arrayStateWrite.status);
+  check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
   check("duplicate work ids in keyed state snapshots are rejected", duplicateIdStateWrite.status === 400, duplicateIdStateWrite.status);
   check("invalid work items in keyed state snapshots are rejected", invalidPackStateWrite.status === 400, invalidPackStateWrite.status);
