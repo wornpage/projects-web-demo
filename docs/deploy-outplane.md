@@ -59,6 +59,12 @@ The browser sends an anonymous client key with API requests, so hosted demo
 edits are separated per browser without accounts. Hosted Postgres API requests
 without that browser key are rejected instead of sharing one fallback row.
 
+The app also supports a sync code for personal two-device use. **New** creates a
+code and copies the current demo state to that code's row; **Use** joins that
+row from another device; **Leave** returns to the device's own row. Anyone with
+the code can open the same demo state. The code is hashed before it is sent as
+the backend row key, but the stored demo JSON is not end-to-end encrypted.
+
 This is demo isolation, not real user security. Add authentication before
 storing private user data, real customer work, or anything that needs account
 ownership.
@@ -72,6 +78,8 @@ After deploy:
 3. Change one work item.
 4. Refresh the page and confirm the change remains in that browser.
 5. Open a private window and confirm it starts from seed demo data.
+6. Create a sync code, use it in a second browser, and confirm both browsers see
+   the same demo state.
 
 ## Notes
 

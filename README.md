@@ -94,6 +94,12 @@ The default local state file is `server/data/state.json`. Hosted deploys should
 use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres environment
 variables instead of writable container files.
 
+In hosted app mode, the top sync-code strip can connect two browsers or devices
+to the same demo row. Use **New** to create a code, then enter that code on the
+other device. Anyone with the code can open that demo state, and the database
+still stores readable JSON; this is convenience sync, not private encrypted
+storage.
+
 ## Docker
 
 Build the app image:
@@ -148,6 +154,10 @@ client key so visitors do not overwrite each other; hosted API requests without
 that key are rejected instead of sharing one fallback row. The database is
 configured without a public IP allow list, so the app uses Render's private
 connection string.
+
+The optional sync code replaces the anonymous browser key with a hashed code so
+two devices can share one demo row. It does not create accounts or encrypt the
+stored JSON.
 
 ## Static Preview With API
 

@@ -548,6 +548,7 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-notice,
+.demo-sync,
 .demo-command-brief,
 .demo-toolbar,
 .demo-panel,
@@ -591,6 +592,75 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-notice strong {
   color: var(--cockpit-text);
+}
+
+.demo-sync {
+  align-items: center;
+  background: var(--cockpit-surface);
+  border: 1px solid var(--cockpit-border);
+  border-left: 3px solid var(--cockpit-accent);
+  border-radius: var(--demo-panel-radius);
+  color: var(--cockpit-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.demo-sync-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.demo-sync-copy strong {
+  color: var(--cockpit-text);
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+.demo-sync-copy span,
+.demo-sync p {
+  color: var(--cockpit-text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.demo-sync-controls {
+  align-items: center;
+  display: flex;
+  flex: 1 1 360px;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.demo-sync-controls input {
+  background: var(--cockpit-surface);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius-sm);
+  color: var(--cockpit-text);
+  flex: 1 1 150px;
+  font: inherit;
+  font-size: 13px;
+  max-width: 190px;
+  min-height: 34px;
+  min-width: 0;
+  padding: 7px 9px;
+  text-transform: uppercase;
+}
+
+.demo-sync-controls input:focus-visible {
+  border-color: var(--cockpit-accent);
+  outline: 3px solid var(--demo-focus-ring);
+  outline-offset: 2px;
+}
+
+.demo-sync p {
+  flex: 1 0 100%;
 }
 
 .demo-command-brief {

@@ -13,6 +13,9 @@ const DEMO_DEFAULT_VERSION = "working";
 const DEMO_API_QUERY_PARAM = "api";
 const API_STATE_SAVE_DEBOUNCE_MS = 300;
 const API_CLIENT_STORAGE_KEY = "projects-static-demo-api-client-v1";
+const SYNC_CODE_STORAGE_KEY = "projects-static-demo-sync-code-v1";
+const SYNC_CODE_MIN_COMPACT_LENGTH = 8;
+const SYNC_CODE_MAX_COMPACT_LENGTH = 16;
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
@@ -236,6 +239,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   purgeLegacyDemoState();
   bindShellControls();
+  bindDemoSyncControls();
   bindBottomDockVisibility();
   renderNav();
   updateServiceBoundaryNotice();
@@ -468,7 +472,7 @@ async function loadBackendState() {
 
   const response = await fetch(apiUrl("/api/state"), {
     cache: "no-store",
-    headers: apiHeaders()
+    headers: await apiHeaders()
   });
   if (!response.ok) {
     throw new Error(`Backend API failed with ${response.status}`);
@@ -511,7 +515,7 @@ function flushBackendStateSave() {
 async function persistBackendStateSnapshot(snapshot) {
   const response = await fetch(apiUrl("/api/state"), {
     method: "PUT",
-    headers: apiHeaders({ "content-type": "application/json" }),
+    headers: await apiHeaders({ "content-type": "application/json" }),
     body: JSON.stringify(snapshot)
   });
   if (!response.ok) {
@@ -525,23 +529,204 @@ function updateServiceBoundaryNotice() {
     return;
   }
 
-  notice.textContent = DEMO_API_BASE_URL
-    ? "Demo data only. Saves through the API for this browser, not an account. Do not enter private project data."
-    : "Demo data only. Saves in this browser, not an account. Do not enter private project data.";
+  const syncCode = readSyncCode();
+  notice.textContent = DEMO_API_BASE_URL && syncCode
+    ? "Sync code active. Anyone with the code can open this demo state. Do not enter private project data."
+    : DEMO_API_BASE_URL
+      ? "Demo data only. Saves through the API for this browser, not an account. Do not enter private project data."
+      : "Demo data only. Saves in this browser, not an account. Do not enter private project data.";
+  renderDemoSyncControls();
 }
 
-function apiHeaders(values = {}) {
+function bindDemoSyncControls() {
+  el("sync-code-use")?.addEventListener("click", () => {
+    withSyncControlsBusy(() => activateSyncCode(valueOf("sync-code-input"), { copyCurrentState: false }));
+  });
+  el("sync-code-new")?.addEventListener("click", () => {
+    const code = generateSyncCode();
+    const input = el("sync-code-input");
+    if (input) {
+      input.value = code;
+    }
+    withSyncControlsBusy(() => activateSyncCode(code, { copyCurrentState: true }));
+  });
+  el("sync-code-leave")?.addEventListener("click", () => {
+    withSyncControlsBusy(leaveSyncCode);
+  });
+}
+
+function renderDemoSyncControls(message = "") {
+  const panel = el("demo-sync");
+  if (!panel) {
+    return;
+  }
+
+  panel.hidden = !DEMO_API_BASE_URL;
+  if (!DEMO_API_BASE_URL) {
+    return;
+  }
+
+  const syncCode = readSyncCode();
+  const input = el("sync-code-input");
+  if (input && document.activeElement !== input) {
+    input.value = syncCode;
+  }
+  if (el("sync-code-state")) {
+    el("sync-code-state").textContent = syncCode
+      ? `Using ${syncCode}. Other devices can use this code.`
+      : "This device has its own demo state.";
+  }
+  if (el("sync-code-leave")) {
+    el("sync-code-leave").hidden = !syncCode;
+  }
+  const help = el("sync-code-help");
+  if (help) {
+    help.textContent = message || (syncCode
+      ? "Anyone with this code can open the same demo state. Do not use it for private data."
+      : "Use a code to sync this demo across devices. This is not an account or private storage.");
+  }
+}
+
+async function withSyncControlsBusy(action) {
+  setSyncControlsBusy(true);
+  try {
+    await action();
+  } catch (error) {
+    console.error("Projects demo sync failed.", error);
+    renderDemoSyncControls(error.message || "Sync code failed.");
+  } finally {
+    setSyncControlsBusy(false);
+  }
+}
+
+function setSyncControlsBusy(busy) {
+  ["sync-code-input", "sync-code-use", "sync-code-new", "sync-code-leave"].forEach((id) => {
+    const control = el(id);
+    if (control) {
+      control.disabled = Boolean(busy);
+    }
+  });
+}
+
+async function activateSyncCode(value, options = {}) {
+  if (!DEMO_API_BASE_URL) {
+    renderDemoSyncControls("Sync codes need the backend app mode.");
+    return;
+  }
+
+  const code = normalizeSyncCode(value);
+  if (!code) {
+    renderDemoSyncControls(`Enter at least ${SYNC_CODE_MIN_COMPACT_LENGTH} letters or numbers for a sync code.`);
+    return;
+  }
+
+  clearPendingBackendStateSave();
+  writeSyncCode(code);
+  apiSessionClientId = "";
+  if (options.copyCurrentState) {
+    await persistBackendStateSnapshot(demoStateSnapshot());
+    state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use code on another device");
+  } else {
+    loadState(await loadBackendState());
+    state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "review shared demo state");
+  }
+
+  updateServiceBoundaryNotice();
+  render();
+  renderDemoSyncControls(options.copyCurrentState
+    ? "New code is active. Use it on another device to open this demo state."
+    : "Code is active. This device now opens the shared demo state.");
+}
+
+async function leaveSyncCode() {
+  if (!DEMO_API_BASE_URL) {
+    return;
+  }
+
+  clearPendingBackendStateSave();
+  clearSyncCode();
+  apiSessionClientId = "";
+  loadState(await loadBackendState());
+  state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use this device only");
+  updateServiceBoundaryNotice();
+  render();
+  renderDemoSyncControls("Sync code left. This device is back to its own demo state.");
+}
+
+function clearPendingBackendStateSave() {
+  window.clearTimeout(apiSaveTimer);
+  apiPendingSnapshot = null;
+  apiSaveInFlight = false;
+}
+
+function readSyncCode() {
+  try {
+    return normalizeSyncCode(localStorage.getItem(SYNC_CODE_STORAGE_KEY) || "");
+  } catch {
+    return "";
+  }
+}
+
+function writeSyncCode(code) {
+  try {
+    localStorage.setItem(SYNC_CODE_STORAGE_KEY, code);
+  } catch {
+    // LocalStorage access can be restricted in some embedded contexts.
+  }
+}
+
+function clearSyncCode() {
+  try {
+    localStorage.removeItem(SYNC_CODE_STORAGE_KEY);
+  } catch {
+    // LocalStorage access can be restricted in some embedded contexts.
+  }
+}
+
+function normalizeSyncCode(value) {
+  const compact = String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/gu, "")
+    .slice(0, SYNC_CODE_MAX_COMPACT_LENGTH);
+  if (compact.length < SYNC_CODE_MIN_COMPACT_LENGTH) {
+    return "";
+  }
+
+  return compact.match(/.{1,4}/gu).join("-");
+}
+
+function generateSyncCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint8Array(12);
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+
+  const compact = Array.from(bytes, (value) => alphabet[value % alphabet.length]).join("");
+  return compact.match(/.{1,4}/gu).join("-");
+}
+
+async function apiHeaders(values = {}) {
   const headers = { ...values };
-  const clientId = apiClientId();
+  const clientId = await apiClientId();
   if (clientId) {
     headers["x-projects-demo-client"] = clientId;
   }
   return headers;
 }
 
-function apiClientId() {
+async function apiClientId() {
   if (!DEMO_API_BASE_URL) {
     return "";
+  }
+
+  const syncCode = readSyncCode();
+  if (syncCode) {
+    return syncClientId(syncCode);
   }
 
   const saved = readApiClientId();
@@ -560,6 +745,40 @@ function apiClientId() {
     // LocalStorage access can be restricted in some embedded contexts.
   }
   return next;
+}
+
+async function syncClientId(syncCode) {
+  const normalized = normalizeSyncCode(syncCode);
+  if (!normalized) {
+    return "";
+  }
+
+  if (!globalThis.crypto?.subtle) {
+    return `sync-${normalized.toLowerCase().replace(/[^a-z0-9._-]/gu, "-")}`;
+  }
+
+  const digest = await globalThis.crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(`projects-web-demo-sync:${normalized}`)
+  );
+  return `sync-${base64Url(digest).slice(0, 64)}`;
+}
+
+function base64Url(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary)
+    .replace(/\+/gu, "-")
+    .replace(/\//gu, "_")
+    .replace(/=+$/u, "");
+}
+
+function apiPersistenceLabel() {
+  const syncCode = readSyncCode();
+  return syncCode ? "Sync code" : "Backend API";
 }
 
 function readApiClientId() {
@@ -585,19 +804,19 @@ function persistenceVerb() {
 }
 
 function persistenceStatusText(browserText = "This browser only") {
-  return DEMO_API_BASE_URL ? "Backend API" : browserText;
+  return DEMO_API_BASE_URL ? apiPersistenceLabel() : browserText;
 }
 
 function persistenceEditStatus(browserText) {
-  return DEMO_API_BASE_URL ? "Edits save to backend" : browserText;
+  return DEMO_API_BASE_URL ? `Edits save to ${apiPersistenceLabel().toLowerCase()}` : browserText;
 }
 
 function persistenceMemoryStatus(browserText) {
-  return DEMO_API_BASE_URL ? "Stored in backend" : browserText;
+  return DEMO_API_BASE_URL ? `Stored in ${apiPersistenceLabel().toLowerCase()}` : browserText;
 }
 
 function persistenceCreatedActivity() {
-  return DEMO_API_BASE_URL ? "Created through backend API." : "Created in this browser.";
+  return DEMO_API_BASE_URL ? `Created through ${apiPersistenceLabel().toLowerCase()}.` : "Created in this browser.";
 }
 
 function profileStatus(profileKey, source = "Settings") {
@@ -1708,7 +1927,7 @@ function renderHome() {
           <h2>Pick work, see what blocks it, run the next action.</h2>
         </div>
       </div>
-      <p>Projects is a compact way to keep work honest: each item shows where you are, what is blocking progress, and the one button that should run next. This static demo uses browser-local sample work so the value is visible without knowing the original project history.</p>
+      <p>Projects is a compact way to keep work honest: each item shows where you are, what is blocking progress, and the one button that should run next. This demo uses sample work so the value is visible without knowing the original project history.</p>
       <p class="demo-home-counts">${state.packs.length} sample ${escapeHtml(workNoun(state.packs.length))}; ${reviewCount} need review.</p>
       ${homeEmpty}
       <div class="demo-start-path" aria-label="Primary demo path">

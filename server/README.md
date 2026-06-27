@@ -10,6 +10,10 @@ When `PROJECTS_STATE_STORAGE=postgres` is active, state-changing and state-read
 API routes require that anonymous browser client key. Missing or invalid keys
 are rejected instead of falling back to one shared hosted row.
 
+The frontend can replace the anonymous browser key with a hashed sync code so
+two browsers or devices can share one demo row. That is a convenience feature,
+not authentication or encryption of the stored JSON.
+
 ## App Mode
 
 ```powershell

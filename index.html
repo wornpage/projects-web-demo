@@ -48,6 +48,21 @@
           Demo data only. No account or private project data.
         </section>
 
+        <section id="demo-sync" class="demo-sync card" aria-label="Demo sync code" hidden>
+          <div class="demo-sync-copy">
+            <strong>Sync code</strong>
+            <span id="sync-code-state">This device has its own demo state.</span>
+          </div>
+          <div class="demo-sync-controls">
+            <label class="sr-only" for="sync-code-input">Sync code</label>
+            <input id="sync-code-input" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="ABCD-2345-WXYZ" aria-describedby="sync-code-help">
+            <button id="sync-code-use" class="btn btn-sm" type="button">Use</button>
+            <button id="sync-code-new" class="btn btn-sm" type="button">New</button>
+            <button id="sync-code-leave" class="btn btn-sm" type="button">Leave</button>
+          </div>
+          <p id="sync-code-help">Anyone with this code can open the same demo state. Do not use it for private data.</p>
+        </section>
+
         <section class="demo-command-brief sidecar" aria-label="Projects next action">
           <div class="demo-command-top">
             <div>
