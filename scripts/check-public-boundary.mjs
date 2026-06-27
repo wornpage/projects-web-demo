@@ -95,6 +95,8 @@ try {
   check("state write rate limits are configured", stateWriteRateLimitConfigured(serverSource), "stateWriteKeyForRequest before body read");
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
   check("state-changing routes validate client keys and write limits before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
+  const browserWritePreservesStatus = browserWriteRoutePreservesBackendStatus(serverSource);
+  check("browser-row write preserves backend-owned status", browserWritePreservesStatus.ok, browserWritePreservesStatus.detail);
   check("state reset validates client key before storage", resetRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
   const recoveryRestore = frontendRecoveryRestoreUsesBackendEndpoint(frontendSource);
@@ -507,6 +509,19 @@ try {
   const resetStateAfterWrite = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": resetClient }
   });
+  const browserStatusOverwriteState = stateWithGeneratedPacks(1, "browser-status-overwrite-boundary");
+  browserStatusOverwriteState.status = "Browser status should not replace backend status.";
+  const browserStatusOverwriteWrite = await jsonRequest(port, "/api/state/browser", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": resetClient
+    },
+    body: JSON.stringify(browserStatusOverwriteState)
+  });
+  const resetStateAfterBrowserWrite = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": resetClient }
+  });
   const missingPacksStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
     headers: {
@@ -816,6 +831,7 @@ try {
   check("named profile endpoint persists the keyed row", clientAStateAfterProfile.body?.copyProfile === "developer", clientAStateAfterProfile.body?.copyProfile || "missing");
   check("named reset endpoint restores default row", validResetWrite.status === 200 && validResetWrite.body?.state?.copyProfile === "general" && validResetWrite.body?.state?.scenarioId === "default" && validResetWrite.body?.state?.filter === "all" && /backend row/u.test(validResetWrite.body?.state?.status || "") && Array.isArray(validResetWrite.body?.state?.packs) && validResetWrite.body.state.packs.length > 0, `${validResetWrite.status} / ${validResetWrite.body?.state?.copyProfile || "missing"} / ${validResetWrite.body?.state?.status || "missing"}`);
   check("named reset endpoint persists the keyed row", resetStateAfterWrite.body?.copyProfile === "general" && resetStateAfterWrite.body?.scenarioId === "default" && resetStateAfterWrite.body?.filter === "all", `${resetStateAfterWrite.body?.copyProfile || "missing"} / ${resetStateAfterWrite.body?.scenarioId || "missing"} / ${resetStateAfterWrite.body?.filter || "missing"}`);
+  check("browser-row write preserves backend-owned status", browserStatusOverwriteWrite.status === 200 && /backend row/u.test(resetStateAfterBrowserWrite.body?.status || ""), `${browserStatusOverwriteWrite.status} / ${resetStateAfterBrowserWrite.body?.status || "missing"}`);
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("empty state snapshots are rejected", emptyPacksStateWrite.status === 400, emptyPacksStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
@@ -1127,6 +1143,27 @@ function writeRoutesValidateKeyBeforeBody(source) {
   return {
     ok: failed.length === 0,
     detail: failed.length === 0 ? "stateWriteKeyForRequest before readJsonBody" : failed.join(", ")
+  };
+}
+
+function browserWriteRoutePreservesBackendStatus(source) {
+  const routeStart = source.indexOf('if (method === "PUT" && pathname === "/api/state/browser")');
+  const routeEnd = source.indexOf("\n  }\n\n", routeStart);
+  const routeSource = routeStart >= 0
+    ? source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined)
+    : "";
+  const helperBody = functionBody(source, "browserStatePayload");
+  const ok = routeSource.includes("const current = await readState(stateKey)")
+    && routeSource.includes("browserStatePayload(payload, current)")
+    && helperBody.includes("validateStatePayload(payload.state)")
+    && helperBody.includes("status: currentState.status || \"\"")
+    && helperBody.includes("actionReceipt: null")
+    && helperBody.includes("query: \"\"");
+  return {
+    ok,
+    detail: ok
+      ? "browser row validates payload then preserves status and clears transient fields"
+      : "browser row still replaces server-owned status or transient fields"
   };
 }
 

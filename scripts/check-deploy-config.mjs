@@ -175,6 +175,10 @@ check("live verifier handles hosted reset", includesAll(liveVerifier, [
   "hosted named reset endpoint restores default row",
   "\"/api/state/reset\""
 ]), "hosted reset");
+check("live verifier proves browser-row status preservation", includesAll(liveVerifier, [
+  "browserStatusOverwriteWrite",
+  "hosted browser-row write preserves backend-owned status"
+]), "browser-row status preservation");
 check("live verifier rejects invalid work-path status writes", includesAll(liveVerifier, [
   "invalidWorkPathStatus",
   "hosted work-path rejects invalid statuses"

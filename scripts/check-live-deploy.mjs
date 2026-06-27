@@ -236,6 +236,13 @@ try {
     "x-projects-demo-client": resetKey,
     "content-type": "application/json"
   }, "POST");
+  const browserStatusOverwriteState = stateWithGeneratedPacks(1, "live-browser-status-overwrite");
+  browserStatusOverwriteState.status = "Browser status should not replace backend status.";
+  const browserStatusOverwriteWrite = await writeJson("/api/state/browser", browserStatusOverwriteState, {
+    "x-projects-demo-client": resetKey,
+    "content-type": "application/json"
+  });
+  const resetStateAfterBrowserWrite = await readJson("/api/state", { "x-projects-demo-client": resetKey });
   const unkeyedWorkflowWriteStatuses = await Promise.all([
     ["pack create", "/api/packs"],
     ["work path", "/api/packs/source-folder-audit/path"],
@@ -540,6 +547,7 @@ try {
   check("hosted named profile endpoint saves supported profile", validProfileWrite.state?.copyProfile === "developer", validProfileWrite.state?.copyProfile || "missing");
   check("hosted named profile endpoint rejects unsupported profiles", invalidNamedProfileStatus === 400, invalidNamedProfileStatus);
   check("hosted named reset endpoint restores default row", validResetWrite.state?.copyProfile === "general" && validResetWrite.state?.scenarioId === "default" && validResetWrite.state?.filter === "all" && /backend row/u.test(validResetWrite.state?.status || "") && Array.isArray(validResetWrite.state?.packs) && validResetWrite.state.packs.length > 0, `${validResetWrite.state?.copyProfile || "missing"} / ${validResetWrite.state?.scenarioId || "missing"} / ${validResetWrite.state?.filter || "missing"} / ${validResetWrite.state?.status || "missing"}`);
+  check("hosted browser-row write preserves backend-owned status", /backend row/u.test(browserStatusOverwriteWrite.state?.status || "") && /backend row/u.test(resetStateAfterBrowserWrite.status || ""), `${browserStatusOverwriteWrite.state?.status || "missing"} / ${resetStateAfterBrowserWrite.status || "missing"}`);
   check("hosted state rejects blank copy profiles", blankProfileStateStatus === 400, blankProfileStateStatus);
   check("hosted state rejects invalid top-level text fields", invalidStateTextFieldStatus === 400, invalidStateTextFieldStatus);
   check("hosted state rejects overlong top-level text fields", overlongStateTextFieldStatus === 400, overlongStateTextFieldStatus);

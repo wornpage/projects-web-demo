@@ -26,7 +26,9 @@ existing item, reject malformed top-level state fields, reject malformed
 source, memory, and activity lists, and also reject malformed or oversized
 `actionReceipt` object shapes when present. Normal browser-row saves use the
 typed `projects-browser-state-v1` envelope and omit transient receipt/search
-UI state plus browser-derived status text.
+UI state plus browser-derived status text. The server validates the browser
+payload, preserves the current backend-owned status, and clears receipt/search
+fields before writing.
 `POST /api/state/erase` removes only the row selected by the current generated
 browser key or hashed sync key. Missing or invalid keys are rejected before any
 storage erase runs.
@@ -168,7 +170,8 @@ instead of the browser-row save path. Hosted reset uses `POST
 /api/state/reset` instead of the browser-row save path. Hosted browser rows save through a
 `projects-browser-state-v1` envelope on `PUT /api/state/browser`, omitting
 transient receipt, search, and browser-derived status text; the older generic
-`PUT /api/state` write path is retired.
+`PUT /api/state` write path is retired. Browser-row writes preserve the current
+backend-owned status instead of accepting browser status copy.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.

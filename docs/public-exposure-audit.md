@@ -234,7 +234,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Anonymous API callers can repeatedly consume backend write work | Fixed | The backend keeps per-process source and state-key rate limits; local boundary/source-order gates prove repeated keyed state writes on one app process eventually return `429` before content-type parsing. Hosted live verification does not require observing `429` because Outplane can route requests across processes |
 | Malformed JSON snapshots can wipe a keyed state row | Fixed | `PUT /api/state/browser` requires the typed `projects-browser-state-v1` envelope with a state object that has at least one item in `packs`; scalar, array, unsupported-kind, empty-`packs`, and missing-`packs` payloads return `400` and leave the keyed row unchanged |
 | Browser-row writes can store ambiguous or malformed work identities | Fixed | `PUT /api/state/browser` rejects invalid work items, invalid work statuses, duplicate work ids, selected work ids that do not reference an existing item, selected work ids with non-text shapes, malformed or overlong work text fields, and malformed work source/memory/activity lists before storage |
-| Browser-row writes can store unsupported durable UI state | Fixed | `PUT /api/state/browser` rejects unsupported or non-text saved profile, scenario, and filter values, plus malformed or overlong top-level status text, before storage. Normal hosted browser-row saves omit transient `actionReceipt`, `query`, and browser-derived `status`; recovery and sync remain explicit full snapshot flows |
+| Browser-row writes can store unsupported durable UI state | Fixed | `PUT /api/state/browser` rejects unsupported or non-text saved profile, scenario, and filter values, plus malformed or overlong top-level status text, before storage. Normal hosted browser-row saves omit transient `actionReceipt`, `query`, and browser-derived `status`; the backend preserves the current server-owned status and clears receipt/search fields before writing. Recovery and sync remain explicit full snapshot flows |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Oversized JSON bodies can consume backend memory | Fixed | Body routes reject declared oversized JSON before reading the request stream, and the local boundary plus deploy-config gates prove that ordering; local streamed oversize reads return `413` once JSON exceeds 1 MiB, while the live gate accepts the hosted platform's `413` or `502` rejection only when the oversized row is not stored |
 | Full-state writes accept malformed or unbounded receipt objects | Fixed | `actionReceipt` values must be plain objects when present, and object depth, key count, array items, key length, and text length are bounded before storage |
@@ -293,7 +293,8 @@ keeps browser-local fallback copy.
 Server-owned workflow calls do not pre-send the browser's full state snapshot
 before those specific endpoints. Hosted browser-row snapshots use the named
 typed `PUT /api/state/browser` endpoint and omit transient receipt/search UI
-state plus browser-derived status text.
+state plus browser-derived status text. The browser-row route preserves the
+current backend-owned status instead of accepting browser status copy.
 Hosted recovery restore uses `POST /api/state/restore`; GitHub Pages keeps the
 browser-local restore path.
 Hosted sync-code copy uses `POST /api/state/sync`.

@@ -173,7 +173,9 @@ can sanitize into an empty row. Use the backend erase endpoint to clear the
 current row.
 Browser-row writes must use the typed `projects-browser-state-v1` envelope and
 save only the durable row state, omitting transient receipt, search, and
-browser-derived status text.
+browser-derived status text. The backend validates the browser payload, keeps
+the current server-owned status, and clears transient receipt/search fields
+before storage.
 State writes also require supported text profile, scenario, and filter values,
 bounded top-level status text, plus each work item must keep bounded text
 fields with a unique id, title, and valid workflow status, and the saved
@@ -203,7 +205,8 @@ New sync-code copies in hosted app mode post to `POST /api/state/sync` instead
 of going through the browser-row save path. Hosted browser-row snapshots save
 through the typed `PUT /api/state/browser` envelope without transient receipt,
 search, or browser-derived status text; the older generic `PUT /api/state`
-write path is retired.
+write path is retired. Browser-row writes preserve the current backend-owned
+status instead of accepting browser status copy.
 Hosted filter changes post to `POST /api/state/filter` so that supported filter
 values and the saved filter status copy are owned by the backend instead of the
 browser-row snapshot path.
