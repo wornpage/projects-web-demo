@@ -19,8 +19,9 @@ Hosted Postgres stores and reads a server-side digest of that key in
 Each anonymous state row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected. Full-state writes require each
 work item to keep bounded text fields with a unique id and title, require the
-selected work id to reference an existing item, reject malformed source, memory,
-and activity lists, and also reject oversized `actionReceipt` object shapes before storage.
+selected work id to be text and reference an existing item, reject malformed
+top-level state fields, reject malformed source, memory, and activity lists, and
+also reject malformed or oversized `actionReceipt` object shapes before storage.
 `POST /api/state/erase` removes only the row selected by the current generated
 browser key or hashed sync key. Missing or invalid keys are rejected before any
 storage erase runs.

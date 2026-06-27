@@ -358,6 +358,14 @@ try {
     },
     body: JSON.stringify(stateWithInvalidSelectedId("invalid-selected-boundary"))
   });
+  const invalidSelectedIdTypeStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidSelectedIdType("invalid-selected-type-boundary"))
+  });
   const invalidStringListStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -390,6 +398,14 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateMetadata("invalid-profile-boundary", "copyProfile", "private"))
   });
+  const invalidProfileTypeStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidStateMetadata("invalid-profile-type-boundary", "copyProfile", ["general"]))
+  });
   const invalidScenarioStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -414,6 +430,22 @@ try {
     },
     body: JSON.stringify(stateWithInvalidStateMetadata("blank-profile-boundary", "copyProfile", ""))
   });
+  const invalidStateTextFieldWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidStateTextField("invalid-state-text-boundary", "query", { text: "not text" }))
+  });
+  const overlongStateTextFieldWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidStateTextField("overlong-state-text-boundary", "query", "x".repeat(201)))
+  });
   const deepReceiptStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -422,6 +454,26 @@ try {
     },
     body: JSON.stringify(stateWithGeneratedPacks(1, "deep-receipt-boundary", {
       actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
+    }))
+  });
+  const malformedReceiptStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithGeneratedPacks(1, "malformed-receipt-boundary", {
+      actionReceipt: ["not", "a", "plain", "object"]
+    }))
+  });
+  const overlongReceiptTextStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithGeneratedPacks(1, "overlong-receipt-text-boundary", {
+      actionReceipt: { summary: "x".repeat(2001) }
     }))
   });
   const wideReceiptStateWrite = await request(port, "/api/state", {
@@ -500,13 +552,19 @@ try {
   check("invalid work items in keyed state snapshots are rejected", invalidPackStateWrite.status === 400, invalidPackStateWrite.status);
   check("invalid work status snapshots are rejected", invalidStatusStateWrite.status === 400, invalidStatusStateWrite.status);
   check("invalid selected work snapshots are rejected", invalidSelectedIdStateWrite.status === 400, invalidSelectedIdStateWrite.status);
+  check("invalid selected work types are rejected", invalidSelectedIdTypeStateWrite.status === 400, invalidSelectedIdTypeStateWrite.status);
   check("invalid work string-list snapshots are rejected", invalidStringListStateWrite.status === 400, invalidStringListStateWrite.status);
   check("invalid work text-field snapshots are rejected", invalidTextFieldStateWrite.status === 400, invalidTextFieldStateWrite.status);
   check("overlong work text-field snapshots are rejected", overlongTextFieldStateWrite.status === 400, overlongTextFieldStateWrite.status);
   check("invalid copy profiles are rejected", invalidProfileStateWrite.status === 400, invalidProfileStateWrite.status);
+  check("invalid copy profile types are rejected", invalidProfileTypeStateWrite.status === 400, invalidProfileTypeStateWrite.status);
   check("invalid scenarios are rejected", invalidScenarioStateWrite.status === 400, invalidScenarioStateWrite.status);
   check("invalid filters are rejected", invalidFilterStateWrite.status === 400, invalidFilterStateWrite.status);
   check("blank copy profiles are rejected", blankProfileStateWrite.status === 400, blankProfileStateWrite.status);
+  check("invalid top-level state text fields are rejected", invalidStateTextFieldWrite.status === 400, invalidStateTextFieldWrite.status);
+  check("overlong top-level state text fields are rejected", overlongStateTextFieldWrite.status === 400, overlongStateTextFieldWrite.status);
+  check("malformed action receipts are rejected", malformedReceiptStateWrite.status === 400, malformedReceiptStateWrite.status);
+  check("overlong action receipt text is rejected", overlongReceiptTextStateWrite.status === 400, overlongReceiptTextStateWrite.status);
   check("deep action receipts are rejected", deepReceiptStateWrite.status === 400, deepReceiptStateWrite.status);
   check("wide action receipts are rejected", wideReceiptStateWrite.status === 400, wideReceiptStateWrite.status);
   check("client A state survives rejected malformed snapshots", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
@@ -611,6 +669,12 @@ function stateWithInvalidSelectedId(prefix) {
   return state;
 }
 
+function stateWithInvalidSelectedIdType(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.selectedId = [state.packs[0].id];
+  return state;
+}
+
 function stateWithInvalidStringList(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.packs[0].memory = [{ note: "not text" }];
@@ -630,6 +694,12 @@ function stateWithOverlongTextField(prefix) {
 }
 
 function stateWithInvalidStateMetadata(prefix, key, value) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state[key] = value;
+  return state;
+}
+
+function stateWithInvalidStateTextField(prefix, key, value) {
   const state = stateWithGeneratedPacks(1, prefix);
   state[key] = value;
   return state;

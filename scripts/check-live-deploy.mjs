@@ -120,6 +120,10 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const invalidSelectedIdTypeStateStatus = await writeStatus("/api/state", stateWithInvalidSelectedIdType("live-invalid-selected-type-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   const invalidStringListStateStatus = await writeStatus("/api/state", stateWithInvalidStringList("live-invalid-string-list-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
@@ -136,6 +140,10 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const invalidProfileTypeStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-profile-type-state", "copyProfile", ["general"]), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   const invalidScenarioStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-invalid-scenario-state", "scenarioId", "private-roadmap"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
@@ -145,6 +153,14 @@ try {
     "content-type": "application/json"
   }, "PUT");
   const blankProfileStateStatus = await writeStatus("/api/state", stateWithInvalidStateMetadata("live-blank-profile-state", "copyProfile", ""), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const invalidStateTextFieldStatus = await writeStatus("/api/state", stateWithInvalidStateTextField("live-invalid-state-text", "query", { text: "not text" }), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const overlongStateTextFieldStatus = await writeStatus("/api/state", stateWithInvalidStateTextField("live-overlong-state-text", "query", "x".repeat(201)), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
@@ -172,6 +188,18 @@ try {
   }, "POST");
   const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
     actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
+  }), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const malformedReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-malformed-receipt-state", {
+    actionReceipt: ["not", "a", "plain", "object"]
+  }), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
+  const overlongReceiptTextStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-overlong-receipt-text-state", {
+    actionReceipt: { summary: "x".repeat(2001) }
   }), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
@@ -352,19 +380,25 @@ try {
   check("hosted state rejects invalid work items", invalidPackStateStatus === 400, invalidPackStateStatus);
   check("hosted state rejects invalid work statuses", invalidWorkStatusStateStatus === 400, invalidWorkStatusStateStatus);
   check("hosted state rejects invalid selected work", invalidSelectedIdStateStatus === 400, invalidSelectedIdStateStatus);
+  check("hosted state rejects invalid selected work types", invalidSelectedIdTypeStateStatus === 400, invalidSelectedIdTypeStateStatus);
   check("hosted state rejects invalid work string lists", invalidStringListStateStatus === 400, invalidStringListStateStatus);
   check("hosted state rejects invalid work text fields", invalidTextFieldStateStatus === 400, invalidTextFieldStateStatus);
   check("hosted state rejects overlong work text fields", overlongTextFieldStateStatus === 400, overlongTextFieldStateStatus);
   check("hosted state rejects invalid copy profiles", invalidProfileStateStatus === 400, invalidProfileStateStatus);
+  check("hosted state rejects invalid copy profile types", invalidProfileTypeStateStatus === 400, invalidProfileTypeStateStatus);
   check("hosted state rejects invalid scenarios", invalidScenarioStateStatus === 400, invalidScenarioStateStatus);
   check("hosted state rejects invalid filters", invalidFilterStateStatus === 400, invalidFilterStateStatus);
   check("hosted state rejects blank copy profiles", blankProfileStateStatus === 400, blankProfileStateStatus);
+  check("hosted state rejects invalid top-level text fields", invalidStateTextFieldStatus === 400, invalidStateTextFieldStatus);
+  check("hosted state rejects overlong top-level text fields", overlongStateTextFieldStatus === 400, overlongStateTextFieldStatus);
   check(
     "hosted workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWriteStatuses.every(([, status]) => status === 400),
     unkeyedWorkflowWriteStatuses.map(([name, status]) => `${name}:${status}`).join(", ")
   );
   check("hosted work-path rejects invalid statuses", invalidWorkPathStatus === 400, invalidWorkPathStatus);
+  check("hosted state rejects malformed action receipts", malformedReceiptStateStatus === 400, malformedReceiptStateStatus);
+  check("hosted state rejects overlong action receipt text", overlongReceiptTextStateStatus === 400, overlongReceiptTextStateStatus);
   check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);
   check("hosted client A survives rejected malformed snapshots", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
@@ -551,6 +585,12 @@ function stateWithInvalidSelectedId(prefix) {
   return state;
 }
 
+function stateWithInvalidSelectedIdType(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.selectedId = [state.packs[0].id];
+  return state;
+}
+
 function stateWithInvalidStringList(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.packs[0].memory = [{ note: "not text" }];
@@ -570,6 +610,12 @@ function stateWithOverlongTextField(prefix) {
 }
 
 function stateWithInvalidStateMetadata(prefix, key, value) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state[key] = value;
+  return state;
+}
+
+function stateWithInvalidStateTextField(prefix, key, value) {
   const state = stateWithGeneratedPacks(1, prefix);
   state[key] = value;
   return state;

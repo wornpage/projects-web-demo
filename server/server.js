@@ -1359,9 +1359,10 @@ function validateStatePayload(payload) {
   }
 
   validateStateMetadata(payload);
+  validateStateTextFields(payload);
   const packIds = validateStatePacks(payload.packs);
   validateSelectedPackId(payload.selectedId, packIds);
-  validatePlainValueShape(payload.actionReceipt);
+  validateActionReceipt(payload);
 }
 
 function validateStateMetadata(payload) {
@@ -1375,9 +1376,33 @@ function validateStateMetadataValue(payload, key, maxLength, validValues, messag
     return;
   }
 
+  if (typeof payload[key] !== "string") {
+    throw httpError(400, `Demo state ${key} must be text.`);
+  }
+
   const value = normalizeText(payload[key], maxLength);
   if (!value || !validValues.has(value)) {
     throw httpError(400, message);
+  }
+}
+
+function validateStateTextFields(payload) {
+  validateStateTextField(payload, "status", 1000);
+  validateStateTextField(payload, "query", 200);
+  validateStateTextField(payload, "savedAt", 80);
+}
+
+function validateStateTextField(payload, key, maxLength) {
+  if (!Object.prototype.hasOwnProperty.call(payload, key)) {
+    return;
+  }
+  if (typeof payload[key] !== "string") {
+    throw httpError(400, `Demo state ${key} must be text.`);
+  }
+
+  const value = normalizeText(payload[key], maxLength + 1);
+  if (value.length > maxLength) {
+    throw httpError(400, `Demo state ${key} cannot be more than ${maxLength} characters.`);
   }
 }
 
@@ -1415,10 +1440,25 @@ function validateStatePacks(value) {
 }
 
 function validateSelectedPackId(value, packIds) {
+  if (typeof value !== "string") {
+    throw httpError(400, "Demo state selected work must be text.");
+  }
+
   const selectedId = normalizeText(value, 120);
   if (!selectedId || !packIds.has(selectedId)) {
     throw httpError(400, "Demo state selected work must reference an existing item.");
   }
+}
+
+function validateActionReceipt(payload) {
+  if (!Object.prototype.hasOwnProperty.call(payload, "actionReceipt") || payload.actionReceipt === null) {
+    return;
+  }
+  if (!payload.actionReceipt || typeof payload.actionReceipt !== "object" || Array.isArray(payload.actionReceipt)) {
+    throw httpError(400, "Demo state action receipt must be an object.");
+  }
+
+  validatePlainValueShape(payload.actionReceipt);
 }
 
 function validatePackTextFields(pack) {
@@ -1539,6 +1579,13 @@ function sanitizePlainValue(value, depth = 0) {
 }
 
 function validatePlainValueShape(value, depth = 0) {
+  if (typeof value === "string") {
+    const normalized = normalizeText(value, 2001);
+    if (normalized.length > 2000) {
+      throw httpError(400, "Action receipt text cannot be more than 2000 characters.");
+    }
+    return;
+  }
   if (!value || typeof value !== "object") {
     return;
   }
@@ -1557,7 +1604,12 @@ function validatePlainValueShape(value, depth = 0) {
   if (entries.length > MAX_PLAIN_OBJECT_KEYS) {
     throw httpError(400, `Action receipt objects cannot contain more than ${MAX_PLAIN_OBJECT_KEYS} keys.`);
   }
-  entries.forEach(([, entry]) => validatePlainValueShape(entry, depth + 1));
+  entries.forEach(([key, entry]) => {
+    if (key.length > 80) {
+      throw httpError(400, "Action receipt keys cannot be more than 80 characters.");
+    }
+    validatePlainValueShape(entry, depth + 1);
+  });
 }
 
 function normalizeStringArray(value, maxItems, maxLength) {
