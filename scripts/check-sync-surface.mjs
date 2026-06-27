@@ -159,12 +159,12 @@ check(
 );
 
 check(
-  "sync help keeps short private-data warning",
-  html.includes("Anyone with this code can open this demo state. No private data.") &&
-    source.includes("Anyone with this code can open this demo state. No private data.") &&
+  "sync help keeps short demo-data-only warning",
+  html.includes("Share demo data only. Anyone with this code can open this state.") &&
+    source.includes("Share demo data only. Anyone with this code can open this state.") &&
     !html.includes("Do not use it for private data") &&
     !source.includes("Do not use it for private data"),
-  "short sync privacy warning"
+  "short sync sharing warning"
 );
 
 check(
@@ -202,7 +202,7 @@ check(
 
 check(
   "sync section exposes its share warning",
-  html.includes('id="demo-sync" class="demo-sync card" aria-label="Demo sync code" aria-describedby="sync-code-help"'),
+  html.includes('id="demo-sync" class="demo-sync card" aria-label="Demo sync code sharing" aria-describedby="sync-code-help"'),
   "demo-sync described by sync-code-help"
 );
 
