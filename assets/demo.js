@@ -312,12 +312,11 @@ function setTheme(dark) {
   document.documentElement.classList.toggle("dark", dark);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
   const toggle = el("theme-toggle");
-  const label = dark ? "Light mode" : "Dark mode";
-  const help = dark ? "Switch this demo to light mode." : "Switch this demo to dark mode.";
-  toggle.textContent = label;
+  const help = dark ? "Turn off dark mode." : "Turn on dark mode.";
+  toggle.textContent = "Dark mode";
   toggle.setAttribute("aria-pressed", String(dark));
   toggle.setAttribute("title", help);
-  toggle.setAttribute("aria-label", help);
+  toggle.setAttribute("aria-label", "Dark mode");
   localStorage.setItem(THEME_STORAGE_KEY, dark ? "dark" : "light");
 }
 

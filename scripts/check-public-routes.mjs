@@ -149,6 +149,7 @@ check("bottom dock exposes where blocker and next labels", html.includes('aria-d
 check("next action controls declare the content region they update", html.includes('id="primary-action"') && html.includes('id="dock-where-item" class="demo-bottom-item" href="#/work" aria-controls="screen-content"') && html.includes('id="dock-review-item" class="demo-bottom-item" href="#/review" aria-controls="screen-content"') && html.includes('id="dock-next"') && html.includes('aria-controls="screen-content"'), "screen-content controlled by action controls");
 check("pack-aware navigation keeps selected work context", source.includes("function routeLinkPackId(route)") && source.includes('item.setAttribute("href", formatRouteHash(item.dataset.route, routeLinkPackId(item.dataset.route)))') && source.includes('data-pack="${escapeAttribute(routeLinkPackId(route))}"'), "nav and route buttons preserve selected work ids");
 check("browser title follows the current screen", source.includes("function updateDocumentTitle(screenTitle)") && source.includes('document.title = screenTitle === "Start" ? "Projects Demo" : `${screenTitle} - Projects Demo`;') && source.includes("updateDocumentTitle(screenTitle);"), "document title mirrors screen title");
+check("theme toggle keeps a stable pressed-button name", themeToggleContractOk(), "Dark mode name stays stable while title describes next action");
 check("skip target landmark is labelled by the visible title", html.includes('id="demo-main"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels main landmark");
 check("screen content region is labelled by the visible title", html.includes('id="screen-content"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels live content");
 
@@ -251,6 +252,21 @@ function metadataPreviewContractOk() {
 function demoNoticeContractOk() {
   return html.includes('<section id="demo-notice" class="demo-notice card" role="note" aria-label="Demo notice">')
     && html.includes("Start with Review. Demo data only; no login or private project data.");
+}
+
+function themeToggleContractOk() {
+  return includesAll(html, [
+    'id="theme-toggle"',
+    'aria-pressed="false"',
+    'title="Turn on dark mode."',
+    'aria-label="Dark mode">Dark mode</button>'
+  ]) && includesAll(source, [
+    'const help = dark ? "Turn off dark mode." : "Turn on dark mode."',
+    'toggle.textContent = "Dark mode"',
+    'toggle.setAttribute("aria-pressed", String(dark))',
+    'toggle.setAttribute("title", help)',
+    'toggle.setAttribute("aria-label", "Dark mode")'
+  ]) && !source.includes('"Light mode"');
 }
 
 function spotlightFactsContractOk() {
