@@ -13,6 +13,7 @@ const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "projects-state-recovery-
 const stateFile = path.join(tmpDir, "state.json");
 const port = await freePort();
 const checks = [];
+const source = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
 const server = spawn(process.execPath, ["server/server.js"], {
   cwd: repoRoot,
   env: {
@@ -34,6 +35,7 @@ server.stderr.on("data", (chunk) => {
 });
 
 try {
+  checkRecoverySurfaceSource();
   await waitForHealth(port);
 
   const clientA = "demo-00000000-0000-4000-8000-000000000101";
@@ -128,6 +130,20 @@ try {
 
 function check(name, ok, detail) {
   checks.push({ name, ok: Boolean(ok), detail: String(detail ?? "") });
+}
+
+function checkRecoverySurfaceSource() {
+  check("recovery UI keeps copy output", source.includes('id="demo-recovery-output"'), "demo-recovery-output");
+  check("recovery UI keeps restore input", source.includes('id="demo-recovery-input"'), "demo-recovery-input");
+  check("recovery UI keeps copy button", source.includes('id="copy-recovery-state"'), "copy-recovery-state");
+  check("recovery UI keeps restore button", source.includes('id="restore-recovery-state"'), "restore-recovery-state");
+  check("recovery snapshot has a version marker", source.includes("projectsDemoRecovery: RECOVERY_SNAPSHOT_VERSION"), "projectsDemoRecovery");
+  check("recovery snapshot uses current demo state", source.includes("state: demoStateSnapshot()"), "demoStateSnapshot");
+  check("recovery restore parses pasted backup", source.includes('parseRecoverySnapshot(valueOf("demo-recovery-input"))'), "parseRecoverySnapshot");
+  check("recovery restore persists through normal save path", source.includes("loadState(snapshot)") && source.includes("saveState()"), "loadState/saveState");
+  check("recovery import caps work count", source.includes("const DEMO_STATE_MAX_PACKS = 50") && source.includes("packs.length > DEMO_STATE_MAX_PACKS"), "50 pack cap");
+  check("recovery import rejects invalid work items", source.includes("backup work items need an id and title"), "id/title required");
+  check("recovery import rejects duplicate work ids", source.includes("backup work item ids must be unique"), "unique ids required");
 }
 
 function stateWithCheckPack(state, id, title) {

@@ -852,6 +852,77 @@ html[data-theme="dark"] .demo-header-metadata {
   flex: 1 0 100%;
 }
 
+.demo-recovery-panel {
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px;
+}
+
+.demo-recovery-panel summary {
+  align-items: center;
+  color: var(--cockpit-text);
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  list-style: none;
+}
+
+.demo-recovery-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.demo-recovery-panel summary::after {
+  color: var(--cockpit-accent);
+  content: "+";
+  font-size: 16px;
+  line-height: 1;
+}
+
+.demo-recovery-panel[open] summary::after {
+  content: "-";
+}
+
+.demo-recovery-panel summary span {
+  font-size: 13px;
+  font-weight: 820;
+}
+
+.demo-recovery-panel summary small,
+.demo-recovery-panel p,
+.demo-recovery-panel label {
+  color: var(--cockpit-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.demo-recovery-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  min-width: 0;
+}
+
+.demo-recovery-panel .demo-inline-form {
+  align-items: stretch;
+  display: grid;
+  gap: 8px;
+}
+
+.demo-recovery-panel textarea.demo-search-input {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 0;
+  min-height: 132px;
+  resize: vertical;
+}
+
 .demo-command-brief {
   display: grid;
   gap: 10px;

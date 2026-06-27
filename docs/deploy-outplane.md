@@ -98,11 +98,13 @@ After deploy:
    the same demo state.
 7. Confirm **Copy code** copies the short code, **Copy link** copies a `?sync=`
    URL, and the QR code is visible beside the sync link.
-8. Confirm the app shell points at a current CSS/JS asset query string and
+8. Open the Start screen Recovery section, copy a backup, paste it back, and
+   confirm the restored demo state stays in the same browser or active sync row.
+9. Confirm the app shell points at a current CSS/JS asset query string and
    `assets/demo.js` includes the latest frontend code. The Node app rewrites
    asset query strings at startup so stale cached assets are bypassed after a
    deploy.
-9. Run the full ship verifier from the repo root:
+10. Run the full ship verifier from the repo root:
 
    ```powershell
    pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'

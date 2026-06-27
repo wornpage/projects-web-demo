@@ -18,6 +18,8 @@ const SYNC_QR_DATA_CODEWORDS = 108;
 const SYNC_QR_ERROR_CODEWORDS = 26;
 const SYNC_QR_QUIET_MODULES = 4;
 const SYNC_QR_MAX_BYTES = 106;
+const DEMO_STATE_MAX_PACKS = 50;
+const RECOVERY_SNAPSHOT_VERSION = 1;
 const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"]);
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
@@ -443,6 +445,14 @@ function demoStateSnapshot() {
   };
 }
 
+function recoverySnapshotText() {
+  return JSON.stringify({
+    projectsDemoRecovery: RECOVERY_SNAPSHOT_VERSION,
+    exportedAt: new Date().toISOString(),
+    state: demoStateSnapshot()
+  }, null, 2);
+}
+
 function resetState() {
   localStorage.removeItem(DEMO_STORAGE_KEY);
   purgeLegacyDemoState();
@@ -457,6 +467,132 @@ function resetState() {
   state.clipboardReceipt = null;
   syncSearchParam("scenario", null);
   render();
+}
+
+function copyRecoverySnapshot() {
+  const snapshot = recoverySnapshotText();
+  const output = el("demo-recovery-output");
+  if (output) {
+    output.value = snapshot;
+  }
+
+  copyToClipboard(
+    snapshot,
+    clipboardStatus("Recovery", "save the copied demo backup"),
+    {
+      controlId: "copy-recovery-state",
+      targetId: "demo-recovery-output",
+      targetLabel: "Recovery JSON",
+      title: "Recovery backup copied",
+      detail: "The current demo snapshot is ready to save.",
+      next: "Save the copied backup"
+    }
+  );
+}
+
+function restoreRecoverySnapshot() {
+  try {
+    const snapshot = parseRecoverySnapshot(valueOf("demo-recovery-input"));
+    loadState(snapshot);
+    state.status = "Where: Recovery. Blocker: None. Button runs next: review restored demo state.";
+    state.clipboardReceipt = null;
+    syncSearchParam("scenario", state.scenarioId === "default" ? null : state.scenarioId);
+    syncSearchParam("profile", state.copyProfile === "general" ? null : state.copyProfile);
+    saveState();
+    render();
+  } catch (error) {
+    state.status = `Where: Recovery. Blocker: ${error.message || "invalid backup"}. Button runs next: paste a valid demo backup.`;
+    render();
+  }
+}
+
+function parseRecoverySnapshot(value) {
+  const parsed = safeJson(value);
+  const source = parsed?.projectsDemoRecovery === RECOVERY_SNAPSHOT_VERSION
+    ? parsed.state
+    : parsed;
+  return normalizeRecoveryState(source);
+}
+
+function normalizeRecoveryState(source) {
+  if (!source || typeof source !== "object" || !Array.isArray(source.packs)) {
+    throw new Error("paste a Projects demo recovery JSON snapshot");
+  }
+
+  const packs = source.packs;
+  if (packs.length > DEMO_STATE_MAX_PACKS) {
+    throw new Error(`backup has more than ${DEMO_STATE_MAX_PACKS} work items`);
+  }
+
+  const normalizedPacks = packs.map(normalizeRecoveryPack);
+  const packIds = new Set();
+  for (const pack of normalizedPacks) {
+    if (packIds.has(pack.id)) {
+      throw new Error("backup work item ids must be unique");
+    }
+    packIds.add(pack.id);
+  }
+
+  const selectedId = normalizeRecoveryText(source.selectedId, 120);
+  const copyProfile = copyProfiles[source.copyProfile] ? source.copyProfile : "general";
+  const scenarioId = DEMO_SCENARIO_BY_ID[source.scenarioId] ? source.scenarioId : "default";
+  const filter = filters.some(([key]) => key === source.filter) ? source.filter : "all";
+
+  return {
+    packs: normalizedPacks,
+    copyProfile,
+    scenarioId,
+    selectedId: normalizedPacks.some((pack) => pack.id === selectedId)
+      ? selectedId
+      : normalizedPacks[0]?.id || "",
+    status: normalizeRecoveryText(source.status, 1000) || "Where: Recovery. Blocker: None. Button runs next: review restored demo state.",
+    actionReceipt: normalizeActionReceipt(source.actionReceipt),
+    filter,
+    query: normalizeRecoveryText(source.query, 200)
+  };
+}
+
+function normalizeRecoveryPack(source) {
+  if (!source || typeof source !== "object") {
+    throw new Error("backup contains an invalid work item");
+  }
+
+  const id = normalizeRecoveryText(source.id, 120);
+  const title = normalizeRecoveryText(source.title, 200);
+  if (!id || !title) {
+    throw new Error("backup work items need an id and title");
+  }
+
+  return {
+    id,
+    title,
+    type: normalizeRecoveryText(source.type, 80) || "general",
+    status: normalizeRecoveryStatus(source.status),
+    blocker: normalizeStoredBlocker(source.blocker),
+    next: normalizeRecoveryText(source.next, 120),
+    due: normalizeRecoveryText(source.due, 40),
+    owner: normalizeRecoveryText(source.owner, 120),
+    purpose: normalizeRecoveryText(source.purpose, 1000),
+    doneWhen: normalizeRecoveryText(source.doneWhen, 1000),
+    sources: normalizeRecoveryTextArray(source.sources, 50, 200),
+    memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
+    activity: normalizeRecoveryTextArray(source.activity, 100, 400)
+  };
+}
+
+function normalizeRecoveryStatus(value) {
+  const status = normalizeRecoveryText(value, 40).toLowerCase();
+  return ["active", "blocked", "draft", "done"].includes(status) ? status : "draft";
+}
+
+function normalizeRecoveryTextArray(value, maxItems, maxLength) {
+  return Array.isArray(value)
+    ? value.map((entry) => normalizeRecoveryText(entry, maxLength)).filter(Boolean).slice(0, maxItems)
+    : [];
+}
+
+function normalizeRecoveryText(value, maxLength) {
+  return normalizeLegacyVisibleCopy(normalizeCopy(value)).slice(0, maxLength);
 }
 
 function normalizeApiBaseUrl(value) {
@@ -2417,10 +2553,43 @@ function renderHome() {
         <span id="reset-demo-home-help" class="sr-only">${escapeHtml(resetHelp)}</span>
         <button class="btn" type="button" id="reset-demo-home"${controlHelpAttributes(false, resetHelp, "reset-demo-home-help")}>Reset sample</button>
       </div>
+      ${recoveryPanel()}
     </section>
   `;
   bindGoButtons();
   el("reset-demo-home")?.addEventListener("click", resetState);
+  bindRecoveryControls();
+}
+
+function recoveryPanel() {
+  const snapshot = recoverySnapshotText();
+  const restoreHelp = "Restore a Projects demo recovery JSON snapshot into this browser or active sync row.";
+  const shouldOpen = Boolean(clipboardReceiptFor("copy-recovery-state") || state.status.startsWith("Where: Recovery."));
+  return `<details class="demo-recovery-panel"${shouldOpen ? " open" : ""}>
+    <summary>
+      <span>Recovery</span>
+      <small>Copy or restore demo JSON.</small>
+    </summary>
+    <p>Demo backup only. Do not paste private project data.</p>
+    ${clipboardNoticePanel("copy-recovery-state")}
+    <div class="demo-recovery-grid">
+      <div class="${escapeAttribute(copyPayloadClass("demo-recovery-output"))}">
+        <label for="demo-recovery-output">Current demo backup</label>
+        <textarea id="demo-recovery-output" class="demo-search-input" readonly spellcheck="false">${escapeHtml(snapshot)}</textarea>
+        <button class="btn btn-sm" type="button" id="copy-recovery-state">Copy backup</button>
+      </div>
+      <div class="demo-inline-form demo-recovery-restore">
+        <label for="demo-recovery-input">Restore pasted backup</label>
+        <textarea id="demo-recovery-input" class="demo-search-input" spellcheck="false" placeholder="Paste Projects demo recovery JSON here"></textarea>
+        <button class="btn btn-sm btn-primary" type="button" id="restore-recovery-state"${controlLabelAttributes(restoreHelp)}>Restore backup</button>
+      </div>
+    </div>
+  </details>`;
+}
+
+function bindRecoveryControls() {
+  el("copy-recovery-state")?.addEventListener("click", copyRecoverySnapshot);
+  el("restore-recovery-state")?.addEventListener("click", restoreRecoverySnapshot);
 }
 
 function renderWork() {

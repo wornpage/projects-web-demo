@@ -152,6 +152,12 @@ and the database still stores readable JSON; this is convenience sync, not
 private encrypted storage. Browsers must support Web Crypto hashing for sync
 codes; the app will not send readable sync codes as backend row keys.
 
+The Start screen also has a collapsed Recovery section. **Copy backup** copies a
+bounded JSON snapshot for the current browser or active sync row, and
+**Restore backup** validates pasted Projects demo recovery JSON before loading
+and saving it through the same local or backend state path. This is still demo
+recovery, not account backup or encrypted private storage.
+
 ## Docker
 
 Build the app image:

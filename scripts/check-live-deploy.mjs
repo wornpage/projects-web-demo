@@ -192,6 +192,7 @@ try {
   check("internal API strings are encoded", readableInternalStrings.length === 0, readableInternalStrings.join(", ") || "hidden");
   check("API base cannot be overridden from the query string", readableApiQueryOverride.length === 0, readableApiQueryOverride.join(", ") || "absent");
   check("retired browser diagnostics are absent", retiredDiagnosticTokens.length === 0, retiredDiagnosticTokens.join(", ") || "absent");
+  check("recovery controls are deployed", script.includes("copy-recovery-state") && script.includes("restore-recovery-state"), "copy/restore recovery controls");
   check("public assets have no source map references", publicSourceMapReferences.length === 0, publicSourceMapReferences.join(", ") || "absent");
   check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
   check("source map, retired metadata, unlisted public files, direct seed JSON, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));

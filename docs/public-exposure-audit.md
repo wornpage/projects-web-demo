@@ -139,6 +139,10 @@ The sync gate confirms generated sync codes and anonymous browser row keys use
 Web Crypto and do not fall back to weak random values. The local and live
 boundary gates also confirm weak manual and readable sync-code API client key
 values are rejected.
+The recovery gate also confirms the Start screen keeps copy/restore recovery
+controls, recovery JSON includes a version marker and current demo state, pasted
+recovery JSON is capped at 50 work items, and restored snapshots use the normal
+local or backend save path.
 
 ## Risk Decisions
 
