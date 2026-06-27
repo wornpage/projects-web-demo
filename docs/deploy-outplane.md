@@ -61,9 +61,11 @@ without that browser key are rejected instead of sharing one fallback row.
 
 The app also supports a sync code for personal two-device use. **New** creates a
 code and copies the current demo state to that code's row; **Use** joins that
-row from another device; **Leave** returns to the device's own row. Anyone with
-the code can open the same demo state. The code is hashed before it is sent as
-the backend row key, but the stored demo JSON is not end-to-end encrypted.
+row from another device; **Copy link** copies an invite URL; the QR code opens
+the same invite URL on a phone; **Leave** returns to the device's own row.
+Anyone with the code or sync link can open the same demo state. The code is
+hashed before it is sent as the backend row key, but the stored demo JSON is not
+end-to-end encrypted.
 
 This is demo isolation, not real user security. Add authentication before
 storing private user data, real customer work, or anything that needs account
@@ -80,7 +82,9 @@ After deploy:
 5. Open a private window and confirm it starts from seed demo data.
 6. Create a sync code, use it in a second browser, and confirm both browsers see
    the same demo state.
-7. Confirm the app shell points at a current CSS/JS asset query string and
+7. Confirm **Copy link** copies a `?sync=` URL and the QR code is visible beside
+   the sync link.
+8. Confirm the app shell points at a current CSS/JS asset query string and
    `assets/demo.js` includes the latest frontend code. The Node app rewrites
    asset query strings at startup so stale cached assets are bypassed after a
    deploy.

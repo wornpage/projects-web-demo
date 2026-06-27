@@ -659,6 +659,44 @@ html[data-theme="dark"] .demo-header-metadata {
   outline-offset: 2px;
 }
 
+.demo-sync-share {
+  align-items: center;
+  border-top: 1px solid var(--cockpit-border);
+  display: flex;
+  flex: 1 0 100%;
+  gap: 12px;
+  justify-content: space-between;
+  min-width: 0;
+  padding-top: 10px;
+}
+
+.demo-sync-share a {
+  color: var(--cockpit-accent);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.demo-sync-qr {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius-sm);
+  display: flex;
+  flex: 0 0 auto;
+  height: 118px;
+  justify-content: center;
+  padding: 8px;
+  width: 118px;
+}
+
+.demo-sync-qr svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
 .demo-sync p {
   flex: 1 0 100%;
 }

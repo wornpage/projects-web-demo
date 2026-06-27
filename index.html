@@ -58,7 +58,12 @@
             <input id="sync-code-input" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="ABCD-2345-WXYZ" aria-describedby="sync-code-help">
             <button id="sync-code-use" class="btn btn-sm" type="button">Use</button>
             <button id="sync-code-new" class="btn btn-sm" type="button">New</button>
+            <button id="sync-code-copy" class="btn btn-sm" type="button" hidden>Copy link</button>
             <button id="sync-code-leave" class="btn btn-sm" type="button">Leave</button>
+          </div>
+          <div id="sync-code-share" class="demo-sync-share" hidden>
+            <a id="sync-code-link" href="#/home">Sync link</a>
+            <div id="sync-code-qr" class="demo-sync-qr" aria-label="Sync link QR code" role="img"></div>
           </div>
           <p id="sync-code-help">Anyone with this code can open the same demo state. Do not use it for private data.</p>
         </section>

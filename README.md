@@ -101,9 +101,9 @@ variables instead of writable container files.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
 to the same demo row. Use **New** to create a code, then enter that code on the
-other device. Anyone with the code can open that demo state, and the database
-still stores readable JSON; this is convenience sync, not private encrypted
-storage.
+other device, copy the sync link, or scan the QR code. Anyone with the code or
+sync link can open that demo state, and the database still stores readable JSON;
+this is convenience sync, not private encrypted storage.
 
 ## Docker
 
