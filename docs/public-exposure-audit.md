@@ -128,7 +128,8 @@ keys, keeps generated browser rows separate,
 lets a fixed shared sync key read the same row from another request, restores an
 exported state snapshot to its keyed row, rejects oversized keyed state
 snapshots, rejects duplicate work ids and invalid work items in state snapshots,
-erases the current keyed row without touching other rows,
+erases the current keyed row without touching other rows, then erases the
+temporary shared and recovery verifier rows,
 uses same-origin API CORS instead of wildcard CORS, rejects
 third-party preflights, rejects disallowed preflight methods/headers, and
 rejects forwarded-host CORS spoofing. It also confirms the hosted state write
@@ -174,6 +175,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Ship verification can mix local edits with an older live deploy | Fixed | `scripts/check-git-ship-state.mjs` requires a clean branch synced with upstream before the live Outplane check runs |
 | Hosted asset URLs change on every restart of the same build | Fixed | Asset query-string fallback is derived from shipped public runtime file contents, while explicit deploy asset versions still win |
+| Live verifier leaves hosted check rows behind | Fixed | The live gate erases temporary shared-sync and recovery rows after proving cross-request sync and restore behavior |
 | Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |
 | Local file-backed API users mix state | Fixed | Browser client keys are required and map to separate hashed local state files |

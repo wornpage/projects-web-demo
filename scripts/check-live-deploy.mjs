@@ -133,6 +133,10 @@ try {
   const eraseClientAStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": clientAKey }, "POST");
   const clientAStateAfterErase = await readJson("/api/state", { "x-projects-demo-client": clientAKey });
   const sharedStateAfterErase = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
+  const eraseSharedStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": sharedKey }, "POST");
+  const sharedStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
+  const eraseRecoveryStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": recoveryKey }, "POST");
+  const recoveryStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": recoveryKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
@@ -244,6 +248,8 @@ try {
   check("hosted state erase keeps shared row", stateHasPackTitle(sharedStateAfterErase, sharedTitle), sharedTitle);
   check("hosted state can restore an exported snapshot", stateHasPackTitle(restoredRecoveryState, recoverySnapshotTitle), recoverySnapshotTitle);
   check("hosted state restore removes later overwrite", !stateHasPackTitle(restoredRecoveryState, recoveryOverwriteTitle), recoveryOverwriteTitle);
+  check("hosted verifier cleanup erases shared row", eraseSharedStateStatus === 200 && !stateHasPackTitle(sharedStateAfterCleanup, sharedTitle), `${eraseSharedStateStatus} / ${sharedTitle}`);
+  check("hosted verifier cleanup erases recovery row", eraseRecoveryStateStatus === 200 && !stateHasPackTitle(recoveryStateAfterCleanup, recoverySnapshotTitle), `${eraseRecoveryStateStatus} / ${recoverySnapshotTitle}`);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");
   check("private repo and local path strings are absent", !/(github\.com\/jared-bidlow|C:\\|C:\/|\.git\/config|server\/server\.js)/iu.test(script), "private path scan");

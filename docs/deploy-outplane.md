@@ -133,10 +133,11 @@ After deploy:
    write, if hosted state accepts an oversized receipt shape, if two browser
    client keys can read each other's state, if seed demo work cannot load
    through the keyed API, if a shared sync key cannot be read from a second
-   request, if an
-   exported state snapshot cannot be restored, or if public assets expose source
-   maps or private path strings.
-   It writes only generated-format verifier rows.
+   request, if an exported state snapshot cannot be restored, if the live
+   verifier cannot erase the temporary verifier rows it writes, or if public
+   assets expose source maps or private path strings.
+   It writes only generated-format verifier rows, then erases the temporary
+   verifier rows.
 
 ## Notes
 

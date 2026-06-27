@@ -85,11 +85,18 @@ check("live verifier compares deployed frontend hashes", includesAll(liveVerifie
   "sha256(script)",
   "normalizeDeployText(css)"
 ]), "live JS/CSS hash match");
+check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
+  "eraseSharedStateStatus",
+  "eraseRecoveryStateStatus",
+  "hosted verifier cleanup erases shared row",
+  "hosted verifier cleanup erases recovery row"
+]), "live verifier cleanup");
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
 check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, clean git state, and live/u.test(readme), "README ship summary");
 check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, clean git state, and live/u.test(serverReadme), "server README ship summary");
 check("deploy doc documents content-derived asset fallback", deployDoc.includes("content-derived asset fallback"), "content-derived asset fallback");
+check("deploy doc documents live verifier cleanup", /erases the temporary\s+verifier rows/u.test(deployDoc), "live verifier cleanup");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
