@@ -202,6 +202,9 @@ New sync-code copies in hosted app mode post to `POST /api/state/sync` instead
 of going through the browser-row save path. Hosted browser-row snapshots save
 through the typed `PUT /api/state/browser` envelope without transient receipt
 or search text; the older generic `PUT /api/state` write path is retired.
+Hosted filter changes post to `POST /api/state/filter` so that supported filter
+values and the saved filter status copy are owned by the backend instead of the
+browser-row snapshot path.
 If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
 and does not continue into the static fallback write path.
 Those workflow endpoints reject malformed or overlong request fields before

@@ -207,6 +207,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Server-owned workflow calls pre-send browser full-state snapshots | Fixed | Pack create, next, path, memory, and action endpoints cancel pending generic saves and call their specific API without first writing `PUT /api/state` |
 | Hosted recovery restore uses generic browser save path | Fixed | Recovery restore posts to `POST /api/state/restore` in hosted app mode and rejects missing browser keys before body parsing |
 | Hosted sync-code copy uses generic browser save path | Fixed | New sync-code copies post to `POST /api/state/sync` in hosted app mode and reject missing browser keys before body parsing |
+| Hosted filter changes use generic browser-row persistence | Fixed | Filter chips post to `POST /api/state/filter` in hosted app mode and reject missing browser keys before body parsing |
 | Hosted browser-row persistence uses generic state write path | Fixed | Browser-row snapshots now save through `PUT /api/state/browser`; `PUT /api/state` is retired |
 | Server-owned work-path writes accept unsupported workflow status | Fixed | `/api/packs/{id}/path` rejects present blank or unsupported status values before storage, and local/live gates prove it |
 | Backend endpoint responses trigger immediate generic state re-saves | Fixed | Backend-loaded state marks the next render as save-suppressed, so workflow and sync loads are not immediately followed by a generic `PUT /api/state` |
@@ -292,6 +293,7 @@ state.
 Hosted recovery restore uses `POST /api/state/restore`; GitHub Pages keeps the
 browser-local restore path.
 Hosted sync-code copy uses `POST /api/state/sync`.
+Hosted filter changes use `POST /api/state/filter`.
 Backend-loaded state also suppresses the next render's generic save, so a
 specific workflow endpoint response is not immediately re-written through
 `PUT /api/state/browser`.
@@ -299,9 +301,9 @@ The older generic `PATCH /api/packs/{id}` update path is retired so work edits
 must pass through the server-owned workflow endpoints.
 Durable browser-row persistence uses the `projects-browser-state-v1` envelope
 on `PUT /api/state/browser`. Hosted recovery restore uses `POST
-/api/state/restore`, and hosted sync-code copy uses `POST /api/state/sync`.
-The older duplicate `POST /api/state` and generic `PUT /api/state` write paths
-are retired.
+/api/state/restore`, hosted sync-code copy uses `POST /api/state/sync`, and
+hosted filter changes use `POST /api/state/filter`. The older duplicate
+`POST /api/state` and generic `PUT /api/state` write paths are retired.
 
 ## Obfuscation Decision
 
