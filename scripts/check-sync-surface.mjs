@@ -22,6 +22,7 @@ const requiredHtmlIds = [
   "sync-code-input",
   "sync-code-use",
   "sync-code-new",
+  "sync-code-copy-code",
   "sync-code-copy",
   "sync-code-leave",
   "sync-code-share",
@@ -49,6 +50,7 @@ const requiredFunctions = [
   "renderDemoSyncControls",
   "renderSyncShare",
   "syncShareUrl",
+  "copySyncCode",
   "copySyncLink",
   "activateSyncCode",
   "leaveSyncCode",
@@ -85,6 +87,7 @@ const applyLaunchSync = functionSource("applyLaunchSyncCode");
 const renderControls = functionSource("renderDemoSyncControls");
 const renderShare = functionSource("renderSyncShare");
 const shareUrl = functionSource("syncShareUrl");
+const copyCode = functionSource("copySyncCode");
 const copyLink = functionSource("copySyncLink");
 const activateCode = functionSource("activateSyncCode");
 const leaveCode = functionSource("leaveSyncCode");
@@ -105,15 +108,16 @@ check(
 );
 
 check(
-  "sync controls wire use, new, copy, and leave actions",
+  "sync controls wire use, new, copy code, copy link, and leave actions",
   includesAll(bindSyncControls, [
     'activateSyncCode(valueOf("sync-code-input"), { copyCurrentState: false })',
     "generateSyncCode()",
     "activateSyncCode(code, { copyCurrentState: true })",
+    "copySyncCode()",
     "copySyncLink()",
     "withSyncControlsBusy(leaveSyncCode)"
   ]),
-  "use/new/copy/leave"
+  "use/new/copy-code/copy-link/leave"
 );
 
 check(
@@ -157,6 +161,16 @@ check(
     "url.hash = \"#/home\""
   ]),
   "syncShareUrl"
+);
+
+check(
+  "copy code action copies the normalized sync code",
+  includesAll(copyCode, [
+    "const syncCode = readSyncCode()",
+    "navigator.clipboard.writeText(syncCode)",
+    "enter code on another device"
+  ]),
+  "copySyncCode"
 );
 
 check(

@@ -763,6 +763,9 @@ function bindDemoSyncControls() {
   el("sync-code-copy")?.addEventListener("click", () => {
     copySyncLink();
   });
+  el("sync-code-copy-code")?.addEventListener("click", () => {
+    copySyncCode();
+  });
   el("sync-code-leave")?.addEventListener("click", () => {
     withSyncControlsBusy(leaveSyncCode);
   });
@@ -809,6 +812,9 @@ function renderDemoSyncControls(message = "") {
   }
   if (el("sync-code-copy")) {
     el("sync-code-copy").hidden = !syncCode;
+  }
+  if (el("sync-code-copy-code")) {
+    el("sync-code-copy-code").hidden = !syncCode;
   }
   renderSyncShare(syncCode);
   const help = el("sync-code-help");
@@ -872,6 +878,23 @@ async function copySyncLink() {
   }
 }
 
+async function copySyncCode() {
+  const syncCode = readSyncCode();
+  if (!syncCode) {
+    renderDemoSyncControls("Make a sync code before copying it.");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(syncCode);
+    state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "enter code on another device");
+    render();
+    renderDemoSyncControls("Sync code copied. Anyone with it can open this demo state.");
+  } catch {
+    renderDemoSyncControls("Copy blocked. Use the visible sync code or scan the QR code.");
+  }
+}
+
 async function withSyncControlsBusy(action) {
   setSyncControlsBusy(true);
   try {
@@ -885,7 +908,7 @@ async function withSyncControlsBusy(action) {
 }
 
 function setSyncControlsBusy(busy) {
-  ["sync-code-input", "sync-code-use", "sync-code-new", "sync-code-copy", "sync-code-leave"].forEach((id) => {
+  ["sync-code-input", "sync-code-use", "sync-code-new", "sync-code-copy-code", "sync-code-copy", "sync-code-leave"].forEach((id) => {
     const control = el(id);
     if (control) {
       control.disabled = Boolean(busy);

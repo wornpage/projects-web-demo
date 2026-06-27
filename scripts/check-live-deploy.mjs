@@ -174,6 +174,7 @@ try {
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API config loads before the frontend script", runtimeConfigPath && html.indexOf("assets/runtime-config.js") < html.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
   check("runtime API config is served as same-origin JavaScript", runtimeConfig.includes("window.PROJECTS_API_BASE_URL = location.origin;"), runtimeConfig.trim() || "missing");
+  check("sync copy-code control is deployed", html.includes('id="sync-code-copy-code"') && html.includes("Copy code"), "sync-code-copy-code");
   check("app shell contains no inline scripts", !hasInlineScript(html), "external scripts only");
   check("script policy avoids unsafe inline scripts", scriptSrcDirective(csp) === "script-src 'self'", scriptSrcDirective(csp) || "missing");
   check("style policy avoids unsafe inline styles", styleSrcDirective(csp) === "style-src 'self'", styleSrcDirective(csp) || "missing");

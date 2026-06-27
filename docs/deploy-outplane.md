@@ -72,13 +72,14 @@ CORS.
 
 The app also supports a sync code for personal two-device use. **New** creates a
 Web Crypto generated 20-character code and copies the current demo state to that
-code's row; **Use** joins that row from another device; **Copy link** copies an
-invite URL; the QR code opens the same invite URL on a phone; **Leave** returns
-to the device's own row. Anyone with the code or sync link can open the same
-demo state. The code is hashed before it is sent to the API, and the server
-hashes API client keys again before Postgres storage, but the stored demo JSON
-is not end-to-end encrypted. Browsers must support Web Crypto hashing for sync;
-the app will not send readable sync codes as backend row keys.
+code's row; **Use** joins that row from another device; **Copy code** copies the
+short code; **Copy link** copies an invite URL; the QR code opens the same
+invite URL on a phone; **Leave** returns to the device's own row. Anyone with
+the code or sync link can open the same demo state. The code is hashed before it
+is sent to the API, and the server hashes API client keys again before Postgres
+storage, but the stored demo JSON is not end-to-end encrypted. Browsers must
+support Web Crypto hashing for sync; the app will not send readable sync codes
+as backend row keys.
 
 This is demo isolation, not real user security. Add authentication before
 storing private user data, real customer work, or anything that needs account
@@ -95,8 +96,8 @@ After deploy:
 5. Open a private window and confirm it starts from seed demo data.
 6. Create a sync code, use it in a second browser, and confirm both browsers see
    the same demo state.
-7. Confirm **Copy link** copies a `?sync=` URL and the QR code is visible beside
-   the sync link.
+7. Confirm **Copy code** copies the short code, **Copy link** copies a `?sync=`
+   URL, and the QR code is visible beside the sync link.
 8. Confirm the app shell points at a current CSS/JS asset query string and
    `assets/demo.js` includes the latest frontend code. The Node app rewrites
    asset query strings at startup so stale cached assets are bypassed after a
