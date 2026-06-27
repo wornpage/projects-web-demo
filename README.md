@@ -90,6 +90,11 @@ The same Node process serves the frontend and `/api`. In app mode,
 `assets/demo.js` at the same-origin API, so no `?api=` query parameter is
 needed.
 
+The Node app also rewrites the CSS/JS asset query string at startup using
+`PROJECTS_ASSET_VERSION`, a known commit environment variable, or a generated
+startup value. That keeps hosted deploys from serving stale cached frontend
+assets after a push.
+
 The default local state file is `server/data/state.json`. Hosted deploys should
 use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres environment
 variables instead of writable container files.

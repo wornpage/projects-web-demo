@@ -80,8 +80,10 @@ After deploy:
 5. Open a private window and confirm it starts from seed demo data.
 6. Create a sync code, use it in a second browser, and confirm both browsers see
    the same demo state.
-7. Confirm the app shell and `assets/demo.js` responses include
-   `Cache-Control: no-store` so frontend changes are not hidden by stale assets.
+7. Confirm the app shell points at a current CSS/JS asset query string and
+   `assets/demo.js` includes the latest frontend code. The Node app rewrites
+   asset query strings at startup so stale cached assets are bypassed after a
+   deploy.
 
 ## Notes
 

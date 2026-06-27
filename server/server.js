@@ -16,6 +16,11 @@ const STATE_DIR = path.dirname(STATE_FILE);
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const STATE_STORAGE = normalizeStateStorageMode(process.env.PROJECTS_STATE_STORAGE || (hasPostgresConfig() ? "postgres" : "file"));
 const DEFAULT_STATE_KEY = normalizeText(process.env.PROJECTS_STATE_KEY || "default", 120) || "default";
+const ASSET_VERSION = normalizeAssetVersion(process.env.PROJECTS_ASSET_VERSION
+  || process.env.RENDER_GIT_COMMIT
+  || process.env.GIT_COMMIT
+  || process.env.COMMIT_SHA
+  || `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`);
 const API_CLIENT_HEADER = "x-projects-demo-client";
 const MAX_BODY_BYTES = 1024 * 1024;
 const publicStaticFiles = new Set([
@@ -264,12 +269,15 @@ function isIndexFile(file) {
 }
 
 function injectAppApiBase(html) {
+  const versionedHtml = html
+    .replace(/(href="assets\/(?:app|demo)\.css\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
+    .replace(/(src="assets\/demo\.js\?v=)[^"]*/u, `$1${ASSET_VERSION}`);
   const script = '<script>window.PROJECTS_API_BASE_URL = window.PROJECTS_API_BASE_URL || location.origin;</script>';
-  if (html.includes(script)) {
-    return html;
+  if (versionedHtml.includes(script)) {
+    return versionedHtml;
   }
 
-  return html.replace(
+  return versionedHtml.replace(
     /(\s*<script src="assets\/demo\.js[^>]*><\/script>)/u,
     `  ${script}\n$1`
   );
@@ -515,6 +523,10 @@ function normalizeStringArray(value, maxItems, maxLength) {
 
 function normalizeText(value, maxLength = 2000) {
   return String(value ?? "").replace(/\s+/gu, " ").trim().slice(0, maxLength);
+}
+
+function normalizeAssetVersion(value) {
+  return normalizeText(value, 120).replace(/[^A-Za-z0-9._-]/gu, "-") || "app";
 }
 
 function findPackOrThrow(state, packId) {
