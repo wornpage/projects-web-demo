@@ -3768,6 +3768,7 @@ html[data-theme="dark"] .demo-command-work-path {
   padding: 9px 10px;
   text-align: left;
   text-decoration: none;
+  touch-action: manipulation;
   transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
 }
 
@@ -3892,6 +3893,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 .demo-shell button.btn {
   max-width: 100%;
   min-height: 38px;
+  touch-action: manipulation;
 }
 
 .demo-shell .btn[data-copy-state="success"],
