@@ -1093,7 +1093,7 @@ function renderSyncShare(syncCode) {
   }
 
   link.href = shareUrl;
-  link.textContent = "Sync link";
+  link.textContent = "Open sync link";
   qr.dataset.qrValue = shareUrl;
   renderSyncQr(qr, shareUrl);
 }

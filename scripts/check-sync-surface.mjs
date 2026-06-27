@@ -219,7 +219,8 @@ check(
 
 check(
   "sync share link keeps a clear accessible name",
-  html.includes('id="sync-code-link" href="#/home" aria-label="Open sync link"'),
+  html.includes('id="sync-code-link" href="#/home" aria-label="Open sync link">Open sync link</a>') &&
+    source.includes('link.textContent = "Open sync link"'),
   "Open sync link"
 );
 
