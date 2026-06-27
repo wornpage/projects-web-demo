@@ -57,12 +57,17 @@ try {
   const htmlNonce = nonceFromHtml(appShell.text);
   check("app shell sends a content security policy", csp.includes("default-src 'self'") && csp.includes("object-src 'none'"), csp || "missing");
   check("app shell blocks framing", csp.includes("frame-ancestors 'none'"), csp || "missing");
+  check("app shell sends legacy frame deny header", appShell.headers["x-frame-options"] === "DENY", appShell.headers["x-frame-options"] || "missing");
+  check("app shell limits cross-origin resource reuse", appShell.headers["cross-origin-resource-policy"] === "same-origin", appShell.headers["cross-origin-resource-policy"] || "missing");
+  check("app shell isolates opener context", appShell.headers["cross-origin-opener-policy"] === "same-origin", appShell.headers["cross-origin-opener-policy"] || "missing");
+  check("app shell disables sensitive browser permissions", permissionsPolicyDisables(appShell.headers["permissions-policy"], ["camera", "geolocation", "microphone", "payment", "usb"]), appShell.headers["permissions-policy"] || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API script uses CSP nonce", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
   check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
   const healthText = JSON.stringify(health.body);
   check("health endpoint reports only storage kind", health.body?.ok === true && health.body?.storage === "file", healthText);
   check("health endpoint hides storage internals", !("stateStorage" in health.body) && !healthText.includes(stateFile) && !/state\.json|projects_demo_state|DATABASE_URL|PGHOST|PGPASSWORD/iu.test(healthText), healthText);
+  check("API health sends shared security headers", sharedSecurityHeadersOk(health.headers), sharedSecurityHeaderDetail(health.headers));
   check("Postgres state keys are hashed before storage", /function postgresStateKey\(stateKey\)[\s\S]*v2:\$\{crypto\.createHash\("sha256"\)\.update\(normalized\)\.digest\("hex"\)\}/u.test(serverSource), "postgresStateKey");
   check("Postgres raw state-key path is migration-only", serverSource.includes("WHERE state_key = $1 OR state_key = $2") && serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "legacy read fallback plus delete");
 
@@ -340,6 +345,37 @@ function nonceFromHtml(html) {
 
 function scriptSrcDirective(csp) {
   return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("script-src")) || "";
+}
+
+function permissionsPolicyDisables(value, features) {
+  const policy = String(value || "");
+  return features.every((feature) => policy.includes(`${feature}=()`));
+}
+
+function sharedSecurityHeadersOk(headers) {
+  return getHeader(headers, "cache-control") === "no-store"
+    && getHeader(headers, "referrer-policy") === "no-referrer"
+    && getHeader(headers, "x-content-type-options") === "nosniff"
+    && getHeader(headers, "x-frame-options") === "DENY"
+    && getHeader(headers, "cross-origin-resource-policy") === "same-origin"
+    && getHeader(headers, "cross-origin-opener-policy") === "same-origin"
+    && permissionsPolicyDisables(getHeader(headers, "permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]);
+}
+
+function sharedSecurityHeaderDetail(headers) {
+  return [
+    "cache-control",
+    "referrer-policy",
+    "x-content-type-options",
+    "x-frame-options",
+    "cross-origin-resource-policy",
+    "cross-origin-opener-policy",
+    "permissions-policy"
+  ].map((name) => `${name}=${getHeader(headers, name) || "missing"}`).join("; ");
+}
+
+function getHeader(headers, name) {
+  return headers?.[name] || "";
 }
 
 async function waitForHealth(activePort) {

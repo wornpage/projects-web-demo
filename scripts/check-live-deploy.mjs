@@ -146,8 +146,13 @@ try {
   check("health endpoint reports ok", health.ok === true, health.ok);
   check("hosted state uses Postgres", health.storage === "postgres", health.storage || "missing");
   check("health endpoint hides storage internals", !("stateStorage" in health) && !/projects_demo_state|DATABASE_URL|PGHOST|PGPASSWORD|state\.json|\/app\/state/iu.test(healthText), healthText);
+  check("live API health sends shared security headers", sharedSecurityHeadersOk(sameOriginCors.headers), sharedSecurityHeaderDetail(sameOriginCors.headers));
   check("app shell sends CSP", csp.includes("default-src 'self'") && csp.includes("object-src 'none'"), csp || "missing");
   check("app shell blocks framing", csp.includes("frame-ancestors 'none'"), csp || "missing");
+  check("app shell sends legacy frame deny header", htmlResponse.headers.get("x-frame-options") === "DENY", htmlResponse.headers.get("x-frame-options") || "missing");
+  check("app shell limits cross-origin resource reuse", htmlResponse.headers.get("cross-origin-resource-policy") === "same-origin", htmlResponse.headers.get("cross-origin-resource-policy") || "missing");
+  check("app shell isolates opener context", htmlResponse.headers.get("cross-origin-opener-policy") === "same-origin", htmlResponse.headers.get("cross-origin-opener-policy") || "missing");
+  check("app shell disables sensitive browser permissions", permissionsPolicyDisables(htmlResponse.headers.get("permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]), htmlResponse.headers.get("permissions-policy") || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API script nonce matches CSP", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
   check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
@@ -338,6 +343,37 @@ function nonceFromHtml(html) {
 
 function scriptSrcDirective(csp) {
   return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("script-src")) || "";
+}
+
+function permissionsPolicyDisables(value, features) {
+  const policy = String(value || "");
+  return features.every((feature) => policy.includes(`${feature}=()`));
+}
+
+function sharedSecurityHeadersOk(headers) {
+  return getHeader(headers, "cache-control") === "no-store"
+    && getHeader(headers, "referrer-policy") === "no-referrer"
+    && getHeader(headers, "x-content-type-options") === "nosniff"
+    && getHeader(headers, "x-frame-options") === "DENY"
+    && getHeader(headers, "cross-origin-resource-policy") === "same-origin"
+    && getHeader(headers, "cross-origin-opener-policy") === "same-origin"
+    && permissionsPolicyDisables(getHeader(headers, "permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]);
+}
+
+function sharedSecurityHeaderDetail(headers) {
+  return [
+    "cache-control",
+    "referrer-policy",
+    "x-content-type-options",
+    "x-frame-options",
+    "cross-origin-resource-policy",
+    "cross-origin-opener-policy",
+    "permissions-policy"
+  ].map((name) => `${name}=${getHeader(headers, name) || "missing"}`).join("; ");
+}
+
+function getHeader(headers, name) {
+  return typeof headers?.get === "function" ? headers.get(name) || "" : headers?.[name] || "";
 }
 
 function normalizeBaseUrl(value) {

@@ -64,8 +64,14 @@ const CORS_ALLOWED_METHODS = "GET,POST,PUT,OPTIONS";
 const CORS_ALLOWED_HEADERS = `content-type, ${API_CLIENT_HEADER}`;
 const securityHeaders = {
   "cache-control": "no-store",
+  "cross-origin-opener-policy": "same-origin",
+  "cross-origin-resource-policy": "same-origin",
+  "origin-agent-cluster": "?1",
+  "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
   "referrer-policy": "no-referrer",
-  "x-content-type-options": "nosniff"
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "x-permitted-cross-domain-policies": "none"
 };
 
 const stateStorage = createStateStorage();

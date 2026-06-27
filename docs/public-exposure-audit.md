@@ -75,9 +75,11 @@ confirms public assets stay on the file allowlist, confirms public text assets
 stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
 and confirms the backend-served app shell sends a nonce-based Content Security
-Policy for the injected runtime API script. It also confirms API CORS uses
-the exact same-origin app origin instead of a wildcard and rejects a
-third-party preflight.
+Policy for the injected runtime API script. It also confirms the app shell sends
+legacy frame denial, same-origin resource/opener isolation, and restrictive
+Permissions-Policy headers. API CORS uses the exact same-origin app origin
+instead of a wildcard, rejects a third-party preflight, and cannot be authorized
+by a spoofed forwarding header.
 
 Repeatable live gate:
 
@@ -91,8 +93,10 @@ demo work through `/api/demo-packs` with a browser client key, keeps fixed
 `live-check-*` browser rows separate, lets a fixed shared sync key read the same
 row from another request, restores an exported state snapshot to its keyed row,
 rejects oversized keyed state snapshots, uses same-origin API CORS instead of
-wildcard CORS, and rejects a third-party preflight. It also confirms the hosted
-public assets have no source-map
+wildcard CORS, rejects a third-party preflight, and rejects forwarded-host CORS
+spoofing. It also confirms the hosted app shell sends frame-deny, same-origin
+resource/opener isolation, and restrictive Permissions-Policy headers, and that
+hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
 asset, or unlisted public asset/data paths.
 It confirms `/api/health` reports only the storage kind and does not expose
@@ -122,7 +126,8 @@ Web Crypto and do not fall back to weak random values.
 | Full-state writes accept unbounded receipt objects | Fixed | `actionReceipt` objects are depth/key/item bounded before storage |
 | Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |
 | Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
-| API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin |
+| App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
+| API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin or explicit configured origins and does not trust forwarded-host for authorization |
 | GitHub Pages root publish could expose repo files | Possible if enabled | Keep Pages disabled or publish only a filtered artifact |
 
 ## What Cannot Be Hidden

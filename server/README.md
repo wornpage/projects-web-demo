@@ -111,10 +111,12 @@ at `http://localhost:5179/#/home` when you need backend-backed persistence.
 | `POST /api/packs/{id}/next` | Set the server-owned `Button runs next` value for one work item. |
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
-API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:
-nosniff`. API body routes require `Content-Type: application/json`; non-JSON
-body writes are rejected with `415`. API CORS reflects only same-origin app
-requests. This is still demo isolation, not private account security.
+API and app responses use `Cache-Control: no-store`, `Referrer-Policy:
+no-referrer`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+same-origin resource/opener isolation, and restrictive `Permissions-Policy`
+headers. API body routes require `Content-Type: application/json`; non-JSON body
+writes are rejected with `415`. API CORS reflects only same-origin app requests.
+This is still demo isolation, not private account security.
 
 ## Checks
 

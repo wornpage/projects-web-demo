@@ -114,6 +114,10 @@ forwarding headers. Hosted deploys can also pin explicit allowed origins with
 single Node app for backend-backed local testing; the static preview remains
 browser-local.
 
+The Node app also sends no-store, no-referrer, nosniff, frame-deny,
+same-origin resource/opener isolation, and restrictive Permissions-Policy
+headers on served app and API responses.
+
 The local state path defaults to `server/data/state.json`, but backend API
 state routes still require the browser's anonymous client key. Local
 file-backed app mode stores each keyed client's state in a separate hashed
