@@ -107,7 +107,8 @@ After deploy:
    asset-disclosure, public route, sync sharing, state recovery, public-boundary,
    Docker deploy-boundary, whitespace, and live Outplane checks. Its live step
    fails if Outplane is still serving an old frontend bundle, if the app shell is
-   missing its same-origin runtime config script or no-inline CSP, if production
+   missing its same-origin runtime config script or no-inline CSP, if app/API
+   responses are missing the noindex/noarchive robots header, if production
    minification did not run, if the backend-backed frontend helpers are missing,
    if retired triage code is still public, if hosted state accepts a request
    without a browser client key, if a missing-key write reaches body parsing

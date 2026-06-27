@@ -121,6 +121,8 @@ same-origin resource/opener/embedder isolation, restrictive
 Permissions-Policy headers, and a CSP that blocks unsafe inline scripts and
 styles on served app and API responses. The CSP also denies frames, workers,
 manifests, and media loaders the demo does not use.
+App and API responses also send `X-Robots-Tag: noindex, nofollow, noarchive`
+so public dev deployments are not invited into search indexes or archives.
 The hosted app serves the backend API-base setting through
 `assets/runtime-config.js` instead of an inline script.
 

@@ -168,6 +168,7 @@ try {
   check("app shell isolates opener context", htmlResponse.headers.get("cross-origin-opener-policy") === "same-origin", htmlResponse.headers.get("cross-origin-opener-policy") || "missing");
   check("app shell requires cross-origin embedder policy", htmlResponse.headers.get("cross-origin-embedder-policy") === "require-corp", htmlResponse.headers.get("cross-origin-embedder-policy") || "missing");
   check("app shell disables sensitive browser permissions", permissionsPolicyDisables(htmlResponse.headers.get("permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]), htmlResponse.headers.get("permissions-policy") || "missing");
+  check("app shell opts out of search indexing", htmlResponse.headers.get("x-robots-tag") === "noindex, nofollow, noarchive", htmlResponse.headers.get("x-robots-tag") || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API config loads before the frontend script", runtimeConfigPath && html.indexOf("assets/runtime-config.js") < html.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
   check("runtime API config is served as same-origin JavaScript", runtimeConfig.includes("window.PROJECTS_API_BASE_URL = location.origin;"), runtimeConfig.trim() || "missing");
@@ -404,6 +405,7 @@ function sharedSecurityHeadersOk(headers) {
     && getHeader(headers, "origin-agent-cluster") === "?1"
     && getHeader(headers, "strict-transport-security") === "max-age=31536000; includeSubDomains"
     && getHeader(headers, "x-permitted-cross-domain-policies") === "none"
+    && getHeader(headers, "x-robots-tag") === "noindex, nofollow, noarchive"
     && permissionsPolicyDisables(getHeader(headers, "permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]);
 }
 
@@ -419,6 +421,7 @@ function sharedSecurityHeaderDetail(headers) {
     "origin-agent-cluster",
     "strict-transport-security",
     "x-permitted-cross-domain-policies",
+    "x-robots-tag",
     "permissions-policy"
   ].map((name) => `${name}=${getHeader(headers, name) || "missing"}`).join("; ");
 }

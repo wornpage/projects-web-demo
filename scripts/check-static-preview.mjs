@@ -168,6 +168,7 @@ function sharedSecurityHeadersOk(headers) {
     && getHeader(headers, "origin-agent-cluster") === "?1"
     && getHeader(headers, "strict-transport-security") === "max-age=31536000; includeSubDomains"
     && getHeader(headers, "x-permitted-cross-domain-policies") === "none"
+    && getHeader(headers, "x-robots-tag") === "noindex, nofollow, noarchive"
     && permissionsPolicyDisables(getHeader(headers, "permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]);
 }
 
@@ -183,6 +184,7 @@ function sharedSecurityHeaderDetail(headers) {
     "origin-agent-cluster",
     "strict-transport-security",
     "x-permitted-cross-domain-policies",
+    "x-robots-tag",
     "permissions-policy"
   ].map((name) => `${name}=${getHeader(headers, name) || "missing"}`).join("; ");
 }

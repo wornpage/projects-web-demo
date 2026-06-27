@@ -76,7 +76,8 @@ const securityHeaders = {
   "strict-transport-security": "max-age=31536000; includeSubDomains",
   "x-content-type-options": "nosniff",
   "x-frame-options": "DENY",
-  "x-permitted-cross-domain-policies": "none"
+  "x-permitted-cross-domain-policies": "none",
+  "x-robots-tag": "noindex, nofollow, noarchive"
 };
 
 const stateStorage = createStateStorage();

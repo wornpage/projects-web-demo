@@ -114,8 +114,9 @@ rejects forwarded-host CORS spoofing. It also confirms the hosted state write
 path rejects a missing browser key before body parsing, the hosted app shell
 sends HSTS, frame-deny, same-origin resource/opener isolation, embedder
 isolation, origin-agent clustering, restrictive Permissions-Policy headers, a
-style policy without unsafe inline styles, and explicit denials for unused
-frame, worker, manifest, and media loaders, and that
+noindex/noarchive robots header, a style policy without unsafe inline styles,
+and explicit denials for unused frame, worker, manifest, and media loaders, and
+that
 hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
 asset, or unlisted public asset/data paths.
@@ -150,7 +151,8 @@ Web Crypto and do not fall back to weak random values.
 | Backend app shell allows arbitrary inline script/style | Fixed | The Node app serves the API-base setting through same-origin `assets/runtime-config.js`, uses `script-src 'self'`, and blocks unsafe inline styles |
 | App shell CSP leaves unused loaders to fallback behavior | Fixed | CSP now explicitly denies frames, workers, manifests, and media loaders the demo does not use |
 | App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener/embedder isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
-| Shared security headers can drift unverified | Fixed | Local, static-preview, and live gates now assert embedder policy, origin-agent clustering, and cross-domain policy denial |
+| Public dev deploys can be indexed or archived by search engines | Fixed | App and API responses send `X-Robots-Tag: noindex, nofollow, noarchive`, and local/static/live gates assert it |
+| Shared security headers can drift unverified | Fixed | Local, static-preview, and live gates now assert embedder policy, origin-agent clustering, cross-domain policy denial, and robots indexing controls |
 | Hosted app lacks HTTPS downgrade protection | Fixed | App and API responses send HSTS for HTTPS clients |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin or explicit configured origins and does not trust forwarded-host for authorization |
 | API preflight accepts retired methods or unlisted headers | Fixed | CORS preflights validate the requested method and header list before returning authorization headers |

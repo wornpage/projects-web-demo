@@ -70,6 +70,7 @@ try {
   check("app shell isolates opener context", appShell.headers["cross-origin-opener-policy"] === "same-origin", appShell.headers["cross-origin-opener-policy"] || "missing");
   check("app shell requires cross-origin embedder policy", appShell.headers["cross-origin-embedder-policy"] === "require-corp", appShell.headers["cross-origin-embedder-policy"] || "missing");
   check("app shell disables sensitive browser permissions", permissionsPolicyDisables(appShell.headers["permissions-policy"], ["camera", "geolocation", "microphone", "payment", "usb"]), appShell.headers["permissions-policy"] || "missing");
+  check("app shell opts out of search indexing", appShell.headers["x-robots-tag"] === "noindex, nofollow, noarchive", appShell.headers["x-robots-tag"] || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API config loads before the frontend script", runtimeConfigPath && appShell.text.indexOf("assets/runtime-config.js") < appShell.text.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
   check("runtime API config is served as same-origin JavaScript", runtimeConfig.text.includes("window.PROJECTS_API_BASE_URL = location.origin;"), runtimeConfig.text.trim() || "missing");
@@ -426,6 +427,7 @@ function sharedSecurityHeadersOk(headers) {
     && getHeader(headers, "origin-agent-cluster") === "?1"
     && getHeader(headers, "strict-transport-security") === "max-age=31536000; includeSubDomains"
     && getHeader(headers, "x-permitted-cross-domain-policies") === "none"
+    && getHeader(headers, "x-robots-tag") === "noindex, nofollow, noarchive"
     && permissionsPolicyDisables(getHeader(headers, "permissions-policy"), ["camera", "geolocation", "microphone", "payment", "usb"]);
 }
 
@@ -441,6 +443,7 @@ function sharedSecurityHeaderDetail(headers) {
     "origin-agent-cluster",
     "strict-transport-security",
     "x-permitted-cross-domain-policies",
+    "x-robots-tag",
     "permissions-policy"
   ].map((name) => `${name}=${getHeader(headers, name) || "missing"}`).join("; ");
 }

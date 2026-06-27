@@ -121,7 +121,9 @@ incoming Host header.
 API and app responses use `Cache-Control: no-store`, `Referrer-Policy:
 no-referrer`, `X-Content-Type-Options: nosniff`, HSTS, `X-Frame-Options: DENY`,
 same-origin resource/opener/embedder isolation, origin-agent clustering, and
-restrictive `Permissions-Policy` headers. API body routes require
+restrictive `Permissions-Policy` headers. They also send
+`X-Robots-Tag: noindex, nofollow, noarchive` so public dev deployments are not
+invited into search indexes or archives. API body routes require
 `Content-Type: application/json`; non-JSON body writes are rejected with `415`.
 API CORS reflects only same-origin app requests. Preflights with retired methods
 or unlisted request headers are rejected. This is still demo isolation, not
