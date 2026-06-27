@@ -64,6 +64,7 @@ try {
   const liveClientKey = "demo-00000000-0000-4000-8000-000000000201";
   const apiHeaders = { "x-projects-demo-client": liveClientKey };
   const liveSeedPacks = await readJson("/api/demo-packs", apiHeaders);
+  const liveSeedPacksHash = sha256(canonicalJson(liveSeedPacks));
   const liveState = await readJson("/api/state", apiHeaders);
   const commandPreview = await readJson("/api/packs/source-folder-audit/command", apiHeaders);
   const unkeyedStateStatus = await readStatus("/api/state");
@@ -230,6 +231,7 @@ try {
   check("source map, retired metadata, unlisted public files, direct seed JSON, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
   check("API seed data route returns demo packs", Array.isArray(liveSeedPacks) && liveSeedPacks.length > 0, `${liveSeedPacks?.length || 0} pack(s)`);
+  check("API seed data matches this checkout", liveSeedPacksHash === expectedFrontend.seedPacksHash, `live=${liveSeedPacksHash} expected=${expectedFrontend.seedPacksHash}`);
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
@@ -429,16 +431,18 @@ async function expectedFrontendAssets() {
       throw new Error(`Local protected frontend build failed.\n${result.stderr || result.stdout}`);
     }
 
-    const [script, css, appShell] = await Promise.all([
+    const [script, css, appShell, seedPacks] = await Promise.all([
       fs.readFile(protectedScriptPath, "utf8"),
       fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8"),
-      fs.readFile(path.join(repoRoot, "index.html"), "utf8")
+      fs.readFile(path.join(repoRoot, "index.html"), "utf8"),
+      fs.readFile(path.join(repoRoot, "data/demo-packs.json"), "utf8")
     ]);
 
     return {
       appShellHash: sha256(canonicalAppShellHtml(appShell)),
       scriptHash: sha256(script),
-      cssHash: sha256(normalizeDeployText(css))
+      cssHash: sha256(normalizeDeployText(css)),
+      seedPacksHash: sha256(canonicalJson(JSON.parse(seedPacks)))
     };
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
@@ -447,6 +451,10 @@ async function expectedFrontendAssets() {
 
 function sha256(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function canonicalJson(value) {
+  return JSON.stringify(value);
 }
 
 function canonicalAppShellHtml(html) {

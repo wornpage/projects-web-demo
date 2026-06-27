@@ -87,6 +87,12 @@ check("live verifier compares deployed frontend hashes", includesAll(liveVerifie
   "sha256(script)",
   "normalizeDeployText(css)"
 ]), "live app shell/JS/CSS hash match");
+check("live verifier compares API seed data to checkout", includesAll(liveVerifier, [
+  "API seed data matches this checkout",
+  "data/demo-packs.json",
+  "seedPacksHash",
+  "canonicalJson(liveSeedPacks)"
+]), "live seed data hash match");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",
@@ -96,10 +102,12 @@ check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
 check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+whitespace, clean git state, and live/u.test(readme), "README ship summary");
 check("README documents live app-shell matching", /app shell and\s+protected frontend content matching/u.test(readme), "app shell matching");
+check("README documents live seed-data matching", /seed-data matching/u.test(readme), "seed-data matching");
 check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, clean git state, and live/u.test(serverReadme), "server README ship summary");
 check("deploy doc documents content-derived asset fallback", deployDoc.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("deploy doc documents live app-shell matching", /app shell content,\s+protected JS, or CSS content/u.test(deployDoc), "app shell matching");
+check("deploy doc documents live seed-data matching", /hosted seed data does not match this checkout/u.test(deployDoc), "seed-data matching");
 check("deploy doc documents live verifier cleanup", /erases the temporary\s+verifier rows/u.test(deployDoc), "live verifier cleanup");
 
 for (const row of checks) {
