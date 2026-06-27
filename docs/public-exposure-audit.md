@@ -142,6 +142,8 @@ through `GET /api/packs/{id}/command`, work-path edits run through
 `block`, `done`, and `open` run through `POST /api/packs/{id}/actions`. These
 endpoints update or read the stored demo state on the server and return the
 resulting command preview or receipt to the browser.
+The older generic `PATCH /api/packs/{id}` update path is retired so work edits
+must pass through the server-owned workflow endpoints.
 
 ## Obfuscation Decision
 

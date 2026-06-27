@@ -75,7 +75,18 @@ try {
     }
   });
   check("same-origin API CORS is exact, not wildcard", sameOriginCors.headers["access-control-allow-origin"] === sameOrigin, sameOriginCors.headers["access-control-allow-origin"] || "missing");
+  check("same-origin API CORS omits retired PATCH method", !String(sameOriginCors.headers["access-control-allow-methods"] || "").includes("PATCH"), sameOriginCors.headers["access-control-allow-methods"] || "missing");
   check("third-party API preflight is rejected", blockedPreflight.status === 403 && !blockedPreflight.headers["access-control-allow-origin"], `${blockedPreflight.status} / ${blockedPreflight.headers["access-control-allow-origin"] || "no cors"}`);
+
+  const retiredPatch = await request(port, "/api/packs/source-folder-audit", {
+    method: "PATCH",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": "local-check-client-a"
+    },
+    body: JSON.stringify({ status: "done" })
+  });
+  check("generic pack PATCH route is retired", retiredPatch.status === 404, retiredPatch.status);
 
   for (const pathname of [
     "/README.md",

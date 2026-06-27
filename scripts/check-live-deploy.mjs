@@ -38,6 +38,10 @@ try {
   const liveState = await readJson("/api/state", apiHeaders);
   const commandPreview = await readJson("/api/packs/source-folder-audit/command", apiHeaders);
   const unkeyedStateStatus = await readStatus("/api/state");
+  const retiredGenericPatchStatus = await readStatus("/api/packs/source-folder-audit", {
+    ...apiHeaders,
+    "content-type": "application/json"
+  }, "PATCH");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "live-check-browser-a";
   const clientBKey = "live-check-browser-b";
@@ -120,6 +124,7 @@ try {
   check("runtime API script nonce matches CSP", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
   check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
   check("live API CORS is same-origin only", sameOriginCors.headers.get("access-control-allow-origin") === baseUrl.origin, sameOriginCors.headers.get("access-control-allow-origin") || "missing");
+  check("live API CORS omits retired PATCH method", !String(sameOriginCors.headers.get("access-control-allow-methods") || "").includes("PATCH"), sameOriginCors.headers.get("access-control-allow-methods") || "missing");
   check("live API rejects third-party preflight", blockedCorsPreflightStatus === 403, blockedCorsPreflightStatus);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
@@ -132,6 +137,7 @@ try {
   check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
   check("source map, retired metadata, unlisted public files, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
+  check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);

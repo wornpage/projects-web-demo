@@ -55,7 +55,7 @@ const contentTypes = {
   ".txt": "text/plain; charset=utf-8"
 };
 
-const CORS_ALLOWED_METHODS = "GET,POST,PUT,PATCH,OPTIONS";
+const CORS_ALLOWED_METHODS = "GET,POST,PUT,OPTIONS";
 const CORS_ALLOWED_HEADERS = `content-type, ${API_CLIENT_HEADER}`;
 const securityHeaders = {
   "cache-control": "no-store",
@@ -191,18 +191,6 @@ async function routeRequest(request, response, url) {
   if (packMatch) {
     const packId = decodeURIComponent(packMatch[1]);
     const isMemoryRoute = pathname.endsWith("/memory");
-    if (method === "PATCH" && !isMemoryRoute) {
-      const payload = await readJsonBody(request);
-      const stateKey = stateKeyForRequest(request);
-      const state = await readState(stateKey);
-      const pack = findPackOrThrow(state, packId);
-      const updated = sanitizePack({ ...pack, ...payload, id: pack.id });
-      Object.assign(pack, updated, { id: pack.id });
-      await writeState(state, stateKey);
-      sendJson(request, response, 200, pack);
-      return;
-    }
-
     if (method === "POST" && isMemoryRoute) {
       const payload = await readJsonBody(request);
       const stateKey = stateKeyForRequest(request);

@@ -95,7 +95,6 @@ at `http://localhost:5179/#/home` when you need backend-backed persistence.
 | `GET /api/packs` | Load only work items. |
 | `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Button runs next` preview for one work item. |
 | `POST /api/packs` | Create one work item using server-owned workflow defaults. |
-| `PATCH /api/packs/{id}` | Update one work item. |
 | `POST /api/packs/{id}/path` | Save one work path and return the server-owned receipt/state. |
 | `POST /api/packs/{id}/actions` | Run a server-owned pack action such as `start`, `unblock`, `block`, `done`, or `open`. |
 | `POST /api/packs/{id}/next` | Set the server-owned `Button runs next` value for one work item. |
