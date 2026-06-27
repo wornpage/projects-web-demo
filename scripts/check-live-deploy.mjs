@@ -24,13 +24,21 @@ try {
     "addBackendPackMemoryNote",
     "saveBackendPackPath"
   ];
+  const internalFrontendStrings = [
+    "/api/packs",
+    "/api/state",
+    "x-projects-demo-client",
+    "projects-static-demo-api-client-v1"
+  ];
   const readableBackendHelpers = backendHelperNames.filter((name) => script.includes(name));
+  const readableInternalStrings = internalFrontendStrings.filter((value) => script.includes(value));
 
   check("health endpoint reports ok", health.ok === true, health.ok);
   check("hosted state uses Postgres", String(health.stateStorage || "").startsWith("postgres:"), health.stateStorage);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
+  check("internal API strings are encoded", readableInternalStrings.length === 0, readableInternalStrings.join(", ") || "hidden");
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");
   check("private repo and local path strings are absent", !/(github\.com\/jared-bidlow|C:\\|C:\/|\.git\/config|server\/server\.js)/iu.test(script), "private path scan");
 

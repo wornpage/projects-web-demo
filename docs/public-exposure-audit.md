@@ -102,11 +102,13 @@ Obfuscation can add copy-friction, but it does not make browser-delivered code
 private and can break debugging, accessibility, and interaction flows if it is
 too aggressive.
 
-The production Docker build uses local Terser minification on `assets/demo.js`
-with top-level compression and mangling, then syntax-checks the generated
-script before pruning build tools. This hides readable helper names such as the
-backend action helpers while keeping the deployed script small enough to load
-normally.
+The production Docker build runs `scripts/protect-frontend.mjs` against
+`assets/demo.js`. The script uses local Terser minification with top-level
+compression and mangling, encodes selected internal API strings into a runtime
+string table, syntax-checks the generated script, and fails the build if
+readable helper names or protected strings remain. This hides readable helper
+names such as the backend action helpers while keeping the deployed script
+small enough to load normally.
 
 `nstarke/egodeath` was evaluated at pinned commit
 `ef8ed58fd26eb5cba59cb3a2787660efc7ac5b31`, but it is not enabled for

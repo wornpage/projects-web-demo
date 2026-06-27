@@ -34,6 +34,7 @@ Keep this repo focused on the public portfolio demo.
 | `assets/favicon.png` | Demo favicon. |
 | `data/demo-packs.json` | Fake browser-local work data. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
+| `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app is serving the protected current frontend. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
 | `render.yaml` | Render Blueprint for hosting the Docker app with managed Postgres state. |
@@ -131,10 +132,12 @@ The container serves the frontend and `/api` from one Node process. It can use
 local file-backed state for development, but hosted deploys should use managed
 Postgres so app containers stay stateless.
 
-Production Docker builds minify `assets/demo.js` with top-level Terser
-compression and mangling, then syntax-check the generated script. This makes
-the deployed browser script harder to read, but it is still public executable
-JavaScript.
+Production Docker builds run `scripts/protect-frontend.mjs` against
+`assets/demo.js`. The script minifies with top-level Terser compression and
+mangling, encodes selected internal API strings into a runtime string table,
+syntax-checks the generated script, and fails the build if readable helper names
+or protected strings remain. This makes the deployed browser script harder to
+read, but it is still public executable JavaScript.
 
 The pinned `nstarke/egodeath` commit
 `ef8ed58fd26eb5cba59cb3a2787660efc7ac5b31` was tested and left disabled for

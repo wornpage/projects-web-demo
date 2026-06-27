@@ -13,14 +13,10 @@ RUN npm --prefix server ci --include=dev
 COPY index.html ./
 COPY assets ./assets
 COPY data ./data
+COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs
 COPY server/server.js ./server/server.js
 
-RUN ./server/node_modules/.bin/terser assets/demo.js \
-    --compress passes=2,toplevel=true \
-    --mangle toplevel=true \
-    --comments false \
-    --output assets/demo.js \
-  && node --check assets/demo.js \
+RUN node scripts/protect-frontend.mjs assets/demo.js assets/demo.js \
   && npm --prefix server prune --omit=dev
 
 RUN mkdir -p /app/state \
