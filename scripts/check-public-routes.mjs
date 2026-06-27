@@ -117,6 +117,7 @@ check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
 check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"'), "demo notice role=note");
 check("sidebar idea note is exposed as supporting context", html.includes('class="demo-sidebar-note card" role="note"'), "sidebar note role=note");
+check("next action panel is labelled by its visible title", html.includes('class="demo-command-brief sidecar" aria-labelledby="command-title"'), "command-title labels next action panel");
 check("skip target landmark is labelled by the visible title", html.includes('id="demo-main"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels main landmark");
 check("screen content region is labelled by the visible title", html.includes('id="screen-content"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels live content");
 
