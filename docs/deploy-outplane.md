@@ -147,8 +147,9 @@ After deploy:
    without a browser client key, if hosted state accepts a weak manual client
    key or readable sync-code-shaped client key, if a missing-key state or
    workflow write reaches body parsing before ownership validation, if hosted
-   state accepts a non-JSON write or oversized JSON body, if repeated state
-   writes do not eventually return `429`, an invalid selected work id or selected id
+   state accepts a non-JSON write, if an oversized JSON upload is not rejected
+   by the app or hosting platform, if that oversized row is stored, if repeated
+   state writes do not eventually return `429`, an invalid selected work id or selected id
    type, malformed top-level metadata or text, a malformed or overlong work text
    field, malformed work string list, or malformed/oversized receipt shape, if hosted
    workflow writes accept malformed create, next, action, memory, or path fields, if hosted

@@ -252,6 +252,7 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const limitStateAfterRejectedWrites = await readJson("/api/state", { "x-projects-demo-client": limitKey });
   await writeJson("/api/state", stateWithCheckPack(liveState, "live-isolation-check", clientATitle), {
     "x-projects-demo-client": clientAKey
   });
@@ -419,7 +420,12 @@ try {
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
   check("hosted state writes reject missing client key before body parsing", unkeyedNonJsonStateWriteStatus === 400, unkeyedNonJsonStateWriteStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
-  check("hosted state rejects oversized JSON bodies", oversizedBodyStateStatus === 413, oversizedBodyStateStatus);
+  check(
+    "hosted state rejects oversized JSON uploads before storage",
+    hostedOversizedBodyRejected(oversizedBodyStateStatus)
+      && !stateHasPackId(limitStateAfterRejectedWrites, "live-oversized-body-state-1"),
+    `${oversizedBodyStateStatus}; stored=${stateHasPackId(limitStateAfterRejectedWrites, "live-oversized-body-state-1")}`
+  );
   check("hosted state rejects null snapshots", nullStateStatus === 400, nullStateStatus);
   check("hosted state rejects array snapshots", arrayStateStatus === 400, arrayStateStatus);
   check("hosted state rejects snapshots without packs", missingPacksStateStatus === 400, missingPacksStateStatus);
@@ -581,11 +587,19 @@ function stateHasPackTitle(state, title) {
   return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
 }
 
+function stateHasPackId(state, id) {
+  return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.id === id);
+}
+
 function commandPreviewOwnsCopy(preview) {
   return typeof preview?.flowHint === "string"
     && preview.flowHint.startsWith("Flow:")
     && typeof preview?.primaryReason === "string"
     && preview.primaryReason.startsWith("Why:");
+}
+
+function hostedOversizedBodyRejected(status) {
+  return status === 413 || status === 502;
 }
 
 function rateLimitStatusesOk(statuses) {

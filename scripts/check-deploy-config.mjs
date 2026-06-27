@@ -139,6 +139,11 @@ check("live verifier rejects invalid work-path status writes", includesAll(liveV
   "invalidWorkPathStatus",
   "hosted work-path rejects invalid statuses"
 ]), "invalid work-path status rejection");
+check("live verifier handles hosted oversized upload rejection", includesAll(liveVerifier, [
+  "hosted state rejects oversized JSON uploads before storage",
+  "hostedOversizedBodyRejected",
+  "stateHasPackId(limitStateAfterRejectedWrites, \"live-oversized-body-state-1\")"
+]), "hosted oversized upload rejection");
 check("live verifier checks hosted write rate limits", includesAll(liveVerifier, [
   "rateLimitedStateWriteStatuses",
   "hosted state write rate limit rejects before content-type parsing",
