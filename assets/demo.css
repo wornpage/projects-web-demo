@@ -1,5 +1,69 @@
 :root {
+  --cockpit-bg: #f6f0e6;
+  --cockpit-surface: #fffcf4;
+  --cockpit-nav-bg: #efe7da;
+  --cockpit-accent: #1d6f64;
+  --cockpit-accent-hover: #15564d;
+  --cockpit-accent-text: #ffffff;
+  --cockpit-accent-50: #eaf4f0;
+  --cockpit-selected-bg: #d7efe7;
+  --cockpit-selected-fg: #082f2b;
+  --cockpit-border: #ddd0bd;
+  --cockpit-border-strong: #c9bca8;
+  --cockpit-text: #21322b;
+  --cockpit-text-secondary: #5b6a60;
+  --cockpit-text-muted: #708277;
+  --cockpit-muted: var(--cockpit-text-muted);
+  --cockpit-hover-bg: #eaf4f0;
+  --cockpit-success-bg: #ecfdf5;
+  --cockpit-success-border: #14b8a6;
+  --cockpit-success-text: #134e4a;
+  --cockpit-warning-bg: #fff7ed;
+  --cockpit-warning-border: #fdba74;
+  --cockpit-warning-text: #9a3412;
+  --cockpit-danger-bg: #fef2f2;
+  --cockpit-danger-border: #fca5a5;
+  --cockpit-danger-text: #991b1b;
+  --cockpit-radius: 8px;
+  --cockpit-radius-sm: 4px;
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --cockpit-focus: var(--cockpit-accent);
+  --font-family: "Trebuchet MS", "Verdana", "Arial", sans-serif;
+  --font-family-display: "Trebuchet MS", "Verdana", "Arial", sans-serif;
+  --font-family-label: "Trebuchet MS", "Verdana", "Arial", sans-serif;
+  --font-body-weight: 520;
+  --font-display-weight: 760;
+  --font-label-weight: 740;
   --demo-sidebar-width: 180px;
+}
+
+html.dark,
+html[data-theme="dark"] {
+  --cockpit-bg: #0d1512;
+  --cockpit-surface: #17211d;
+  --cockpit-nav-bg: #101a16;
+  --cockpit-accent: #4ca48f;
+  --cockpit-accent-hover: #7ddac3;
+  --cockpit-accent-text: #ecfffa;
+  --cockpit-accent-50: #16372f;
+  --cockpit-selected-bg: #16453b;
+  --cockpit-selected-fg: #f7fffc;
+  --cockpit-border: #34473f;
+  --cockpit-border-strong: #5b6a60;
+  --cockpit-text: #f7fffc;
+  --cockpit-text-secondary: #d9e8e2;
+  --cockpit-text-muted: #9aa99f;
+  --cockpit-hover-bg: #16372f;
+  --cockpit-success-bg: #022c22;
+  --cockpit-success-border: #14b8a6;
+  --cockpit-success-text: #a7f3d0;
+  --cockpit-warning-bg: #431407;
+  --cockpit-warning-border: #fdba74;
+  --cockpit-warning-text: #fed7aa;
+  --cockpit-danger-bg: #450a0a;
+  --cockpit-danger-border: #fca5a5;
+  --cockpit-danger-text: #fecaca;
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 * {
@@ -7,13 +71,93 @@
 }
 
 body {
+  background: var(--cockpit-bg);
+  color: var(--cockpit-text);
+  font-family: var(--font-family);
+  font-weight: var(--font-body-weight);
+  margin: 0;
   min-width: 0;
   overflow-x: hidden;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
 html,
 body {
   max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+.demo-brand strong,
+.demo-card-title {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-display-weight);
+}
+
+::selection {
+  background: var(--cockpit-selected-bg);
+  color: var(--cockpit-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cockpit-accent);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  background: var(--cockpit-accent);
+  border-radius: var(--cockpit-radius-sm);
+  color: var(--cockpit-accent-text);
+  font-size: 13px;
+  font-weight: 700;
+  left: 8px;
+  padding: 8px 16px;
+  position: absolute;
+  text-decoration: none;
+  top: -100px;
+  transition: top 0.12s ease;
+  z-index: 10000;
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+.btn {
+  align-items: center;
+  background: var(--cockpit-surface);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
+  color: var(--cockpit-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+  padding: 6px 14px;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: var(--cockpit-accent-50);
+  border-color: var(--cockpit-accent);
+}
+
+.btn-primary {
+  background: var(--cockpit-accent);
+  border-color: var(--cockpit-accent);
+  color: var(--cockpit-accent-text);
+}
+
+.btn-primary:hover {
+  background: var(--cockpit-accent-hover);
+}
+
+.btn-sm {
+  font-size: 12px;
+  padding: 3px 10px;
 }
 
 .demo-source-list,

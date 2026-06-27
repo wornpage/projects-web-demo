@@ -10,7 +10,6 @@ const PORT = Number(process.env.PREVIEW_PORT || 5181);
 const ROOT_DIR = path.resolve(__dirname, "..");
 const publicStaticFiles = new Set([
   "/index.html",
-  "/assets/app.css",
   "/assets/demo.css",
   "/assets/demo.js",
   "/assets/favicon.png",

@@ -13,7 +13,6 @@ const copyLines = lines.filter((line) => line.startsWith("COPY "));
 const allowedCopyLines = [
   "COPY server/package*.json ./server/",
   "COPY index.html ./",
-  "COPY assets/app.css ./assets/app.css",
   "COPY assets/demo.css ./assets/demo.css",
   "COPY assets/demo.js ./assets/demo.js",
   "COPY assets/favicon.png ./assets/favicon.png",
@@ -41,7 +40,6 @@ check("Docker build creates named public asset directories", lines.includes("RUN
 check("Docker copy list is allowlisted", unexpectedCopies.length === 0, unexpectedCopies.join(" | ") || "allowlist only");
 check("Dockerfile does not copy repo root or docs", forbiddenCopies.length === 0, forbiddenCopies.join(" | ") || "absent");
 check("Docker image copies only named public frontend files", [
-  "COPY assets/app.css ./assets/app.css",
   "COPY assets/demo.css ./assets/demo.css",
   "COPY assets/demo.js ./assets/demo.js",
   "COPY assets/favicon.png ./assets/favicon.png",

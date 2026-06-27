@@ -29,7 +29,6 @@ try {
     { pathname: "/", text: html },
     { pathname: scriptPath, text: script },
     { pathname: "/assets/demo.css", text: await readText("/assets/demo.css") },
-    { pathname: "/assets/app.css", text: await readText("/assets/app.css") },
     { pathname: "/data/demo-packs.json", text: await readText("/data/demo-packs.json") }
   ];
   const lineCount = script.split(/\r?\n/u).length;
@@ -110,6 +109,7 @@ try {
   const sourceMapStatuses = await Promise.all([
     "/assets/demo.js.map",
     "/assets/demo.css.map",
+    "/assets/app.css",
     "/assets/app.css.map",
     "/assets/demo-metadata.json",
     "/assets/not-allowlisted.txt",

@@ -29,7 +29,6 @@ Keep this repo focused on the public portfolio demo.
 | `index.html` | Public app shell served by GitHub Pages. |
 | `assets/demo.js` | Hash routing, demo state, button behavior, and backend app-mode calls. |
 | `assets/demo.css` | Public demo layout and interaction styling. |
-| `assets/app.css` | Shared visual tokens and base component rules used by the demo. |
 | `assets/favicon.png` | Demo favicon. |
 | `data/demo-packs.json` | Fake browser-local work data. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
@@ -142,9 +141,10 @@ http://localhost:5179/#/home
 ```
 
 The container serves the frontend and `/api` from one Node process. The image
-copies only the named public frontend files, not the whole repository or broad
-asset directories. It can use local file-backed state for development, but
-hosted deploys should use managed Postgres so app containers stay stateless.
+copies only the named public frontend files, not the whole repository, broad
+asset directories, or the retired shared app stylesheet. It can use local
+file-backed state for development, but hosted deploys should use managed
+Postgres so app containers stay stateless.
 
 Production Docker builds run `scripts/protect-frontend.mjs` against
 `assets/demo.js`. The script minifies with top-level Terser compression and

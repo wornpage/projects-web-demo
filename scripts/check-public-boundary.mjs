@@ -43,7 +43,6 @@ try {
     "/index.html",
     "/assets/demo.js",
     "/assets/demo.css",
-    "/assets/app.css",
     "/assets/favicon.png",
     "/data/demo-packs.json"
   ]) {
@@ -118,6 +117,7 @@ try {
   }
 
   for (const pathname of [
+    "/assets/app.css",
     "/assets/demo.js.map",
     "/assets/demo.css.map",
     "/assets/app.css.map",

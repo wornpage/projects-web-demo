@@ -8,7 +8,6 @@ The hosted Outplane app does not expose private repository files through the
 web server. The public surface is the browser app itself:
 
 - `index.html`
-- `assets/app.css`
 - `assets/demo.css`
 - `assets/demo.js`
 - `assets/favicon.png`
@@ -105,6 +104,7 @@ Web Crypto and do not fall back to weak random values.
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
+| Broad shared app stylesheet is public | Fixed | Removed `assets/app.css`; demo-owned tokens now live in `assets/demo.css` |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |

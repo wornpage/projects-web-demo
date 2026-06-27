@@ -37,7 +37,6 @@ const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
 ]);
 const publicStaticFiles = new Set([
   "/index.html",
-  "/assets/app.css",
   "/assets/demo.css",
   "/assets/demo.js",
   "/assets/favicon.png",
@@ -316,7 +315,7 @@ function contentSecurityPolicy(nonce) {
 
 function injectAppApiBase(html, nonce) {
   const versionedHtml = html
-    .replace(/(href="assets\/(?:app|demo)\.css\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
+    .replace(/(href="assets\/demo\.css\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
     .replace(/(src="assets\/demo\.js\?v=)[^"]*/u, `$1${ASSET_VERSION}`);
   const script = `<script nonce="${escapeHtmlAttribute(nonce)}">window.PROJECTS_API_BASE_URL = window.PROJECTS_API_BASE_URL || location.origin;</script>`;
   if (versionedHtml.includes("window.PROJECTS_API_BASE_URL")) {

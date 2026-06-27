@@ -10,18 +10,17 @@ const publicTextAssets = [
   { pathname: "index.html", maxBytes: 12000 },
   { pathname: "assets/demo.js", maxBytes: 240000 },
   { pathname: "assets/demo.css", maxBytes: 130000 },
-  { pathname: "assets/app.css", maxBytes: 490000 },
   { pathname: "data/demo-packs.json", maxBytes: 15000 }
 ];
 const publicFileAllowlist = [
-  "assets/app.css",
   "assets/demo.css",
   "assets/demo.js",
   "assets/favicon.png",
   "data/demo-packs.json"
 ];
-const totalPublicTextBudgetBytes = 830000;
+const totalPublicTextBudgetBytes = 390000;
 const retiredPublicFiles = [
+  "assets/app.css",
   "assets/demo-metadata.json"
 ];
 const retiredRootFiles = [
@@ -31,6 +30,10 @@ const forbiddenPatterns = [
   {
     name: "source map hints",
     pattern: /sourceMappingURL|sourceURL/iu
+  },
+  {
+    name: "remote stylesheet imports",
+    pattern: /@import\s+url\(["']?https?:/iu
   },
   {
     name: "local filesystem paths",

@@ -12,7 +12,6 @@ RUN npm --prefix server ci --include=dev
 RUN mkdir -p assets data scripts
 
 COPY index.html ./
-COPY assets/app.css ./assets/app.css
 COPY assets/demo.css ./assets/demo.css
 COPY assets/demo.js ./assets/demo.js
 COPY assets/favicon.png ./assets/favicon.png
