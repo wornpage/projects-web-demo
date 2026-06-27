@@ -62,6 +62,8 @@ const contentTypes = {
 
 const CORS_ALLOWED_METHODS = "GET,POST,PUT,OPTIONS";
 const CORS_ALLOWED_HEADERS = `content-type, ${API_CLIENT_HEADER}`;
+const CORS_ALLOWED_METHOD_SET = new Set(CORS_ALLOWED_METHODS.split(","));
+const CORS_ALLOWED_HEADER_SET = new Set(CORS_ALLOWED_HEADERS.split(",").map((header) => header.trim().toLowerCase()));
 const securityHeaders = {
   "cache-control": "no-store",
   "cross-origin-opener-policy": "same-origin",
@@ -1394,7 +1396,9 @@ function parseCorsOrigins(value) {
 
 function isCorsRequestAllowed(request) {
   const origin = normalizedCorsOrigin(request.headers.origin);
-  return !origin || Boolean(allowedCorsOrigin(origin, request));
+  return (!origin || Boolean(allowedCorsOrigin(origin, request)))
+    && isPreflightMethodAllowed(request)
+    && arePreflightHeadersAllowed(request);
 }
 
 function corsHeadersForRequest(request) {
@@ -1445,6 +1449,24 @@ function requestHostValues(request) {
     .flatMap((value) => String(value || "").split(","))
     .map((host) => normalizeText(host, 300).toLowerCase())
     .filter(Boolean);
+}
+
+function isPreflightMethodAllowed(request) {
+  const method = normalizeText(request.headers["access-control-request-method"], 40).toUpperCase();
+  return !method || CORS_ALLOWED_METHOD_SET.has(method);
+}
+
+function arePreflightHeadersAllowed(request) {
+  const rawHeaders = normalizeText(request.headers["access-control-request-headers"], 300).toLowerCase();
+  if (!rawHeaders) {
+    return true;
+  }
+
+  return rawHeaders
+    .split(",")
+    .map((header) => header.trim())
+    .filter(Boolean)
+    .every((header) => CORS_ALLOWED_HEADER_SET.has(header));
 }
 
 function sendJson(request, response, statusCode, payload) {

@@ -92,6 +92,22 @@ try {
       "access-control-request-headers": "content-type, x-projects-demo-client"
     }
   });
+  const blockedMethodPreflight = await request(port, "/api/state", {
+    method: "OPTIONS",
+    headers: {
+      origin: sameOrigin,
+      "access-control-request-method": "PATCH",
+      "access-control-request-headers": "content-type, x-projects-demo-client"
+    }
+  });
+  const blockedHeaderPreflight = await request(port, "/api/state", {
+    method: "OPTIONS",
+    headers: {
+      origin: sameOrigin,
+      "access-control-request-method": "PUT",
+      "access-control-request-headers": "content-type, x-projects-demo-client, x-extra-demo-header"
+    }
+  });
   const spoofedForwardedCors = await request(port, "/api/health", {
     headers: {
       origin: "https://spoofed.example",
@@ -101,6 +117,8 @@ try {
   check("same-origin API CORS is exact, not wildcard", sameOriginCors.headers["access-control-allow-origin"] === sameOrigin, sameOriginCors.headers["access-control-allow-origin"] || "missing");
   check("same-origin API CORS omits retired PATCH method", !String(sameOriginCors.headers["access-control-allow-methods"] || "").includes("PATCH"), sameOriginCors.headers["access-control-allow-methods"] || "missing");
   check("third-party API preflight is rejected", blockedPreflight.status === 403 && !blockedPreflight.headers["access-control-allow-origin"], `${blockedPreflight.status} / ${blockedPreflight.headers["access-control-allow-origin"] || "no cors"}`);
+  check("disallowed API preflight method is rejected", blockedMethodPreflight.status === 403 && !blockedMethodPreflight.headers["access-control-allow-origin"], `${blockedMethodPreflight.status} / ${blockedMethodPreflight.headers["access-control-allow-origin"] || "no cors"}`);
+  check("disallowed API preflight header is rejected", blockedHeaderPreflight.status === 403 && !blockedHeaderPreflight.headers["access-control-allow-origin"], `${blockedHeaderPreflight.status} / ${blockedHeaderPreflight.headers["access-control-allow-origin"] || "no cors"}`);
   check("forwarded host cannot authorize API CORS", !spoofedForwardedCors.headers["access-control-allow-origin"], spoofedForwardedCors.headers["access-control-allow-origin"] || "no cors");
 
   const retiredPatch = await request(port, "/api/packs/source-folder-audit", {

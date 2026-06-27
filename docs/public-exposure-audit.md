@@ -79,8 +79,9 @@ Policy for the injected runtime API script and blocks unsafe inline styles. It
 also confirms the app shell sends
 legacy frame denial, same-origin resource/opener isolation, and restrictive
 Permissions-Policy headers. API CORS uses the exact same-origin app origin
-instead of a wildcard, rejects a third-party preflight, and cannot be authorized
-by a spoofed forwarding header. It also confirms malformed `Host` values do not
+instead of a wildcard, rejects third-party preflights, rejects retired methods
+or unlisted request headers during preflight, and cannot be authorized by a
+spoofed forwarding header. It also confirms malformed `Host` values do not
 bypass the normal request handler.
 
 The static preview gate starts `server/static.js`, confirms only the static file
@@ -106,8 +107,9 @@ demo work through `/api/demo-packs` with a browser client key, keeps fixed
 `live-check-*` browser rows separate, lets a fixed shared sync key read the same
 row from another request, restores an exported state snapshot to its keyed row,
 rejects oversized keyed state snapshots, uses same-origin API CORS instead of
-wildcard CORS, rejects a third-party preflight, and rejects forwarded-host CORS
-spoofing. It also confirms the hosted app shell sends frame-deny, same-origin
+wildcard CORS, rejects third-party preflights, rejects disallowed preflight
+methods/headers, and rejects forwarded-host CORS spoofing. It also confirms the
+hosted app shell sends frame-deny, same-origin
 resource/opener isolation, restrictive Permissions-Policy headers, and a style
 policy without unsafe inline styles, and that
 hosted public assets have no source-map
@@ -143,6 +145,7 @@ Web Crypto and do not fall back to weak random values.
 | Backend app shell allows arbitrary inline script/style | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script and blocks unsafe inline styles |
 | App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener isolation, no-referrer, nosniff, and restrictive Permissions-Policy headers |
 | API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin or explicit configured origins and does not trust forwarded-host for authorization |
+| API preflight accepts retired methods or unlisted headers | Fixed | CORS preflights validate the requested method and header list before returning authorization headers |
 | Host header parsing can bypass the normal error path | Fixed | Request routing parses against a fixed internal base and the boundary gate sends an invalid Host header through `/api/health` |
 | GitHub Pages root publish could expose repo files | Possible if enabled | Keep Pages disabled or publish only a filtered artifact |
 

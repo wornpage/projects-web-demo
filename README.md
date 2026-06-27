@@ -112,7 +112,8 @@ assets after a push.
 API CORS is bounded to same-origin app requests using the request `Host`, not
 forwarding headers. Hosted deploys can also pin explicit allowed origins with
 `PROJECTS_PUBLIC_ORIGIN` or comma-separated `PROJECTS_ALLOWED_ORIGINS`. Use the
-single Node app for backend-backed local testing; the static preview remains
+single Node app for backend-backed local testing; preflights with retired
+methods or unlisted request headers are rejected. The static preview remains
 browser-local.
 
 The Node app also sends no-store, no-referrer, nosniff, frame-deny,

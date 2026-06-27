@@ -23,6 +23,16 @@ try {
     "access-control-request-method": "PUT",
     "access-control-request-headers": "content-type, x-projects-demo-client"
   }, "OPTIONS");
+  const blockedMethodPreflightStatus = await readStatus("/api/state", {
+    origin: baseUrl.origin,
+    "access-control-request-method": "PATCH",
+    "access-control-request-headers": "content-type, x-projects-demo-client"
+  }, "OPTIONS");
+  const blockedHeaderPreflightStatus = await readStatus("/api/state", {
+    origin: baseUrl.origin,
+    "access-control-request-method": "PUT",
+    "access-control-request-headers": "content-type, x-projects-demo-client, x-extra-demo-header"
+  }, "OPTIONS");
   const cspNonce = nonceFromCsp(csp);
   const htmlNonce = nonceFromHtml(html);
   const assetMatch = html.match(/assets\/demo\.js\?v=([^"']+)/u);
@@ -161,6 +171,8 @@ try {
   check("live API CORS omits retired PATCH method", !String(sameOriginCors.headers.get("access-control-allow-methods") || "").includes("PATCH"), sameOriginCors.headers.get("access-control-allow-methods") || "missing");
   check("live API rejects forwarded-host CORS spoofing", !spoofedForwardedCors.headers.get("access-control-allow-origin"), spoofedForwardedCors.headers.get("access-control-allow-origin") || "no cors");
   check("live API rejects third-party preflight", blockedCorsPreflightStatus === 403, blockedCorsPreflightStatus);
+  check("live API rejects disallowed preflight method", blockedMethodPreflightStatus === 403, blockedMethodPreflightStatus);
+  check("live API rejects disallowed preflight header", blockedHeaderPreflightStatus === 403, blockedHeaderPreflightStatus);
   check("HTML points at versioned demo.js", Boolean(assetVersion), assetVersion || "missing");
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
   check("weak random fallback is absent", !script.includes("Math.random"), script.includes("Math.random") ? "Math.random" : "absent");
