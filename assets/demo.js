@@ -4554,7 +4554,14 @@ function runResolvedPackAction(pack) {
     return;
   }
 
-  const resolved = resolvePrimaryCommandForPack(pack);
+  const resolved = backendPackCommandForSelected(pack) || resolvePrimaryCommandForPack(pack);
+  if (isBackendCommandPending(resolved)) {
+    scheduleBackendPackCommandPreview(pack);
+    state.status = routeStatus("Backend command", "waiting for server-owned command preview", "try again after it loads");
+    render();
+    return;
+  }
+
   if (runRouteAction(resolved.action, resolved.targetPackId)) {
     return;
   }

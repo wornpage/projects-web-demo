@@ -141,6 +141,9 @@ base instead of the incoming Host header.
 | `POST /api/packs/{id}/next` | Set the server-owned `Button runs next` value for one work item. |
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
+Hosted run-next dispatch reads from the server command preview and stops at a
+retry/refresh blocker while the preview is unavailable, instead of resolving the
+primary command only in browser code.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.

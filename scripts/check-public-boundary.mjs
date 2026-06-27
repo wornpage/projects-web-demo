@@ -98,6 +98,8 @@ try {
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
+  const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
+  check("backend app mode runs next from server command preview", runNextBoundary.ok, runNextBoundary.detail);
   const serverPreviewMarkers = serverCommandPreviewCopyMarkers(serverSource);
   check("server command preview owns selected-work flow copy", serverPreviewMarkers.ok, serverPreviewMarkers.detail);
   const workflowPreflight = frontendWorkflowHelpersAvoidFullStatePreflight(frontendSource);
@@ -1000,6 +1002,37 @@ function backendCommandPendingMarkers(source) {
   return {
     ok: missing.length === 0,
     detail: missing.length === 0 ? "selected work controls wait while preview loads" : missing.join(", ")
+  };
+}
+
+function frontendRunNextUsesBackendCommandPreview(source) {
+  const body = functionBody(source, "runResolvedPackAction");
+  if (!body) {
+    return { ok: false, detail: "runResolvedPackAction:missing" };
+  }
+
+  const required = [
+    "backendPackCommandForSelected(pack) || resolvePrimaryCommandForPack(pack)",
+    "if (isBackendCommandPending(resolved))",
+    "scheduleBackendPackCommandPreview(pack);",
+    "waiting for server-owned command preview",
+    "return;"
+  ];
+  const missing = required.filter((needle) => !body.includes(needle));
+  const backendIndex = body.indexOf("backendPackCommandForSelected(pack)");
+  const localIndex = body.indexOf("resolvePrimaryCommandForPack(pack)");
+  const routeIndex = body.indexOf("runRouteAction(resolved.action, resolved.targetPackId)");
+  const actionIndex = body.indexOf("handlePackAction(pack.id, resolved.action)");
+  const orderOk = backendIndex >= 0
+    && localIndex > backendIndex
+    && routeIndex > localIndex
+    && actionIndex > routeIndex;
+
+  return {
+    ok: missing.length === 0 && orderOk,
+    detail: missing.length === 0 && orderOk
+      ? "run-next waits for API-owned command before local route/action dispatch"
+      : `missing ${missing.join(", ") || "correct order"}`
   };
 }
 

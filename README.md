@@ -180,6 +180,8 @@ malformed receipts, or off-contract work rows.
 Selected-work commands in hosted app mode wait for the server command preview
 before enabling the primary command buttons, so the browser does not briefly run
 the local workflow fallback while `/api/packs/{id}/command` is loading.
+Run-next dispatch also uses that server command preview in hosted app mode and
+stops at a retry/refresh blocker while the preview is unavailable.
 That same command preview owns the selected-work flow hint and primary "why"
 copy in hosted app mode; the browser-side copy remains only as the static
 fallback.
