@@ -12,8 +12,8 @@ Verified on June 27, 2026:
 https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app
 ```
 
-The live app reported `postgres:projects_demo_state` from `/api/health`, and a
-save/read smoke test passed through `/api/state`.
+The live app reported `storage: postgres` from `/api/health`, and a save/read
+smoke test passed through `/api/state`.
 
 ## Shape
 

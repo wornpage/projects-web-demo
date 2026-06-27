@@ -109,9 +109,11 @@ try {
     "/data/not-allowlisted.json",
     "/render.yaml"
   ].map(async (pathname) => [pathname, await readStatus(pathname)]));
+  const healthText = JSON.stringify(health);
 
   check("health endpoint reports ok", health.ok === true, health.ok);
-  check("hosted state uses Postgres", String(health.stateStorage || "").startsWith("postgres:"), health.stateStorage);
+  check("hosted state uses Postgres", health.storage === "postgres", health.storage || "missing");
+  check("health endpoint hides storage internals", !("stateStorage" in health) && !/projects_demo_state|DATABASE_URL|PGHOST|PGPASSWORD|state\.json|\/app\/state/iu.test(healthText), healthText);
   check("app shell sends CSP", csp.includes("default-src 'self'") && csp.includes("object-src 'none'"), csp || "missing");
   check("app shell blocks framing", csp.includes("frame-ancestors 'none'"), csp || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");

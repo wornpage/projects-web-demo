@@ -89,6 +89,8 @@ uses same-origin API CORS instead of wildcard CORS, and rejects a third-party
 preflight. It also confirms the hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
 asset, or unlisted public asset/data paths.
+It confirms `/api/health` reports only the storage kind and does not expose
+database table names, local state file paths, or storage credentials.
 The sync gate confirms generated sync codes and anonymous browser row keys use
 Web Crypto and do not fall back to weak random values.
 
@@ -103,6 +105,7 @@ Web Crypto and do not fall back to weak random values.
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
+| Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |
 | Local file-backed API users mix state | Fixed | Browser client keys map to separate hashed local state files |
 | Guessable generated sync or browser row keys | Reduced | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback |

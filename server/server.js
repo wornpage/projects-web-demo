@@ -17,7 +17,6 @@ const DATABASE_URL = process.env.DATABASE_URL || "";
 const STATE_STORAGE = normalizeStateStorageMode(process.env.PROJECTS_STATE_STORAGE || (hasPostgresConfig() ? "postgres" : "file"));
 const DEFAULT_STATE_KEY = normalizeText(process.env.PROJECTS_STATE_KEY || "default", 120) || "default";
 const ASSET_VERSION = normalizeAssetVersion(process.env.PROJECTS_ASSET_VERSION
-  || process.env.RENDER_GIT_COMMIT
   || process.env.GIT_COMMIT
   || process.env.COMMIT_SHA
   || `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`);
@@ -110,7 +109,7 @@ async function routeRequest(request, response, url) {
     sendJson(request, response, 200, {
       ok: true,
       service: "projects-web-demo-api",
-      stateStorage: stateStorage.label,
+      storage: STATE_STORAGE,
       time: new Date().toISOString()
     });
     return;
