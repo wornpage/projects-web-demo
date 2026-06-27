@@ -4,14 +4,14 @@ const crypto = require("node:crypto");
 const fileSystem = require("node:fs");
 const fs = require("node:fs/promises");
 const http = require("node:http");
+const os = require("node:os");
 const path = require("node:path");
 
 const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 5179);
 const ROOT_DIR = path.resolve(__dirname, "..");
 const SEED_PACKS_FILE = path.join(ROOT_DIR, "data", "demo-packs.json");
-const DATA_DIR = path.join(__dirname, "data");
-const STATE_FILE = process.env.PROJECTS_STATE_FILE || path.join(DATA_DIR, "state.json");
+const STATE_FILE = process.env.PROJECTS_STATE_FILE || defaultStateFile();
 const STATE_DIR = path.dirname(STATE_FILE);
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const STATE_STORAGE = normalizeStateStorageMode(process.env.PROJECTS_STATE_STORAGE || (hasPostgresConfig() ? "postgres" : "file"));
@@ -370,6 +370,30 @@ function createStateStorage() {
   }
 
   return createFileStateStorage();
+}
+
+function defaultStateFile() {
+  return path.join(defaultStateDir(), "state.json");
+}
+
+function defaultStateDir() {
+  if (process.platform === "win32") {
+    const appData = process.env.LOCALAPPDATA || process.env.APPDATA;
+    if (appData) {
+      return path.join(appData, "projects-web-demo");
+    }
+  }
+
+  if (process.platform === "darwin") {
+    return path.join(os.homedir(), "Library", "Application Support", "projects-web-demo");
+  }
+
+  const stateHome = process.env.XDG_STATE_HOME || process.env.XDG_DATA_HOME;
+  if (stateHome) {
+    return path.join(stateHome, "projects-web-demo");
+  }
+
+  return path.join(os.homedir(), ".local", "state", "projects-web-demo");
 }
 
 function createFileStateStorage() {

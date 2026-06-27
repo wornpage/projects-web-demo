@@ -101,6 +101,8 @@ try {
   check("recovery filenames hide client keys", files.every((file) => !file.includes(clientA) && !file.includes(clientB)), files.join(", "));
   check("recovery does not write an unkeyed local state file", !files.includes("state.json"), files.join(", "));
 
+  await checkDefaultStatePath();
+
   for (const row of checks) {
     console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
   }
@@ -120,11 +122,7 @@ try {
   }
   process.exitCode = 1;
 } finally {
-  server.kill();
-  await new Promise((resolve) => {
-    server.once("exit", resolve);
-    setTimeout(resolve, 2000);
-  });
+  await stopServer(server);
   await fs.rm(tmpDir, { recursive: true, force: true });
 }
 
@@ -160,6 +158,99 @@ function stateWithCheckPack(state, id, title) {
 
 function stateHasPackTitle(state, title) {
   return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
+}
+
+async function checkDefaultStatePath() {
+  const defaultRoot = path.join(tmpDir, "default-user-data");
+  const defaultPort = await freePort();
+  const expectedPrefix = expectedDefaultStatePrefix();
+  const defaultServer = spawn(process.execPath, ["server/server.js"], {
+    cwd: repoRoot,
+    env: {
+      ...process.env,
+      APPDATA: path.join(defaultRoot, "app-data"),
+      HOME: path.join(defaultRoot, "home"),
+      HOST: "127.0.0.1",
+      LOCALAPPDATA: path.join(defaultRoot, "local-app-data"),
+      PORT: String(defaultPort),
+      PROJECTS_STATE_FILE: "",
+      PROJECTS_STATE_STORAGE: "file",
+      XDG_DATA_HOME: path.join(defaultRoot, "xdg-data"),
+      XDG_STATE_HOME: path.join(defaultRoot, "xdg-state")
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let defaultStdout = "";
+  let defaultStderr = "";
+  defaultServer.stdout.on("data", (chunk) => {
+    defaultStdout += chunk;
+  });
+  defaultServer.stderr.on("data", (chunk) => {
+    defaultStderr += chunk;
+  });
+
+  try {
+    await waitForHealth(defaultPort);
+    const defaultClient = "default-state-path-check";
+    const initialState = await jsonRequest(defaultPort, "/api/state", {
+      headers: { "x-projects-demo-client": defaultClient }
+    });
+    const savedState = await jsonRequest(defaultPort, "/api/state", {
+      method: "PUT",
+      headers: {
+        "content-type": "application/json",
+        "x-projects-demo-client": defaultClient
+      },
+      body: JSON.stringify(stateWithCheckPack(initialState.body, "default-state-path-check", "Default state path check"))
+    });
+    const files = (await listFiles(defaultRoot))
+      .map((file) => path.relative(defaultRoot, file).replace(/\\/gu, "/"));
+    check("default file state writes successfully", savedState.status === 200, savedState.status);
+    check("default file state uses user data directory", files.some((file) => file.startsWith(expectedPrefix) && /state\.[a-f0-9]{32}\.json$/u.test(file)), files.join(", ") || "none");
+    check("default file state avoids the repo data directory", !files.some((file) => file.startsWith("server/data/")), files.join(", ") || "none");
+  } catch (error) {
+    if (defaultStdout.trim()) {
+      console.error(defaultStdout.trim());
+    }
+    if (defaultStderr.trim()) {
+      console.error(defaultStderr.trim());
+    }
+    throw error;
+  } finally {
+    await stopServer(defaultServer);
+  }
+}
+
+function expectedDefaultStatePrefix() {
+  if (process.platform === "win32") {
+    return "local-app-data/projects-web-demo/";
+  }
+  if (process.platform === "darwin") {
+    return "home/Library/Application Support/projects-web-demo/";
+  }
+  return "xdg-state/projects-web-demo/";
+}
+
+async function listFiles(root) {
+  const entries = await fs.readdir(root, { withFileTypes: true }).catch(() => []);
+  const files = [];
+  for (const entry of entries) {
+    const file = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await listFiles(file));
+    } else if (entry.isFile()) {
+      files.push(file);
+    }
+  }
+  return files;
+}
+
+async function stopServer(activeServer) {
+  activeServer.kill();
+  await new Promise((resolve) => {
+    activeServer.once("exit", resolve);
+    setTimeout(resolve, 2000);
+  });
 }
 
 async function waitForHealth(activePort) {

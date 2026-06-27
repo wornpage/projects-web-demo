@@ -120,12 +120,12 @@ same-origin resource/opener isolation, restrictive Permissions-Policy headers,
 and a CSP that blocks unsafe inline scripts and styles on served app and API
 responses.
 
-The local state path defaults to `server/data/state.json`, but backend API
-state routes still require the browser's anonymous client key. Local
-file-backed app mode stores each keyed client's state in a separate hashed
-state file beside that path and rejects unkeyed state requests. Hosted deploys
-should still use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres
-environment variables instead of writable container files.
+The local state path defaults to a user data directory outside the repository,
+but backend API state routes still require the browser's anonymous client key.
+Local file-backed app mode stores each keyed client's state in a separate
+hashed state file beside that path and rejects unkeyed state requests. Hosted
+deploys should still use `PROJECTS_STATE_STORAGE=postgres` with managed
+Postgres environment variables instead of writable container files.
 Hosted Postgres stores a server-side digest of the browser client key rather
 than the raw request header value.
 Each keyed backend row is capped at 50 work items. Oversized full-state writes
@@ -215,7 +215,8 @@ same-origin isolation, Permissions-Policy, and CSP headers.
 ## GitHub Pages
 
 The published site is this static repository. Keep the Pages branch/folder
-pointing at these checked-in files. Do not publish `server/data/state.json`.
+pointing at these checked-in files. Do not publish local state files from
+`server/data/` or a user data directory.
 
 Before shipping, run the full local plus live gate:
 

@@ -46,9 +46,11 @@ is the server-injected API-base setting, and the server gives that script a
 fresh nonce on each response.
 
 Use `PROJECTS_STATE_STORAGE=postgres` and managed Postgres environment variables
-when deploying this app to a host where local files are ephemeral. Local
-file-backed app mode stores each keyed client in a separate hashed state file
-beside the configured state path and rejects unkeyed state requests.
+when deploying this app to a host where local files are ephemeral. Without
+`PROJECTS_STATE_FILE`, local file-backed app mode stores state under the user's
+data directory instead of the repository. Each keyed client gets a separate
+hashed state file beside the configured or default state path, and unkeyed state
+requests are rejected.
 
 ## Docker
 

@@ -134,6 +134,7 @@ Web Crypto and do not fall back to weak random values.
 | Public health endpoint exposes storage internals | Fixed | `/api/health` now reports only the storage kind, not the table name or state file path |
 | Accidental files under public asset directories become reachable | Fixed | Static serving and Docker deploys now use a named public frontend file allowlist |
 | Local file-backed API users mix state | Fixed | Browser client keys are required and map to separate hashed local state files |
+| Local file-backed state defaults inside the repo | Fixed | The no-env local default writes under a user data directory; Docker and tests still use explicit `PROJECTS_STATE_FILE` values |
 | Hosted Postgres stores raw browser row keys | Reduced | New writes use server-side `v2:` SHA-256 state keys; raw-key reads remain only to migrate pre-hash rows on next write |
 | Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
