@@ -148,8 +148,8 @@ rejected.
 Each keyed backend row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected instead of being silently stored.
 Full-state writes must be JSON object snapshots with a `packs` array; scalar,
-array, or missing-work payloads are rejected before they can sanitize into an
-empty row.
+array, empty, or missing-work payloads are rejected before they can sanitize
+into an empty row. Use the backend erase endpoint to clear the current row.
 Full-state writes also require each work item to keep a unique id and title, so
 backup or sync restores cannot silently create ambiguous duplicate work rows.
 Selected-work commands in hosted app mode wait for the server command preview

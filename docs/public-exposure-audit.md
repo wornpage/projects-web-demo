@@ -77,9 +77,9 @@ creates work under one browser client
 key, confirms another client key cannot read it, confirms unkeyed local API
 state, seed data, pack lists, and command previews are rejected, confirms weak
 manual and readable sync-code API client keys are rejected, confirms non-JSON,
-scalar JSON, array JSON, and missing-`packs` state writes are rejected,
-confirms oversized keyed state snapshots, duplicate work ids, invalid work
-items, oversized
+scalar JSON, array JSON, empty-`packs`, and missing-`packs` state writes are
+rejected, confirms oversized keyed state snapshots, duplicate work ids, invalid
+work items, oversized
 `actionReceipt` shapes, and create requests past the state cap are rejected,
 confirms the current keyed row can be erased and then no longer contains that
 client's work,
@@ -200,7 +200,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Hosted Postgres stores raw browser row keys | Fixed | Hosted reads and writes use only server-side `v2:` SHA-256 state keys; the raw-key read fallback is retired |
 | Unkeyed writes can consume body parsing before ownership is checked | Fixed | Server-owned state and workflow write routes validate the browser key before reading JSON, and local/live gates prove missing-key writes return `400` before content-type validation |
 | Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
-| Malformed JSON snapshots can wipe a keyed state row | Fixed | `PUT /api/state` requires a JSON object snapshot with a `packs` array; scalar, array, and missing-`packs` payloads return `400` and leave the keyed row unchanged |
+| Malformed JSON snapshots can wipe a keyed state row | Fixed | `PUT /api/state` requires a JSON object snapshot with at least one item in `packs`; scalar, array, empty-`packs`, and missing-`packs` payloads return `400` and leave the keyed row unchanged |
 | Full-state writes can store ambiguous work identities | Fixed | `PUT /api/state` rejects invalid work items and duplicate work ids before storage |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
 | Full-state writes accept unbounded receipt objects | Fixed | `actionReceipt` objects are depth/key/item bounded before storage |

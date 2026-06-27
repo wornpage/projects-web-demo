@@ -1349,6 +1349,9 @@ function validateStatePacks(value) {
   if (!Array.isArray(value)) {
     throw httpError(400, "Demo state packs must be an array.");
   }
+  if (value.length === 0) {
+    throw httpError(400, "Demo state must contain at least one work item.");
+  }
   if (value.length > MAX_STATE_PACKS) {
     throw httpError(400, `Demo state cannot contain more than ${MAX_STATE_PACKS} work items.`);
   }
