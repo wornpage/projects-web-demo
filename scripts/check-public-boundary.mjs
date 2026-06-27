@@ -107,6 +107,8 @@ try {
   check("hosted browser-row save uses named backend endpoint", browserRowSave.ok, browserRowSave.detail);
   const hostedSearch = frontendSearchStaysLocalOnly(frontendSource);
   check("hosted search stays local-only", hostedSearch.ok, hostedSearch.detail);
+  const hostedClipboard = frontendClipboardReceiptsStayLocalOnly(frontendSource);
+  check("hosted clipboard receipts stay local-only", hostedClipboard.ok, hostedClipboard.detail);
   const hostedFilterSave = frontendFilterUsesBackendEndpoint(frontendSource);
   check("hosted filter changes use named backend endpoint", hostedFilterSave.ok, hostedFilterSave.detail);
   const hostedSelectedSave = frontendSelectedWorkUsesBackendEndpoint(frontendSource);
@@ -1278,6 +1280,29 @@ function frontendSearchStaysLocalOnly(source) {
     detail: ok
       ? "search input re-renders as transient browser UI without scheduling backend persistence"
       : "search input can still reach backend or durable state save path"
+  };
+}
+
+function frontendClipboardReceiptsStayLocalOnly(source) {
+  const receiptBody = functionBody(source, "setClipboardReceipt");
+  const copyBody = functionBody(source, "copyToClipboard");
+  if (!receiptBody || !copyBody) {
+    return { ok: false, detail: "setClipboardReceipt/copyToClipboard:missing" };
+  }
+
+  const ok = receiptBody.includes("if (DEMO_API_BASE_URL) state.suppressNextSave = true;")
+    && receiptBody.includes("state.clipboardReceipt =")
+    && copyBody.includes('setClipboardReceipt("success"')
+    && copyBody.includes('setClipboardReceipt("blocked"')
+    && !copyBody.includes("saveBackend")
+    && !copyBody.includes("scheduleBackendStateSave")
+    && !copyBody.includes("saveState();");
+
+  return {
+    ok,
+    detail: ok
+      ? "clipboard receipt renders are transient UI and do not schedule hosted backend persistence"
+      : "clipboard receipt flow can still reach backend or durable state save path"
   };
 }
 

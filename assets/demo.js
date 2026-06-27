@@ -6425,6 +6425,7 @@ function clipboardTargetState(targetId) {
 }
 
 function setClipboardReceipt(kind, options = {}) {
+  if (DEMO_API_BASE_URL) state.suppressNextSave = true;
   const success = kind === "success";
   const title = options.title || (success ? "Copied to clipboard" : "Clipboard blocked");
   const detail = options.detail || (success
