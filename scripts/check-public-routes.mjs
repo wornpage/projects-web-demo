@@ -109,6 +109,7 @@ check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop g
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
 check("card support actions stay readable and tappable", cardSupportActionStylesContractOk(), "grid tiles plus single-column mobile actions");
 check("panel forms group labels controls and help", panelFormFieldStylesContractOk(), "field-card grouping plus focus state");
+check("work filters stay scannable and tappable", workFilterStylesContractOk(), "equal-width chip grid plus compact mobile columns");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 
 for (const row of checks) {
@@ -242,6 +243,26 @@ function panelFormFieldStylesContractOk() {
     ".demo-panel > .demo-inline-form > .demo-field:not(.demo-state-preview):not(.demo-blocker-field):focus-within",
     ".demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field) .demo-field-help",
     "margin: 0;"
+  ]);
+}
+
+function workFilterStylesContractOk() {
+  const mobileStart = styles.indexOf("@media (max-width: 560px)");
+  const mobileEnd = mobileStart < 0 ? -1 : styles.indexOf("@media", mobileStart + 1);
+  const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
+  return includesAll(styles, [
+    ".demo-toolbar:focus-within",
+    "border-color: var(--cockpit-accent);",
+    "box-shadow: var(--demo-panel-hover-shadow);",
+    ".demo-chip-row",
+    "grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));",
+    ".demo-chip",
+    "justify-content: space-between;",
+    "min-height: 42px;",
+    "width: 100%;"
+  ]) && includesAll(mobileStyles, [
+    ".demo-chip-row",
+    "grid-template-columns: repeat(2, minmax(0, 1fr));"
   ]);
 }
 

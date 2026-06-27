@@ -2009,6 +2009,11 @@ html[data-theme="dark"] .demo-header-metadata {
   gap: 10px;
 }
 
+.demo-toolbar:focus-within {
+  border-color: var(--cockpit-accent);
+  box-shadow: var(--demo-panel-hover-shadow);
+}
+
 .demo-panel-head {
   margin-bottom: 4px;
 }
@@ -2183,10 +2188,11 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-chip-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
   gap: 8px;
   margin-top: 12px;
+  min-width: 0;
 }
 
 .demo-chip,
@@ -2201,12 +2207,16 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-chip {
   align-items: center;
   border-radius: 999px;
-  display: inline-flex;
+  display: flex;
   font-size: 13px;
   font-weight: 700;
   gap: 6px;
+  justify-content: space-between;
+  min-height: 42px;
+  min-width: 0;
   padding: 8px 12px;
   transition: border-color var(--demo-motion-duration) ease, transform var(--demo-motion-duration) ease, background-color var(--demo-motion-duration) ease;
+  width: 100%;
 }
 
 .demo-chip:hover,
@@ -4527,6 +4537,10 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
   .demo-card-support > .demo-card-actions {
     grid-template-columns: 1fr;
+  }
+
+  .demo-chip-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .demo-meta-row {
