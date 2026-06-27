@@ -130,6 +130,7 @@ deploys should still use `PROJECTS_STATE_STORAGE=postgres` with managed
 Postgres environment variables instead of writable container files.
 Hosted Postgres stores a server-side digest of the browser client key rather
 than the raw request header value.
+State-changing API routes validate that client key before reading JSON payloads.
 Each keyed backend row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected instead of being silently stored.
 

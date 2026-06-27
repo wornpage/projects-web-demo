@@ -142,8 +142,9 @@ async function routeRequest(request, response, url) {
   }
 
   if (method === "PUT" && pathname === "/api/state") {
+    const stateKey = stateKeyForRequest(request);
     const payload = await readJsonBody(request);
-    sendJson(request, response, 200, await writeState(payload, stateKeyForRequest(request)));
+    sendJson(request, response, 200, await writeState(payload, stateKey));
     return;
   }
 
@@ -154,8 +155,8 @@ async function routeRequest(request, response, url) {
   }
 
   if (method === "POST" && pathname === "/api/packs") {
-    const payload = await readJsonBody(request);
     const stateKey = stateKeyForRequest(request);
+    const payload = await readJsonBody(request);
     const state = await readState(stateKey);
     const result = createPackFromPayload(state, payload);
     await writeState(state, stateKey);
@@ -166,8 +167,8 @@ async function routeRequest(request, response, url) {
   const packPathMatch = pathname.match(/^\/api\/packs\/([^/]+)\/path$/u);
   if (packPathMatch && method === "POST") {
     const packId = decodeURIComponent(packPathMatch[1]);
-    const payload = await readJsonBody(request);
     const stateKey = stateKeyForRequest(request);
+    const payload = await readJsonBody(request);
     const state = await readState(stateKey);
     const result = savePackPathAction(state, packId, payload);
     await writeState(state, stateKey);
@@ -178,8 +179,8 @@ async function routeRequest(request, response, url) {
   const packNextMatch = pathname.match(/^\/api\/packs\/([^/]+)\/next$/u);
   if (packNextMatch && method === "POST") {
     const packId = decodeURIComponent(packNextMatch[1]);
-    const payload = await readJsonBody(request);
     const stateKey = stateKeyForRequest(request);
+    const payload = await readJsonBody(request);
     const state = await readState(stateKey);
     const result = setPackNextAction(state, packId, payload.next);
     await writeState(state, stateKey);
@@ -190,8 +191,8 @@ async function routeRequest(request, response, url) {
   const packActionMatch = pathname.match(/^\/api\/packs\/([^/]+)\/actions$/u);
   if (packActionMatch && method === "POST") {
     const packId = decodeURIComponent(packActionMatch[1]);
-    const payload = await readJsonBody(request);
     const stateKey = stateKeyForRequest(request);
+    const payload = await readJsonBody(request);
     const state = await readState(stateKey);
     const result = runPackAction(state, packId, payload.action);
     await writeState(state, stateKey);
@@ -213,8 +214,8 @@ async function routeRequest(request, response, url) {
     const packId = decodeURIComponent(packMatch[1]);
     const isMemoryRoute = pathname.endsWith("/memory");
     if (method === "POST" && isMemoryRoute) {
-      const payload = await readJsonBody(request);
       const stateKey = stateKeyForRequest(request);
+      const payload = await readJsonBody(request);
       const state = await readState(stateKey);
       const result = addPackMemoryAction(state, packId, payload.note);
       await writeState(state, stateKey);

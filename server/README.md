@@ -10,6 +10,7 @@ without accounts.
 State-changing and state-read API routes require that anonymous browser client
 key in both local file-backed mode and hosted Postgres mode. Missing or invalid
 keys are rejected instead of falling back to one shared row.
+State-changing routes validate that key before reading JSON payloads.
 Hosted Postgres stores a server-side digest of that key in `state_key`; local
 file-backed mode stores hashed filenames.
 Each anonymous state row is capped at 50 work items. Oversized full-state writes

@@ -71,6 +71,9 @@ try {
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
   const recoveryOverwriteTitle = `Live recovery overwritten ${isolationStamp}`;
+  const unkeyedNonJsonStateWriteStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-unkeyed-non-json-state"), {
+    "content-type": "text/plain"
+  }, "PUT");
   const nonJsonStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-non-json-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "text/plain"
@@ -190,6 +193,7 @@ try {
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
+  check("hosted state writes reject missing client key before body parsing", unkeyedNonJsonStateWriteStatus === 400, unkeyedNonJsonStateWriteStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
   check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);

@@ -110,7 +110,8 @@ After deploy:
    missing its nonce-based CSP, if production
    minification did not run, if the backend-backed frontend helpers are missing,
    if retired triage code is still public, if hosted state accepts a request
-   without a browser client key, if hosted state accepts a non-JSON write, if
+   without a browser client key, if a missing-key write reaches body parsing
+   before ownership validation, if hosted state accepts a non-JSON write, if
    hosted state accepts an oversized receipt shape, if two browser client keys
    can read each other's state, if seed demo work cannot load through the keyed
    API, if a shared sync key cannot be read from a second request, if an

@@ -81,6 +81,8 @@ try {
   check("API health sends shared security headers", sharedSecurityHeadersOk(health.headers), sharedSecurityHeaderDetail(health.headers));
   check("Postgres state keys are hashed before storage", /function postgresStateKey\(stateKey\)[\s\S]*v2:\$\{crypto\.createHash\("sha256"\)\.update\(normalized\)\.digest\("hex"\)\}/u.test(serverSource), "postgresStateKey");
   check("Postgres raw state-key path is migration-only", serverSource.includes("WHERE state_key = $1 OR state_key = $2") && serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "legacy read fallback plus delete");
+  const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
+  check("state-changing routes validate client keys before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
 
   const sameOrigin = `http://127.0.0.1:${port}`;
   const sameOriginCors = await request(port, "/api/health", {
@@ -208,6 +210,13 @@ try {
     headers: { "x-projects-demo-client": clientB }
   });
   const unkeyedState = await request(port, "/api/state");
+  const unkeyedNonJsonStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "text/plain"
+    },
+    body: JSON.stringify(stateWithGeneratedPacks(1, "unkeyed-non-json-boundary"))
+  });
   const nonJsonStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -272,6 +281,7 @@ try {
   check("client A reads its created work", stateHasPackTitle(clientAState.body, packTitle), clientAState.status);
   check("client B does not read client A work", !stateHasPackTitle(clientBState.body, packTitle), clientBState.status);
   check("unkeyed local API state is rejected", unkeyedState.status === 400, unkeyedState.status);
+  check("unkeyed local API state writes are rejected before body parsing", unkeyedNonJsonStateWrite.status === 400, unkeyedNonJsonStateWrite.status);
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
   check("deep action receipts are rejected", deepReceiptStateWrite.status === 400, deepReceiptStateWrite.status);
@@ -435,6 +445,27 @@ function sharedSecurityHeaderDetail(headers) {
 
 function getHeader(headers, name) {
   return headers?.[name] || "";
+}
+
+function writeRoutesValidateKeyBeforeBody(source) {
+  const anchors = [
+    "if (method === \"PUT\" && pathname === \"/api/state\")",
+    "if (method === \"POST\" && pathname === \"/api/packs\")",
+    "if (packPathMatch && method === \"POST\")",
+    "if (packNextMatch && method === \"POST\")",
+    "if (packActionMatch && method === \"POST\")",
+    "if (method === \"POST\" && isMemoryRoute)"
+  ];
+  const failed = anchors.filter((anchor) => {
+    const start = source.indexOf(anchor);
+    const keyIndex = source.indexOf("stateKeyForRequest(request)", start);
+    const bodyIndex = source.indexOf("readJsonBody(request)", start);
+    return start < 0 || keyIndex < 0 || bodyIndex < 0 || keyIndex > bodyIndex;
+  });
+  return {
+    ok: failed.length === 0,
+    detail: failed.length === 0 ? "stateKeyForRequest before readJsonBody" : failed.join(", ")
+  };
 }
 
 async function waitForHealth(activePort) {
