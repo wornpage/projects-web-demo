@@ -33,6 +33,7 @@ const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
 const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"]);
+const VALID_PACK_STATUSES = new Set(["active", "blocked", "draft", "done"]);
 const RUNTIME_CONFIG_PATHNAME = "/assets/runtime-config.js";
 const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
   ["title", "title"],
@@ -1364,8 +1365,12 @@ function validateStatePacks(value) {
 
     const id = normalizeText(pack.id, 120);
     const title = normalizeText(pack.title, 200);
+    const status = normalizeText(pack.status, 40);
     if (!id || !title) {
       throw httpError(400, "Demo state work items need an id and title.");
+    }
+    if (!VALID_PACK_STATUSES.has(status)) {
+      throw httpError(400, "Demo state work items need a valid status.");
     }
     if (packIds.has(id)) {
       throw httpError(400, "Demo state work item ids must be unique.");

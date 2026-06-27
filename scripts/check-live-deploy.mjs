@@ -110,6 +110,10 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const invalidWorkStatusStateStatus = await writeStatus("/api/state", stateWithInvalidPackStatus("live-invalid-status-state"), {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  }, "PUT");
   const unkeyedWorkflowWriteStatuses = await Promise.all([
     ["pack create", "/api/packs"],
     ["work path", "/api/packs/source-folder-audit/path"],
@@ -288,6 +292,7 @@ try {
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
   check("hosted state rejects duplicate work ids", duplicateIdStateStatus === 400, duplicateIdStateStatus);
   check("hosted state rejects invalid work items", invalidPackStateStatus === 400, invalidPackStateStatus);
+  check("hosted state rejects invalid work statuses", invalidWorkStatusStateStatus === 400, invalidWorkStatusStateStatus);
   check(
     "hosted workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWriteStatuses.every(([, status]) => status === 400),
@@ -463,6 +468,12 @@ function stateWithDuplicatePackIds(prefix) {
 function stateWithMissingPackTitle(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.packs[0].title = "";
+  return state;
+}
+
+function stateWithInvalidPackStatus(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.packs[0].status = "waiting-for-private-workflow";
   return state;
 }
 

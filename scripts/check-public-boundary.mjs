@@ -342,6 +342,14 @@ try {
     },
     body: JSON.stringify(stateWithMissingPackTitle("missing-title-boundary"))
   });
+  const invalidStatusStateWrite = await request(port, "/api/state", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify(stateWithInvalidPackStatus("invalid-status-boundary"))
+  });
   const deepReceiptStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -415,6 +423,7 @@ try {
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
   check("duplicate work ids in keyed state snapshots are rejected", duplicateIdStateWrite.status === 400, duplicateIdStateWrite.status);
   check("invalid work items in keyed state snapshots are rejected", invalidPackStateWrite.status === 400, invalidPackStateWrite.status);
+  check("invalid work status snapshots are rejected", invalidStatusStateWrite.status === 400, invalidStatusStateWrite.status);
   check("deep action receipts are rejected", deepReceiptStateWrite.status === 400, deepReceiptStateWrite.status);
   check("wide action receipts are rejected", wideReceiptStateWrite.status === 400, wideReceiptStateWrite.status);
   check("client A state survives rejected malformed snapshots", stateHasPackTitle(clientAStateAfterRejectedWrite.body, packTitle), clientAStateAfterRejectedWrite.status);
@@ -503,6 +512,12 @@ function stateWithDuplicatePackIds(prefix) {
 function stateWithMissingPackTitle(prefix) {
   const state = stateWithGeneratedPacks(1, prefix);
   state.packs[0].title = "";
+  return state;
+}
+
+function stateWithInvalidPackStatus(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.packs[0].status = "waiting-for-private-workflow";
   return state;
 }
 
