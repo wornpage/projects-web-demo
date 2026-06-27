@@ -30,6 +30,10 @@ http://localhost:5179/#/home
 In app mode, the frontend is served with a same-origin API setting, so no
 `?api=` query parameter is needed.
 
+The app shell is served with a Content Security Policy. The only inline script
+is the server-injected API-base setting, and the server gives that script a
+fresh nonce on each response.
+
 Use `PROJECTS_STATE_STORAGE=postgres` and managed Postgres environment variables
 when deploying this app to a host where local files are ephemeral. Local
 file-backed app mode still honors the browser client key by storing each keyed

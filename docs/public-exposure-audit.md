@@ -62,7 +62,9 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
 The gate starts the Node app with a temporary file-backed state directory,
 confirms only the public allowlist is served, confirms repository files and
 path traversal attempts return `404`, creates work under one browser client
-key, and confirms another client key plus the default local row cannot read it.
+key, confirms another client key plus the default local row cannot read it, and
+confirms the backend-served app shell sends a nonce-based Content Security
+Policy for the injected runtime API script.
 
 Repeatable live gate:
 
@@ -84,6 +86,7 @@ and lets a fixed shared sync key read the same row from another request.
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
 | Local file-backed API users mix state | Fixed | Browser client keys map to separate hashed local state files |
+| Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
 | GitHub Pages root publish could expose repo files | Possible if enabled | Keep Pages disabled or publish only a filtered artifact |
 
 ## What Cannot Be Hidden

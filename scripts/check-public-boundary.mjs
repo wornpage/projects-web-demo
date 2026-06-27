@@ -36,6 +36,7 @@ server.stderr.on("data", (chunk) => {
 try {
   await waitForHealth(port);
 
+  const appShell = await request(port, "/");
   for (const pathname of [
     "/",
     "/index.html",
@@ -48,6 +49,14 @@ try {
     const response = await request(port, pathname);
     check(`public asset allowed: ${pathname}`, response.status === 200, response.status);
   }
+  const csp = appShell.headers["content-security-policy"] || "";
+  const cspNonce = nonceFromCsp(csp);
+  const htmlNonce = nonceFromHtml(appShell.text);
+  check("app shell sends a content security policy", csp.includes("default-src 'self'") && csp.includes("object-src 'none'"), csp || "missing");
+  check("app shell blocks framing", csp.includes("frame-ancestors 'none'"), csp || "missing");
+  check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
+  check("runtime API script uses CSP nonce", Boolean(cspNonce) && cspNonce === htmlNonce, htmlNonce || "missing");
+  check("script policy avoids unsafe inline scripts", csp.includes(`script-src 'self' 'nonce-${cspNonce}'`) && !scriptSrcDirective(csp).includes("'unsafe-inline'"), scriptSrcDirective(csp));
 
   for (const pathname of [
     "/README.md",
@@ -132,6 +141,20 @@ function check(name, ok, detail) {
 
 function stateHasPackTitle(state, title) {
   return Array.isArray(state?.packs) && state.packs.some((pack) => pack?.title === title);
+}
+
+function nonceFromCsp(csp) {
+  const match = csp.match(/script-src[^;]*'nonce-([^']+)'/u);
+  return match?.[1] || "";
+}
+
+function nonceFromHtml(html) {
+  const match = html.match(/<script nonce="([^"]+)">window\.PROJECTS_API_BASE_URL/u);
+  return match?.[1] || "";
+}
+
+function scriptSrcDirective(csp) {
+  return csp.split(";").map((part) => part.trim()).find((part) => part.startsWith("script-src")) || "";
 }
 
 async function waitForHealth(activePort) {

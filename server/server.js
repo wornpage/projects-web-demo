@@ -231,9 +231,11 @@ async function serveStaticRequest(request, response, url) {
   const contentType = contentTypes[extension] || "application/octet-stream";
 
   if (isIndexFile(file)) {
-    const html = injectAppApiBase(await fs.readFile(file, "utf8"));
+    const nonce = crypto.randomBytes(16).toString("base64");
+    const html = injectAppApiBase(await fs.readFile(file, "utf8"), nonce);
     response.writeHead(200, {
       ...securityHeaders,
+      "content-security-policy": contentSecurityPolicy(nonce),
       "content-type": contentType
     });
     response.end(request.method === "HEAD" ? "" : html);
@@ -310,19 +312,41 @@ function isIndexFile(file) {
   return path.resolve(file) === path.join(ROOT_DIR, "index.html");
 }
 
-function injectAppApiBase(html) {
+function contentSecurityPolicy(nonce) {
+  return [
+    "default-src 'self'",
+    "base-uri 'none'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    `script-src 'self' 'nonce-${nonce}'`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "form-action 'none'"
+  ].join("; ");
+}
+
+function injectAppApiBase(html, nonce) {
   const versionedHtml = html
     .replace(/(href="assets\/(?:app|demo)\.css\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
     .replace(/(src="assets\/demo\.js\?v=)[^"]*/u, `$1${ASSET_VERSION}`);
-  const script = '<script>window.PROJECTS_API_BASE_URL = window.PROJECTS_API_BASE_URL || location.origin;</script>';
-  if (versionedHtml.includes(script)) {
-    return versionedHtml;
+  const script = `<script nonce="${escapeHtmlAttribute(nonce)}">window.PROJECTS_API_BASE_URL = window.PROJECTS_API_BASE_URL || location.origin;</script>`;
+  if (versionedHtml.includes("window.PROJECTS_API_BASE_URL")) {
+    return versionedHtml.replace(/<script[^>]*>window\.PROJECTS_API_BASE_URL = window\.PROJECTS_API_BASE_URL \|\| location\.origin;<\/script>/u, script);
   }
 
   return versionedHtml.replace(
     /(\s*<script src="assets\/demo\.js[^>]*><\/script>)/u,
     `  ${script}\n$1`
   );
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value ?? "")
+    .replace(/&/gu, "&amp;")
+    .replace(/"/gu, "&quot;")
+    .replace(/</gu, "&lt;")
+    .replace(/>/gu, "&gt;");
 }
 
 async function readState(stateKey = DEFAULT_STATE_KEY) {
