@@ -79,8 +79,11 @@ Outplane app origin or an explicitly configured `PROJECTS_PUBLIC_ORIGIN` /
 CORS.
 The backend keeps in-memory per-process rate limits for public API traffic and
 state writes. State-write throttling runs after the browser key is validated but
-before JSON body parsing. This protects the demo from simple repeated-write
-abuse, but it is not account security, encryption, or a full DDoS control.
+before JSON body parsing. The local boundary and deploy-config gates prove this
+ordering on one app process; the hosted live gate does not require observing
+`429` because Outplane can route requests across processes. This protects the
+demo from simple repeated-write abuse, but it is not account security,
+encryption, or a full DDoS control.
 
 The app also supports a sync code for personal two-device use. **New** creates a
 Web Crypto generated 20-character code and copies the current demo state to that
@@ -148,9 +151,9 @@ After deploy:
    key or readable sync-code-shaped client key, if a missing-key state or
    workflow write reaches body parsing before ownership validation, if hosted
    state accepts a non-JSON write, if an oversized JSON upload is not rejected
-   by the app or hosting platform, if that oversized row is stored, if repeated
-   state writes do not eventually return `429`, an invalid selected work id or selected id
-   type, malformed top-level metadata or text, a malformed or overlong work text
+   by the app or hosting platform, if that oversized row is stored, if an
+   invalid selected work id or selected id type, malformed top-level metadata
+   or text, a malformed or overlong work text
    field, malformed work string list, or malformed/oversized receipt shape, if hosted
    workflow writes accept malformed create, next, action, memory, or path fields, if hosted
    work-path writes accept an unsupported status value,

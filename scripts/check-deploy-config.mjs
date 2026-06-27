@@ -144,12 +144,12 @@ check("live verifier handles hosted oversized upload rejection", includesAll(liv
   "hostedOversizedBodyRejected",
   "stateHasPackId(limitStateAfterRejectedWrites, \"live-oversized-body-state-1\")"
 ]), "hosted oversized upload rejection");
-check("live verifier checks hosted write rate limits", includesAll(liveVerifier, [
-  "rateLimitedStateWriteStatuses",
-  "hosted state write rate limit rejects before content-type parsing",
-  "rateLimitWriteStatuses",
-  "RATE_LIMIT_STATE_WRITE_REQUESTS"
-]), "hosted write rate limit rejection");
+check(
+  "live verifier avoids process-local hosted write-rate assertion",
+  !liveVerifier.includes("hosted state write rate limit rejects before content-type parsing")
+    && !liveVerifier.includes("rateLimitWriteStatuses"),
+  "covered by local boundary/source-order checks"
+);
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",

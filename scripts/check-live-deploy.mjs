@@ -10,7 +10,6 @@ import { fileURLToPath } from "node:url";
 const DEFAULT_URL = "https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app";
 const MAX_STATE_PACKS = 50;
 const MAX_PLAIN_VALUE_DEPTH = 6;
-const RATE_LIMIT_STATE_WRITE_REQUESTS = 120;
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const baseUrl = normalizeBaseUrl(process.argv[2] || DEFAULT_URL);
@@ -89,7 +88,6 @@ try {
   const recoveryKey = "demo-00000000-0000-4000-8000-000000000204";
   const limitKey = "demo-00000000-0000-4000-8000-000000000205";
   const pathStatusKey = "demo-00000000-0000-4000-8000-000000000206";
-  const rateLimitKey = `demo-${crypto.randomUUID()}`;
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
@@ -226,7 +224,6 @@ try {
     "x-projects-demo-client": pathStatusKey,
     "content-type": "application/json"
   }, "POST");
-  const rateLimitedStateWriteStatuses = await rateLimitWriteStatuses(rateLimitKey);
   const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
     actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
   }), {
@@ -450,7 +447,6 @@ try {
   check("hosted workflow rejects malformed actions", invalidWorkflowActionStatus === 400, invalidWorkflowActionStatus);
   check("hosted workflow rejects overlong memory notes", overlongWorkflowMemoryStatus === 400, overlongWorkflowMemoryStatus);
   check("hosted workflow rejects malformed path text fields", invalidWorkflowPathTextStatus === 400, invalidWorkflowPathTextStatus);
-  check("hosted state write rate limit rejects before content-type parsing", rateLimitStatusesOk(rateLimitedStateWriteStatuses), statusCounts(rateLimitedStateWriteStatuses));
   check("hosted state rejects malformed action receipts", malformedReceiptStateStatus === 400, malformedReceiptStateStatus);
   check("hosted state rejects overlong action receipt text", overlongReceiptTextStateStatus === 400, overlongReceiptTextStateStatus);
   check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);
@@ -550,19 +546,6 @@ async function writeStatus(pathname, payload, headers = {}, method = "PUT") {
   return response.status;
 }
 
-async function rateLimitWriteStatuses(clientKey) {
-  const statuses = [];
-  for (let index = 0; index < RATE_LIMIT_STATE_WRITE_REQUESTS + 1; index += 1) {
-    statuses.push(await writeStatus("/api/state", {
-      ignored: "rate limit check should fail content-type before storage until the bucket is full"
-    }, {
-      "x-projects-demo-client": clientKey,
-      "content-type": "text/plain"
-    }, "PUT"));
-  }
-  return statuses;
-}
-
 function stateWithCheckPack(state, id, title) {
   const packs = Array.isArray(state?.packs) ? state.packs : [];
   const checkPack = {
@@ -606,18 +589,6 @@ function commandPreviewOwnsCopy(preview) {
 
 function hostedOversizedBodyRejected(status) {
   return status === 413 || status === 502;
-}
-
-function rateLimitStatusesOk(statuses) {
-  return statuses.filter((status) => status === 415).length === RATE_LIMIT_STATE_WRITE_REQUESTS
-    && statuses.filter((status) => status === 429).length === 1;
-}
-
-function statusCounts(statuses) {
-  return [...new Set(statuses)]
-    .sort((left, right) => left - right)
-    .map((status) => `${status}:${statuses.filter((entry) => entry === status).length}`)
-    .join(", ");
 }
 
 function stateWithGeneratedPacks(count, prefix, options = {}) {
