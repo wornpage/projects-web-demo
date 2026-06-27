@@ -62,9 +62,10 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
 The gate starts the Node app with a temporary file-backed state directory,
 confirms only the public allowlist is served, confirms repository files and
 path traversal attempts return `404`, creates work under one browser client
-key, confirms another client key plus the default local row cannot read it, and
-confirms the backend-served app shell sends a nonce-based Content Security
-Policy for the injected runtime API script.
+key, confirms another client key plus the default local row cannot read it,
+confirms public text assets stay under explicit size budgets without source-map
+hints or private path strings, and confirms the backend-served app shell sends a
+nonce-based Content Security Policy for the injected runtime API script.
 
 Repeatable live gate:
 
@@ -76,7 +77,8 @@ The live gate confirms the hosted app uses Postgres, serves the app shell with a
 nonce-based CSP, rejects `/api/state` without a browser client key, keeps fixed
 `live-check-*` browser rows separate, lets a fixed shared sync key read the same
 row from another request, and restores an exported state snapshot to its keyed
-row.
+row. It also confirms the hosted public assets have no source-map references,
+private path strings, or served source-map files.
 
 ## Risk Decisions
 

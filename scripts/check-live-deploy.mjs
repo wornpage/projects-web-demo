@@ -19,6 +19,13 @@ try {
     ? `/assets/demo.js?v=${encodeURIComponent(assetVersion)}`
     : "/assets/demo.js";
   const script = await readText(scriptPath);
+  const publicAssetTexts = [
+    { pathname: "/", text: html },
+    { pathname: scriptPath, text: script },
+    { pathname: "/assets/demo.css", text: await readText("/assets/demo.css") },
+    { pathname: "/assets/app.css", text: await readText("/assets/app.css") },
+    { pathname: "/data/demo-packs.json", text: await readText("/data/demo-packs.json") }
+  ];
   const lineCount = script.split(/\r?\n/u).length;
   const liveClientKey = `live-check-${Date.now().toString(36)}`;
   const apiHeaders = { "x-projects-demo-client": liveClientKey };
@@ -68,6 +75,17 @@ try {
   ];
   const readableBackendHelpers = backendHelperNames.filter((name) => script.includes(name));
   const readableInternalStrings = internalFrontendStrings.filter((value) => script.includes(value));
+  const publicSourceMapReferences = publicAssetTexts
+    .filter((asset) => /sourceMappingURL|sourceURL/iu.test(asset.text))
+    .map((asset) => asset.pathname);
+  const publicPrivatePathReferences = publicAssetTexts
+    .filter((asset) => /(?:github\.com\/jared-bidlow|(?<![A-Za-z])(?:[A-Za-z]:[\\/]|\\\\\?\\[A-Za-z]:\\)|\.git[\\/]|server[\\/]server\.js|server[\\/]package-lock\.json|node_modules[\\/])/iu.test(asset.text))
+    .map((asset) => asset.pathname);
+  const sourceMapStatuses = await Promise.all([
+    "/assets/demo.js.map",
+    "/assets/demo.css.map",
+    "/assets/app.css.map"
+  ].map(async (pathname) => [pathname, await readStatus(pathname)]));
 
   check("health endpoint reports ok", health.ok === true, health.ok);
   check("hosted state uses Postgres", String(health.stateStorage || "").startsWith("postgres:"), health.stateStorage);
@@ -80,6 +98,9 @@ try {
   check("production JS is minified", lineCount < 200, `${lineCount} line(s)`);
   check("backend helper names are not readable", readableBackendHelpers.length === 0, readableBackendHelpers.join(", ") || "hidden");
   check("internal API strings are encoded", readableInternalStrings.length === 0, readableInternalStrings.join(", ") || "hidden");
+  check("public assets have no source map references", publicSourceMapReferences.length === 0, publicSourceMapReferences.join(", ") || "absent");
+  check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
+  check("source map files are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);

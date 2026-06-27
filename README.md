@@ -36,6 +36,7 @@ Keep this repo focused on the public portfolio demo.
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
+| `scripts/check-public-assets.mjs` | Local proof that public text assets stay budgeted and omit source maps or private path strings. |
 | `scripts/check-public-routes.mjs` | Local proof that the visible route set stays intentionally small. |
 | `scripts/check-sync-surface.mjs` | Local proof that sync links, QR sharing, and sync client keys stay wired. |
 | `scripts/check-state-recovery.mjs` | Local proof that one client's exported state can be restored without mixing rows. |
@@ -224,9 +225,9 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 ```
 
 That command runs frontend syntax, backend syntax, protected frontend, public
-route-contract, sync sharing, state recovery, public-boundary, Docker
-deploy-boundary, whitespace, and live Outplane checks. For UI-only work, also
-smoke the main routes locally in light and dark mode:
+asset-disclosure, public route-contract, sync sharing, state recovery,
+public-boundary, Docker deploy-boundary, whitespace, and live Outplane checks.
+For UI-only work, also smoke the main routes locally in light and dark mode:
 
 - `#/home`
 - `#/review`

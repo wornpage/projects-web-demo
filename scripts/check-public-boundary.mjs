@@ -74,6 +74,15 @@ try {
     check(`private repo file blocked: ${pathname}`, response.status === 404, response.status);
   }
 
+  for (const pathname of [
+    "/assets/demo.js.map",
+    "/assets/demo.css.map",
+    "/assets/app.css.map"
+  ]) {
+    const response = await request(port, pathname);
+    check(`source map not served: ${pathname}`, response.status === 404, response.status);
+  }
+
   const clientA = "local-check-client-a";
   const clientB = "local-check-client-b";
   const packTitle = `Boundary check ${Date.now().toString(36)}`;
