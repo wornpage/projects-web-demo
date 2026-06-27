@@ -103,6 +103,10 @@ check("live verifier rejects unkeyed pack reads", includesAll(liveVerifier, [
   "hosted pack list rejects missing client key",
   "hosted command preview rejects missing client key"
 ]), "unkeyed pack read rejection");
+check("live verifier rejects unkeyed workflow writes before body parsing", includesAll(liveVerifier, [
+  "unkeyedWorkflowWriteStatuses",
+  "hosted workflow writes reject missing client key before body parsing"
+]), "unkeyed workflow write rejection");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",

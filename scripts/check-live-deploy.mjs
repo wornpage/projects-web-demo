@@ -110,6 +110,18 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const unkeyedWorkflowWriteStatuses = await Promise.all([
+    ["pack create", "/api/packs"],
+    ["work path", "/api/packs/source-folder-audit/path"],
+    ["next action", "/api/packs/source-folder-audit/next"],
+    ["pack action", "/api/packs/source-folder-audit/actions"],
+    ["memory action", "/api/packs/source-folder-audit/memory"]
+  ].map(async ([name, pathname]) => [
+    name,
+    await writeStatus(pathname, { action: "open", next: "Open", note: "Missing-key live boundary check." }, {
+      "content-type": "text/plain"
+    }, "POST")
+  ]));
   const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
     actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
   }), {
@@ -248,6 +260,11 @@ try {
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);
   check("hosted state rejects duplicate work ids", duplicateIdStateStatus === 400, duplicateIdStateStatus);
   check("hosted state rejects invalid work items", invalidPackStateStatus === 400, invalidPackStateStatus);
+  check(
+    "hosted workflow writes reject missing client key before body parsing",
+    unkeyedWorkflowWriteStatuses.every(([, status]) => status === 400),
+    unkeyedWorkflowWriteStatuses.map(([name, status]) => `${name}:${status}`).join(", ")
+  );
   check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);

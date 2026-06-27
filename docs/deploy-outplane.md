@@ -130,9 +130,9 @@ After deploy:
    backend-backed frontend helpers are missing,
    if retired triage code is still public, if hosted state accepts a request
    without a browser client key, if hosted state accepts a weak manual client
-   key or readable sync-code-shaped client key, if a missing-key write reaches
-   body parsing before ownership validation, if hosted state accepts a non-JSON
-   write, if hosted state accepts an oversized receipt shape, if two browser
+   key or readable sync-code-shaped client key, if a missing-key state or
+   workflow write reaches body parsing before ownership validation, if hosted
+   state accepts a non-JSON write, if hosted state accepts an oversized receipt shape, if two browser
    client keys can read each other's state, if seed demo work cannot load
    through the keyed API, if a shared sync key cannot be read from a second
    request, if an exported state snapshot cannot be restored, if the live

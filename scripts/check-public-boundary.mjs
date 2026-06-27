@@ -156,9 +156,28 @@ try {
   const unkeyedSeedPacks = await request(port, "/api/demo-packs");
   const unkeyedPacks = await request(port, "/api/packs");
   const unkeyedCommandPreview = await request(port, "/api/packs/source-folder-audit/command");
+  const unkeyedWorkflowWrites = await Promise.all([
+    ["pack create", "/api/packs"],
+    ["work path", "/api/packs/source-folder-audit/path"],
+    ["next action", "/api/packs/source-folder-audit/next"],
+    ["pack action", "/api/packs/source-folder-audit/actions"],
+    ["memory action", "/api/packs/source-folder-audit/memory"]
+  ].map(async ([name, pathname]) => {
+    const response = await request(port, pathname, {
+      method: "POST",
+      headers: { "content-type": "text/plain" },
+      body: JSON.stringify({ action: "open", next: "Open", note: "Missing-key boundary check." })
+    });
+    return [name, response.status];
+  }));
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
+  check(
+    "unkeyed API workflow writes reject missing client key before body parsing",
+    unkeyedWorkflowWrites.every(([, status]) => status === 400),
+    unkeyedWorkflowWrites.map(([name, status]) => `${name}:${status}`).join(", ")
+  );
 
   for (const pathname of [
     "/README.md",

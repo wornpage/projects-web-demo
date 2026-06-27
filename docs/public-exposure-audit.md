@@ -139,8 +139,9 @@ temporary shared and recovery verifier rows,
 uses same-origin API CORS instead of wildcard CORS, rejects
 third-party preflights, rejects disallowed preflight methods/headers, and
 rejects forwarded-host CORS spoofing. It also confirms the hosted state write
-path rejects a missing browser key before body parsing, the hosted app shell
-sends HSTS, frame-deny, same-origin resource/opener isolation, embedder
+path and server-owned workflow write paths reject a missing browser key before
+body parsing, the hosted app shell sends HSTS, frame-deny, same-origin
+resource/opener isolation, embedder
 isolation, origin-agent clustering, restrictive Permissions-Policy headers, a
 noindex/noarchive robots header, a style policy without unsafe inline styles,
 and explicit denials for unused frame, worker, manifest, and media loaders, and
@@ -192,7 +193,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Demo users cannot remove hosted anonymous state | Fixed | `POST /api/state/erase` deletes only the current keyed row and rejects missing keys before storage access |
 | Local file-backed state defaults inside the repo | Fixed | The no-env local default writes under a user data directory; Docker and tests still use explicit `PROJECTS_STATE_FILE` values |
 | Hosted Postgres stores raw browser row keys | Fixed | Hosted reads and writes use only server-side `v2:` SHA-256 state keys; the raw-key read fallback is retired |
-| Unkeyed writes can consume body parsing before ownership is checked | Fixed | Server-owned write routes now validate the browser key before reading JSON, and local/live gates prove missing-key writes return `400` before content-type validation |
+| Unkeyed writes can consume body parsing before ownership is checked | Fixed | Server-owned state and workflow write routes validate the browser key before reading JSON, and local/live gates prove missing-key writes return `400` before content-type validation |
 | Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
 | Full-state writes can store ambiguous work identities | Fixed | `PUT /api/state` rejects invalid work items and duplicate work ids before storage |
 | API body routes parse non-JSON writes | Fixed | Body routes require `Content-Type: application/json`; non-JSON state writes return `415` |
