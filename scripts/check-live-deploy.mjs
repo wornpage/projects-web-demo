@@ -84,6 +84,9 @@ try {
   const unkeyedRestoreStatus = await writeStatus("/api/state/restore", stateWithGeneratedPacks(1, "live-unkeyed-restore"), {
     "content-type": "text/plain"
   }, "POST");
+  const unkeyedSyncCopyStatus = await writeStatus("/api/state/sync", stateWithGeneratedPacks(1, "live-unkeyed-sync"), {
+    "content-type": "text/plain"
+  }, "POST");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
   const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
@@ -265,9 +268,9 @@ try {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
   }, "PUT");
-  await writeJson("/api/state", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
+  await writeJson("/api/state/sync", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
     "x-projects-demo-client": sharedKey
-  });
+  }, "POST");
   await writeJson("/api/state", stateWithCheckPack(liveState, "live-recovery-check", recoverySnapshotTitle), {
     "x-projects-demo-client": recoveryKey
   });
@@ -409,6 +412,7 @@ try {
   check("generic pack PATCH route is retired", retiredGenericPatchStatus === 404, retiredGenericPatchStatus);
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted recovery restore rejects missing client key before body parsing", unkeyedRestoreStatus === 400, unkeyedRestoreStatus);
+  check("hosted sync copy rejects missing client key before body parsing", unkeyedSyncCopyStatus === 400, unkeyedSyncCopyStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);

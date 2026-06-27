@@ -98,6 +98,8 @@ try {
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
   const recoveryRestore = frontendRecoveryRestoreUsesBackendEndpoint(frontendSource);
   check("hosted recovery restore uses named backend endpoint", recoveryRestore.ok, recoveryRestore.detail);
+  const syncCopy = frontendSyncCopyUsesBackendEndpoint(frontendSource);
+  check("hosted sync copy uses named backend endpoint", syncCopy.ok, syncCopy.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -199,11 +201,17 @@ try {
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ packs: [] })
   });
+  const unkeyedSyncCopy = await request(port, "/api/state/sync", {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: JSON.stringify({ packs: [] })
+  });
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
   check("keyed command preview owns flow and reason copy", commandPreviewOwnsCopy(keyedCommandPreview.body), `${keyedCommandPreview.body?.flowHint || "missing"} / ${keyedCommandPreview.body?.primaryReason || "missing"}`);
   check("unkeyed recovery restore rejects missing client key before body parsing", unkeyedRestore.status === 400, unkeyedRestore.status);
+  check("unkeyed sync copy rejects missing client key before body parsing", unkeyedSyncCopy.status === 400, unkeyedSyncCopy.status);
   check(
     "unkeyed API workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWrites.every(([, status]) => status === 400),
@@ -932,6 +940,7 @@ function writeRoutesValidateKeyBeforeBody(source) {
   const anchors = [
     "if (method === \"PUT\" && pathname === \"/api/state\")",
     "if (method === \"POST\" && pathname === \"/api/state/restore\")",
+    "if (method === \"POST\" && pathname === \"/api/state/sync\")",
     "if (method === \"POST\" && pathname === \"/api/packs\")",
     "if (packPathMatch && method === \"POST\")",
     "if (packNextMatch && method === \"POST\")",
@@ -982,6 +991,30 @@ function frontendRecoveryRestoreUsesBackendEndpoint(source) {
     detail: missing.length === 0 && orderOk
       ? "hosted restore posts to /api/state/restore while static restore keeps local save"
       : `missing ${missing.join(", ") || "correct order"}`
+  };
+}
+
+function frontendSyncCopyUsesBackendEndpoint(source) {
+  const body = functionBody(source, "activateSyncCode");
+  if (!body) {
+    return { ok: false, detail: "activateSyncCode:missing" };
+  }
+
+  const required = [
+    "options.copyCurrentState",
+    "sendBackendStateSnapshot(\"/api/state/sync\", \"POST\", demoStateSnapshot(), \"Sync\")",
+    "loadBackendOwnedState(await loadBackendState())"
+  ];
+  const missing = required.filter((needle) => !body.includes(needle));
+  if (body.includes("persistBackendStateSnapshot(demoStateSnapshot())")) {
+    missing.push("generic state snapshot still used for sync copy");
+  }
+
+  return {
+    ok: missing.length === 0,
+    detail: missing.length === 0
+      ? "new sync-code copy posts to /api/state/sync instead of generic PUT /api/state"
+      : missing.join(", ")
   };
 }
 

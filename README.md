@@ -194,6 +194,8 @@ state through `PUT /api/state`.
 Recovery restores in hosted app mode post to `POST /api/state/restore` instead
 of going through the browser's generic full-state save path. Static mode still
 uses the local browser save path because GitHub Pages has no backend.
+New sync-code copies in hosted app mode post to `POST /api/state/sync` instead
+of going through the generic browser-row save path.
 If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
 and does not continue into the static fallback write path.
 Those workflow endpoints reject malformed or overlong request fields before
@@ -212,8 +214,9 @@ scan the QR code. Anyone with the code or sync link can open that demo state,
 and the database still stores readable JSON; this is convenience sync, not
 private encrypted storage. Browsers must support Web Crypto hashing for sync
 codes; the app will not send readable sync codes as backend row keys. Sync
-links use `?sync=` only as a launch parameter and remove it from the address bar
-after the shared state loads.
+copy uses the named backend sync endpoint, and sync links use `?sync=` only as a
+launch parameter and remove it from the address bar after the shared state
+loads.
 
 The Start screen also has a collapsed Recovery section. **Copy backup** copies a
 bounded JSON snapshot for the current browser or active sync row, and

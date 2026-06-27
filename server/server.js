@@ -172,6 +172,13 @@ async function routeRequest(request, response, url) {
     return;
   }
 
+  if (method === "POST" && pathname === "/api/state/sync") {
+    const stateKey = stateWriteKeyForRequest(request);
+    const payload = await readJsonBody(request);
+    sendJson(request, response, 200, await writeState(payload, stateKey));
+    return;
+  }
+
   if (method === "POST" && pathname === "/api/state/erase") {
     sendJson(request, response, 200, await eraseState(stateWriteKeyForRequest(request)));
     return;

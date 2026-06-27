@@ -111,7 +111,7 @@ After deploy:
 4. Refresh the page and confirm the change remains in that browser.
 5. Open a private window and confirm it starts from seed demo data.
 6. Create a sync code, use it in a second browser, and confirm both browsers see
-   the same demo state.
+   the same demo state through the hosted sync-copy endpoint.
 7. Confirm **Copy code** copies the short code, **Copy link** copies a `?sync=`
    URL, the QR code is visible beside the sync link, and opening the sync link
    removes `?sync=` from the address bar after the shared state loads.
@@ -160,7 +160,8 @@ After deploy:
    work-path writes accept an unsupported status value,
    if two browser client keys can read each other's state, if seed demo work cannot load
    through the keyed API, if a shared sync key cannot be read from a second
-   request, if an exported state snapshot cannot be restored through
+   request, if a sync snapshot cannot be copied through `POST /api/state/sync`,
+   if an exported state snapshot cannot be restored through
    `POST /api/state/restore`, if the live
    verifier cannot erase the temporary verifier rows it writes, or if public
    assets expose source maps or private path strings.

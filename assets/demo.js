@@ -1153,7 +1153,7 @@ async function activateSyncCode(value, options = {}) {
   writeSyncCode(code);
   apiSessionClientId = "";
   if (options.copyCurrentState) {
-    await persistBackendStateSnapshot(demoStateSnapshot());
+    await sendBackendStateSnapshot("/api/state/sync", "POST", demoStateSnapshot(), "Sync");
     state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use code on another device");
   } else {
     loadBackendOwnedState(await loadBackendState());

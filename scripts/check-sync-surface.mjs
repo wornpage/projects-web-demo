@@ -10,6 +10,7 @@ const requireFromServer = createRequire(new URL("../server/package.json", import
 const acorn = requireFromServer("acorn");
 const html = await fs.readFile(path.join(repoRoot, "index.html"), "utf8");
 const source = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+const styles = await fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8");
 const ast = acorn.parse(source, {
   ecmaVersion: "latest",
   sourceType: "script"
@@ -204,7 +205,7 @@ check(
     "writeSyncCode(code)",
     "apiSessionClientId = \"\"",
     "options.copyCurrentState",
-    "persistBackendStateSnapshot(demoStateSnapshot())",
+    "sendBackendStateSnapshot(\"/api/state/sync\", \"POST\", demoStateSnapshot(), \"Sync\")",
     "loadBackendOwnedState(await loadBackendState())"
   ]),
   "activateSyncCode"
@@ -305,6 +306,12 @@ check(
   "syncClientId"
 );
 
+check(
+  "sync controls stay usable on mobile",
+  syncMobileStylesOk(),
+  "full-width input, centered buttons, compact share grid"
+);
+
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
 }
@@ -322,6 +329,24 @@ function check(name, ok, detail) {
 
 function includesAll(text, needles) {
   return needles.every((needle) => text.includes(needle));
+}
+
+function syncMobileStylesOk() {
+  const mobileStart = styles.indexOf("@media (max-width: 560px)");
+  const mobileEnd = mobileStart < 0 ? -1 : styles.indexOf("@media", mobileStart + 1);
+  const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
+  return includesAll(mobileStyles, [
+    ".demo-sync-controls",
+    ".demo-sync-share",
+    "align-items: stretch;",
+    ".demo-sync-controls input",
+    "max-width: none;",
+    "width: 100%;",
+    ".demo-sync-controls .btn",
+    "flex: 1 1 120px;",
+    "justify-content: center;",
+    "grid-template-columns: minmax(0, 1fr) auto;"
+  ]);
 }
 
 function sourceOrder(text, needles) {
