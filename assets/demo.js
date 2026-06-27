@@ -3099,7 +3099,7 @@ function renderCreate() {
         ${inputField("new-title", "Title", defaults.title, `Name the ${profile().work} before Save can run.`)}
         ${inputField("new-owner", "Owner", defaults.owner, "Name the person, team, or role responsible for the next step.")}
         ${buttonRunsNextSelectField("new-next", "Button runs next", defaults.next, "Choose the first action. Choose action means Save work stays paused.")}
-        ${inputField("new-due", "Due", defaults.due, "Optional date used by Today and Calendar views.")}
+        ${inputField("new-due", "Due", defaults.due, "Optional date kept on the work path and searchable in the work list.")}
         ${textField("new-purpose", "Why it matters", defaults.purpose, `Optional context for why this ${profile().work} exists.`)}
       </div>
       <p id="create-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(createState.help)}</p>
@@ -3201,7 +3201,7 @@ function renderPackDetail() {
         <div class="demo-form-grid">
           ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
           ${showOwnerInline ? "" : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
-          ${inputField("edit-due", "Due", pack.due, "Optional date used by Today and Calendar views.")}
+          ${inputField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
           ${textField("edit-purpose", "Purpose", pack.purpose, "Extra context; keep the main work path above focused.")}
         </div>
       </details>
