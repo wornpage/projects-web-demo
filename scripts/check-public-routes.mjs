@@ -108,6 +108,8 @@ check("spotlight facts keep the command triad visible", spotlightFactsContractOk
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
 check("card support actions stay readable and tappable", cardSupportActionStylesContractOk(), "grid tiles plus single-column mobile actions");
+check("card title buttons keep a readable hit area", cardTitleButtonStylesContractOk(), "title buttons keep padding and focus radius");
+check("card state pills stay compact in headers", cardStatePillStylesContractOk(), "desktop badge cap plus mobile start alignment");
 check("panel forms group labels controls and help", panelFormFieldStylesContractOk(), "field-card grouping plus focus state");
 check("work filters stay scannable and tappable", workFilterStylesContractOk(), "equal-width chip grid plus compact mobile columns");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
@@ -233,6 +235,35 @@ function cardSupportActionStylesContractOk() {
   ]);
 }
 
+function cardTitleButtonStylesContractOk() {
+  return includesAll(styles, [
+    ".demo-card-title",
+    "border-radius: var(--cockpit-radius-sm);",
+    "min-height: 30px;",
+    "padding: 3px 0;",
+    ".demo-card-title:focus-visible",
+    "outline: 3px solid var(--demo-focus-ring);"
+  ]);
+}
+
+function cardStatePillStylesContractOk() {
+  const mobileStart = styles.indexOf("@media (max-width: 560px)");
+  const mobileEnd = mobileStart < 0 ? -1 : styles.indexOf("@media", mobileStart + 1);
+  const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
+  return includesAll(styles, [
+    ".demo-state-pill",
+    "justify-content: center;",
+    "line-height: 1.2;",
+    "white-space: normal;",
+    ".demo-card-head > .demo-state-pill",
+    "max-width: min(100%, 180px);"
+  ]) && includesAll(mobileStyles, [
+    ".demo-card-head > .demo-state-pill",
+    "justify-self: start;",
+    "max-width: 100%;"
+  ]);
+}
+
 function panelFormFieldStylesContractOk() {
   return includesAll(styles, [
     ".demo-panel > .demo-form-grid > .demo-field:not(.demo-state-preview):not(.demo-blocker-field)",
@@ -259,7 +290,10 @@ function workFilterStylesContractOk() {
     ".demo-chip",
     "justify-content: space-between;",
     "min-height: 42px;",
-    "width: 100%;"
+    "width: 100%;",
+    ".demo-chip[aria-pressed=\"true\"] .demo-chip-count",
+    "background: var(--cockpit-bg);",
+    "color: var(--cockpit-text);"
   ]) && includesAll(mobileStyles, [
     ".demo-chip-row",
     "grid-template-columns: repeat(2, minmax(0, 1fr));"

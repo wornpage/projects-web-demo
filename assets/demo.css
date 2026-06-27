@@ -2232,6 +2232,12 @@ html[data-theme="dark"] .demo-header-metadata {
   color: var(--cockpit-accent-text);
 }
 
+.demo-chip[aria-pressed="true"] .demo-chip-count {
+  background: var(--cockpit-bg);
+  border-color: var(--cockpit-border-strong);
+  color: var(--cockpit-text);
+}
+
 .demo-chip-count {
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
@@ -2515,6 +2521,7 @@ html[data-theme="dark"] .demo-card-head {
 .demo-card-title {
   background: transparent;
   border: 0;
+  border-radius: var(--cockpit-radius-sm);
   color: var(--cockpit-text);
   cursor: pointer;
   display: block;
@@ -2522,10 +2529,11 @@ html[data-theme="dark"] .demo-card-head {
   font-size: 17px;
   font-weight: var(--demo-card-title-weight);
   line-height: 1.18;
+  min-height: 30px;
   min-width: 0;
   overflow-wrap: anywhere;
   text-wrap: balance;
-  padding: 0;
+  padding: 3px 0;
   text-align: left;
   text-decoration: none;
 }
@@ -2762,7 +2770,15 @@ html[data-theme="dark"] .demo-disabled-reason {
   flex: 0 0 auto;
   font-size: 12px;
   font-weight: 760;
+  justify-content: center;
+  line-height: 1.2;
   padding: 4px 9px;
+  text-align: center;
+  white-space: normal;
+}
+
+.demo-card-head > .demo-state-pill {
+  max-width: min(100%, 180px);
 }
 
 html.dark .demo-state-pill,
@@ -4517,6 +4533,11 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   .demo-card-title {
     font-size: 16px;
     line-height: 1.22;
+  }
+
+  .demo-card-head > .demo-state-pill {
+    justify-self: start;
+    max-width: 100%;
   }
 
   .demo-card-meta,
