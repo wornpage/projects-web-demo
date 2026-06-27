@@ -8,7 +8,7 @@ ENV PORT=5179
 ENV PROJECTS_STATE_FILE=/app/state/state.json
 
 COPY server/package*.json ./server/
-RUN npm --prefix server ci
+RUN npm --prefix server ci --include=dev
 
 COPY index.html ./
 COPY assets ./assets
