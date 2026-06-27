@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from "node:child_process";
+import fs from "node:fs/promises";
 import http from "node:http";
 import net from "node:net";
 import path from "node:path";
@@ -29,6 +30,9 @@ server.stderr.on("data", (chunk) => {
 
 try {
   await waitForPreview(port);
+
+  const frontendSource = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+  check("static preview frontend avoids runtime inline style setters", !/\.style\b|setAttribute\(\s*["']style/iu.test(frontendSource), "inline style setter absent");
 
   for (const pathname of [
     "/",

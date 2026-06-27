@@ -85,7 +85,9 @@ bypass the normal request handler.
 The static preview gate starts `server/static.js`, confirms only the static file
 allowlist is served, confirms static sample JSON remains the only public data
 file, rejects non-read methods, sends defensive CSP and browser security headers,
-and confirms unexpected valid `Host` values do not affect preview routing:
+confirms the frontend avoids runtime inline style setters that the static CSP
+would block, and confirms unexpected valid `Host` values do not affect preview
+routing:
 
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'npm --prefix server run static:check'

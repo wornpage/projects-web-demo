@@ -179,6 +179,14 @@ h3,
   width: 1px;
 }
 
+.demo-clipboard-hidden-target {
+  height: 1px;
+  inset: 0 auto auto -9999px;
+  opacity: 0;
+  position: fixed;
+  width: 1px;
+}
+
 .demo-app-shell {
   background: var(--cockpit-bg);
   color: var(--cockpit-text);

@@ -6086,11 +6086,7 @@ function copyWithSelectionFallback(value, targetId = "") {
   if (temporary) {
     target.value = value;
     target.setAttribute("readonly", "");
-    target.style.position = "fixed";
-    target.style.inset = "0 auto auto -9999px";
-    target.style.width = "1px";
-    target.style.height = "1px";
-    target.style.opacity = "0";
+    target.className = "demo-clipboard-hidden-target";
     document.body.appendChild(target);
   }
 
