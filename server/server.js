@@ -173,10 +173,13 @@ async function routeRequest(request, response, url) {
     return;
   }
 
-  if (method === "POST" && pathname === "/api/state/sync") {
-    const stateKey = stateWriteKeyForRequest(request);
+  if (method === "POST" && pathname === "/api/state/sync-copy") {
+    const sourceStateKey = stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    sendJson(request, response, 200, await writeState(payload, stateKey));
+    const result = copyStateToSyncAction(await readState(sourceStateKey), payload);
+    enforceStateWriteRateLimit(request, result.targetClientId);
+    await writeState(result.state, result.targetClientId);
+    sendJson(request, response, 200, result);
     return;
   }
 
@@ -622,7 +625,11 @@ function stateWriteKeyForRequest(request) {
 
 function isGeneratedClientStateKey(value) {
   return /^demo-(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[A-Za-z0-9_-]{22})$/iu.test(value)
-    || /^sync-[A-Za-z0-9_-]{43}$/u.test(value);
+    || isSyncStateKey(value);
+}
+
+function isSyncStateKey(value) {
+  return /^sync-[A-Za-z0-9_-]{43}$/u.test(value);
 }
 
 function isApiPathname(pathname) {
@@ -888,6 +895,22 @@ function saveStateSelectedAction(state, payload) {
   return { selectedId, state };
 }
 
+function copyStateToSyncAction(currentState, payload) {
+  const source = workflowPayloadObject(payload);
+  const targetClientId = workflowTextField(source, "targetClientId", 70, { required: true });
+  if (!isSyncStateKey(targetClientId)) {
+    throw httpError(400, "Demo sync target is not supported.");
+  }
+
+  const state = sanitizeState({
+    ...currentState,
+    status: syncCopyStatusMessage(),
+    actionReceipt: null,
+    query: ""
+  });
+  return { copied: true, targetClientId, state };
+}
+
 async function saveStateScenarioAction(currentState, payload) {
   const source = workflowPayloadObject(payload);
   const scenarioId = workflowTextField(source, "scenarioId", 80, { required: true });
@@ -940,6 +963,10 @@ async function resetStateAction() {
 
 function resetStatusMessage() {
   return "Where: Start. Blocker: None. Button runs next: review reset backend row.";
+}
+
+function syncCopyStatusMessage() {
+  return "Where: Sync code. Blocker: None. Button runs next: use code on another device.";
 }
 
 function profileStatusMessage(profile, sourceLabel) {

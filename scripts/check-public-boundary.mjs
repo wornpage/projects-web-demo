@@ -236,6 +236,11 @@ try {
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ packs: [] })
   });
+  const unkeyedNamedSyncCopy = await request(port, "/api/state/sync-copy", {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: JSON.stringify({ targetClientId: "sync-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" })
+  });
   const unkeyedFilterWrite = await request(port, "/api/state/filter", {
     method: "POST",
     headers: { "content-type": "text/plain" },
@@ -262,7 +267,8 @@ try {
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
   check("keyed command preview owns flow and reason copy", commandPreviewOwnsCopy(keyedCommandPreview.body), `${keyedCommandPreview.body?.flowHint || "missing"} / ${keyedCommandPreview.body?.primaryReason || "missing"}`);
   check("unkeyed recovery restore rejects missing client key before body parsing", unkeyedRestore.status === 400, unkeyedRestore.status);
-  check("unkeyed sync copy rejects missing client key before body parsing", unkeyedSyncCopy.status === 400, unkeyedSyncCopy.status);
+  check("retired whole-state sync route is not callable", unkeyedSyncCopy.status === 404, unkeyedSyncCopy.status);
+  check("unkeyed named sync copy rejects missing client key before body parsing", unkeyedNamedSyncCopy.status === 400, unkeyedNamedSyncCopy.status);
   check("unkeyed filter write rejects missing client key before body parsing", unkeyedFilterWrite.status === 400, unkeyedFilterWrite.status);
   check("unkeyed selected-work write rejects missing client key before body parsing", unkeyedSelectedWrite.status === 400, unkeyedSelectedWrite.status);
   check("unkeyed scenario write rejects missing client key before body parsing", unkeyedScenarioWrite.status === 400, unkeyedScenarioWrite.status);
@@ -335,6 +341,28 @@ try {
   const clientAState = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientA }
   });
+  const syncCopyClient = "sync-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const validSyncCopy = await jsonRequest(port, "/api/state/sync-copy", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ targetClientId: syncCopyClient })
+  });
+  const copiedSyncState = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": syncCopyClient }
+  });
+  const invalidSyncCopy = await request(port, "/api/state/sync-copy", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ targetClientId: clientB })
+  });
+  check("server-owned sync copy can copy client A into a sync row", validSyncCopy.body?.copied === true && copiedSyncState.body?.packs?.some((pack) => pack.title === packTitle), `${validSyncCopy.status} / ${copiedSyncState.status}`);
+  check("server-owned sync copy rejects non-sync targets", invalidSyncCopy.status === 400, invalidSyncCopy.status);
   const clientBState = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientB }
   });
@@ -1129,7 +1157,7 @@ function writeRoutesValidateKeyBeforeBody(source) {
   const anchors = [
     "if (method === \"PUT\" && pathname === \"/api/state/browser\")",
     "if (method === \"POST\" && pathname === \"/api/state/restore\")",
-    "if (method === \"POST\" && pathname === \"/api/state/sync\")",
+    "if (method === \"POST\" && pathname === \"/api/state/sync-copy\")",
     "if (method === \"POST\" && pathname === \"/api/state/filter\")",
     "if (method === \"POST\" && pathname === \"/api/state/selected\")",
     "if (method === \"POST\" && pathname === \"/api/state/scenario\")",
@@ -1216,18 +1244,23 @@ function frontendSyncCopyUsesBackendEndpoint(source) {
 
   const required = [
     "options.copyCurrentState",
-    "sendBackendStateSnapshot(\"/api/state/sync\", \"POST\", demoStateSnapshot(), \"Sync\")",
+    "postBackendStateAction(\"/api/state/sync-copy\"",
+    "targetClientId:await syncClientId(code)",
+    "\"sync copy\")",
     "loadBackendOwnedState(await loadBackendState())"
   ];
   const missing = required.filter((needle) => !body.includes(needle));
   if (body.includes("persistBackendStateSnapshot(demoStateSnapshot())")) {
     missing.push("generic state snapshot still used for sync copy");
   }
+  if (body.includes("sendBackendStateSnapshot(\"/api/state/sync\"")) {
+    missing.push("whole-state sync snapshot route still used");
+  }
 
   return {
     ok: missing.length === 0,
     detail: missing.length === 0
-      ? "new sync-code copy posts to /api/state/sync instead of generic PUT /api/state"
+      ? "new sync-code copy posts to /api/state/sync-copy instead of sending a browser-defined state snapshot"
       : missing.join(", ")
   };
 }

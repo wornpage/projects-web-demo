@@ -664,25 +664,16 @@ function normalizeRecoveryStatus(value) {
   return ["active", "blocked", "draft", "done"].includes(status) ? status : "draft";
 }
 
-function normalizeRecoveryTextArray(value, maxItems, maxLength) {
-  return Array.isArray(value)
-    ? value.map((entry) => normalizeRecoveryText(entry, maxLength)).filter(Boolean).slice(0, maxItems)
-    : [];
-}
+function normalizeRecoveryTextArray(value, maxItems, maxLength) {return Array.isArray(value)?value.map((entry) => normalizeRecoveryText(entry, maxLength)).filter(Boolean).slice(0, maxItems):[]}
 
-function normalizeRecoveryText(value, maxLength) {
-  return normalizeLegacyVisibleCopy(normalizeCopy(value)).slice(0, maxLength);
-}
+function normalizeRecoveryText(value, maxLength) {return normalizeLegacyVisibleCopy(normalizeCopy(value)).slice(0, maxLength)}
 
 function normalizeApiBaseUrl(value) {
   const text = normalizeCopy(value);
   return text ? text.replace(/\/+$/u, "") : "";
 }
 
-function apiUrl(path) {
-  const suffix = path.startsWith("/") ? path : `/${path}`;
-  return `${DEMO_API_BASE_URL}${suffix}`;
-}
+function apiUrl(path) {return `${DEMO_API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`}
 
 async function loadBackendState(headers = null) {
   if (!DEMO_API_BASE_URL) {
@@ -716,9 +707,7 @@ async function loadBackendSeedPacks(headers = null) {
   return response.json();
 }
 
-function normalizeStoredDemoState(value) {
-  return value && typeof value === "object" ? value : {};
-}
+function normalizeStoredDemoState(value) {return value && typeof value === "object" ? value : {}}
 
 function scheduleBackendStateSave(snapshot) {
   apiPendingSnapshot = structuredClone(snapshot);
@@ -798,10 +787,6 @@ async function saveBackendProfile(profile, source = "Start") {
 
 async function saveBackendResetState() {
   return postBackendStateAction("/api/state/reset", {}, "reset");
-}
-
-async function copyBackendStateToSync(targetClientId) {
-  return postBackendStateAction("/api/state/sync-copy", { targetClientId }, "sync copy");
 }
 
 async function runBackendPackAction(pack, action) {
@@ -1220,10 +1205,10 @@ async function activateSyncCode(value, options = {}) {
 
   clearPendingBackendStateSave();
   if (options.copyCurrentState) {
-    await copyBackendStateToSync(await syncClientId(code));
+    await postBackendStateAction("/api/state/sync-copy",{targetClientId:await syncClientId(code)},"sync copy");
     writeSyncCode(code);
     apiSessionClientId = "";
-    state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use code on another device");
+    state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use code elsewhere");
   } else {
     writeSyncCode(code);
     apiSessionClientId = "";
@@ -1234,7 +1219,7 @@ async function activateSyncCode(value, options = {}) {
   updateServiceBoundaryNotice();
   render();
   renderDemoSyncControls(options.copyCurrentState
-    ? "New code active. Use it on another device to open this state."
+    ? "New code active. Use it elsewhere to open this state."
     : "Code active. This device opens shared demo state.");
 }
 

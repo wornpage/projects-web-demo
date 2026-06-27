@@ -259,7 +259,7 @@ check(
     "writeSyncCode(code)",
     "apiSessionClientId = \"\"",
     "options.copyCurrentState",
-    "sendBackendStateSnapshot(\"/api/state/sync\", \"POST\", demoStateSnapshot(), \"Sync\")",
+    "postBackendStateAction(\"/api/state/sync-copy\",{targetClientId:await syncClientId(code)},\"sync copy\")",
     "loadBackendOwnedState(await loadBackendState())"
   ]),
   "activateSyncCode"
