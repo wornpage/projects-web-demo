@@ -269,7 +269,7 @@ function metadataPreviewContractOk() {
 
 function demoNoticeContractOk() {
   return html.includes('<section id="demo-notice" class="demo-notice card" role="note" aria-label="Starting point and demo data notice">')
-    && html.includes("Start with Review. Demo data only; no login or private project data.");
+    && html.includes("Start with Review; everything here is sample data. No login or private project data.");
 }
 
 function themeToggleContractOk() {
