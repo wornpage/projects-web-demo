@@ -114,6 +114,7 @@ check("card state pills stay compact in headers", cardStatePillStylesContractOk(
 check("panel forms group labels controls and help", panelFormFieldStylesContractOk(), "field-card grouping plus focus state");
 check("work filters stay scannable and tappable", workFilterStylesContractOk(), "equal-width chip grid plus compact mobile columns");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
+check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
 check("skip target landmark is labelled by the visible title", html.includes('id="demo-main"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels main landmark");
 check("screen content region is labelled by the visible title", html.includes('id="screen-content"') && html.includes('aria-labelledby="screen-title"'), "screen-title labels live content");
 
