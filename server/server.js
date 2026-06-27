@@ -209,6 +209,16 @@ async function routeRequest(request, response, url) {
     return;
   }
 
+  if (method === "POST" && pathname === "/api/state/profile") {
+    const stateKey = stateWriteKeyForRequest(request);
+    const payload = await readJsonBody(request);
+    const state = await readState(stateKey);
+    const result = saveStateProfileAction(state, payload);
+    await writeState(state, stateKey);
+    sendJson(request, response, 200, result);
+    return;
+  }
+
   if (method === "POST" && pathname === "/api/state/erase") {
     sendJson(request, response, 200, await eraseState(stateWriteKeyForRequest(request)));
     return;
@@ -896,6 +906,41 @@ async function saveStateScenarioAction(currentState, payload) {
   });
 
   return { scenarioId, state };
+}
+
+function saveStateProfileAction(state, payload) {
+  const source = workflowPayloadObject(payload);
+  const profile = workflowTextField(source, "profile", 40, { required: true });
+  const sourceLabel = workflowTextField(source, "source", 40) || "Start";
+  if (!VALID_COPY_PROFILES.has(profile)) {
+    throw httpError(400, "Demo state copy profile is not supported.");
+  }
+
+  state.copyProfile = profile;
+  state.status = profileStatusMessage(profile, sourceLabel);
+  state.actionReceipt = null;
+  return { profile, state };
+}
+
+function profileStatusMessage(profile, sourceLabel) {
+  const label = capitalizeText(profile);
+  const work = stateWorkLabel(profile);
+  return `Where: ${sourceLabel}. Blocker: None. Button runs next: use ${label} copy labels for ${work}.`;
+}
+
+function stateWorkLabel(profile) {
+  const labels = {
+    climate: "site check",
+    developer: "task",
+    dj: "gig",
+    general: "work"
+  };
+  return labels[profile] || labels.general;
+}
+
+function capitalizeText(value) {
+  const text = normalizeText(value, 40);
+  return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}` : "";
 }
 
 function workflowBooleanField(source, key) {

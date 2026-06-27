@@ -100,6 +100,9 @@ try {
   const unkeyedScenarioWriteStatus = await writeStatus("/api/state/scenario", { scenarioId: "empty" }, {
     "content-type": "text/plain"
   }, "POST");
+  const unkeyedProfileWriteStatus = await writeStatus("/api/state/profile", { profile: "developer" }, {
+    "content-type": "text/plain"
+  }, "POST");
   const isolationStamp = Date.now().toString(36);
   const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
   const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
@@ -110,6 +113,7 @@ try {
   const filterKey = `demo-${crypto.randomUUID()}`;
   const selectedKey = `demo-${crypto.randomUUID()}`;
   const scenarioKey = `demo-${crypto.randomUUID()}`;
+  const profileKey = `demo-${crypto.randomUUID()}`;
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
   const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
@@ -212,6 +216,14 @@ try {
   }, "POST");
   const invalidNamedScenarioStatus = await writeStatus("/api/state/scenario", { scenarioId: "private-roadmap" }, {
     "x-projects-demo-client": scenarioKey,
+    "content-type": "application/json"
+  }, "POST");
+  const validProfileWrite = await writeJson("/api/state/profile", { profile: "developer", source: "URL" }, {
+    "x-projects-demo-client": profileKey,
+    "content-type": "application/json"
+  }, "POST");
+  const invalidNamedProfileStatus = await writeStatus("/api/state/profile", { profile: "private" }, {
+    "x-projects-demo-client": profileKey,
     "content-type": "application/json"
   }, "POST");
   const unkeyedWorkflowWriteStatuses = await Promise.all([
@@ -346,12 +358,15 @@ try {
   const selectedStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": selectedKey });
   const eraseScenarioStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": scenarioKey }, "POST");
   const scenarioStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": scenarioKey });
+  const eraseProfileStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": profileKey }, "POST");
+  const profileStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": profileKey });
   const backendHelperNames = [
     "runBackendPackAction",
     "saveBackendPackNextAction",
     "saveBackendStateFilter",
     "saveBackendSelectedWork",
     "saveBackendScenario",
+    "saveBackendProfile",
     "loadBackendSeedPacks",
     "loadBackendPackCommandPreview",
     "createBackendPack",
@@ -473,6 +488,7 @@ try {
   check("hosted filter write rejects missing client key before body parsing", unkeyedFilterWriteStatus === 400, unkeyedFilterWriteStatus);
   check("hosted selected-work write rejects missing client key before body parsing", unkeyedSelectedWriteStatus === 400, unkeyedSelectedWriteStatus);
   check("hosted scenario write rejects missing client key before body parsing", unkeyedScenarioWriteStatus === 400, unkeyedScenarioWriteStatus);
+  check("hosted profile write rejects missing client key before body parsing", unkeyedProfileWriteStatus === 400, unkeyedProfileWriteStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
   check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
@@ -508,6 +524,8 @@ try {
   check("hosted named selected-work endpoint rejects unknown work", invalidNamedSelectedStatus === 400, invalidNamedSelectedStatus);
   check("hosted named scenario endpoint saves empty scenario", validScenarioWrite.state?.scenarioId === "empty" && Array.isArray(validScenarioWrite.state?.packs) && validScenarioWrite.state.packs.length === 0, `${validScenarioWrite.state?.scenarioId || "missing"} / ${validScenarioWrite.state?.packs?.length ?? "missing"}`);
   check("hosted named scenario endpoint rejects unsupported scenarios", invalidNamedScenarioStatus === 400, invalidNamedScenarioStatus);
+  check("hosted named profile endpoint saves supported profile", validProfileWrite.state?.copyProfile === "developer", validProfileWrite.state?.copyProfile || "missing");
+  check("hosted named profile endpoint rejects unsupported profiles", invalidNamedProfileStatus === 400, invalidNamedProfileStatus);
   check("hosted state rejects blank copy profiles", blankProfileStateStatus === 400, blankProfileStateStatus);
   check("hosted state rejects invalid top-level text fields", invalidStateTextFieldStatus === 400, invalidStateTextFieldStatus);
   check("hosted state rejects overlong top-level text fields", overlongStateTextFieldStatus === 400, overlongStateTextFieldStatus);
@@ -541,6 +559,7 @@ try {
   check("hosted verifier cleanup erases filter row", eraseFilterStateStatus === 200 && filterStateAfterCleanup.filter !== "review", `${eraseFilterStateStatus} / ${filterStateAfterCleanup.filter || "none"}`);
   check("hosted verifier cleanup erases selected-work row", eraseSelectedStateStatus === 200 && selectedStateAfterCleanup.selectedId !== "source-folder-audit", `${eraseSelectedStateStatus} / ${selectedStateAfterCleanup.selectedId || "none"}`);
   check("hosted verifier cleanup erases scenario row", eraseScenarioStateStatus === 200 && scenarioStateAfterCleanup.scenarioId !== "empty", `${eraseScenarioStateStatus} / ${scenarioStateAfterCleanup.scenarioId || "none"}`);
+  check("hosted verifier cleanup erases profile row", eraseProfileStateStatus === 200 && profileStateAfterCleanup.copyProfile !== "developer", `${eraseProfileStateStatus} / ${profileStateAfterCleanup.copyProfile || "none"}`);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("API command route returns selected-work flow copy", commandPreviewOwnsCopy(commandPreview), `${commandPreview.flowHint || "missing"} / ${commandPreview.primaryReason || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");

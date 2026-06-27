@@ -108,6 +108,8 @@ try {
   check("hosted selected-work changes use named backend endpoint", hostedSelectedSave.ok, hostedSelectedSave.detail);
   const hostedScenarioSave = frontendScenarioUsesBackendEndpoint(frontendSource);
   check("hosted scenario changes use named backend endpoint", hostedScenarioSave.ok, hostedScenarioSave.detail);
+  const hostedProfileSave = frontendProfileUsesBackendEndpoint(frontendSource);
+  check("hosted profile changes use named backend endpoint", hostedProfileSave.ok, hostedProfileSave.detail);
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const runNextBoundary = frontendRunNextUsesBackendCommandPreview(frontendSource);
@@ -238,6 +240,11 @@ try {
     headers: { "content-type": "text/plain" },
     body: JSON.stringify({ scenarioId: "empty" })
   });
+  const unkeyedProfileWrite = await request(port, "/api/state/profile", {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: JSON.stringify({ profile: "developer" })
+  });
   check("unkeyed API seed data is rejected", unkeyedSeedPacks.status === 400, unkeyedSeedPacks.status);
   check("unkeyed API pack list is rejected", unkeyedPacks.status === 400, unkeyedPacks.status);
   check("unkeyed API command preview is rejected", unkeyedCommandPreview.status === 400, unkeyedCommandPreview.status);
@@ -247,6 +254,7 @@ try {
   check("unkeyed filter write rejects missing client key before body parsing", unkeyedFilterWrite.status === 400, unkeyedFilterWrite.status);
   check("unkeyed selected-work write rejects missing client key before body parsing", unkeyedSelectedWrite.status === 400, unkeyedSelectedWrite.status);
   check("unkeyed scenario write rejects missing client key before body parsing", unkeyedScenarioWrite.status === 400, unkeyedScenarioWrite.status);
+  check("unkeyed profile write rejects missing client key before body parsing", unkeyedProfileWrite.status === 400, unkeyedProfileWrite.status);
   check(
     "unkeyed API workflow writes reject missing client key before body parsing",
     unkeyedWorkflowWrites.every(([, status]) => status === 400),
@@ -458,6 +466,25 @@ try {
   });
   const scenarioStateAfterWrite = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": scenarioClient }
+  });
+  const validProfileWrite = await jsonRequest(port, "/api/state/profile", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ profile: "developer", source: "URL" })
+  });
+  const invalidProfileWrite = await request(port, "/api/state/profile", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ profile: "private" })
+  });
+  const clientAStateAfterProfile = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": clientA }
   });
   const missingPacksStateWrite = await request(port, "/api/state/browser", {
     method: "PUT",
@@ -763,6 +790,9 @@ try {
   check("named scenario endpoint saves empty scenario", validScenarioWrite.status === 200 && validScenarioWrite.body?.state?.scenarioId === "empty" && Array.isArray(validScenarioWrite.body?.state?.packs) && validScenarioWrite.body.state.packs.length === 0, `${validScenarioWrite.status} / ${validScenarioWrite.body?.state?.scenarioId || "missing"} / ${validScenarioWrite.body?.state?.packs?.length ?? "missing"}`);
   check("named scenario endpoint rejects unsupported scenarios", invalidScenarioWrite.status === 400, invalidScenarioWrite.status);
   check("named scenario endpoint persists the keyed row", scenarioStateAfterWrite.body?.scenarioId === "empty" && Array.isArray(scenarioStateAfterWrite.body?.packs) && scenarioStateAfterWrite.body.packs.length === 0, `${scenarioStateAfterWrite.body?.scenarioId || "missing"} / ${scenarioStateAfterWrite.body?.packs?.length ?? "missing"}`);
+  check("named profile endpoint saves supported profile", validProfileWrite.status === 200 && validProfileWrite.body?.state?.copyProfile === "developer", `${validProfileWrite.status} / ${validProfileWrite.body?.state?.copyProfile || "missing"}`);
+  check("named profile endpoint rejects unsupported profiles", invalidProfileWrite.status === 400, invalidProfileWrite.status);
+  check("named profile endpoint persists the keyed row", clientAStateAfterProfile.body?.copyProfile === "developer", clientAStateAfterProfile.body?.copyProfile || "missing");
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("empty state snapshots are rejected", emptyPacksStateWrite.status === 400, emptyPacksStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
@@ -1058,6 +1088,7 @@ function writeRoutesValidateKeyBeforeBody(source) {
     "if (method === \"POST\" && pathname === \"/api/state/filter\")",
     "if (method === \"POST\" && pathname === \"/api/state/selected\")",
     "if (method === \"POST\" && pathname === \"/api/state/scenario\")",
+    "if (method === \"POST\" && pathname === \"/api/state/profile\")",
     "if (method === \"POST\" && pathname === \"/api/packs\")",
     "if (packPathMatch && method === \"POST\")",
     "if (packNextMatch && method === \"POST\")",
@@ -1217,6 +1248,26 @@ function frontendScenarioUsesBackendEndpoint(source) {
     detail: ok
       ? "hosted scenario changes post to /api/state/scenario without falling back to browser-row saves"
       : "hosted scenario changes still rely on browser-row snapshot persistence"
+  };
+}
+
+function frontendProfileUsesBackendEndpoint(source) {
+  const helperBody = functionBody(source, "saveBackendProfile");
+  const launchBody = functionBody(source, "applyLaunchConfiguration");
+  if (!helperBody || !launchBody) {
+    return { ok: false, detail: "saveBackendProfile/applyLaunchConfiguration:missing" };
+  }
+
+  const ok = helperBody.includes('fetch(apiUrl("/api/state/profile")')
+    && helperBody.includes("JSON.stringify({ profile, source })")
+    && helperBody.includes("loadBackendOwnedState(result.state)")
+    && launchBody.includes("await saveBackendProfile(profileParam, \"URL\")")
+    && !launchBody.includes("scheduleBackendStateSave(browserRowStateSnapshot())");
+  return {
+    ok,
+    detail: ok
+      ? "hosted profile launch changes post to /api/state/profile without falling back to browser-row saves"
+      : "hosted profile launch changes still rely on browser-row snapshot persistence"
   };
 }
 

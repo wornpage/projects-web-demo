@@ -393,9 +393,13 @@ async function applyLaunchConfiguration() {
   }
 
   if (hasProfileParam) {
-    state.copyProfile = profileParam;
+    if (DEMO_API_BASE_URL) {
+      await saveBackendProfile(profileParam, "URL");
+    } else {
+      state.copyProfile = profileParam;
+      state.status = profileStatus(profileParam, "URL");
+    }
     syncSearchParam("profile", profileParam);
-    state.status = profileStatus(profileParam, "URL");
   }
 
 }
@@ -754,10 +758,6 @@ async function sendBackendStateSnapshot(path, method, snapshot, label) {
 }
 
 async function saveBackendStateFilter(filter) {
-  if (!DEMO_API_BASE_URL) {
-    return null;
-  }
-
   prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl("/api/state/filter"), {
     method: "POST",
@@ -774,10 +774,6 @@ async function saveBackendStateFilter(filter) {
 }
 
 async function saveBackendSelectedWork(selectedId) {
-  if (!DEMO_API_BASE_URL) {
-    return null;
-  }
-
   const response = await fetch(apiUrl("/api/state/selected"), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -793,10 +789,6 @@ async function saveBackendSelectedWork(selectedId) {
 }
 
 async function saveBackendScenario(scenarioId, options = {}) {
-  if (!DEMO_API_BASE_URL) {
-    return null;
-  }
-
   const response = await fetch(apiUrl("/api/state/scenario"), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -810,6 +802,18 @@ async function saveBackendScenario(scenarioId, options = {}) {
   }
 
   const result = await response.json();
+  loadBackendOwnedState(result.state);
+  return result;
+}
+
+async function saveBackendProfile(profile, source = "Start") {
+  const response = await fetch(apiUrl("/api/state/profile"), {
+    method: "POST",
+    headers: await apiHeaders({ "content-type": "application/json" }),
+    body: JSON.stringify({ profile, source })
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(`Backend profile failed with ${response.status}`);
   loadBackendOwnedState(result.state);
   return result;
 }
@@ -3270,39 +3274,13 @@ function renderMemory() {
 
 function memoryWorkChooser(selected) {
   if (state.packs.length === 0) {
-    return `
-      <section class="demo-toolbar" aria-label="Memory work selector">
-        <div class="demo-panel-head">
-          <div>
-            <span class="section-label">Selected work</span>
-            <h2>Choose memory target</h2>
-          </div>
-          <span class="demo-status">No work loaded</span>
-        </div>
-        <p id="memory-work-summary" class="demo-status-line" role="status" aria-live="polite">Create work before adding memory notes.</p>
-        ${navButton("create", profile().newWork)}
-      </section>
-    `;
+    return `<section class="demo-toolbar" aria-label="Memory work selector"><div class="demo-panel-head"><div><span class="section-label">Selected work</span><h2>Choose memory target</h2></div><span class="demo-status">No work loaded</span></div><p id="memory-work-summary" class="demo-status-line" role="status" aria-live="polite">Create work before adding memory notes.</p>${navButton("create", profile().newWork)}</section>`;
   }
 
   const summary = selected
     ? `Memory note will save to ${workTitle(selected)}.`
     : `Choose a ${workNoun(1)} before adding memory.`;
-  return `
-    <section class="demo-toolbar" aria-label="Memory work selector">
-      <div class="demo-panel-head">
-        <div>
-          <span class="section-label">Selected work</span>
-          <h2>Choose memory target</h2>
-        </div>
-        <span class="demo-status">${state.packs.length} ${workNoun(state.packs.length)}</span>
-      </div>
-      <p id="memory-work-summary" class="demo-status-line" role="status" aria-live="polite">${escapeHtml(summary)}</p>
-      <div class="demo-chip-row" aria-label="Work for memory" aria-describedby="memory-work-summary">
-        ${state.packs.map((pack) => memoryWorkChoiceButton(pack, selected)).join("")}
-      </div>
-    </section>
-  `;
+  return `<section class="demo-toolbar" aria-label="Memory work selector"><div class="demo-panel-head"><div><span class="section-label">Selected work</span><h2>Choose memory target</h2></div><span class="demo-status">${state.packs.length} ${workNoun(state.packs.length)}</span></div><p id="memory-work-summary" class="demo-status-line" role="status" aria-live="polite">${escapeHtml(summary)}</p><div class="demo-chip-row" aria-label="Work for memory" aria-describedby="memory-work-summary">${state.packs.map((pack) => memoryWorkChoiceButton(pack, selected)).join("")}</div></section>`;
 }
 
 function memoryWorkChoiceButton(pack, selected) {
@@ -3311,11 +3289,7 @@ function memoryWorkChoiceButton(pack, selected) {
   const help = active
     ? `Current memory target: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: add memory note.`
     : `Use ${workTitle(pack)} as the memory target. Blocker: ${blockerTextForPack(pack)}. Button runs next: add memory note.`;
-  return `
-    <button type="button" class="demo-chip" aria-pressed="${active}" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(help)}>
-      ${escapeHtml(workTitle(pack))}<span class="demo-chip-count">${escapeHtml(label)}</span>
-    </button>
-  `;
+  return `<button type="button" class="demo-chip" aria-pressed="${active}" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(help)}>${escapeHtml(workTitle(pack))}<span class="demo-chip-count">${escapeHtml(label)}</span></button>`;
 }
 
 function blockerStateField(pack) {

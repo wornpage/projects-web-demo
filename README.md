@@ -211,6 +211,8 @@ browser-row snapshot.
 Hosted scenario changes post to `POST /api/state/scenario` so the scenario
 transform and empty-state scenario are owned by the backend instead of a
 browser-row snapshot.
+Hosted profile launch changes post to `POST /api/state/profile` so URL-selected
+copy labels are saved by the backend instead of a browser-row snapshot.
 If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
 and does not continue into the static fallback write path.
 Those workflow endpoints reject malformed or overlong request fields before
