@@ -1041,7 +1041,7 @@ function renderDemoSyncControls(message = "") {
   const help = el("sync-code-help");
   if (help) {
     help.textContent = message || (syncCode
-      ? "Anyone with this code can open the same demo state. Do not use it for private data."
+      ? "Anyone with this code can open this demo state. No private data."
       : "Use a code to sync this demo across devices. No login or private storage.");
   }
 }

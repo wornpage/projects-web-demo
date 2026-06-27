@@ -139,6 +139,15 @@ check(
 );
 
 check(
+  "sync help keeps short private-data warning",
+  html.includes("Anyone with this code can open this demo state. No private data.") &&
+    source.includes("Anyone with this code can open this demo state. No private data.") &&
+    !html.includes("Do not use it for private data") &&
+    !source.includes("Do not use it for private data"),
+  "short sync privacy warning"
+);
+
+check(
   "launch sync code comes from ?sync= only in backend app mode",
   includesAll(applyLaunchSync, [
     "!DEMO_API_BASE_URL",
