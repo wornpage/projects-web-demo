@@ -9,6 +9,7 @@
     "check": "node --check server.js && node --check static.js",
     "protect:check": "node ../scripts/check-protected-frontend.mjs",
     "assets:check": "node ../scripts/check-public-assets.mjs",
+    "risk:check": "node ../scripts/check-risk-decisions.mjs",
     "static:check": "node ../scripts/check-static-preview.mjs",
     "publish:check": "node ../scripts/check-static-publish.mjs",
     "routes:check": "node ../scripts/check-public-routes.mjs",

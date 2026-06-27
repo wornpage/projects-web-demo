@@ -142,6 +142,10 @@ values are rejected.
 
 ## Risk Decisions
 
+This table is part of the ship gate. A risk row must be a final state:
+`Fixed`, `True`, or `Not observed`. Do not leave public-exposure work in
+`Possible` or `Reduced` without making a new explicit decision first.
+
 | Risk | Current status | Decision |
 |---|---|---|
 | Browser JS is visible | True | Accept for demo; move valuable logic server-side if it becomes proprietary |

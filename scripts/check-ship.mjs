@@ -33,6 +33,11 @@ const steps = [
     args: ["scripts/check-public-assets.mjs"]
   },
   {
+    label: "public risk decisions",
+    command: process.execPath,
+    args: ["scripts/check-risk-decisions.mjs"]
+  },
+  {
     label: "static publish artifact",
     command: process.execPath,
     args: ["scripts/check-static-publish.mjs"]
