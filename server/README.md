@@ -154,6 +154,12 @@ cookie-backed identity path, plus `X-Robots-Tag: noindex, nofollow, noarchive`
 so public dev deployments are not invited into search indexes or archives. API body routes require
 `Content-Type: application/json`; non-JSON body writes are rejected with `415`,
 and bodies above 1 MiB are rejected with `413`.
+The backend also keeps in-memory per-source and per-state write rate limits.
+By default, each process allows 1200 API requests per socket source, 600 write
+requests per socket source, and 120 write requests per state key in a 60-second
+window. State-write throttling runs after client-key validation but before JSON
+body parsing. It is an abuse guard for this public demo, not authentication or
+DDoS protection.
 API CORS reflects only same-origin app requests. Preflights with retired methods
 or unlisted request headers are rejected. This is still demo isolation, not
 private account security. The app-shell CSP blocks inline scripts and styles

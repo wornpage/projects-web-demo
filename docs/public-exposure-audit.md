@@ -84,7 +84,8 @@ statuses, invalid selected work ids and selected id types, malformed work text
 fields and string lists, malformed top-level metadata or text fields,
 unsupported profile/scenario/filter values, malformed or oversized
 `actionReceipt` shapes, create requests past the state cap, and malformed or
-unsupported server-owned workflow writes are rejected,
+unsupported server-owned workflow writes are rejected, confirms repeated
+state writes eventually return `429` before content-type parsing,
 confirms the current keyed row can be erased and then no longer contains that
 client's work,
 confirms public assets stay on the file allowlist, confirms public text assets
@@ -143,6 +144,8 @@ work ids and selected id types, malformed top-level metadata, malformed or
 overlong top-level text fields, malformed or overlong work text fields,
 malformed string lists, and malformed or oversized receipt shapes in state snapshots,
 rejects malformed server-owned workflow create, next, action, memory, and path writes,
+confirms repeated hosted state writes eventually return `429` before
+content-type parsing,
 erases the current keyed row without touching other rows, then erases the
 temporary shared and recovery verifier rows,
 uses same-origin API CORS instead of wildcard CORS, rejects
@@ -216,6 +219,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Hosted Postgres stores raw browser row keys | Fixed | Hosted reads and writes use only server-side `v2:` SHA-256 state keys; the raw-key read fallback is retired |
 | Unkeyed writes can consume body parsing before ownership is checked | Fixed | Server-owned state and workflow write routes validate the browser key before reading JSON, and local/live gates prove missing-key writes return `400` before content-type validation |
 | Anonymous backend state rows can grow without a work-item cap | Fixed | `PUT /api/state` and `POST /api/packs` reject rows above 50 work items |
+| Anonymous API callers can repeatedly consume backend write work | Fixed | The backend keeps per-process source and state-key rate limits; local and live gates prove repeated keyed state writes eventually return `429` before content-type parsing |
 | Malformed JSON snapshots can wipe a keyed state row | Fixed | `PUT /api/state` requires a JSON object snapshot with at least one item in `packs`; scalar, array, empty-`packs`, and missing-`packs` payloads return `400` and leave the keyed row unchanged |
 | Full-state writes can store ambiguous or malformed work identities | Fixed | `PUT /api/state` rejects invalid work items, invalid work statuses, duplicate work ids, selected work ids that do not reference an existing item, selected work ids with non-text shapes, malformed or overlong work text fields, and malformed work source/memory/activity lists before storage |
 | Full-state writes can store unsupported UI state | Fixed | `PUT /api/state` rejects unsupported or non-text saved profile, scenario, and filter values, plus malformed or overlong top-level status/query text, before storage |

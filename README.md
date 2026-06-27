@@ -150,6 +150,13 @@ State-changing API routes validate that client key before reading JSON payloads.
 The API accepts only generated `demo-...` browser keys or hashed `sync-...`
 share keys; weak manual header values and readable sync-code-shaped headers are
 rejected.
+The backend also keeps in-memory per-source and per-state write rate limits.
+By default, each process allows 1200 API requests per socket source, 600 write
+requests per socket source, and 120 write requests per state key in a 60-second
+window. State-write throttling runs after client-key validation but before JSON
+body parsing, so repeated invalid writes eventually return `429` without being
+stored. This is an abuse guard for a public demo, not authentication or DDoS
+protection.
 Each keyed backend row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected instead of being silently stored.
 JSON body writes are capped at 1 MiB and return `413` before storage if the

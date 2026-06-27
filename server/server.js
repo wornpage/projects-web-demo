@@ -69,6 +69,11 @@ const CORS_ALLOWED_METHODS = "GET,POST,PUT,OPTIONS";
 const CORS_ALLOWED_HEADERS = `content-type, ${API_CLIENT_HEADER}`;
 const CORS_ALLOWED_METHOD_SET = new Set(CORS_ALLOWED_METHODS.split(","));
 const CORS_ALLOWED_HEADER_SET = new Set(CORS_ALLOWED_HEADERS.split(",").map((header) => header.trim().toLowerCase()));
+const RATE_LIMIT_WINDOW_MS = envInteger("PROJECTS_RATE_LIMIT_WINDOW_MS", 60 * 1000, 1000, 60 * 60 * 1000);
+const RATE_LIMIT_API_REQUESTS = envInteger("PROJECTS_RATE_LIMIT_API_REQUESTS", 1200, 1, 100000);
+const RATE_LIMIT_SOURCE_WRITE_REQUESTS = envInteger("PROJECTS_RATE_LIMIT_SOURCE_WRITE_REQUESTS", 600, 1, 100000);
+const RATE_LIMIT_STATE_WRITE_REQUESTS = envInteger("PROJECTS_RATE_LIMIT_STATE_WRITE_REQUESTS", 120, 1, 100000);
+const RATE_LIMIT_BUCKET_CAP = 10000;
 const securityHeaders = {
   "cache-control": "no-store",
   "clear-site-data": "\"cookies\"",
@@ -85,6 +90,7 @@ const securityHeaders = {
   "x-robots-tag": "noindex, nofollow, noarchive"
 };
 
+const rateLimitBuckets = new Map();
 const stateStorage = createStateStorage();
 
 const server = http.createServer(async (request, response) => {
@@ -127,6 +133,10 @@ async function routeRequest(request, response, url) {
   const pathname = url.pathname.replace(/\/+$/u, "") || "/";
   const method = request.method || "GET";
 
+  if (isApiPathname(pathname)) {
+    enforceApiSourceRateLimit(request);
+  }
+
   if (method === "GET" && pathname === "/api/health") {
     sendJson(request, response, 200, {
       ok: true,
@@ -149,14 +159,14 @@ async function routeRequest(request, response, url) {
   }
 
   if (method === "PUT" && pathname === "/api/state") {
-    const stateKey = stateKeyForRequest(request);
+    const stateKey = stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
     sendJson(request, response, 200, await writeState(payload, stateKey));
     return;
   }
 
   if (method === "POST" && pathname === "/api/state/erase") {
-    sendJson(request, response, 200, await eraseState(stateKeyForRequest(request)));
+    sendJson(request, response, 200, await eraseState(stateWriteKeyForRequest(request)));
     return;
   }
 
@@ -167,7 +177,7 @@ async function routeRequest(request, response, url) {
   }
 
   if (method === "POST" && pathname === "/api/packs") {
-    const stateKey = stateKeyForRequest(request);
+    const stateKey = stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
     const state = await readState(stateKey);
     const result = createPackFromPayload(state, payload);
@@ -179,7 +189,7 @@ async function routeRequest(request, response, url) {
   const packPathMatch = pathname.match(/^\/api\/packs\/([^/]+)\/path$/u);
   if (packPathMatch && method === "POST") {
     const packId = decodeURIComponent(packPathMatch[1]);
-    const stateKey = stateKeyForRequest(request);
+    const stateKey = stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
     const state = await readState(stateKey);
     const result = savePackPathAction(state, packId, payload);
@@ -191,7 +201,7 @@ async function routeRequest(request, response, url) {
   const packNextMatch = pathname.match(/^\/api\/packs\/([^/]+)\/next$/u);
   if (packNextMatch && method === "POST") {
     const packId = decodeURIComponent(packNextMatch[1]);
-    const stateKey = stateKeyForRequest(request);
+    const stateKey = stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
     const state = await readState(stateKey);
     const result = setPackNextAction(state, packId, payload.next);
@@ -203,7 +213,7 @@ async function routeRequest(request, response, url) {
   const packActionMatch = pathname.match(/^\/api\/packs\/([^/]+)\/actions$/u);
   if (packActionMatch && method === "POST") {
     const packId = decodeURIComponent(packActionMatch[1]);
-    const stateKey = stateKeyForRequest(request);
+    const stateKey = stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
     const state = await readState(stateKey);
     const result = runPackAction(state, packId, payload.action);
@@ -226,7 +236,7 @@ async function routeRequest(request, response, url) {
     const packId = decodeURIComponent(packMatch[1]);
     const isMemoryRoute = pathname.endsWith("/memory");
     if (method === "POST" && isMemoryRoute) {
-      const stateKey = stateKeyForRequest(request);
+      const stateKey = stateWriteKeyForRequest(request);
       const payload = await readJsonBody(request);
       const state = await readState(stateKey);
       const result = addPackMemoryAction(state, packId, payload.note);
@@ -541,9 +551,85 @@ function stateKeyForRequest(request) {
   throw httpError(400, `Missing or invalid ${API_CLIENT_HEADER} header.`);
 }
 
+function stateWriteKeyForRequest(request) {
+  const stateKey = stateKeyForRequest(request);
+  enforceStateWriteRateLimit(request, stateKey);
+  return stateKey;
+}
+
 function isGeneratedClientStateKey(value) {
   return /^demo-(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[A-Za-z0-9_-]{22})$/iu.test(value)
     || /^sync-[A-Za-z0-9_-]{43}$/u.test(value);
+}
+
+function isApiPathname(pathname) {
+  return pathname === "/api" || pathname.startsWith("/api/");
+}
+
+function enforceApiSourceRateLimit(request) {
+  enforceRateLimit(
+    `api-source:${requestSourceKey(request)}`,
+    RATE_LIMIT_API_REQUESTS,
+    "Too many API requests."
+  );
+}
+
+function enforceStateWriteRateLimit(request, stateKey) {
+  enforceRateLimit(
+    `write-source:${requestSourceKey(request)}`,
+    RATE_LIMIT_SOURCE_WRITE_REQUESTS,
+    "Too many API write requests."
+  );
+  enforceRateLimit(
+    `write-key:${stateKey}`,
+    RATE_LIMIT_STATE_WRITE_REQUESTS,
+    "Too many writes for this demo state."
+  );
+}
+
+function enforceRateLimit(bucketKey, limit, message) {
+  const now = Date.now();
+  pruneRateLimitBuckets(now);
+
+  const bucket = rateLimitBuckets.get(bucketKey);
+  if (!bucket || bucket.resetAt <= now) {
+    rateLimitBuckets.set(bucketKey, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS
+    });
+    return;
+  }
+
+  if (bucket.count >= limit) {
+    throw httpError(429, message, {
+      retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))
+    });
+  }
+
+  bucket.count += 1;
+}
+
+function pruneRateLimitBuckets(now) {
+  if (rateLimitBuckets.size < RATE_LIMIT_BUCKET_CAP) {
+    return;
+  }
+
+  for (const [bucketKey, bucket] of rateLimitBuckets) {
+    if (bucket.resetAt <= now) {
+      rateLimitBuckets.delete(bucketKey);
+    }
+  }
+
+  while (rateLimitBuckets.size > RATE_LIMIT_BUCKET_CAP) {
+    const oldestKey = rateLimitBuckets.keys().next().value;
+    rateLimitBuckets.delete(oldestKey);
+  }
+}
+
+function requestSourceKey(request) {
+  const family = normalizeText(request.socket?.remoteFamily, 20) || "socket";
+  const address = normalizeText(request.socket?.remoteAddress, 120) || "unknown";
+  return `${family}:${address}`;
 }
 
 function hasPostgresConfig() {
@@ -599,6 +685,24 @@ function normalizeStateStorageMode(value) {
     return "postgres";
   }
   throw new Error("PROJECTS_STATE_STORAGE must be \"file\" or \"postgres\".");
+}
+
+function envInteger(name, fallback, min, max) {
+  const rawValue = normalizeText(process.env[name], 40);
+  if (!rawValue) {
+    return fallback;
+  }
+
+  if (!/^\d+$/u.test(rawValue)) {
+    throw new Error(`${name} must be an integer from ${min} to ${max}.`);
+  }
+
+  const value = Number(rawValue);
+  if (!Number.isSafeInteger(value) || value < min || value > max) {
+    throw new Error(`${name} must be an integer from ${min} to ${max}.`);
+  }
+
+  return value;
 }
 
 async function readFileState(stateKey) {

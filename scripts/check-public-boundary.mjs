@@ -13,6 +13,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const MAX_STATE_PACKS = 50;
 const MAX_PLAIN_VALUE_DEPTH = 6;
 const MAX_PLAIN_OBJECT_KEYS = 40;
+const RATE_LIMIT_STATE_WRITE_REQUESTS = 120;
 const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "projects-public-boundary-"));
 const stateFile = path.join(tmpDir, "state.json");
 const port = await freePort();
@@ -91,9 +92,10 @@ try {
   check("Postgres raw state-key fallback is retired", !serverSource.includes("postgresStateKeys(") && !serverSource.includes("WHERE state_key = $1 OR state_key = $2") && !serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "digest-only state_key path");
   const declaredBodyLimit = declaredBodyLimitBeforeStream(serverSource);
   check("declared oversized body length is rejected before stream reading", declaredBodyLimit.ok, declaredBodyLimit.detail);
+  check("state write rate limits are configured", stateWriteRateLimitConfigured(serverSource), "stateWriteKeyForRequest before body read");
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
-  check("state-changing routes validate client keys before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
-  check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateKeyForRequest required");
+  check("state-changing routes validate client keys and write limits before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
+  check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
   const backendPendingMarkers = backendCommandPendingMarkers(frontendSource);
   check("backend app mode waits for server command preview", backendPendingMarkers.ok, backendPendingMarkers.detail);
   const serverPreviewMarkers = serverCommandPreviewCopyMarkers(serverSource);
@@ -306,6 +308,15 @@ try {
     "",
     ""
   ].join("\r\n"));
+  const rateLimitedStateWriteStatuses = await Promise.all(
+    Array.from({ length: RATE_LIMIT_STATE_WRITE_REQUESTS + 1 }, () => request(port, "/api/state", {
+      method: "PUT",
+      headers: {
+        "content-type": "text/plain",
+        "x-projects-demo-client": "demo-00000000-0000-4000-8000-000000000004"
+      }
+    }).then((response) => response.status))
+  );
   const nullStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -613,6 +624,7 @@ try {
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
   check("oversized JSON bodies are rejected before storage", oversizedBodyStateWrite.status === 413, oversizedBodyStateWrite.status);
   check("declared oversized JSON bodies are rejected before upload", declaredOversizedBodyStateWrite.status === 413, declaredOversizedBodyStateWrite.status);
+  check("keyed state write rate limit rejects before content-type parsing", rateLimitStatusesOk(rateLimitedStateWriteStatuses), statusCounts(rateLimitedStateWriteStatuses));
   check("null state snapshots are rejected", nullStateWrite.status === 400, nullStateWrite.status);
   check("array state snapshots are rejected", arrayStateWrite.status === 400, arrayStateWrite.status);
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
@@ -913,13 +925,13 @@ function writeRoutesValidateKeyBeforeBody(source) {
   ];
   const failed = anchors.filter((anchor) => {
     const start = source.indexOf(anchor);
-    const keyIndex = source.indexOf("stateKeyForRequest(request)", start);
+    const keyIndex = source.indexOf("stateWriteKeyForRequest(request)", start);
     const bodyIndex = source.indexOf("readJsonBody(request)", start);
     return start < 0 || keyIndex < 0 || bodyIndex < 0 || keyIndex > bodyIndex;
   });
   return {
     ok: failed.length === 0,
-    detail: failed.length === 0 ? "stateKeyForRequest before readJsonBody" : failed.join(", ")
+    detail: failed.length === 0 ? "stateWriteKeyForRequest before readJsonBody" : failed.join(", ")
   };
 }
 
@@ -931,7 +943,31 @@ function eraseRouteValidatesKey(source) {
 
   const routeEnd = source.indexOf("\n  }\n\n", routeStart);
   const routeSource = source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined);
-  return routeSource.includes("eraseState(stateKeyForRequest(request))");
+  return routeSource.includes("eraseState(stateWriteKeyForRequest(request))");
+}
+
+function stateWriteRateLimitConfigured(source) {
+  return [
+    "const RATE_LIMIT_WINDOW_MS",
+    "const RATE_LIMIT_API_REQUESTS",
+    "const RATE_LIMIT_SOURCE_WRITE_REQUESTS",
+    "const RATE_LIMIT_STATE_WRITE_REQUESTS",
+    "function stateWriteKeyForRequest(request)",
+    "enforceStateWriteRateLimit(request, stateKey)",
+    "function enforceRateLimit(bucketKey, limit, message)"
+  ].every((needle) => source.includes(needle));
+}
+
+function rateLimitStatusesOk(statuses) {
+  return statuses.filter((status) => status === 415).length === RATE_LIMIT_STATE_WRITE_REQUESTS
+    && statuses.filter((status) => status === 429).length === 1;
+}
+
+function statusCounts(statuses) {
+  return [...new Set(statuses)]
+    .sort((left, right) => left - right)
+    .map((status) => `${status}:${statuses.filter((entry) => entry === status).length}`)
+    .join(", ");
 }
 
 function declaredBodyLimitBeforeStream(source) {

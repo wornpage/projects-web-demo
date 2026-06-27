@@ -49,6 +49,10 @@ smoke test passed through `/api/state`.
 | `PGPASSWORD` | Outplane-provided database password |
 | `PGSSLMODE` | `require` |
 | `PROJECTS_PUBLIC_ORIGIN` | Optional explicit app origin, such as `https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app` |
+| `PROJECTS_RATE_LIMIT_WINDOW_MS` | Optional API rate-limit window; defaults to `60000` |
+| `PROJECTS_RATE_LIMIT_API_REQUESTS` | Optional API requests per socket source per window; defaults to `1200` |
+| `PROJECTS_RATE_LIMIT_SOURCE_WRITE_REQUESTS` | Optional write requests per socket source per window; defaults to `600` |
+| `PROJECTS_RATE_LIMIT_STATE_WRITE_REQUESTS` | Optional write requests per state key per window; defaults to `120` |
 
 If Outplane gives you a single connection URI instead, you can use
 `DATABASE_URL` in place of the `PG*` variables.
@@ -73,6 +77,10 @@ The hosted API also avoids wildcard CORS and only reflects the same-origin
 Outplane app origin or an explicitly configured `PROJECTS_PUBLIC_ORIGIN` /
 `PROJECTS_ALLOWED_ORIGINS` value. It does not use forwarding headers to authorize
 CORS.
+The backend keeps in-memory per-process rate limits for public API traffic and
+state writes. State-write throttling runs after the browser key is validated but
+before JSON body parsing. This protects the demo from simple repeated-write
+abuse, but it is not account security, encryption, or a full DDoS control.
 
 The app also supports a sync code for personal two-device use. **New** creates a
 Web Crypto generated 20-character code and copies the current demo state to that
@@ -139,7 +147,8 @@ After deploy:
    without a browser client key, if hosted state accepts a weak manual client
    key or readable sync-code-shaped client key, if a missing-key state or
    workflow write reaches body parsing before ownership validation, if hosted
-   state accepts a non-JSON write or oversized JSON body, an invalid selected work id or selected id
+   state accepts a non-JSON write or oversized JSON body, if repeated state
+   writes do not eventually return `429`, an invalid selected work id or selected id
    type, malformed top-level metadata or text, a malformed or overlong work text
    field, malformed work string list, or malformed/oversized receipt shape, if hosted
    workflow writes accept malformed create, next, action, memory, or path fields, if hosted

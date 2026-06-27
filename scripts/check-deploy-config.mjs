@@ -46,6 +46,15 @@ for (const [name, expectedValue] of requiredEnvRows.entries()) {
 }
 
 check("deploy env allows explicit public origin", environmentVariables.has("PROJECTS_PUBLIC_ORIGIN"), "PROJECTS_PUBLIC_ORIGIN");
+for (const [name, expectedDefault] of new Map([
+  ["PROJECTS_RATE_LIMIT_WINDOW_MS", "`60000`"],
+  ["PROJECTS_RATE_LIMIT_API_REQUESTS", "`1200`"],
+  ["PROJECTS_RATE_LIMIT_SOURCE_WRITE_REQUESTS", "`600`"],
+  ["PROJECTS_RATE_LIMIT_STATE_WRITE_REQUESTS", "`120`"]
+]).entries()) {
+  const row = environmentVariables.get(name);
+  check(`deploy env documents ${name}`, Boolean(row) && row[1].includes(expectedDefault), row ? row.join(" | ") : "missing");
+}
 check("hosted env table omits file-backed state path", !environmentVariables.has("PROJECTS_STATE_FILE"), "PROJECTS_STATE_FILE absent");
 check("deploy doc forbids hosted PROJECTS_STATE_FILE", deployDoc.includes("Do not set `PROJECTS_STATE_FILE` for the hosted Postgres app."), "warning present");
 check("deploy doc documents DATABASE_URL alternative", deployDoc.includes("`DATABASE_URL` in place of the `PG*` variables."), "DATABASE_URL alternative");
@@ -78,6 +87,8 @@ check("server asset fallback is content-derived", includesAll(serverSource, [
 check("server asset fallback avoids startup-random keys", !serverSource.includes("Date.now().toString(36)") && !serverSource.includes("crypto.randomUUID().slice(0, 8)"), "no timestamp/random fallback");
 const declaredBodyLimit = declaredBodyLimitBeforeStream(serverSource);
 check("server rejects declared oversized bodies before reading", declaredBodyLimit.ok, declaredBodyLimit.detail);
+const apiRateLimit = apiRateLimitConfigured(serverSource);
+check("server rate limits API and state writes before body parsing", apiRateLimit.ok, apiRateLimit.detail);
 check(
   "server rejects invalid state storage mode",
   invalidStorageStartup.exited
@@ -128,6 +139,11 @@ check("live verifier rejects invalid work-path status writes", includesAll(liveV
   "invalidWorkPathStatus",
   "hosted work-path rejects invalid statuses"
 ]), "invalid work-path status rejection");
+check("live verifier checks hosted write rate limits", includesAll(liveVerifier, [
+  "rateLimitedStateWriteStatuses",
+  "hosted state write rate limit rejects before content-type parsing",
+  "RATE_LIMIT_STATE_WRITE_REQUESTS"
+]), "hosted write rate limit rejection");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",
@@ -143,14 +159,17 @@ check("README documents live seed-data matching", /seed-data matching/u.test(rea
 check("README documents unkeyed seed-data rejection", /unkeyed seed data\s+rejection/u.test(readme), "unkeyed seed data rejection");
 check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("README documents invalid storage fail-fast", readme.includes("Invalid `PROJECTS_STATE_STORAGE` values fail startup"), "invalid storage fail-fast");
+check("README documents API write rate limits", readme.includes("State-write throttling runs after client-key validation but before JSON"), "API write rate limits");
 check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, whitespace, clean git state, and live/u.test(serverReadme), "server README ship summary");
 check("server README documents unkeyed seed-data rejection", /unkeyed seed data\s+rejection/u.test(serverReadme), "unkeyed seed data rejection");
 check("server README documents invalid storage fail-fast", serverReadme.includes("Invalid `PROJECTS_STATE_STORAGE` values fail startup"), "invalid storage fail-fast");
+check("server README documents API write rate limits", serverReadme.includes("State-write throttling runs after client-key validation but before JSON"), "API write rate limits");
 check("deploy doc documents content-derived asset fallback", deployDoc.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("deploy doc documents live app-shell matching", /app shell content,\s+protected JS, or CSS content/u.test(deployDoc), "app shell matching");
 check("deploy doc documents live seed-data matching", /hosted seed data does not match this checkout/u.test(deployDoc), "seed-data matching");
 check("deploy doc documents live verifier cleanup", /erases the temporary\s+verifier rows/u.test(deployDoc), "live verifier cleanup");
 check("deploy doc documents invalid storage fail-fast", /any\s+other value fails startup/u.test(deployDoc), "invalid storage fail-fast");
+check("deploy doc documents API write rate limits", deployDoc.includes("State-write throttling runs after the browser key is validated but"), "API write rate limits");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
@@ -202,6 +221,32 @@ function declaredBodyLimitBeforeStream(source) {
     detail: bodyStart >= 0 && guardIndex > bodyStart && streamIndex > guardIndex
       ? "content-length guard before stream read"
       : "missing guard before stream read"
+  };
+}
+
+function apiRateLimitConfigured(source) {
+  const stateWriteKey = source.indexOf("function stateWriteKeyForRequest(request)");
+  const enforceWrite = source.indexOf("enforceStateWriteRateLimit(request, stateKey)", stateWriteKey);
+  const writeRoute = source.indexOf('if (method === "PUT" && pathname === "/api/state")');
+  const routeWriteKey = source.indexOf("stateWriteKeyForRequest(request)", writeRoute);
+  const bodyRead = source.indexOf("readJsonBody(request)", writeRoute);
+  const required = [
+    "const RATE_LIMIT_WINDOW_MS",
+    "const RATE_LIMIT_API_REQUESTS",
+    "const RATE_LIMIT_SOURCE_WRITE_REQUESTS",
+    "const RATE_LIMIT_STATE_WRITE_REQUESTS",
+    "function enforceApiSourceRateLimit(request)",
+    "function enforceStateWriteRateLimit(request, stateKey)",
+    "function enforceRateLimit(bucketKey, limit, message)"
+  ];
+  const missing = required.filter((needle) => !source.includes(needle));
+  return {
+    ok: missing.length === 0
+      && stateWriteKey >= 0
+      && enforceWrite > stateWriteKey
+      && routeWriteKey > writeRoute
+      && bodyRead > routeWriteKey,
+    detail: missing.length === 0 ? "stateWriteKeyForRequest before readJsonBody" : `missing ${missing.join(", ")}`
   };
 }
 

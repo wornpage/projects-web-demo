@@ -45,6 +45,7 @@ try {
   requireRiskStatus(byRisk, "Browser JS is visible", "True");
   requireRiskStatus(byRisk, "Static sample data is visible on static targets", "True");
   requireRiskStatus(byRisk, "Private repo files served by Outplane", "Fixed");
+  requireRiskStatus(byRisk, "Anonymous API callers can repeatedly consume backend write work", "Fixed");
   requireRiskStatus(byRisk, "GitHub Pages root publish could expose repo files", "Fixed");
 
   for (const row of checks) {
