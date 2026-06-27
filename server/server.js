@@ -57,12 +57,6 @@ const contentTypes = {
 
 const CORS_ALLOWED_METHODS = "GET,POST,PUT,PATCH,OPTIONS";
 const CORS_ALLOWED_HEADERS = `content-type, ${API_CLIENT_HEADER}`;
-const configuredCorsOrigins = parseCorsOrigins(process.env.PROJECTS_ALLOWED_ORIGINS);
-const localPreviewCorsOrigins = new Set([
-  "http://localhost:5181",
-  "http://127.0.0.1:5181",
-  "http://[::1]:5181"
-]);
 const securityHeaders = {
   "cache-control": "no-store",
   "referrer-policy": "no-referrer",
@@ -1253,15 +1247,6 @@ async function readJsonBody(request) {
   }
 }
 
-function parseCorsOrigins(value) {
-  return new Set(
-    String(value || "")
-      .split(/[,\s]+/u)
-      .map((origin) => normalizedCorsOrigin(origin))
-      .filter(Boolean)
-  );
-}
-
 function normalizedCorsOrigin(value) {
   const text = normalizeText(value, 300);
   if (!text) {
@@ -1306,9 +1291,6 @@ function corsHeadersForRequest(request) {
 function allowedCorsOrigin(origin, request) {
   if (!origin) {
     return "";
-  }
-  if (configuredCorsOrigins.has(origin) || localPreviewCorsOrigins.has(origin)) {
-    return origin;
   }
   return isSameHostOrigin(origin, request) ? origin : "";
 }

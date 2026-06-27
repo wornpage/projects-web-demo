@@ -93,6 +93,14 @@ const apiClient = functionSource("apiClientId");
 const syncClient = functionSource("syncClientId");
 
 check(
+  "backend API base comes only from the server-injected setting",
+  includesAll(source, [
+    "const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || \"\")"
+  ]) && !source.includes("DEMO_API_QUERY_PARAM") && !source.includes("launchParams.get(\"api\")") && !source.includes("launchParams.get('api')"),
+  "window.PROJECTS_API_BASE_URL only"
+);
+
+check(
   "sync controls wire use, new, copy, and leave actions",
   includesAll(bindSyncControls, [
     'activateSyncCode(valueOf("sync-code-input"), { copyCurrentState: false })',

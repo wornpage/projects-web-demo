@@ -106,9 +106,8 @@ The Node app also rewrites the CSS/JS asset query string at startup using
 startup value. That keeps hosted deploys from serving stale cached frontend
 assets after a push.
 
-API CORS is bounded. Same-origin app requests are allowed, the default local
-static preview origin `http://localhost:5181` is allowed for development, and
-extra development origins must be listed in `PROJECTS_ALLOWED_ORIGINS`.
+API CORS is bounded to same-origin app requests. Use the single Node app for
+backend-backed local testing; the static preview remains browser-local.
 
 The default local state file is `server/data/state.json`. When the browser sends
 its anonymous client key, local file-backed app mode stores that client's state
@@ -193,15 +192,9 @@ The optional sync code replaces the anonymous browser key with a hashed code so
 two devices can share one demo row. It does not create accounts or encrypt the
 stored JSON.
 
-## Static Preview With API
+## Static Preview
 
-Run the app/API in one terminal:
-
-```powershell
-pwsh -NoLogo -NoProfile -Command 'node "server/server.js"'
-```
-
-Run the static frontend preview in another terminal:
+Run the static frontend preview from the repository root:
 
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'node "server/static.js"'
@@ -210,12 +203,12 @@ pwsh -NoLogo -NoProfile -Command 'node "server/static.js"'
 Then open:
 
 ```text
-http://localhost:5181/?api=http://localhost:5179/#/home
+http://localhost:5181/#/home
 ```
 
-When `api` is present, the frontend loads and saves demo state through
-`GET /api/state` and `PUT /api/state`. Without `api`, the static preview keeps
-the original browser-local GitHub Pages behavior.
+The static preview uses browser-local state, matching the GitHub Pages behavior.
+Use app mode at `http://localhost:5179/#/home` when you need backend-backed
+persistence.
 
 ## GitHub Pages
 

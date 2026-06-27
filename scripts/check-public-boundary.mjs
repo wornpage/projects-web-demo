@@ -62,14 +62,6 @@ try {
   const sameOriginCors = await request(port, "/api/health", {
     headers: { origin: sameOrigin }
   });
-  const previewPreflight = await request(port, "/api/state", {
-    method: "OPTIONS",
-    headers: {
-      origin: "http://localhost:5181",
-      "access-control-request-method": "PUT",
-      "access-control-request-headers": "content-type, x-projects-demo-client"
-    }
-  });
   const blockedPreflight = await request(port, "/api/state", {
     method: "OPTIONS",
     headers: {
@@ -79,7 +71,6 @@ try {
     }
   });
   check("same-origin API CORS is exact, not wildcard", sameOriginCors.headers["access-control-allow-origin"] === sameOrigin, sameOriginCors.headers["access-control-allow-origin"] || "missing");
-  check("local preview origin can preflight the API", previewPreflight.status === 204 && previewPreflight.headers["access-control-allow-origin"] === "http://localhost:5181", `${previewPreflight.status} / ${previewPreflight.headers["access-control-allow-origin"] || "missing"}`);
   check("third-party API preflight is rejected", blockedPreflight.status === 403 && !blockedPreflight.headers["access-control-allow-origin"], `${blockedPreflight.status} / ${blockedPreflight.headers["access-control-allow-origin"] || "no cors"}`);
 
   for (const pathname of [

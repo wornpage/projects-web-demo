@@ -67,8 +67,8 @@ confirms public text assets stay under explicit size budgets without source-map
 hints or private path strings, confirms retired route code stays absent,
 and confirms the backend-served app shell sends a nonce-based Content Security
 Policy for the injected runtime API script. It also confirms API CORS uses
-exact allowed origins instead of a wildcard, allows the local preview origin,
-and rejects a third-party preflight.
+the exact same-origin app origin instead of a wildcard and rejects a
+third-party preflight.
 
 Repeatable live gate:
 
@@ -95,7 +95,7 @@ references, private path strings, or served source-map files.
 | Docker image contains extra docs/source helpers | Reduced | Docker now copies only `server/server.js` after install |
 | Local file-backed API users mix state | Fixed | Browser client keys map to separate hashed local state files |
 | Backend app shell allows arbitrary inline script | Reduced | The Node app serves `index.html` with a nonce-based CSP for the injected API-base script |
-| API accepts browser calls from any site | Fixed | CORS reflects only same-origin, the local preview origin, or exact configured origins |
+| API accepts browser calls from any site | Fixed | CORS reflects only the same-origin app origin |
 | GitHub Pages root publish could expose repo files | Possible if enabled | Keep Pages disabled or publish only a filtered artifact |
 
 ## What Cannot Be Hidden

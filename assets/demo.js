@@ -7,7 +7,6 @@ const LEGACY_DEMO_STORAGE_KEYS = [
 const THEME_STORAGE_KEY = "projects-demo-theme-v2";
 const DEMO_METADATA_FILE = "assets/demo-metadata.json";
 const DEMO_DEFAULT_VERSION = "working";
-const DEMO_API_QUERY_PARAM = "api";
 const API_STATE_SAVE_DEBOUNCE_MS = 300;
 const API_CLIENT_STORAGE_KEY = "projects-static-demo-api-client-v1";
 const SYNC_CODE_STORAGE_KEY = "projects-static-demo-sync-code-v1";
@@ -231,7 +230,7 @@ function reviewScenarioPack(pack) {
 
 const el = (id) => document.getElementById(id);
 const launchParams = new URLSearchParams(location.search);
-const DEMO_API_BASE_URL = normalizeApiBaseUrl(launchParams.get(DEMO_API_QUERY_PARAM) || window.PROJECTS_API_BASE_URL || "");
+const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || "");
 let apiSaveTimer = null;
 let apiPendingSnapshot = null;
 let apiSaveInFlight = false;

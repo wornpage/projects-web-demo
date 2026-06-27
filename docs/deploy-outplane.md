@@ -48,7 +48,6 @@ save/read smoke test passed through `/api/state`.
 | `PGUSER` | Outplane-provided database role |
 | `PGPASSWORD` | Outplane-provided database password |
 | `PGSSLMODE` | `require` |
-| `PROJECTS_ALLOWED_ORIGINS` | Optional exact extra development origins; leave unset for the same-origin Outplane app |
 
 If Outplane gives you a single connection URI instead, you can use
 `DATABASE_URL` in place of the `PG*` variables.
@@ -59,9 +58,8 @@ only for local file-backed development, and it implies container or volume state
 The browser sends an anonymous client key with API requests, so hosted demo
 edits are separated per browser without accounts. Hosted Postgres API requests
 without that browser key are rejected instead of sharing one fallback row.
-The hosted API also avoids wildcard CORS; same-origin requests are allowed by
-default, and any extra browser origins must be listed exactly in
-`PROJECTS_ALLOWED_ORIGINS`.
+The hosted API also avoids wildcard CORS and only reflects the same-origin
+Outplane app origin.
 
 The app also supports a sync code for personal two-device use. **New** creates a
 code and copies the current demo state to that code's row; **Use** joins that

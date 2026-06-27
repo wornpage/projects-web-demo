@@ -82,28 +82,22 @@ Use [../docs/deploy-outplane.md](../docs/deploy-outplane.md) for the Outplane
 development deploy path. It uses the same Dockerfile and Postgres-backed storage
 mode as Render.
 
-## Static Preview With API
+## Static Preview
 
-Run the app/API in one terminal:
-
-```powershell
-pwsh -NoLogo -NoProfile -Command 'node "server/server.js"'
-```
-
-Then serve the static frontend from the repository root in another terminal:
+Serve the static frontend from the repository root:
 
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'node "server/static.js"'
 ```
 
-Open the frontend with the API query parameter:
+Open:
 
 ```text
-http://localhost:5181/?api=http://localhost:5179/#/home
+http://localhost:5181/#/home
 ```
 
-Without the `api` query parameter, the app keeps its original browser-local
-GitHub Pages behavior.
+The static preview keeps the browser-local GitHub Pages behavior. Use app mode
+at `http://localhost:5179/#/home` when you need backend-backed persistence.
 
 ## Endpoints
 
@@ -122,10 +116,8 @@ GitHub Pages behavior.
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
 API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:
-nosniff`. API CORS reflects only same-origin requests, the default local static
-preview origin `http://localhost:5181`, or exact origins listed in
-`PROJECTS_ALLOWED_ORIGINS`. This is still demo isolation, not private account
-security.
+nosniff`. API CORS reflects only same-origin app requests. This is still demo
+isolation, not private account security.
 
 ## Checks
 
