@@ -138,7 +138,7 @@ base instead of the incoming Host header.
 | `GET /api/state` | Load the full demo state. |
 | `PUT /api/state/browser` | Save the typed durable browser-row state for the current browser row. |
 | `POST /api/state/restore` | Restore a bounded recovery snapshot into the current keyed demo state row. |
-| `POST /api/state/sync` | Copy the current demo snapshot into a newly selected sync-code row. |
+| `POST /api/state/sync-copy` | Copy the current server-owned demo row into a newly selected sync-code row. |
 | `POST /api/state/filter` | Save one supported status filter and return the server-owned row state. |
 | `POST /api/state/selected` | Save one existing selected work id and return the server-owned row state. |
 | `POST /api/state/scenario` | Apply one supported scenario transform and return the server-owned row state. |
@@ -160,8 +160,8 @@ Hosted card-level run-next buttons use generic copy and defer the specific
 command label to the server-preview run-next path.
 Hosted recovery restores use `POST /api/state/restore` instead of the generic
 browser save path; static preview keeps local browser restore.
-Hosted sync-code copies use `POST /api/state/sync` instead of the browser-row
-save path. Hosted filter chips use `POST /api/state/filter` instead of the
+Hosted sync-code copies use `POST /api/state/sync-copy` instead of sending a
+browser-defined state snapshot. Hosted filter chips use `POST /api/state/filter` instead of the
 browser-row save path. Hosted selected-work navigation uses
 `POST /api/state/selected` instead of the browser-row save path. Hosted
 scenario changes use `POST /api/state/scenario` instead of the browser-row

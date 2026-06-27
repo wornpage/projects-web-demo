@@ -201,8 +201,8 @@ state through `PUT /api/state`.
 Recovery restores in hosted app mode post to `POST /api/state/restore` instead
 of going through the browser's generic full-state save path. Static mode still
 uses the local browser save path because GitHub Pages has no backend.
-New sync-code copies in hosted app mode post to `POST /api/state/sync` instead
-of going through the browser-row save path. Hosted browser-row snapshots save
+New sync-code copies in hosted app mode post to `POST /api/state/sync-copy`
+instead of sending a browser-defined state snapshot. Hosted browser-row snapshots save
 through the typed `PUT /api/state/browser` envelope without transient receipt,
 search, or browser-derived status text; the older generic `PUT /api/state`
 write path is retired. Browser-row writes preserve the current backend-owned

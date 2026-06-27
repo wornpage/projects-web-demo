@@ -88,7 +88,7 @@ try {
   const unkeyedRestoreStatus = await writeStatus("/api/state/restore", stateWithGeneratedPacks(1, "live-unkeyed-restore"), {
     "content-type": "text/plain"
   }, "POST");
-  const unkeyedSyncCopyStatus = await writeStatus("/api/state/sync", stateWithGeneratedPacks(1, "live-unkeyed-sync"), {
+  const unkeyedSyncCopyStatus = await writeStatus("/api/state/sync-copy", { targetClientId: "sync-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }, {
     "content-type": "text/plain"
   }, "POST");
   const unkeyedFilterWriteStatus = await writeStatus("/api/state/filter", { filter: "review" }, {
@@ -108,6 +108,7 @@ try {
   const clientAKey = "demo-00000000-0000-4000-8000-000000000202";
   const clientBKey = "demo-00000000-0000-4000-8000-000000000203";
   const sharedKey = "sync-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const syncSourceKey = "demo-00000000-0000-4000-8000-000000000207";
   const recoveryKey = "demo-00000000-0000-4000-8000-000000000204";
   const limitKey = "demo-00000000-0000-4000-8000-000000000205";
   const pathStatusKey = "demo-00000000-0000-4000-8000-000000000206";
@@ -344,8 +345,11 @@ try {
     "x-projects-demo-client": clientAKey,
     "content-type": "application/json"
   }, "PUT");
-  await writeJson("/api/state/sync", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
-    "x-projects-demo-client": sharedKey
+  await writeJson("/api/state/browser", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
+    "x-projects-demo-client": syncSourceKey
+  });
+  await writeJson("/api/state/sync-copy", { targetClientId: sharedKey }, {
+    "x-projects-demo-client": syncSourceKey
   }, "POST");
   await writeJson("/api/state/browser", stateWithCheckPack(liveState, "live-recovery-check", recoverySnapshotTitle), {
     "x-projects-demo-client": recoveryKey
@@ -365,6 +369,8 @@ try {
   const sharedStateAfterErase = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
   const eraseSharedStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": sharedKey }, "POST");
   const sharedStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
+  const eraseSyncSourceStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": syncSourceKey }, "POST");
+  const syncSourceStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": syncSourceKey });
   const eraseRecoveryStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": recoveryKey }, "POST");
   const recoveryStateAfterCleanup = await readJson("/api/state", { "x-projects-demo-client": recoveryKey });
   const erasePathStatusStateStatus = await readStatus("/api/state/erase", { "x-projects-demo-client": pathStatusKey }, "POST");
@@ -576,6 +582,7 @@ try {
   check("hosted state can restore an exported snapshot", stateHasPackTitle(restoredRecoveryState, recoverySnapshotTitle), recoverySnapshotTitle);
   check("hosted state restore removes later overwrite", !stateHasPackTitle(restoredRecoveryState, recoveryOverwriteTitle), recoveryOverwriteTitle);
   check("hosted verifier cleanup erases shared row", eraseSharedStateStatus === 200 && !stateHasPackTitle(sharedStateAfterCleanup, sharedTitle), `${eraseSharedStateStatus} / ${sharedTitle}`);
+  check("hosted verifier cleanup erases sync source row", eraseSyncSourceStateStatus === 200 && !stateHasPackTitle(syncSourceStateAfterCleanup, sharedTitle), `${eraseSyncSourceStateStatus} / ${sharedTitle}`);
   check("hosted verifier cleanup erases recovery row", eraseRecoveryStateStatus === 200 && !stateHasPackTitle(recoveryStateAfterCleanup, recoverySnapshotTitle), `${eraseRecoveryStateStatus} / ${recoverySnapshotTitle}`);
   check("hosted verifier cleanup erases path-status row", erasePathStatusStateStatus === 200 && !stateHasPackTitle(pathStatusStateAfterCleanup, pathStatusTitle), `${erasePathStatusStateStatus} / ${pathStatusTitle}`);
   check("hosted verifier cleanup erases filter row", eraseFilterStateStatus === 200 && filterStateAfterCleanup.filter !== "review", `${eraseFilterStateStatus} / ${filterStateAfterCleanup.filter || "none"}`);

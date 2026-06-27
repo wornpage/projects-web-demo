@@ -143,7 +143,7 @@ check("live verifier rejects unkeyed recovery restore before body parsing", incl
 check("live verifier rejects unkeyed sync copy before body parsing", includesAll(liveVerifier, [
   "unkeyedSyncCopyStatus",
   "hosted sync copy rejects missing client key before body parsing",
-  "\"/api/state/sync\""
+  "\"/api/state/sync-copy\""
 ]), "unkeyed sync copy rejection");
 check("live verifier rejects unkeyed filter writes before body parsing", includesAll(liveVerifier, [
   "unkeyedFilterWriteStatus",

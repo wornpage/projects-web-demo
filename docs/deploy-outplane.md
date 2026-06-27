@@ -160,7 +160,7 @@ After deploy:
    work-path writes accept an unsupported status value,
    if two browser client keys can read each other's state, if seed demo work cannot load
    through the keyed API, if a shared sync key cannot be read from a second
-   request, if a sync snapshot cannot be copied through `POST /api/state/sync`,
+   request, if a sync row cannot be copied through `POST /api/state/sync-copy`,
    if an exported state snapshot cannot be restored through
    `POST /api/state/restore`, if the live
    verifier cannot erase the temporary verifier rows it writes, or if public
