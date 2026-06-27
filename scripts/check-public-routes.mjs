@@ -115,6 +115,7 @@ check("panel forms group labels controls and help", panelFormFieldStylesContract
 check("work filters stay scannable and tappable", workFilterStylesContractOk(), "equal-width chip grid plus compact mobile columns");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 check("skip link names the current screen target", html.includes('href="#demo-main">Skip to current screen</a>'), "Skip to current screen");
+check("demo notice says no login or private data", html.includes("Demo data only. No login or private project data."), "no login/private data");
 check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"'), "demo notice role=note");
 check("sidebar idea note is exposed as supporting context", html.includes('class="demo-sidebar-note card" role="note"'), "sidebar note role=note");
 check("next action panel is labelled by its visible title", html.includes('class="demo-command-brief sidecar" aria-labelledby="command-title"'), "command-title labels next action panel");
