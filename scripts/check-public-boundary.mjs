@@ -814,7 +814,7 @@ try {
   check("named profile endpoint saves supported profile", validProfileWrite.status === 200 && validProfileWrite.body?.state?.copyProfile === "developer", `${validProfileWrite.status} / ${validProfileWrite.body?.state?.copyProfile || "missing"}`);
   check("named profile endpoint rejects unsupported profiles", invalidProfileWrite.status === 400, invalidProfileWrite.status);
   check("named profile endpoint persists the keyed row", clientAStateAfterProfile.body?.copyProfile === "developer", clientAStateAfterProfile.body?.copyProfile || "missing");
-  check("named reset endpoint restores default row", validResetWrite.status === 200 && validResetWrite.body?.state?.copyProfile === "general" && validResetWrite.body?.state?.scenarioId === "default" && validResetWrite.body?.state?.filter === "all" && Array.isArray(validResetWrite.body?.state?.packs) && validResetWrite.body.state.packs.length > 0, `${validResetWrite.status} / ${validResetWrite.body?.state?.copyProfile || "missing"}`);
+  check("named reset endpoint restores default row", validResetWrite.status === 200 && validResetWrite.body?.state?.copyProfile === "general" && validResetWrite.body?.state?.scenarioId === "default" && validResetWrite.body?.state?.filter === "all" && /backend row/u.test(validResetWrite.body?.state?.status || "") && Array.isArray(validResetWrite.body?.state?.packs) && validResetWrite.body.state.packs.length > 0, `${validResetWrite.status} / ${validResetWrite.body?.state?.copyProfile || "missing"} / ${validResetWrite.body?.state?.status || "missing"}`);
   check("named reset endpoint persists the keyed row", resetStateAfterWrite.body?.copyProfile === "general" && resetStateAfterWrite.body?.scenarioId === "default" && resetStateAfterWrite.body?.filter === "all", `${resetStateAfterWrite.body?.copyProfile || "missing"} / ${resetStateAfterWrite.body?.scenarioId || "missing"} / ${resetStateAfterWrite.body?.filter || "missing"}`);
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
   check("empty state snapshots are rejected", emptyPacksStateWrite.status === 400, emptyPacksStateWrite.status);
@@ -1201,11 +1201,12 @@ function frontendBrowserRowSaveUsesNamedEndpoint(source) {
     && snapshotBody.includes('"projects-browser-state-v1"')
     && snapshotBody.includes("state:s")
     && snapshotBody.includes("delete s.actionReceipt")
-    && snapshotBody.includes("delete s.query");
+    && snapshotBody.includes("delete s.query")
+    && snapshotBody.includes("delete s.status");
   return {
     ok,
     detail: ok
-      ? "browser-row snapshots save through /api/state/browser without transient receipt/query"
+      ? "browser-row snapshots save through /api/state/browser without transient receipt/query/status"
       : "browser-row save still uses the generic or full recovery snapshot"
   };
 }

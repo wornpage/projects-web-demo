@@ -938,7 +938,7 @@ async function resetStateAction() {
 }
 
 function resetStatusMessage() {
-  return "Where: Start. Blocker: None. Button runs next: review reset demo data in this browser.";
+  return "Where: Start. Blocker: None. Button runs next: review reset backend row.";
 }
 
 function profileStatusMessage(profile, sourceLabel) {

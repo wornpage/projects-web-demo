@@ -477,7 +477,7 @@ function demoStateSnapshot() {
   };
 }
 
-function browserRowStateSnapshot(){const s=demoStateSnapshot();delete s.actionReceipt;delete s.query;return{kind:"projects-browser-state-v1",state:s}}
+function browserRowStateSnapshot(){const s=demoStateSnapshot();delete s.actionReceipt;delete s.query;delete s.status;return{kind:"projects-browser-state-v1",state:s}}
 
 function recoverySnapshotText() {
   return JSON.stringify({
@@ -1028,7 +1028,7 @@ function updateServiceBoundaryNotice() {
   notice.textContent = DEMO_API_BASE_URL && syncCode
     ? "Sync code active. Anyone with the code can open this demo state. No private project data."
     : DEMO_API_BASE_URL
-      ? "Demo data only. Saves through the API for this browser; no login. No private project data."
+      ? "Demo data only. Saves to this backend row; no login. No private project data."
       : "Demo data only. Saves in this browser; no login. No private project data.";
   renderDemoSyncControls();
 }
@@ -3074,7 +3074,7 @@ function nextChoicePreviewHelp(pack, command = resolvePrimaryCommandForPack(pack
 }
 
 function resetDemoHelp() {
-  return "Reset demo work, profile, scenario, and edits in this browser.";
+  return DEMO_API_BASE_URL ? "Reset demo work, profile, scenario, and edits in this backend row." : "Reset demo work, profile, scenario, and edits in this browser.";
 }
 
 function renderCreate() {
