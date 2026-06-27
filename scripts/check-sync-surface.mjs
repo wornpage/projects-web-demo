@@ -315,6 +315,9 @@ check(
 check(
   "sync share link keeps visible keyboard focus",
   includesAll(styles, [
+    ".demo-sync-share a",
+    "display: inline-flex;",
+    "min-height: 34px;",
     ".demo-sync-share a:focus-visible",
     "outline: 3px solid var(--demo-focus-ring);",
     "outline-offset: 2px;"
