@@ -132,7 +132,7 @@ check("work filters stay scannable and tappable", workFilterStylesContractOk(), 
 check("work search reports visible result context", workSearchContractOk(), "search summary describes visible count and active filter; placeholder advertises searchable blocker");
 check("empty states expose semantic context", source.includes('class="demo-empty" role="note" aria-label="${escapeAttribute(label)}"') && source.includes("Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Button runs next: ${context.next}."), "empty state note labels include triad");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
-check("primary nav label stays compact and public-facing", html.includes('id="demo-nav"') && html.includes('aria-label="Demo screens"'), "Demo screens");
+check("primary nav label stays compact and portfolio-facing", html.includes('id="demo-nav"') && html.includes('aria-label="Portfolio demo screens"'), "Portfolio demo screens");
 check("sidebar landmark label keeps portfolio framing", html.includes('class="demo-sidebar nav-rail" aria-label="Portfolio demo navigation"'), "Portfolio demo navigation");
 check("header kicker keeps portfolio framing", html.includes('<div class="demo-kicker">Portfolio demo</div>'), "Portfolio demo");
 check("brand home link stays portfolio-facing", brandHomeLinkContractOk(), "Projects portfolio demo home");
