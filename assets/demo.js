@@ -2667,14 +2667,30 @@ function homeSpotlightPanel() {
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
     <p>${escapeHtml(purpose)}</p>
-    ${selectedWorkTriad(pack, command)}
+    ${homeSpotlightFacts(pack, command)}
     <div class="demo-home-spotlight-actions">
       ${primaryCommandButton(pack)}
-      ${supportActionButton("review", "Review blocker", pack, "btn")}
       ${supportActionButton("open", "Open path", pack, "btn")}
+      ${navButton("work", "Work list")}
       <small>${escapeHtml(reason)}</small>
     </div>
   </article>`;
+}
+
+function homeSpotlightFacts(pack, command) {
+  return `<div class="demo-home-spotlight-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`)}">
+    ${homeSpotlightFact("Where", workTitle(pack))}
+    ${homeSpotlightFact("Blocker", blockerTextForPack(pack))}
+    ${homeSpotlightFact("Button runs next", command.label)}
+  </div>`;
+}
+
+function homeSpotlightFact(label, value) {
+  const copy = copySurface(value || DEMO_BLOCKER_NONE_LABEL, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  return `<div class="demo-home-spotlight-fact">
+    <span>${escapeHtml(label)}</span>
+    <strong${copySurfaceAttributes(label, copy)}>${escapeHtml(copy.visible)}</strong>
+  </div>`;
 }
 
 function homeSpotlightPack() {
