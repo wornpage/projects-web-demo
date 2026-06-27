@@ -161,22 +161,26 @@ body parsing. On one app process, repeated invalid writes eventually return
 source ordering. The hosted live gate does not require observing `429` because
 Outplane can route requests across processes. This is an abuse guard for a
 public demo, not authentication or DDoS protection.
-Each keyed backend row is capped at 50 work items. Oversized full-state writes
-and create requests past that cap are rejected instead of being silently stored.
+Each keyed backend row is capped at 50 work items. Oversized browser-row,
+recovery, sync, and create writes past that cap are rejected instead of being
+silently stored.
 JSON body writes are capped at 1 MiB and return `413` before storage if the
 request is too large. Declared oversized bodies are rejected before the request
 stream is read.
-Full-state writes must be JSON object snapshots with a `packs` array; scalar,
-array, empty, or missing-work payloads are rejected before they can sanitize
-into an empty row. Use the backend erase endpoint to clear the current row.
-Full-state writes also require supported text profile, scenario, and filter
-values, bounded top-level status/query text, a plain bounded action receipt when
-present, plus each work item must keep bounded text fields with a unique id,
-title, and valid workflow status, and the saved selected work id must be text
-that references one of those items. Work source, memory, and activity lists
-must also be bounded text arrays. That keeps backup or sync restores from
-silently creating duplicate rows, dangling selections, malformed notes,
-malformed receipts, or off-contract work rows.
+Full recovery and sync writes must be JSON object snapshots with a `packs`
+array; scalar, array, empty, or missing-work payloads are rejected before they
+can sanitize into an empty row. Use the backend erase endpoint to clear the
+current row.
+Browser-row writes must use the typed `projects-browser-state-v1` envelope and
+save only the durable row state, omitting transient receipt and search text.
+State writes also require supported text profile, scenario, and filter values,
+bounded top-level status text, plus each work item must keep bounded text
+fields with a unique id, title, and valid workflow status, and the saved
+selected work id must be text that references one of those items. Work source,
+memory, and activity lists must also be bounded text arrays. That keeps browser
+rows, backup restores, and sync copies from silently creating duplicate rows,
+dangling selections, malformed notes, malformed receipts, or off-contract work
+rows.
 Selected-work commands in hosted app mode wait for the server command preview
 before enabling the primary command buttons, so the browser does not briefly run
 the local workflow fallback while `/api/packs/{id}/command` is loading.
@@ -196,8 +200,8 @@ of going through the browser's generic full-state save path. Static mode still
 uses the local browser save path because GitHub Pages has no backend.
 New sync-code copies in hosted app mode post to `POST /api/state/sync` instead
 of going through the browser-row save path. Hosted browser-row snapshots save
-through `PUT /api/state/browser`; the older generic `PUT /api/state` write path
-is retired.
+through the typed `PUT /api/state/browser` envelope without transient receipt
+or search text; the older generic `PUT /api/state` write path is retired.
 If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
 and does not continue into the static fallback write path.
 Those workflow endpoints reject malformed or overlong request fields before

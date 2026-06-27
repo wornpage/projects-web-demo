@@ -16,14 +16,17 @@ share keys, and rejects weak manual header values or readable
 sync-code-shaped headers.
 Hosted Postgres stores and reads a server-side digest of that key in
 `state_key`; local file-backed mode stores hashed filenames.
-Each anonymous state row is capped at 50 work items. Oversized full-state writes
-and create requests past that cap are rejected. JSON body writes are capped at
-1 MiB and return `413` before storage if the request is too large; declared
-oversized bodies are rejected before the request stream is read. Full-state
-writes require each work item to keep bounded text fields with a unique id and
-title, require the selected work id to be text and reference an existing item,
-reject malformed top-level state fields, reject malformed source, memory, and
-activity lists, and also reject malformed or oversized `actionReceipt` object shapes before storage.
+Each anonymous state row is capped at 50 work items. Oversized browser-row,
+recovery, sync, and create writes past that cap are rejected. JSON body writes
+are capped at 1 MiB and return `413` before storage if the request is too
+large; declared oversized bodies are rejected before the request stream is
+read. State writes require each work item to keep bounded text fields with a
+unique id and title, require the selected work id to be text and reference an
+existing item, reject malformed top-level state fields, reject malformed
+source, memory, and activity lists, and also reject malformed or oversized
+`actionReceipt` object shapes when present. Normal browser-row saves use the
+typed `projects-browser-state-v1` envelope and omit transient receipt/search
+UI state.
 `POST /api/state/erase` removes only the row selected by the current generated
 browser key or hashed sync key. Missing or invalid keys are rejected before any
 storage erase runs.
@@ -131,7 +134,7 @@ base instead of the incoming Host header.
 | `GET /api/health` | Check that the backend is running. |
 | `GET /api/demo-packs` | Load server-side seed demo work with a browser client key. |
 | `GET /api/state` | Load the full demo state. |
-| `PUT /api/state/browser` | Save the full demo state for the current browser row. |
+| `PUT /api/state/browser` | Save the typed durable browser-row state for the current browser row. |
 | `POST /api/state/restore` | Restore a bounded recovery snapshot into the current keyed demo state row. |
 | `POST /api/state/sync` | Copy the current demo snapshot into a newly selected sync-code row. |
 | `POST /api/state/erase` | Erase the current keyed demo state row. |
@@ -151,8 +154,9 @@ command label to the server-preview run-next path.
 Hosted recovery restores use `POST /api/state/restore` instead of the generic
 browser save path; static preview keeps local browser restore.
 Hosted sync-code copies use `POST /api/state/sync` instead of the browser-row
-save path. Hosted browser rows save through `PUT /api/state/browser`; the older
-generic `PUT /api/state` write path is retired.
+save path. Hosted browser rows save through a `projects-browser-state-v1`
+envelope on `PUT /api/state/browser`, omitting transient receipt and search
+text; the older generic `PUT /api/state` write path is retired.
 Server-owned workflow write routes require JSON object payloads and reject
 malformed or overlong text fields, malformed create source/memory lists, and
 unsupported action or work-path status values before storage.
