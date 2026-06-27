@@ -14,7 +14,7 @@ const DATA_DIR = path.join(__dirname, "data");
 const STATE_FILE = process.env.PROJECTS_STATE_FILE || path.join(DATA_DIR, "state.json");
 const STATE_DIR = path.dirname(STATE_FILE);
 const DATABASE_URL = process.env.DATABASE_URL || "";
-const STATE_STORAGE = normalizeStateStorageMode(process.env.PROJECTS_STATE_STORAGE || (DATABASE_URL ? "postgres" : "file"));
+const STATE_STORAGE = normalizeStateStorageMode(process.env.PROJECTS_STATE_STORAGE || (hasPostgresConfig() ? "postgres" : "file"));
 const DEFAULT_STATE_KEY = normalizeText(process.env.PROJECTS_STATE_KEY || "default", 120) || "default";
 const API_CLIENT_HEADER = "x-projects-demo-client";
 const MAX_BODY_BYTES = 1024 * 1024;
@@ -290,16 +290,12 @@ function createFileStateStorage() {
 }
 
 function createPostgresStateStorage() {
-  if (!DATABASE_URL) {
-    throw new Error("DATABASE_URL is required when PROJECTS_STATE_STORAGE=postgres.");
+  const poolOptions = postgresPoolOptions();
+  if (!poolOptions) {
+    throw new Error("DATABASE_URL or PGHOST/PGDATABASE/PGUSER/PGPASSWORD is required when PROJECTS_STATE_STORAGE=postgres.");
   }
 
   const { Pool } = require("pg");
-  const poolOptions = { connectionString: DATABASE_URL };
-  const ssl = postgresSslOption();
-  if (ssl !== undefined) {
-    poolOptions.ssl = ssl;
-  }
   const pool = new Pool(poolOptions);
 
   return {
@@ -339,9 +335,42 @@ function stateKeyForRequest(request) {
   return /^[A-Za-z0-9][A-Za-z0-9._-]{7,119}$/u.test(value) ? value : DEFAULT_STATE_KEY;
 }
 
+function hasPostgresConfig() {
+  return Boolean(DATABASE_URL || (process.env.PGHOST && process.env.PGDATABASE && process.env.PGUSER && process.env.PGPASSWORD));
+}
+
+function postgresPoolOptions() {
+  const ssl = postgresSslOption();
+  if (DATABASE_URL) {
+    return ssl === undefined
+      ? { connectionString: DATABASE_URL }
+      : { connectionString: DATABASE_URL, ssl };
+  }
+
+  if (!hasPostgresConfig()) {
+    return null;
+  }
+
+  const options = {
+    host: process.env.PGHOST,
+    database: process.env.PGDATABASE,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD
+  };
+  const port = Number(process.env.PGPORT || 5432);
+  if (Number.isInteger(port) && port > 0) {
+    options.port = port;
+  }
+  if (ssl !== undefined) {
+    options.ssl = ssl;
+  }
+
+  return options;
+}
+
 function postgresSslOption() {
-  const mode = normalizeText(process.env.PROJECTS_POSTGRES_SSL, 20).toLowerCase();
-  if (mode === "require") {
+  const mode = normalizeText(process.env.PROJECTS_POSTGRES_SSL || process.env.PGSSLMODE, 20).toLowerCase();
+  if (mode === "require" || mode === "prefer") {
     return { rejectUnauthorized: false };
   }
   if (mode === "disable") {

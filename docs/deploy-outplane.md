@@ -12,13 +12,13 @@ stateless.
 | Root directory | `/` |
 | App port | `5179`, or the value Outplane injects as `PORT` |
 | Bind host | `0.0.0.0` through the Dockerfile `HOST` setting |
-| Storage | Managed PostgreSQL through `DATABASE_URL` |
+| Storage | Managed PostgreSQL through Outplane's `PG*` env vars |
 | Health check | `/api/health` |
 
 ## Deploy Steps
 
 1. Create an Outplane managed PostgreSQL database.
-2. Copy the database connection URI.
+2. Open the database connection panel.
 3. Create an Outplane application from this GitHub repository.
 4. Select Dockerfile as the build method.
 5. Set the root directory to `/`.
@@ -33,8 +33,14 @@ stateless.
 | `NODE_ENV` | `production` |
 | `PROJECTS_STATE_STORAGE` | `postgres` |
 | `PROJECTS_STATE_KEY` | `outplane-dev` |
-| `PROJECTS_POSTGRES_SSL` | `require` |
-| `DATABASE_URL` | Outplane PostgreSQL connection URI |
+| `PGHOST` | Outplane-provided database host |
+| `PGDATABASE` | Outplane-provided database name |
+| `PGUSER` | Outplane-provided database role |
+| `PGPASSWORD` | Outplane-provided database password |
+| `PGSSLMODE` | `require` |
+
+If Outplane gives you a single connection URI instead, you can use
+`DATABASE_URL` in place of the `PG*` variables.
 
 The browser sends an anonymous client key with API requests, so hosted demo
 edits are separated per browser without accounts.

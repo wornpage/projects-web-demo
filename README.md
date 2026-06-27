@@ -91,8 +91,8 @@ The same Node process serves the frontend and `/api`. In app mode,
 needed.
 
 The default local state file is `server/data/state.json`. Hosted deploys should
-use `PROJECTS_STATE_STORAGE=postgres` with `DATABASE_URL` instead of writable
-container files.
+use `PROJECTS_STATE_STORAGE=postgres` with managed Postgres environment
+variables instead of writable container files.
 
 ## Docker
 
@@ -122,7 +122,7 @@ Postgres so app containers stay stateless.
 
 Use Outplane when you want a development deployment of the backend-backed app.
 The repo's Dockerfile already reads `PORT`, binds to `0.0.0.0`, and supports
-managed Postgres through `DATABASE_URL`.
+managed Postgres through Outplane's `PG*` environment variables.
 
 See [docs/deploy-outplane.md](docs/deploy-outplane.md).
 
