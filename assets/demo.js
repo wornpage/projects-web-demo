@@ -1340,7 +1340,7 @@ async function syncClientId(syncCode) {
   }
 
   if (!globalThis.crypto?.subtle) {
-    return `sync-${normalized.toLowerCase().replace(/[^a-z0-9._-]/gu, "-")}`;
+    throw new Error("Sync code sharing needs Web Crypto hashing in this browser.");
   }
 
   const digest = await globalThis.crypto.subtle.digest(

@@ -55,6 +55,7 @@ try {
   const commandPreview = await readJson("/api/packs/source-folder-audit/command", apiHeaders);
   const unkeyedStateStatus = await readStatus("/api/state");
   const weakKeyedStateStatus = await readStatus("/api/state", { "x-projects-demo-client": "password1" });
+  const readableSyncKeyedStateStatus = await readStatus("/api/state", { "x-projects-demo-client": "sync-pass-word-pass" });
   const retiredGenericPatchStatus = await readStatus("/api/packs/source-folder-audit", {
     ...apiHeaders,
     "content-type": "application/json"
@@ -199,6 +200,7 @@ try {
   check("generic state POST route is retired", retiredStatePostStatus === 404, retiredStatePostStatus);
   check("hosted state rejects missing client key", unkeyedStateStatus === 400, unkeyedStateStatus);
   check("hosted state rejects weak manual client keys", weakKeyedStateStatus === 400, weakKeyedStateStatus);
+  check("hosted state rejects readable sync-code client keys", readableSyncKeyedStateStatus === 400, readableSyncKeyedStateStatus);
   check("hosted state writes reject missing client key before body parsing", unkeyedNonJsonStateWriteStatus === 400, unkeyedNonJsonStateWriteStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
   check("hosted state rejects oversized snapshots", oversizedStateStatus === 400, oversizedStateStatus);

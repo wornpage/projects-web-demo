@@ -256,22 +256,23 @@ check(
 );
 
 check(
-  "sync client keys are namespaced and hashed when possible",
+  "sync client keys are namespaced and hashed",
   includesAll(syncClient, [
     "globalThis.crypto?.subtle",
     "globalThis.crypto.subtle.digest",
     "projects-web-demo-sync:${normalized}",
     "return `sync-${base64Url(digest).slice(0, 64)}`"
-  ]),
+  ]) && !syncClient.includes("normalized.toLowerCase()"),
   "syncClientId"
 );
 
 check(
-  "sync client key fallback stays scoped to the sync code",
+  "sync client keys fail without Web Crypto hashing",
   includesAll(syncClient, [
-    "return `sync-${normalized.toLowerCase().replace(/[^a-z0-9._-]/gu, \"-\")}`"
-  ]),
-  "syncClientId fallback"
+    "!globalThis.crypto?.subtle",
+    "throw new Error(\"Sync code sharing needs Web Crypto hashing in this browser.\")"
+  ]) && !syncClient.includes("return `sync-${normalized.toLowerCase()"),
+  "syncClientId"
 );
 
 for (const row of checks) {

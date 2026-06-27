@@ -11,8 +11,9 @@ State-changing and state-read API routes require that anonymous browser client
 key in both local file-backed mode and hosted Postgres mode. Missing or invalid
 keys are rejected instead of falling back to one shared row.
 State-changing routes validate that key before reading JSON payloads.
-The API accepts only generated `demo-...` browser keys or `sync-...` share keys,
-and rejects weak manual header values such as short passwords.
+The API accepts only generated `demo-...` browser keys or hashed `sync-...`
+share keys, and rejects weak manual header values or readable
+sync-code-shaped headers.
 Hosted Postgres stores a server-side digest of that key in `state_key`; local
 file-backed mode stores hashed filenames.
 Each anonymous state row is capped at 50 work items. Oversized full-state writes
@@ -21,8 +22,10 @@ oversized `actionReceipt` object shapes before storage.
 
 The frontend can replace the anonymous browser key with a hashed sync code so
 two browsers or devices can share one demo row. New sync codes and anonymous
-browser row keys require Web Crypto instead of weak random fallbacks. That is a
-convenience feature, not authentication or encryption of the stored JSON.
+browser row keys require Web Crypto instead of weak random fallbacks. Sync codes
+also require Web Crypto hashing; the frontend does not send readable sync codes
+as backend row keys. That is a convenience feature, not authentication or
+encryption of the stored JSON.
 
 ## App Mode
 

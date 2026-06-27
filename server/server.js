@@ -516,8 +516,7 @@ function stateKeyForRequest(request) {
 
 function isGeneratedClientStateKey(value) {
   return /^demo-(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[A-Za-z0-9_-]{22})$/iu.test(value)
-    || /^sync-[A-Za-z0-9_-]{43}$/u.test(value)
-    || /^sync-[a-z0-9]{1,4}(?:-[a-z0-9]{1,4}){2,5}$/u.test(value);
+    || /^sync-[A-Za-z0-9_-]{43}$/u.test(value);
 }
 
 function hasPostgresConfig() {

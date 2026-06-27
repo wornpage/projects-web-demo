@@ -135,8 +135,9 @@ Postgres environment variables instead of writable container files.
 Hosted Postgres stores a server-side digest of the browser client key rather
 than the raw request header value.
 State-changing API routes validate that client key before reading JSON payloads.
-The API accepts only generated `demo-...` browser keys or `sync-...` share keys;
-weak manual header values such as short passwords are rejected.
+The API accepts only generated `demo-...` browser keys or hashed `sync-...`
+share keys; weak manual header values and readable sync-code-shaped headers are
+rejected.
 Each keyed backend row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected instead of being silently stored.
 
@@ -145,7 +146,8 @@ to the same demo row. Use **New** to create a Web Crypto generated 20-character
 code, then enter that code on the other device, copy the sync link, or scan the
 QR code. Anyone with the code or sync link can open that demo state, and the
 database still stores readable JSON; this is convenience sync, not private
-encrypted storage.
+encrypted storage. Browsers must support Web Crypto hashing for sync codes; the
+app will not send readable sync codes as backend row keys.
 
 ## Docker
 

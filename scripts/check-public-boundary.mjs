@@ -217,6 +217,9 @@ try {
   const weakKeyedState = await request(port, "/api/state", {
     headers: { "x-projects-demo-client": "password1" }
   });
+  const readableSyncKeyedState = await request(port, "/api/state", {
+    headers: { "x-projects-demo-client": "sync-pass-word-pass" }
+  });
   const unkeyedNonJsonStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -289,6 +292,7 @@ try {
   check("client B does not read client A work", !stateHasPackTitle(clientBState.body, packTitle), clientBState.status);
   check("unkeyed local API state is rejected", unkeyedState.status === 400, unkeyedState.status);
   check("weak manual API client keys are rejected", weakKeyedState.status === 400, weakKeyedState.status);
+  check("readable sync-code API client keys are rejected", readableSyncKeyedState.status === 400, readableSyncKeyedState.status);
   check("unkeyed local API state writes are rejected before body parsing", unkeyedNonJsonStateWrite.status === 400, unkeyedNonJsonStateWrite.status);
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
   check("oversized keyed state snapshots are rejected", oversizedStateWrite.status === 400, oversizedStateWrite.status);
