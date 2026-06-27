@@ -1784,6 +1784,7 @@ function render() {
   document.querySelectorAll(".demo-nav-item").forEach((item) => {
     const isActive = item.dataset.route === state.route;
     item.classList.toggle("active", isActive);
+    item.setAttribute("href", formatRouteHash(item.dataset.route, routeLinkPackId(item.dataset.route)));
     if (isActive) {
       item.setAttribute("aria-current", "page");
     } else {
@@ -1865,6 +1866,22 @@ function screenTitleForRoute() {
   }
 
   return ROUTE_CONTRACT[state.route]?.title || ROUTE_CONTRACT.work.title;
+}
+
+function routeLinkPackId(route) {
+  if (!ROUTE_CONTRACT[route]?.acceptsPackId) {
+    return "";
+  }
+
+  if (route === "review") {
+    return preferredReviewPack()?.id || state.selectedId;
+  }
+
+  if (route === "next") {
+    return preferredNextSetupPack()?.id || state.selectedId;
+  }
+
+  return state.selectedId;
 }
 
 function renderCommand(selected) {
@@ -5937,7 +5954,7 @@ function metricCard(label, value, note) {
 function navButton(route, label, className = "btn") {
   const reason = routeButtonReason(route, label);
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
-  return `<button class="${escapeAttribute(className)}" type="button" data-go="${escapeAttribute(route)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
+  return `<button class="${escapeAttribute(className)}" type="button" data-go="${escapeAttribute(route)}" data-pack="${escapeAttribute(routeLinkPackId(route))}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
 }
 
 function homeSecondaryAction(route, label, reason) {
@@ -5951,24 +5968,10 @@ function routeButtonReason(route, label) {
   const reasons = {
     home: "Return to the simplified demo start.",
     work: `Open the ${workNoun(2)} list to choose one ${workNoun(1)}.`,
-    today: `Open dated ${profile().work} and run Button runs next from due items.`,
-    board: `Open the status board to compare ${profile().work} lanes.`,
     review: `Open review ${profile().work} and resolve the next blocker.`,
     next: "Open Button runs next setup for review work.",
-    check: "Open demo checks for screen and action coverage.",
-    health: "Open demo health for navigation, asset, and state checks.",
-    search: `Open search to find ${profile().work} by title, owner, due date, or next action.`,
-    stats: `Open counts for visible ${profile().work}, review, and done states.`,
-    notes: `Open notes for selected ${profile().work}.`,
-    timeline: "Open browser-only activity written by demo actions.",
-    files: `Open ${profile().sources.toLowerCase()} used by the ${workNoun(2)}.`,
-    calendar: `Open due-date ${profile().work} and date-based actions.`,
-    lab: `Open Demo Lab to inspect the selected ${profile().work} state.`,
-    meta: "Open Meta to inspect screens, assets, and build info.",
     create: `Create ${profile().work} with title, owner, and Button runs next.`,
-    memory: `Open Memory to add recall notes to selected ${profile().work}.`,
-    settings: "Change the static demo copy profile.",
-    feedback: "Open feedback with the current demo context."
+    memory: `Open Memory to add recall notes to selected ${profile().work}.`
   };
   return reasons[route] || `Open ${label}.`;
 }
