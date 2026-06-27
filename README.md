@@ -153,7 +153,8 @@ rejected.
 Each keyed backend row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected instead of being silently stored.
 JSON body writes are capped at 1 MiB and return `413` before storage if the
-request is too large.
+request is too large. Declared oversized bodies are rejected before the request
+stream is read.
 Full-state writes must be JSON object snapshots with a `packs` array; scalar,
 array, empty, or missing-work payloads are rejected before they can sanitize
 into an empty row. Use the backend erase endpoint to clear the current row.

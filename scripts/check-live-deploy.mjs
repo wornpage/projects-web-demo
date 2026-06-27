@@ -3,6 +3,8 @@
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import http from "node:http";
+import https from "node:https";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -104,6 +106,10 @@ try {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
   }, "PUT");
+  const declaredOversizedBodyStateStatus = await declaredOversizedBodyStatus("/api/state", {
+    "x-projects-demo-client": limitKey,
+    "content-type": "application/json"
+  });
   const oversizedStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(MAX_STATE_PACKS + 1, "live-oversized-state"), {
     "x-projects-demo-client": limitKey,
     "content-type": "application/json"
@@ -410,6 +416,7 @@ try {
   check("hosted state writes reject missing client key before body parsing", unkeyedNonJsonStateWriteStatus === 400, unkeyedNonJsonStateWriteStatus);
   check("hosted state rejects non-json snapshots", nonJsonStateStatus === 415, nonJsonStateStatus);
   check("hosted state rejects oversized JSON bodies", oversizedBodyStateStatus === 413, oversizedBodyStateStatus);
+  check("hosted state rejects declared oversized JSON bodies before upload", declaredOversizedBodyStateStatus === 413, declaredOversizedBodyStateStatus);
   check("hosted state rejects null snapshots", nullStateStatus === 400, nullStateStatus);
   check("hosted state rejects array snapshots", arrayStateStatus === 400, arrayStateStatus);
   check("hosted state rejects snapshots without packs", missingPacksStateStatus === 400, missingPacksStateStatus);
@@ -538,6 +545,31 @@ async function writeStatus(pathname, payload, headers = {}, method = "PUT") {
     body: JSON.stringify(payload)
   });
   return response.status;
+}
+
+function declaredOversizedBodyStatus(pathname, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const target = new URL(pathname, baseUrl);
+    const client = target.protocol === "https:" ? https : http;
+    const request = client.request(target, {
+      method: "PUT",
+      headers: {
+        "cache-control": "no-cache",
+        "content-length": String(1024 * 1024 + 1),
+        ...headers
+      }
+    }, (response) => {
+      response.resume();
+      response.on("end", () => {
+        resolve(response.statusCode || 0);
+      });
+    });
+    request.on("error", reject);
+    request.setTimeout(10000, () => {
+      request.destroy(new Error("Declared oversized body request timed out."));
+    });
+    request.end();
+  });
 }
 
 function stateWithCheckPack(state, id, title) {

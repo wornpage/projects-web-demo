@@ -89,6 +89,8 @@ try {
   check("API health sends shared security headers", sharedSecurityHeadersOk(health.headers), sharedSecurityHeaderDetail(health.headers));
   check("Postgres state keys are hashed before storage", /function postgresStateKey\(stateKey\)[\s\S]*v2:\$\{crypto\.createHash\("sha256"\)\.update\(normalized\)\.digest\("hex"\)\}/u.test(serverSource), "postgresStateKey");
   check("Postgres raw state-key fallback is retired", !serverSource.includes("postgresStateKeys(") && !serverSource.includes("WHERE state_key = $1 OR state_key = $2") && !serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "digest-only state_key path");
+  const declaredBodyLimit = declaredBodyLimitBeforeStream(serverSource);
+  check("declared oversized body length is rejected before stream reading", declaredBodyLimit.ok, declaredBodyLimit.detail);
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
   check("state-changing routes validate client keys before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateKeyForRequest required");
@@ -294,6 +296,16 @@ try {
     },
     body: JSON.stringify(stateWithOversizedBody("oversized-body-boundary"))
   });
+  const declaredOversizedBodyStateWrite = await rawRequest(port, [
+    "PUT /api/state HTTP/1.1",
+    `Host: 127.0.0.1:${port}`,
+    "Content-Type: application/json",
+    `Content-Length: ${1024 * 1024 + 1}`,
+    `x-projects-demo-client: ${clientA}`,
+    "Connection: close",
+    "",
+    ""
+  ].join("\r\n"));
   const nullStateWrite = await request(port, "/api/state", {
     method: "PUT",
     headers: {
@@ -600,6 +612,7 @@ try {
   check("unkeyed local API state writes are rejected before body parsing", unkeyedNonJsonStateWrite.status === 400, unkeyedNonJsonStateWrite.status);
   check("non-json state snapshots are rejected", nonJsonStateWrite.status === 415, nonJsonStateWrite.status);
   check("oversized JSON bodies are rejected before storage", oversizedBodyStateWrite.status === 413, oversizedBodyStateWrite.status);
+  check("declared oversized JSON bodies are rejected before upload", declaredOversizedBodyStateWrite.status === 413, declaredOversizedBodyStateWrite.status);
   check("null state snapshots are rejected", nullStateWrite.status === 400, nullStateWrite.status);
   check("array state snapshots are rejected", arrayStateWrite.status === 400, arrayStateWrite.status);
   check("state snapshots without packs are rejected", missingPacksStateWrite.status === 400, missingPacksStateWrite.status);
@@ -919,6 +932,18 @@ function eraseRouteValidatesKey(source) {
   const routeEnd = source.indexOf("\n  }\n\n", routeStart);
   const routeSource = source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined);
   return routeSource.includes("eraseState(stateKeyForRequest(request))");
+}
+
+function declaredBodyLimitBeforeStream(source) {
+  const bodyStart = source.indexOf("async function readJsonBody(request)");
+  const guardIndex = source.indexOf("rejectOversizedContentLength(request)", bodyStart);
+  const streamIndex = source.indexOf("for await (const chunk of request)", bodyStart);
+  return {
+    ok: bodyStart >= 0 && guardIndex > bodyStart && streamIndex > guardIndex,
+    detail: bodyStart >= 0 && guardIndex > bodyStart && streamIndex > guardIndex
+      ? "content-length guard before stream read"
+      : "missing guard before stream read"
+  };
 }
 
 function backendCommandPendingMarkers(source) {

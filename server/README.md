@@ -18,7 +18,8 @@ Hosted Postgres stores and reads a server-side digest of that key in
 `state_key`; local file-backed mode stores hashed filenames.
 Each anonymous state row is capped at 50 work items. Oversized full-state writes
 and create requests past that cap are rejected. JSON body writes are capped at
-1 MiB and return `413` before storage if the request is too large. Full-state
+1 MiB and return `413` before storage if the request is too large; declared
+oversized bodies are rejected before the request stream is read. Full-state
 writes require each work item to keep bounded text fields with a unique id and
 title, require the selected work id to be text and reference an existing item,
 reject malformed top-level state fields, reject malformed source, memory, and

@@ -76,6 +76,8 @@ check("server asset fallback is content-derived", includesAll(serverSource, [
   "\"data/demo-packs.json\""
 ]), "contentAssetVersion");
 check("server asset fallback avoids startup-random keys", !serverSource.includes("Date.now().toString(36)") && !serverSource.includes("crypto.randomUUID().slice(0, 8)"), "no timestamp/random fallback");
+const declaredBodyLimit = declaredBodyLimitBeforeStream(serverSource);
+check("server rejects declared oversized bodies before reading", declaredBodyLimit.ok, declaredBodyLimit.detail);
 check(
   "server rejects invalid state storage mode",
   invalidStorageStartup.exited
@@ -126,6 +128,11 @@ check("live verifier rejects invalid work-path status writes", includesAll(liveV
   "invalidWorkPathStatus",
   "hosted work-path rejects invalid statuses"
 ]), "invalid work-path status rejection");
+check("live verifier rejects declared oversized body writes", includesAll(liveVerifier, [
+  "declaredOversizedBodyStateStatus",
+  "hosted state rejects declared oversized JSON bodies before upload",
+  "declaredOversizedBodyStatus"
+]), "declared oversized body rejection");
 check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "eraseSharedStateStatus",
   "eraseRecoveryStateStatus",
@@ -189,6 +196,18 @@ function stripTicks(value) {
 
 function includesAll(text, needles) {
   return needles.every((needle) => text.includes(needle));
+}
+
+function declaredBodyLimitBeforeStream(source) {
+  const bodyStart = source.indexOf("async function readJsonBody(request)");
+  const guardIndex = source.indexOf("rejectOversizedContentLength(request)", bodyStart);
+  const streamIndex = source.indexOf("for await (const chunk of request)", bodyStart);
+  return {
+    ok: bodyStart >= 0 && guardIndex > bodyStart && streamIndex > guardIndex,
+    detail: bodyStart >= 0 && guardIndex > bodyStart && streamIndex > guardIndex
+      ? "content-length guard before stream read"
+      : "missing guard before stream read"
+  };
 }
 
 function invalidStorageModeStartupResult() {

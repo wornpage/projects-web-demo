@@ -1716,6 +1716,7 @@ function uniquePackId(packs, seed) {
 
 async function readJsonBody(request) {
   requireJsonContentType(request);
+  rejectOversizedContentLength(request);
 
   let body = "";
   let bytes = 0;
@@ -1742,6 +1743,18 @@ function requireJsonContentType(request) {
   const contentType = normalizeText(request.headers["content-type"], 120).split(";")[0].trim().toLowerCase();
   if (contentType !== "application/json") {
     throw httpError(415, "Request body must use application/json.");
+  }
+}
+
+function rejectOversizedContentLength(request) {
+  const rawLength = normalizeText(request.headers["content-length"], 40);
+  if (!rawLength || !/^\d+$/u.test(rawLength)) {
+    return;
+  }
+
+  const declaredLength = Number(rawLength);
+  if (declaredLength > MAX_BODY_BYTES) {
+    throw httpError(413, "Request body is too large.");
   }
 }
 
