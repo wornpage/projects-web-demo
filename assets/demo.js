@@ -362,6 +362,11 @@ function loadState(backendState = null) {
   backendPackCommandCache.clear();
 }
 
+function loadBackendOwnedState(backendState) {
+  loadState(backendState);
+  state.suppressNextSave = true;
+}
+
 function purgeLegacyDemoState() {
   for (const key of LEGACY_DEMO_STORAGE_KEYS) {
     try {
@@ -528,10 +533,9 @@ async function eraseBackendState() {
     }
 
     const result = await response.json();
-    loadState(result.state);
+    loadBackendOwnedState(result.state);
     state.status = routeStatus("Backend erase", DEMO_BLOCKER_NONE, "review sample state");
     state.clipboardReceipt = null;
-    state.suppressNextSave = true;
     render();
   } catch (error) {
     state.status = routeStatus("Backend erase", error.message || "erase failed", "try again");
@@ -728,7 +732,7 @@ async function runBackendPackAction(pack, action) {
   }
 
   const result = await response.json();
-  loadState(result.state);
+  loadBackendOwnedState(result.state);
   state.selectedId = result.pack?.id || pack.id;
   if (action === "open") {
     queueFocus("pack-detail", state.selectedId);
@@ -756,7 +760,7 @@ async function saveBackendPackNextAction(pack, next) {
   }
 
   const result = await response.json();
-  loadState(result.state);
+  loadBackendOwnedState(result.state);
   state.selectedId = result.pack?.id || pack.id;
   return result;
 }
@@ -777,7 +781,7 @@ async function createBackendPack(values) {
   }
 
   const result = await response.json();
-  loadState(result.state);
+  loadBackendOwnedState(result.state);
   state.selectedId = result.pack?.id || state.selectedId;
   return result;
 }
@@ -798,7 +802,7 @@ async function addBackendPackMemoryNote(pack, note) {
   }
 
   const result = await response.json();
-  loadState(result.state);
+  loadBackendOwnedState(result.state);
   state.selectedId = result.pack?.id || pack.id;
   return result;
 }
@@ -819,7 +823,7 @@ async function saveBackendPackPath(pack, values) {
   }
 
   const result = await response.json();
-  loadState(result.state);
+  loadBackendOwnedState(result.state);
   state.selectedId = result.pack?.id || pack.id;
   return result;
 }
@@ -1133,7 +1137,7 @@ async function activateSyncCode(value, options = {}) {
     await persistBackendStateSnapshot(demoStateSnapshot());
     state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use code on another device");
   } else {
-    loadState(await loadBackendState());
+    loadBackendOwnedState(await loadBackendState());
     state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "review shared demo state");
   }
 
@@ -1153,7 +1157,7 @@ async function leaveSyncCode() {
   clearSyncCode();
   clearLaunchSyncCodeParam();
   apiSessionClientId = "";
-  loadState(await loadBackendState());
+  loadBackendOwnedState(await loadBackendState());
   state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use this device only");
   updateServiceBoundaryNotice();
   render();

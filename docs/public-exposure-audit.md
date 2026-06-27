@@ -184,6 +184,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Backend app mode can briefly run browser fallback commands | Fixed | Selected-work command controls wait in a disabled state until `/api/packs/{id}/command` returns |
 | Browser duplicates selected-work command rationale in app mode | Fixed | `/api/packs/{id}/command` returns the selected-work flow hint and primary why copy; browser derivation remains for static mode |
 | Server-owned workflow calls pre-send browser full-state snapshots | Fixed | Pack create, next, path, memory, and action endpoints cancel pending generic saves and call their specific API without first writing `PUT /api/state` |
+| Backend endpoint responses trigger immediate generic state re-saves | Fixed | Backend-loaded state marks the next render as save-suppressed, so workflow and sync loads are not immediately followed by a generic `PUT /api/state` |
 | Live verifier can miss stale hosted seed data | Fixed | The live gate compares `GET /api/demo-packs` with checkout `data/demo-packs.json` instead of only checking for a non-empty response |
 | Obsolete provider config confuses the deployment path | Fixed | Removed the retired Render Blueprint so Outplane plus Docker is the only checked-in hosted path |
 | Ship verification can mix local edits with an older live deploy | Fixed | `scripts/check-git-ship-state.mjs` requires a clean branch synced with upstream before the live Outplane check runs |
@@ -251,6 +252,9 @@ keeps browser-local fallback copy.
 Server-owned workflow calls do not pre-send the browser's full state snapshot
 before those specific endpoints. Generic `PUT /api/state` remains for
 browser-row persistence, sync-code copy, and recovery.
+Backend-loaded state also suppresses the next render's generic save, so a
+specific workflow endpoint response is not immediately re-written through
+`PUT /api/state`.
 The older generic `PATCH /api/packs/{id}` update path is retired so work edits
 must pass through the server-owned workflow endpoints.
 Full demo snapshot persistence is intentionally limited to `PUT /api/state` for

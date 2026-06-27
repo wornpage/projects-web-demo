@@ -98,6 +98,8 @@ try {
   check("server command preview owns selected-work flow copy", serverPreviewMarkers.ok, serverPreviewMarkers.detail);
   const workflowPreflight = frontendWorkflowHelpersAvoidFullStatePreflight(frontendSource);
   check("server-owned workflow calls avoid full-state preflight writes", workflowPreflight.ok, workflowPreflight.detail);
+  const backendOwnedLoads = frontendBackendOwnedLoadsSuppressGenericSave(frontendSource);
+  check("backend-loaded state suppresses immediate generic re-save", backendOwnedLoads.ok, backendOwnedLoads.detail);
 
   const sameOrigin = `http://127.0.0.1:${port}`;
   const sameOriginCors = await request(port, "/api/health", {
@@ -672,6 +674,63 @@ function frontendWorkflowHelpersAvoidFullStatePreflight(source) {
   return {
     ok: failures.length === 0,
     detail: failures.length === 0 ? "workflow endpoints call specific APIs without pre-sending PUT /api/state" : failures.join(", ")
+  };
+}
+
+function frontendBackendOwnedLoadsSuppressGenericSave(source) {
+  const failures = [];
+  const loaderBody = functionBody(source, "loadBackendOwnedState");
+  if (!loaderBody) {
+    failures.push("loadBackendOwnedState:missing");
+  } else {
+    if (!loaderBody.includes("loadState(backendState);")) {
+      failures.push("loadBackendOwnedState:no loadState");
+    }
+    if (!loaderBody.includes("state.suppressNextSave = true;")) {
+      failures.push("loadBackendOwnedState:no suppress");
+    }
+  }
+
+  const resultStateHelpers = [
+    "eraseBackendState",
+    "runBackendPackAction",
+    "saveBackendPackNextAction",
+    "createBackendPack",
+    "addBackendPackMemoryNote",
+    "saveBackendPackPath"
+  ];
+  for (const helperName of resultStateHelpers) {
+    const body = functionBody(source, helperName);
+    if (!body) {
+      failures.push(`${helperName}:missing`);
+      continue;
+    }
+    if (!body.includes("loadBackendOwnedState(result.state);")) {
+      failures.push(`${helperName}:not backend-owned`);
+    }
+    if (body.includes("loadState(result.state);")) {
+      failures.push(`${helperName}:plain loadState`);
+    }
+  }
+
+  const backendStateLoadHelpers = [
+    "activateSyncCode",
+    "leaveSyncCode"
+  ];
+  for (const helperName of backendStateLoadHelpers) {
+    const body = functionBody(source, helperName);
+    if (!body) {
+      failures.push(`${helperName}:missing`);
+      continue;
+    }
+    if (!body.includes("loadBackendOwnedState(await loadBackendState())")) {
+      failures.push(`${helperName}:not backend-owned`);
+    }
+  }
+
+  return {
+    ok: failures.length === 0,
+    detail: failures.length === 0 ? "backend endpoint responses render without immediately scheduling PUT /api/state" : failures.join(", ")
   };
 }
 

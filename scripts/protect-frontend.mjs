@@ -55,6 +55,7 @@ const bannedReadableNames = Object.freeze([
   "backendCommandPendingReason",
   "backendCommandPendingFlowHint",
   "syncCommandActionButton",
+  "loadBackendOwnedState",
   "prepareBackendWorkflowRequest"
 ]);
 

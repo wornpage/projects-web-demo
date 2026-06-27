@@ -38,6 +38,7 @@ const leakedTokens = [
   "backendCommandPendingReason",
   "backendCommandPendingFlowHint",
   "syncCommandActionButton",
+  "loadBackendOwnedState",
   "prepareBackendWorkflowRequest",
   "backend-command-pending",
   "/api/packs",

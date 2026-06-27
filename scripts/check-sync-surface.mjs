@@ -189,7 +189,7 @@ check(
     "apiSessionClientId = \"\"",
     "options.copyCurrentState",
     "persistBackendStateSnapshot(demoStateSnapshot())",
-    "loadState(await loadBackendState())"
+    "loadBackendOwnedState(await loadBackendState())"
   ]),
   "activateSyncCode"
 );
@@ -200,7 +200,7 @@ check(
     "clearSyncCode()",
     "clearLaunchSyncCodeParam()",
     "apiSessionClientId = \"\"",
-    "loadState(await loadBackendState())"
+    "loadBackendOwnedState(await loadBackendState())"
   ]),
   "leaveSyncCode"
 );

@@ -158,6 +158,9 @@ fallback.
 Server-owned workflow calls cancel pending generic state saves and call the
 specific backend endpoint directly instead of first writing the full browser
 state through `PUT /api/state`.
+When those endpoints return backend-owned state, the next render is marked
+save-suppressed so the browser does not immediately re-upload that response
+through the generic state endpoint.
 
 In hosted app mode, the top sync-code strip can connect two browsers or devices
 to the same demo row. Use **New** to create a Web Crypto generated 20-character

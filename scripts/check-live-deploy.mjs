@@ -167,6 +167,7 @@ try {
     "backendCommandPendingReason",
     "backendCommandPendingFlowHint",
     "syncCommandActionButton",
+    "loadBackendOwnedState",
     "prepareBackendWorkflowRequest"
   ];
   const internalFrontendStrings = [
