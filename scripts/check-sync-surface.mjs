@@ -159,9 +159,9 @@ check(
 );
 
 check(
-  "sync help keeps short demo-data-only warning",
-  html.includes("Share demo data only. Anyone with this code can open this state.") &&
-    source.includes("Share demo data only. Anyone with this code can open this state.") &&
+  "sync help keeps short sample-data-only warning",
+  html.includes("Share sample data only. Anyone with this code can open this state.") &&
+    source.includes("Share sample data only. Anyone with this code can open this state.") &&
     !html.includes("Do not use it for private data") &&
     !source.includes("Do not use it for private data"),
   "short sync sharing warning"
