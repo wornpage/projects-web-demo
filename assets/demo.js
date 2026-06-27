@@ -3371,15 +3371,25 @@ function blockerInputDisabledReason() {
 
 function workToolbar(label) {
   const currentWork = profile().work;
+  const summary = workToolbarSummary();
   return `
     <section class="demo-toolbar" aria-label="${escapeAttribute(label)}">
       <label class="sr-only" for="demo-search">Search demo ${escapeHtml(currentWork)}</label>
-      <input id="demo-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search ${escapeAttribute(currentWork)} title, Button runs next, owner, or due date" autocomplete="off">
+      <input id="demo-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search ${escapeAttribute(currentWork)} title, Button runs next, owner, or due date" autocomplete="off" aria-describedby="demo-search-summary">
+      <p id="demo-search-summary" class="demo-status-line" role="status" aria-live="polite">${escapeHtml(summary)}</p>
       <div id="status-chips" class="demo-chip-row" aria-label="Status filters">
         ${renderFilterChips()}
       </div>
     </section>
   `;
+}
+
+function workToolbarSummary() {
+  const visibleCount = filteredPacks().length;
+  const query = normalizeCopy(state.query);
+  const filter = filterLabel(state.filter).toLowerCase();
+  const queryPart = query ? ` matching "${query}"` : "";
+  return `${visibleCount} ${workNoun(visibleCount)} visible${queryPart}; ${filter} filter active.`;
 }
 
 function renderFilterChips() {
