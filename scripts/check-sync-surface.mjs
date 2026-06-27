@@ -141,6 +141,12 @@ check(
 );
 
 check(
+  "sync state text announces changes politely",
+  html.includes('id="sync-code-state" role="status" aria-live="polite"'),
+  "sync-code-state role=status aria-live=polite"
+);
+
+check(
   "sync buttons keep clear accessible names",
   includesAll(html, [
     'id="sync-code-use" class="btn btn-sm" type="button" aria-label="Use sync code"',
