@@ -4739,6 +4739,14 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
     font-size: 18px;
   }
 
+  .demo-sync-share {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-sync-qr {
+    justify-self: start;
+  }
+
   .demo-card-title {
     font-size: 15px;
   }

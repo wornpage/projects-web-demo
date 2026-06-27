@@ -335,6 +335,9 @@ function syncMobileStylesOk() {
   const mobileStart = styles.indexOf("@media (max-width: 560px)");
   const mobileEnd = mobileStart < 0 ? -1 : styles.indexOf("@media", mobileStart + 1);
   const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
+  const narrowStart = styles.indexOf("@media (max-width: 420px)");
+  const narrowEnd = narrowStart < 0 ? -1 : styles.indexOf("@media", narrowStart + 1);
+  const narrowStyles = narrowStart < 0 ? "" : styles.slice(narrowStart, narrowEnd > narrowStart ? narrowEnd : undefined);
   return includesAll(mobileStyles, [
     ".demo-sync-controls",
     ".demo-sync-share",
@@ -346,6 +349,11 @@ function syncMobileStylesOk() {
     "flex: 1 1 120px;",
     "justify-content: center;",
     "grid-template-columns: minmax(0, 1fr) auto;"
+  ]) && includesAll(narrowStyles, [
+    ".demo-sync-share",
+    "grid-template-columns: 1fr;",
+    ".demo-sync-qr",
+    "justify-self: start;"
   ]);
 }
 
