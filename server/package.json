@@ -10,6 +10,7 @@
     "protect:check": "node ../scripts/check-protected-frontend.mjs",
     "routes:check": "node ../scripts/check-public-routes.mjs",
     "sync:check": "node ../scripts/check-sync-surface.mjs",
+    "recovery:check": "node ../scripts/check-state-recovery.mjs",
     "docker:check": "node ../scripts/check-docker-boundary.mjs",
     "boundary:check": "node ../scripts/check-public-boundary.mjs",
     "ship:check": "node ../scripts/check-ship.mjs"

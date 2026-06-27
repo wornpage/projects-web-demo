@@ -38,6 +38,11 @@ const steps = [
     args: ["scripts/check-sync-surface.mjs"]
   },
   {
+    label: "state recovery",
+    command: process.execPath,
+    args: ["scripts/check-state-recovery.mjs"]
+  },
+  {
     label: "public boundary",
     command: process.execPath,
     args: ["scripts/check-public-boundary.mjs"]

@@ -29,14 +29,26 @@ try {
   const clientAKey = "live-check-browser-a";
   const clientBKey = "live-check-browser-b";
   const sharedKey = "sync-live-check-shared";
+  const recoveryKey = "live-check-recovery";
   const clientATitle = `Live isolation check ${isolationStamp}`;
   const sharedTitle = `Live shared sync check ${isolationStamp}`;
+  const recoverySnapshotTitle = `Live recovery snapshot ${isolationStamp}`;
+  const recoveryOverwriteTitle = `Live recovery overwritten ${isolationStamp}`;
   await writeJson("/api/state", stateWithCheckPack(liveState, "live-isolation-check", clientATitle), {
     "x-projects-demo-client": clientAKey
   });
   await writeJson("/api/state", stateWithCheckPack(liveState, "live-shared-sync-check", sharedTitle), {
     "x-projects-demo-client": sharedKey
   });
+  await writeJson("/api/state", stateWithCheckPack(liveState, "live-recovery-check", recoverySnapshotTitle), {
+    "x-projects-demo-client": recoveryKey
+  });
+  const exportedRecoveryState = await readJson("/api/state", { "x-projects-demo-client": recoveryKey });
+  await writeJson("/api/state", stateWithCheckPack(exportedRecoveryState, "live-recovery-check", recoveryOverwriteTitle), {
+    "x-projects-demo-client": recoveryKey
+  });
+  await writeJson("/api/state", exportedRecoveryState, { "x-projects-demo-client": recoveryKey });
+  const restoredRecoveryState = await readJson("/api/state", { "x-projects-demo-client": recoveryKey });
   const clientAState = await readJson("/api/state", { "x-projects-demo-client": clientAKey });
   const clientBState = await readJson("/api/state", { "x-projects-demo-client": clientBKey });
   const sharedStateFromSecondRequest = await readJson("/api/state", { "x-projects-demo-client": sharedKey });
@@ -73,6 +85,8 @@ try {
   check("hosted client A reads its own state", stateHasPackTitle(clientAState, clientATitle), clientATitle);
   check("hosted client B does not read client A state", !stateHasPackTitle(clientBState, clientATitle), clientATitle);
   check("hosted sync key is readable from another request", stateHasPackTitle(sharedStateFromSecondRequest, sharedTitle), sharedTitle);
+  check("hosted state can restore an exported snapshot", stateHasPackTitle(restoredRecoveryState, recoverySnapshotTitle), recoverySnapshotTitle);
+  check("hosted state restore removes later overwrite", !stateHasPackTitle(restoredRecoveryState, recoveryOverwriteTitle), recoveryOverwriteTitle);
   check("API command route resolves selected work", commandPreview.action === "unblock" && commandPreview.next === "Set Blocker: None", `${commandPreview.action || "missing"} / ${commandPreview.next || "missing"}`);
   check("retired triage surface is absent", !/triage|parse-triage|copy-triage/iu.test(script), "triage");
   check("private repo and local path strings are absent", !/(github\.com\/jared-bidlow|C:\\|C:\/|\.git\/config|server\/server\.js)/iu.test(script), "private path scan");

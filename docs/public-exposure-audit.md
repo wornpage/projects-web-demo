@@ -74,8 +74,9 @@ pwsh -NoLogo -NoProfile -Command 'node "scripts/check-live-deploy.mjs"'
 
 The live gate confirms the hosted app uses Postgres, serves the app shell with a
 nonce-based CSP, rejects `/api/state` without a browser client key, keeps fixed
-`live-check-*` browser rows separate, and lets a fixed shared sync key read the
-same row from another request.
+`live-check-*` browser rows separate, lets a fixed shared sync key read the same
+row from another request, and restores an exported state snapshot to its keyed
+row.
 
 ## Risk Decisions
 

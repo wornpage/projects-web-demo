@@ -134,5 +134,5 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 ```
 
 That command runs backend syntax, frontend protection, public route-contract,
-sync sharing, public boundary, Docker deploy-boundary, whitespace, and live
-Outplane checks.
+sync sharing, state recovery, public boundary, Docker deploy-boundary,
+whitespace, and live Outplane checks.
