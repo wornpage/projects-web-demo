@@ -140,6 +140,7 @@ After deploy:
    state accepts a non-JSON write, an invalid selected work id or selected id
    type, malformed top-level metadata or text, a malformed or overlong work text
    field, malformed work string list, or malformed/oversized receipt shape, if hosted
+   workflow writes accept malformed create, next, action, memory, or path fields, if hosted
    work-path writes accept an unsupported status value,
    if two browser client keys can read each other's state, if seed demo work cannot load
    through the keyed API, if a shared sync key cannot be read from a second

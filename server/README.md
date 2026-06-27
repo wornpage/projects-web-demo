@@ -138,6 +138,10 @@ base instead of the incoming Host header.
 | `POST /api/packs/{id}/next` | Set the server-owned `Button runs next` value for one work item. |
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
+Server-owned workflow write routes require JSON object payloads and reject
+malformed or overlong text fields, malformed create source/memory lists, and
+unsupported action or work-path status values before storage.
+
 API and app responses use `Cache-Control: no-store`, `Referrer-Policy:
 no-referrer`, `X-Content-Type-Options: nosniff`, HSTS, `X-Frame-Options: DENY`,
 same-origin resource/opener/embedder isolation, origin-agent clustering, and

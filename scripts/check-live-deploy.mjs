@@ -186,6 +186,40 @@ try {
     "x-projects-demo-client": pathStatusKey,
     "content-type": "application/json"
   }, "POST");
+  const invalidWorkflowCreateSourcesStatus = await writeStatus("/api/packs", {
+    title: "Invalid live workflow create source list",
+    owner: "live-boundary-check",
+    next: "Open",
+    sources: [{ path: "not text" }]
+  }, {
+    "x-projects-demo-client": pathStatusKey,
+    "content-type": "application/json"
+  }, "POST");
+  const invalidWorkflowNextStatus = await writeStatus("/api/packs/source-folder-audit/next", {
+    next: { label: "Open" }
+  }, {
+    "x-projects-demo-client": pathStatusKey,
+    "content-type": "application/json"
+  }, "POST");
+  const invalidWorkflowActionStatus = await writeStatus("/api/packs/source-folder-audit/actions", {
+    action: ["open"]
+  }, {
+    "x-projects-demo-client": pathStatusKey,
+    "content-type": "application/json"
+  }, "POST");
+  const overlongWorkflowMemoryStatus = await writeStatus("/api/packs/source-folder-audit/memory", {
+    note: "x".repeat(2001)
+  }, {
+    "x-projects-demo-client": pathStatusKey,
+    "content-type": "application/json"
+  }, "POST");
+  const invalidWorkflowPathTextStatus = await writeStatus("/api/packs/source-folder-audit/path", {
+    status: "active",
+    next: { label: "Open" }
+  }, {
+    "x-projects-demo-client": pathStatusKey,
+    "content-type": "application/json"
+  }, "POST");
   const deepReceiptStateStatus = await writeStatus("/api/state", stateWithGeneratedPacks(1, "live-deep-receipt-state", {
     actionReceipt: deepActionReceipt(MAX_PLAIN_VALUE_DEPTH + 1)
   }), {
@@ -397,6 +431,11 @@ try {
     unkeyedWorkflowWriteStatuses.map(([name, status]) => `${name}:${status}`).join(", ")
   );
   check("hosted work-path rejects invalid statuses", invalidWorkPathStatus === 400, invalidWorkPathStatus);
+  check("hosted workflow rejects malformed create source lists", invalidWorkflowCreateSourcesStatus === 400, invalidWorkflowCreateSourcesStatus);
+  check("hosted workflow rejects malformed next values", invalidWorkflowNextStatus === 400, invalidWorkflowNextStatus);
+  check("hosted workflow rejects malformed actions", invalidWorkflowActionStatus === 400, invalidWorkflowActionStatus);
+  check("hosted workflow rejects overlong memory notes", overlongWorkflowMemoryStatus === 400, overlongWorkflowMemoryStatus);
+  check("hosted workflow rejects malformed path text fields", invalidWorkflowPathTextStatus === 400, invalidWorkflowPathTextStatus);
   check("hosted state rejects malformed action receipts", malformedReceiptStateStatus === 400, malformedReceiptStateStatus);
   check("hosted state rejects overlong action receipt text", overlongReceiptTextStateStatus === 400, overlongReceiptTextStateStatus);
   check("hosted state rejects deep action receipts", deepReceiptStateStatus === 400, deepReceiptStateStatus);

@@ -170,9 +170,11 @@ fallback.
 Server-owned workflow calls cancel pending generic state saves and call the
 specific backend endpoint directly instead of first writing the full browser
 state through `PUT /api/state`.
-The work-path endpoint rejects unsupported saved status values before storage,
-so hosted workflow writes cannot silently normalize private or off-contract
-statuses.
+Those workflow endpoints reject malformed or overlong request fields before
+storage, including invalid create source lists, action keys, memory notes, next
+values, and work-path text. The work-path endpoint also rejects unsupported
+saved status values before storage, so hosted workflow writes cannot silently
+normalize private or off-contract statuses.
 When those endpoints return backend-owned state, the next render is marked
 save-suppressed so the browser does not immediately re-upload that response
 through the generic state endpoint.

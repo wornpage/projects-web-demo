@@ -646,7 +646,8 @@ function createPackFromPayload(state, payload) {
     throw httpError(400, `Demo state cannot contain more than ${MAX_STATE_PACKS} work items.`);
   }
 
-  const values = createPackValues(payload);
+  const source = workflowPayloadObject(payload);
+  const values = createPackValues(source);
   const workflow = initialWorkflowForCreatedPack(values.title, values.owner, values.next);
   if (!workflow.canSave) {
     throw httpError(400, workflow.help);
@@ -655,7 +656,7 @@ function createPackFromPayload(state, payload) {
   const pack = sanitizePack({
     id: uniquePackId(state.packs, slugify(values.title || "sample-work")),
     title: values.title,
-    type: normalizeText(payload?.type, 80) || state.copyProfile || "general",
+    type: workflowTextField(source, "type", 80) || state.copyProfile || "general",
     status: workflow.status,
     blocker: workflow.blocker,
     next: values.next,
@@ -663,8 +664,8 @@ function createPackFromPayload(state, payload) {
     owner: values.owner,
     purpose: values.purpose || "Work created in the backend demo.",
     doneWhen: values.doneWhen || "Result is described.",
-    sources: normalizeStringArray(payload?.sources, 50, 200),
-    memory: normalizeStringArray(payload?.memory, 100, 2000),
+    sources: workflowStringArrayField(source, "sources", 50, 200),
+    memory: workflowStringArrayField(source, "memory", 100, 2000),
     activity: [persistenceCreatedActivity()]
   });
 
@@ -689,16 +690,66 @@ function createPackFromPayload(state, payload) {
   };
 }
 
-function createPackValues(payload) {
-  const source = payload && typeof payload === "object" ? payload : {};
+function createPackValues(source) {
   return {
-    title: normalizeText(source.title, 200),
-    owner: normalizeText(source.owner, 120),
-    next: normalizeText(source.next, 120),
-    due: normalizeText(source.due, 40),
-    purpose: normalizeText(source.purpose, 1000),
-    doneWhen: normalizeText(source.doneWhen, 1000)
+    title: workflowTextField(source, "title", 200),
+    owner: workflowTextField(source, "owner", 120),
+    next: workflowTextField(source, "next", 120),
+    due: workflowTextField(source, "due", 40),
+    purpose: workflowTextField(source, "purpose", 1000),
+    doneWhen: workflowTextField(source, "doneWhen", 1000)
   };
+}
+
+function workflowPayloadObject(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw httpError(400, "Workflow request must be a JSON object.");
+  }
+  return payload;
+}
+
+function workflowTextField(source, key, maxLength, options = {}) {
+  if (!Object.prototype.hasOwnProperty.call(source, key)) {
+    if (options.required) {
+      throw httpError(400, `Workflow ${key} is required.`);
+    }
+    return "";
+  }
+  if (typeof source[key] !== "string") {
+    throw httpError(400, `Workflow ${key} must be text.`);
+  }
+
+  const value = normalizeText(source[key], maxLength + 1);
+  if (options.required && !value) {
+    throw httpError(400, `Workflow ${key} is required.`);
+  }
+  if (value.length > maxLength) {
+    throw httpError(400, `Workflow ${key} cannot be more than ${maxLength} characters.`);
+  }
+  return value;
+}
+
+function workflowStringArrayField(source, key, maxItems, maxLength) {
+  if (!Object.prototype.hasOwnProperty.call(source, key)) {
+    return [];
+  }
+  if (!Array.isArray(source[key])) {
+    throw httpError(400, `Workflow ${key} must be a text array.`);
+  }
+  if (source[key].length > maxItems) {
+    throw httpError(400, `Workflow ${key} cannot contain more than ${maxItems} entries.`);
+  }
+
+  return source[key].map((entry) => {
+    if (typeof entry !== "string") {
+      throw httpError(400, `Workflow ${key} entries must be text.`);
+    }
+    const normalized = normalizeText(entry, maxLength + 1);
+    if (!normalized || normalized.length > maxLength) {
+      throw httpError(400, `Workflow ${key} entries must be nonblank text up to ${maxLength} characters.`);
+    }
+    return normalized;
+  });
 }
 
 function initialWorkflowForCreatedPack(title, owner, next) {
@@ -739,7 +790,7 @@ function isMissingOwnerValue(value) {
 
 function setPackNextAction(state, packId, rawNext) {
   const pack = findPackOrThrow(state, packId);
-  const next = normalizeText(rawNext, 120) || "Open";
+  const next = workflowTextField({ next: rawNext }, "next", 120, { required: true });
   const before = packActionSignature(pack);
   const forwardPath = nextChoiceForwardPath(pack, next);
   pack.next = forwardPath.next;
@@ -771,10 +822,7 @@ function setPackNextAction(state, packId, rawNext) {
 
 function addPackMemoryAction(state, packId, rawNote) {
   const pack = findPackOrThrow(state, packId);
-  const note = normalizeText(rawNote, 2000);
-  if (!note) {
-    throw httpError(400, "Memory note is required.");
-  }
+  const note = workflowTextField({ note: rawNote }, "note", 2000, { required: true });
 
   pack.memory = normalizeStringArray(pack.memory, 100, 2000);
   const added = !pack.memory.some((value) => normalizeText(value) === note);
@@ -841,22 +889,23 @@ function savePackPathAction(state, packId, payload) {
 }
 
 function packPathValues(payload, pack) {
-  const source = payload && typeof payload === "object" ? payload : {};
+  const source = workflowPayloadObject(payload);
   const requestedStatus = packPathStatusValue(source, pack.status);
-  const next = normalizeText(source.next, 120) || pack.next || "Open";
+  const next = workflowTextField(source, "next", 120) || pack.next || "Open";
   const sourceHasBlocker = Object.prototype.hasOwnProperty.call(source, "blocker");
+  const sourceBlocker = sourceHasBlocker ? workflowTextField(source, "blocker", 200) : pack.blocker;
   const rawBlocker = requestedStatus === "done"
     ? DEMO_BLOCKER_NONE
-    : normalizeStoredBlocker(sourceHasBlocker ? source.blocker : pack.blocker);
+    : normalizeStoredBlocker(sourceBlocker);
   return {
-    title: normalizeText(source.title, 200) || pack.title,
+    title: workflowTextField(source, "title", 200) || pack.title,
     status: forwardPathStatusForBlocker(requestedStatus, rawBlocker, next),
     blocker: rawBlocker,
-    owner: normalizeText(source.owner, 120) || pack.owner,
-    due: normalizeText(source.due, 40),
+    owner: workflowTextField(source, "owner", 120) || pack.owner,
+    due: workflowTextField(source, "due", 40),
     next,
-    doneWhen: normalizeText(source.doneWhen, 1000) || pack.doneWhen,
-    purpose: normalizeText(source.purpose, 1000) || pack.purpose
+    doneWhen: workflowTextField(source, "doneWhen", 1000) || pack.doneWhen,
+    purpose: workflowTextField(source, "purpose", 1000) || pack.purpose
   };
 }
 
@@ -865,7 +914,7 @@ function packPathStatusValue(source, fallbackStatus) {
     return normalizeText(fallbackStatus, 40) || "active";
   }
 
-  const status = normalizeText(source.status, 40);
+  const status = workflowTextField(source, "status", 40, { required: true });
   if (!status || !VALID_PACK_STATUSES.has(status)) {
     throw httpError(400, "Work path status is not supported.");
   }
@@ -936,7 +985,7 @@ function buttonRunsNextDisplayLabel(value) {
 }
 
 function runPackAction(state, packId, rawAction) {
-  const action = normalizeText(rawAction, 40).toLowerCase();
+  const action = workflowTextField({ action: rawAction }, "action", 40, { required: true }).toLowerCase();
   if (!SERVER_PACK_ACTIONS.has(action)) {
     throw httpError(400, `Unsupported pack action: ${action || "missing"}`);
   }

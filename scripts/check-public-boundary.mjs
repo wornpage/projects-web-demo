@@ -519,6 +519,54 @@ try {
       next: "Open"
     })
   });
+  const invalidWorkflowCreateSourcesWrite = await request(port, "/api/packs", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({
+      title: "Invalid workflow create source list",
+      owner: "public-boundary-check",
+      next: "Open",
+      sources: [{ path: "not text" }]
+    })
+  });
+  const invalidWorkflowNextWrite = await request(port, "/api/packs/source-folder-audit/next", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ next: { label: "Open" } })
+  });
+  const invalidWorkflowActionWrite = await request(port, "/api/packs/source-folder-audit/actions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ action: ["open"] })
+  });
+  const overlongWorkflowMemoryWrite = await request(port, "/api/packs/source-folder-audit/memory", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ note: "x".repeat(2001) })
+  });
+  const invalidWorkflowPathTextWrite = await request(port, "/api/packs/source-folder-audit/path", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({
+      status: "active",
+      next: { label: "Open" }
+    })
+  });
   const clientAStateAfterRejectedWrite = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientA }
   });
@@ -572,6 +620,11 @@ try {
   check("state rows can reach the documented work cap", limitStateWrite.status === 200, limitStateWrite.status);
   check("creating work past the state cap is rejected", overLimitCreate.status === 400, overLimitCreate.status);
   check("invalid work-path statuses are rejected", invalidWorkPathStatusWrite.status === 400, invalidWorkPathStatusWrite.status);
+  check("malformed workflow create source lists are rejected", invalidWorkflowCreateSourcesWrite.status === 400, invalidWorkflowCreateSourcesWrite.status);
+  check("malformed workflow next values are rejected", invalidWorkflowNextWrite.status === 400, invalidWorkflowNextWrite.status);
+  check("malformed workflow actions are rejected", invalidWorkflowActionWrite.status === 400, invalidWorkflowActionWrite.status);
+  check("overlong workflow memory notes are rejected", overlongWorkflowMemoryWrite.status === 400, overlongWorkflowMemoryWrite.status);
+  check("malformed workflow path text fields are rejected", invalidWorkflowPathTextWrite.status === 400, invalidWorkflowPathTextWrite.status);
   check("unkeyed backend state erase is rejected", unkeyedErase.status === 400, unkeyedErase.status);
   check("current keyed backend state can be erased", eraseClientAState.status === 200 && eraseClientAState.text.includes("\"ok\":true"), eraseClientAState.status);
   check("erased keyed backend state no longer has client work", !stateHasPackTitle(clientAStateAfterErase.body, packTitle), clientAStateAfterErase.status);
