@@ -2792,11 +2792,56 @@ function renderReview() {
         <span class="demo-status">${escapeHtml(reviewState)}</span>
       </div>
       ${disabledReasonNotice(!firstReview, reviewButtonReason)}
+      ${reviewQueuePanel(review, firstReview)}
       ${routeActionReceiptPanel(review, "Review")}
       <div class="demo-review-list">${orderedReview.length ? orderedReview.map(reviewCard).join("") : emptyReview}</div>
     </section>
   `;
   bindListActions();
+}
+
+function reviewQueuePanel(review, firstReview) {
+  if (!firstReview) {
+    return "";
+  }
+
+  const command = resolvePrimaryCommandForPack(firstReview);
+  const workflow = workflowStateForPack(firstReview, command);
+  const blockedCount = review.filter(hasBlocker).length;
+  const missingNextCount = review.filter(isMissingNextAction).length;
+  const ownerGapCount = review.filter((pack) => ownerSupportNeededForPack(pack)).length;
+  const reason = primaryCommandVisibleReason(firstReview, command);
+  return `<article class="demo-home-spotlight demo-review-spotlight" data-pack-id="${escapeAttribute(firstReview.id)}" aria-label="${escapeAttribute(`Up next: ${workTitle(firstReview)}. Blocker: ${blockerTextForPack(firstReview)}. Button runs next: ${command.label}.`)}">
+    <div class="demo-home-spotlight-head demo-review-spotlight-head">
+      <div>
+        <span class="section-label">Up next</span>
+        <h3>
+          <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(firstReview.id)}"${cardTitleButtonAttributes(firstReview)}>${escapeHtml(workTitle(firstReview))}</button>
+        </h3>
+      </div>
+      <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
+    </div>
+    <div class="demo-review-queue-stats" aria-label="Review queue status">
+      ${reviewQueueStat("Blocked", blockedCount, "Needs blocker decision")}
+      ${reviewQueueStat("Missing button", missingNextCount, "Needs Button runs next")}
+      ${reviewQueueStat("Owner gaps", ownerGapCount, "Needs owner")}
+    </div>
+    ${homeSpotlightFacts(firstReview, command)}
+    <div class="demo-home-spotlight-actions demo-review-spotlight-actions">
+      ${primaryCommandButton(firstReview)}
+      ${supportActionButton("open", "Open path", firstReview, "btn")}
+      ${supportActionButton("set-next", "Set button", firstReview, "btn")}
+      <small>${escapeHtml(reason)}</small>
+    </div>
+  </article>`;
+}
+
+function reviewQueueStat(label, value, note) {
+  return `<div class="demo-review-queue-stat">
+    <span>${escapeHtml(label)}</span>
+    <strong>${escapeHtml(String(value))}</strong>
+    <small>${escapeHtml(note)}</small>
+  </div>`;
 }
 
 function renderNext() {

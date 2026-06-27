@@ -9,6 +9,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const requireFromServer = createRequire(new URL("../server/package.json", import.meta.url));
 const acorn = requireFromServer("acorn");
 const source = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+const styles = await fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8");
 const ast = acorn.parse(source, {
   ecmaVersion: "latest",
   sourceType: "script"
@@ -100,6 +101,10 @@ check("retired route render functions are absent", blockedRenderFunctions.length
 check("retired route helper functions are absent", blockedRetiredHelpers.length === 0, blockedRetiredHelpers.join(", ") || "absent");
 check("public routes use hash patterns", publicRoutedPatterns.every((pattern) => pattern.startsWith("#/")), publicRoutedPatterns.join(", "));
 check("pack route requires a work id", routeContract.pack?.acceptsPackId === true && routeContract.pack?.pattern === "#/pack/{packId}", routeContract.pack?.pattern || "missing");
+check("home route surfaces a live sample spotlight", homeSpotlightContractOk(), "homeSpotlightPanel with facts and primary action");
+check("review route surfaces an up-next queue spotlight", reviewSpotlightContractOk(), "reviewQueuePanel with queue stats and actions");
+check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
+check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
@@ -114,6 +119,62 @@ if (failed.length > 0) {
 
 function check(name, ok, detail) {
   checks.push({ name, ok: Boolean(ok), detail: String(detail ?? "") });
+}
+
+function homeSpotlightContractOk() {
+  return includesAll(source, [
+    "${homeSpotlightPanel()}",
+    "function homeSpotlightPanel()",
+    "Live sample",
+    "homeSpotlightFacts(pack, command)",
+    "primaryCommandButton(pack)",
+    "supportActionButton(\"open\", \"Open path\", pack, \"btn\")",
+    "function homeSpotlightPack()"
+  ]);
+}
+
+function reviewSpotlightContractOk() {
+  return includesAll(source, [
+    "${reviewQueuePanel(review, firstReview)}",
+    "function reviewQueuePanel(review, firstReview)",
+    "Up next",
+    "reviewQueueStat(\"Blocked\", blockedCount, \"Needs blocker decision\")",
+    "reviewQueueStat(\"Missing button\", missingNextCount, \"Needs Button runs next\")",
+    "reviewQueueStat(\"Owner gaps\", ownerGapCount, \"Needs owner\")",
+    "primaryCommandButton(firstReview)",
+    "supportActionButton(\"set-next\", \"Set button\", firstReview, \"btn\")"
+  ]);
+}
+
+function spotlightFactsContractOk() {
+  return includesAll(source, [
+    "function homeSpotlightFacts(pack, command)",
+    "homeSpotlightFact(\"Where\", workTitle(pack))",
+    "homeSpotlightFact(\"Blocker\", blockerTextForPack(pack))",
+    "homeSpotlightFact(\"Button runs next\", command.label)",
+    "function homeSpotlightFact(label, value)"
+  ]);
+}
+
+function spotlightStylesContractOk() {
+  const mobileStart = styles.indexOf("@media (max-width: 700px)");
+  const mobileEnd = mobileStart < 0 ? -1 : styles.indexOf("@media", mobileStart + 1);
+  const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
+  return includesAll(styles, [
+    ".demo-home-spotlight",
+    ".demo-review-spotlight",
+    ".demo-home-spotlight-facts",
+    "grid-template-columns: repeat(3, minmax(0, 1fr));",
+    ".demo-review-queue-stats"
+  ]) && includesAll(mobileStyles, [
+    ".demo-home-spotlight-facts",
+    ".demo-review-queue-stats",
+    "grid-template-columns: 1fr;"
+  ]);
+}
+
+function includesAll(text, needles) {
+  return needles.every((needle) => text.includes(needle));
 }
 
 function arraysEqual(left, right) {
