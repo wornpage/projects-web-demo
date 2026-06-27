@@ -144,7 +144,8 @@ This repo includes `render.yaml` for a Render Blueprint deployment.
 
 The Blueprint uses Docker, starts the same single-process app, and stores state
 in managed Postgres through `DATABASE_URL`. Each browser sends an anonymous
-client key so visitors do not overwrite one shared public row. The database is
+client key so visitors do not overwrite each other; hosted API requests without
+that key are rejected instead of sharing one fallback row. The database is
 configured without a public IP allow list, so the app uses Render's private
 connection string.
 

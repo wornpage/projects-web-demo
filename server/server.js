@@ -41,6 +41,11 @@ const corsHeaders = {
   "access-control-allow-methods": "GET,POST,PUT,PATCH,OPTIONS",
   "access-control-allow-headers": `content-type, ${API_CLIENT_HEADER}`
 };
+const securityHeaders = {
+  "cache-control": "no-store",
+  "referrer-policy": "no-referrer",
+  "x-content-type-options": "nosniff"
+};
 
 const stateStorage = createStateStorage();
 
@@ -332,7 +337,15 @@ function createPostgresStateStorage() {
 
 function stateKeyForRequest(request) {
   const value = normalizeText(request.headers[API_CLIENT_HEADER], 120);
-  return /^[A-Za-z0-9][A-Za-z0-9._-]{7,119}$/u.test(value) ? value : DEFAULT_STATE_KEY;
+  if (/^[A-Za-z0-9][A-Za-z0-9._-]{7,119}$/u.test(value)) {
+    return value;
+  }
+
+  if (STATE_STORAGE === "postgres") {
+    throw httpError(400, `Missing or invalid ${API_CLIENT_HEADER} header.`);
+  }
+
+  return DEFAULT_STATE_KEY;
 }
 
 function hasPostgresConfig() {
@@ -547,14 +560,20 @@ async function readJsonBody(request) {
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
+    ...securityHeaders,
     ...corsHeaders,
-    "content-type": "application/json; charset=utf-8"
+    "content-type": "application/json; charset=utf-8",
+    "vary": API_CLIENT_HEADER
   });
   response.end(`${JSON.stringify(payload)}\n`);
 }
 
 function sendEmpty(response, statusCode) {
-  response.writeHead(statusCode, corsHeaders);
+  response.writeHead(statusCode, {
+    ...securityHeaders,
+    ...corsHeaders,
+    "vary": API_CLIENT_HEADER
+  });
   response.end();
 }
 

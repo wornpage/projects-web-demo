@@ -14,8 +14,6 @@ services:
         value: production
       - key: PROJECTS_STATE_STORAGE
         value: postgres
-      - key: PROJECTS_STATE_KEY
-        value: production
       - key: PROJECTS_POSTGRES_SSL
         value: require
       - key: DATABASE_URL

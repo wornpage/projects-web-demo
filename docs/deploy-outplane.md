@@ -43,7 +43,6 @@ save/read smoke test passed through `/api/state`.
 |---|---|
 | `NODE_ENV` | `production` |
 | `PROJECTS_STATE_STORAGE` | `postgres` |
-| `PROJECTS_STATE_KEY` | `outplane-dev` |
 | `PGHOST` | Outplane-provided database host |
 | `PGDATABASE` | Outplane-provided database name |
 | `PGUSER` | Outplane-provided database role |
@@ -57,7 +56,8 @@ Do not set `PROJECTS_STATE_FILE` for the hosted Postgres app. That variable is
 only for local file-backed development, and it implies container or volume state.
 
 The browser sends an anonymous client key with API requests, so hosted demo
-edits are separated per browser without accounts.
+edits are separated per browser without accounts. Hosted Postgres API requests
+without that browser key are rejected instead of sharing one fallback row.
 
 This is demo isolation, not real user security. Add authentication before
 storing private user data, real customer work, or anything that needs account

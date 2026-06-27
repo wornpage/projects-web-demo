@@ -6,6 +6,10 @@ should use managed Postgres through `DATABASE_URL` or standard `PG*` variables.
 In API mode, the browser sends an anonymous client key so demo edits are
 isolated per browser without accounts.
 
+When `PROJECTS_STATE_STORAGE=postgres` is active, state-changing and state-read
+API routes require that anonymous browser client key. Missing or invalid keys
+are rejected instead of falling back to one shared hosted row.
+
 ## App Mode
 
 ```powershell
@@ -59,7 +63,7 @@ Production storage uses:
 | `PROJECTS_STATE_STORAGE=postgres` | Select managed database state. |
 | `DATABASE_URL` | Render-provided private Postgres connection string. |
 | `PGHOST` / `PGDATABASE` / `PGUSER` / `PGPASSWORD` | Alternative split Postgres config. |
-| `PROJECTS_STATE_KEY=production` | Fallback state key when no browser client key is present. |
+| `PROJECTS_STATE_KEY=production` | Local file-mode fallback key. Hosted Postgres requests use the browser client key. |
 
 ## Outplane
 
@@ -101,3 +105,6 @@ GitHub Pages behavior.
 | `POST /api/packs` | Create one work item. |
 | `PATCH /api/packs/{id}` | Update one work item. |
 | `POST /api/packs/{id}/memory` | Add one memory note. |
+
+API JSON responses use `Cache-Control: no-store` and `X-Content-Type-Options:
+nosniff`. This is still demo isolation, not private account security.
