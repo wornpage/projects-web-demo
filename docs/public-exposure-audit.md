@@ -41,6 +41,7 @@ Observed responses:
 | `/.git/config` | `404` | Git metadata not served |
 | `/server/server.js` | `404` | Server source not served |
 | `/server/package-lock.json` | `404` | Dependency lockfile not served |
+| `/src/demo/demo.js` | `404` | Frontend source not served |
 | `/docs/deploy-outplane.md` | `404` | Docs not served by Outplane |
 | `/render.yaml` | `404` | Retired provider config not served |
 | `/assets/../server/server.js` | `404` | Traversal attempt denied |
@@ -79,7 +80,7 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run boundary:check'
 
 The gate starts the Node app with a temporary file-backed state directory,
 confirms only the named public file allowlist is served, confirms repository
-files, unlisted asset/data paths, and path traversal attempts return `404`,
+files, source files, unlisted asset/data paths, and path traversal attempts return `404`,
 creates work under one browser client
 key, confirms another client key cannot read it, confirms unkeyed local API
 state, seed data, pack lists, and command previews are rejected, confirms weak
@@ -120,9 +121,10 @@ routing:
 pwsh -NoLogo -NoProfile -Command 'npm --prefix server run static:check'
 ```
 
-The static publish gate builds a temporary filtered artifact, protects
-`assets/demo.js`, proves the artifact has no repo root, server, docs, package
-manifest, build script, or source-map files, then removes the temporary
+The static publish gate builds a temporary filtered artifact, first confirms
+`assets/demo.js` matches `src/demo/demo.js`, protects `assets/demo.js`, proves
+the artifact has no repo root, source tree, server, docs, package manifest,
+build script, or source-map files, then removes the temporary
 artifact:
 
 ```powershell
@@ -167,7 +169,8 @@ unsafe inline styles, and explicit denials for unused frame, worker, manifest,
 and media loaders, and that
 hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
-asset, unlisted public asset/data paths, and non-public repo/docs/server paths.
+asset, unlisted public asset/data paths, and non-public repo/docs/server/source
+paths.
 It confirms `/api/health` reports only the storage kind and does not expose
 database table names, local state file paths, or storage credentials.
 The full ship gate also refuses to run the live verifier from a dirty working
@@ -196,10 +199,10 @@ This table is part of the ship gate. A risk row must be a final state:
 |---|---|---|
 | Browser JS is visible | True | Accept for demo; move valuable logic server-side if it becomes proprietary |
 | Static sample data is visible on static targets | True | Accept for GitHub Pages/static preview; the static preview gate proves it remains the only public data file, while hosted app mode loads seed data through the keyed API |
-| Private repo files served by Outplane | Fixed | Live Outplane verification proves repo docs, deploy files, Git metadata, server source, lockfiles, and traversal attempts return `404` |
+| Private repo files served by Outplane | Fixed | Live Outplane verification proves repo docs, deploy files, Git metadata, server source, frontend source, lockfiles, and traversal attempts return `404` |
 | Private repo URL in public frontend | Fixed | Removed public Source link and frontend repo URL defaults |
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
-| Docker image contains extra docs/source helpers | Fixed | Docker uses a build stage for frontend protection and package install, then the runtime stage copies only pruned production dependencies, named public files, seed JSON, and `server/server.js` |
+| Docker image contains extra docs/source helpers | Fixed | Docker uses a build stage for generated-asset verification, frontend protection, and package install, then the runtime stage copies only pruned production dependencies, named public files, seed JSON, and `server/server.js` |
 | Broad shared app stylesheet is public | Fixed | Removed `assets/app.css`; demo-owned tokens now live in `assets/demo.css` |
 | Hosted app serves static sample JSON directly | Fixed | `/data/demo-packs.json` is no longer served by the app server; seed work loads through `GET /api/demo-packs` with the browser client key |
 | Hosted seed API accepts unkeyed reads | Fixed | Local and live gates prove `/api/demo-packs` rejects missing browser keys |

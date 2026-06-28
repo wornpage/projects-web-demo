@@ -13,6 +13,16 @@ const steps = [
     args: ["--check", "assets/demo.js"]
   },
   {
+    label: "demo source syntax",
+    command: process.execPath,
+    args: ["--check", "src/demo/demo.js"]
+  },
+  {
+    label: "demo asset generated",
+    command: process.execPath,
+    args: ["scripts/build-demo-asset.mjs", "--check"]
+  },
+  {
     label: "backend server syntax",
     command: process.execPath,
     args: ["--check", "server/server.js"]

@@ -70,6 +70,7 @@ try {
     "/server/server.js",
     "/server/static.js",
     "/server/package-lock.json",
+    "/src/demo/demo.js",
     "/docs/deploy-outplane.md",
     "/.git/config",
     "/assets/../server/server.js",

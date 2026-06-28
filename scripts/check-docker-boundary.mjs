@@ -21,6 +21,8 @@ const allowedBuildCopyLines = [
   "COPY assets/demo.js ./assets/demo.js",
   "COPY assets/favicon.png ./assets/favicon.png",
   "COPY data/demo-packs.json ./data/demo-packs.json",
+  "COPY src/demo/demo.js ./src/demo/demo.js",
+  "COPY scripts/build-demo-asset.mjs ./scripts/build-demo-asset.mjs",
   "COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs",
   "COPY server/server.js ./server/server.js"
 ];
@@ -44,6 +46,8 @@ const forbiddenRuntimeCopyPatterns = [
   /^COPY\s+--from=build\s+\/app\/docs\b/u,
   /^COPY\s+render\.yaml\b/u,
   /^COPY\s+--from=build\s+\/app\/render\.yaml\b/u,
+  /^COPY\s+src\b/u,
+  /^COPY\s+--from=build\s+\/app\/src\b/u,
   /^COPY\s+server\/data\b/u,
   /^COPY\s+--from=build\s+\/app\/server\/data\b/u,
   /^COPY\s+server\/package-lock\.json\s+(?!\.\/server\/)/u,
@@ -58,11 +62,11 @@ const forbiddenRuntimeCopies = runtimeCopyLines.filter((line) => forbiddenRuntim
 check("Docker build stage is pinned to Node Alpine", lines.includes("FROM node:24-alpine AS build"), firstLine("FROM"));
 check("Docker runtime stage is pinned to Node Alpine", lines.includes("FROM node:24-alpine AS runtime"), lastFromLine());
 check("Docker build installs from package lock", buildText.includes("RUN npm --prefix server ci --include=dev"), "npm ci --include=dev");
-check("Docker build creates named public asset directories", buildLines.includes("RUN mkdir -p assets data scripts"), "assets/data/scripts");
+check("Docker build creates named public asset and source directories", buildLines.includes("RUN mkdir -p assets data scripts src/demo"), "assets/data/scripts/src/demo");
 check("Docker build copy list is allowlisted", unexpectedBuildCopies.length === 0, unexpectedBuildCopies.join(" | ") || "allowlist only");
 check("Docker runtime copy list is allowlisted", unexpectedRuntimeCopies.length === 0, unexpectedRuntimeCopies.join(" | ") || "allowlist only");
-check("Docker runtime does not copy repo root, docs, package manifests, or build scripts", forbiddenRuntimeCopies.length === 0, forbiddenRuntimeCopies.join(" | ") || "absent");
-check("Docker runtime omits build-only helpers", !runtimeText.includes("/app/scripts") && !runtimeText.includes("package*.json") && !runtimeText.includes("protect-frontend.mjs"), "scripts/package manifests absent");
+check("Docker runtime does not copy repo root, docs, source, package manifests, or build scripts", forbiddenRuntimeCopies.length === 0, forbiddenRuntimeCopies.join(" | ") || "absent");
+check("Docker runtime omits build-only helpers", !runtimeText.includes("/app/scripts") && !runtimeText.includes("/app/src") && !runtimeText.includes("package*.json") && !runtimeText.includes("protect-frontend.mjs") && !runtimeText.includes("build-demo-asset.mjs"), "scripts/source/package manifests absent");
 check("Docker image copies only named frontend and seed files", [
   "COPY --from=build /app/assets/demo.css ./assets/demo.css",
   "COPY --from=build /app/assets/demo.js ./assets/demo.js",
@@ -71,10 +75,11 @@ check("Docker image copies only named frontend and seed files", [
 ].every((line) => runtimeCopyLines.includes(line)), runtimeCopyLines.join(" | "));
 check("Docker runtime copies only the app server source", runtimeCopyLines.includes("COPY --from=build /app/server/server.js ./server/server.js"), runtimeCopyLines.join(" | "));
 check("Docker runtime copies pruned production dependencies", runtimeCopyLines.includes("COPY --from=build /app/server/node_modules ./server/node_modules"), runtimeCopyLines.join(" | "));
-check("Docker build protects frontend before prune", sourceOrder(buildText, [
-  "RUN node scripts/protect-frontend.mjs assets/demo.js assets/demo.js",
+check("Docker build verifies generated frontend before protection and prune", sourceOrder(buildText, [
+  "RUN node scripts/build-demo-asset.mjs --check",
+  "node scripts/protect-frontend.mjs assets/demo.js assets/demo.js",
   "npm --prefix server prune --omit=dev"
-]), "protect then prune");
+]), "generated check then protect then prune");
 check("Docker runtime defaults to hosted app port", runtimeLines.includes("ENV HOST=0.0.0.0") && runtimeLines.includes("ENV PORT=5179") && runtimeLines.includes("EXPOSE 5179"), "HOST/PORT/EXPOSE");
 check("Docker runtime creates non-root app user", runtimeText.includes("adduser -S app -G app") && runtimeLines.includes("USER app"), "USER app");
 check("Docker runtime image has an API healthcheck", runtimeText.includes("/api/health") && runtimeText.includes("HEALTHCHECK "), "HEALTHCHECK /api/health");

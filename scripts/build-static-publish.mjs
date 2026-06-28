@@ -26,6 +26,7 @@ if (isMainModule()) {
 export async function buildStaticPublish(outputDir, options = {}) {
   const resolvedOutputDir = path.resolve(outputDir);
   assertSafeOutputDir(resolvedOutputDir);
+  assertDemoAssetCurrent();
 
   await fs.rm(resolvedOutputDir, { recursive: true, force: true });
   for (const relativeFile of STATIC_PUBLISH_FILES) {
@@ -52,6 +53,20 @@ export async function buildStaticPublish(outputDir, options = {}) {
     return protectResult.stdout.trim();
   }
   return "";
+}
+
+function assertDemoAssetCurrent() {
+  const result = spawnSync(process.execPath, [
+    path.join(repoRoot, "scripts", "build-demo-asset.mjs"),
+    "--check"
+  ], {
+    cwd: repoRoot,
+    encoding: "utf8"
+  });
+
+  if (result.status !== 0) {
+    throw new Error(`Generated demo asset is stale.\n${result.stderr || result.stdout}`);
+  }
 }
 
 function assertSafeOutputDir(outputDir) {

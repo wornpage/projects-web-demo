@@ -291,6 +291,7 @@ try {
     "/Dockerfile",
     "/server/server.js",
     "/server/package-lock.json",
+    "/src/demo/demo.js",
     "/docs/deploy-outplane.md",
     "/docs/public-exposure-audit.md",
     "/render.yaml",

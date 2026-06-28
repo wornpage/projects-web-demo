@@ -20,19 +20,21 @@ Keep this repo focused on the public portfolio demo.
 | Data | `data/demo-packs.json` sample work | Real packs, private notes, customer data |
 | State | Browser `localStorage` under `projects-static-demo-state-v6`; optional Node app storage backed by local file or anonymous per-browser managed Postgres rows | Account state |
 | Styling | Static CSS in `assets/` | Source-side app shell generation |
-| Behavior | Static JS in `assets/demo.js`; API calls only in Node app mode or when an API base URL is configured | Production backend workflows or GitHub API calls |
+| Behavior | Source JS in `src/demo/demo.js`, generated to the public `assets/demo.js`; API calls only in Node app mode or when an API base URL is configured | Production backend workflows or GitHub API calls |
 
 ## Files
 
 | Path | Purpose |
 |---|---|
 | `index.html` | Public app shell served by GitHub Pages. |
-| `assets/demo.js` | Hash routing, demo state, button behavior, and backend app-mode calls. |
+| `src/demo/demo.js` | Source for hash routing, demo state, button behavior, and backend app-mode calls. |
+| `assets/demo.js` | Generated public browser file served by GitHub Pages and app mode. |
 | `assets/demo.css` | Public demo layout and interaction styling. |
 | `assets/favicon.png` | Demo favicon. |
 | `data/demo-packs.json` | Fake browser-local work data for static publishing; app mode reads it server-side and does not serve the JSON URL directly. |
 | `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
+| `scripts/build-demo-asset.mjs` | Copies `src/demo/demo.js` to the single shipped `assets/demo.js`, or checks that they match. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
 | `scripts/check-public-assets.mjs` | Local proof that public assets stay allowlisted and public text assets stay budgeted without source maps or private path strings. |
 | `scripts/build-static-publish.mjs` | Builds a filtered static publish artifact under `dist/static-publish`. |
@@ -84,7 +86,8 @@ Then open:
 http://localhost:5181/#/home
 ```
 
-No build step is required for normal portfolio-demo edits.
+HTML, CSS, and data edits can preview directly. After editing `src/demo/demo.js`,
+run `npm --prefix server run demo:build` before previewing or shipping.
 
 ## App Mode
 
@@ -313,6 +316,12 @@ See [docs/deploy-outplane.md](docs/deploy-outplane.md).
 
 ## Static Preview
 
+Build the single public browser file after editing demo source:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command 'npm --prefix server run demo:build'
+```
+
 Run the static frontend preview from the repository root:
 
 ```powershell
@@ -353,13 +362,13 @@ Before shipping, run the full local plus live gate:
 pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 ```
 
-That command runs frontend syntax, backend syntax, protected frontend, public
-asset-disclosure, static publish artifact, public route-contract, sync sharing,
-state recovery, public-boundary, Docker deploy-boundary, deploy-config,
+That command runs generated demo asset sync, frontend syntax, backend syntax,
+protected frontend, public asset-disclosure, static publish artifact, public
+route-contract, sync sharing, state recovery, public-boundary, Docker deploy-boundary, deploy-config,
 North Star audit, whitespace, clean git state, and live Outplane checks,
 including app shell and protected frontend content matching, seed-data matching,
-unkeyed seed data rejection, hosted repo-file blocking, invalid work-path
-status rejection, and rejection of weak manual API client keys.
+unkeyed seed data rejection, hosted repo-file blocking, invalid work-path status
+rejection, and rejection of weak manual API client keys.
 For UI-only work, also smoke the main routes locally in light and dark mode:
 
 - `#/home`

@@ -121,6 +121,8 @@ check("create route surfaces readiness before the form", createReadinessContract
 check("memory route exposes selected work chooser", memoryChooserContractOk(), "memoryWorkChooser with chip targets and create fallback");
 check("memory note input exposes live save guidance", memoryNoteInputContractOk(), "memory note placeholder names useful note types and describes live help");
 check("create field help names only current public surfaces", source.includes("Optional date kept on the work path and searchable in the work list.") && !source.includes("Today and Calendar views"), "due help avoids retired screens");
+check("due fields use native date pickers", dueDatePickerContractOk(), "new-due and edit-due render through dateField with type=date");
+check("due dates stay visible and readable after save", dueDateDisplayContractOk(), "cards render semantic dates and Work path summary names saved due date");
 check("runtime status copy avoids retired settings and check screens", !source.includes("Where: Settings") && !source.includes("Where: Check"), "status copy stays on public surfaces");
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
@@ -134,6 +136,7 @@ check("work filters stay scannable and tappable", workFilterStylesContractOk(), 
 check("work search reports visible result context", workSearchContractOk(), "search summary describes visible count and active filter; placeholder advertises searchable blocker");
 check("empty states expose semantic context", source.includes('class="demo-empty" role="note" aria-label="${escapeAttribute(label)}"') && source.includes("Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Button runs next: ${context.next}."), "empty state note labels include triad");
 check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
+check("disabled buttons look inactive", disabledButtonAffordanceContractOk(), "disabled button styling removes pointer affordance and hover accent");
 check("primary nav label stays compact and portfolio-facing", html.includes('id="demo-nav"') && html.includes('aria-label="Portfolio demo screens"'), "Portfolio demo screens");
 check("sidebar landmark label keeps portfolio framing", html.includes('class="demo-sidebar nav-rail" aria-label="Portfolio demo navigation"'), "Portfolio demo navigation");
 check("header kicker keeps portfolio framing", html.includes('<div class="demo-kicker">Portfolio demo</div>'), "Portfolio demo");
@@ -154,6 +157,7 @@ check("empty memory placeholders use sentence-case visible copy", emptyMemoryPla
 check("bottom dock label describes purpose instead of layout", html.includes('class="demo-bottom-brief" aria-label="Next Action summary" aria-describedby="dock-where dock-blocker dock-next-label"'), "Next Action summary");
 check("bottom dock exposes where blocker and next labels", html.includes('aria-describedby="dock-where dock-blocker dock-next-label"') && html.includes('id="dock-where"') && html.includes('id="dock-blocker"') && html.includes('id="dock-next-label"'), "dock summary fields describe bottom dock");
 check("next action controls declare the content region they update", html.includes('id="primary-action"') && html.includes('id="dock-where-item" class="demo-bottom-item" href="#/work" aria-controls="screen-content"') && html.includes('id="dock-review-item" class="demo-bottom-item" href="#/review" aria-controls="screen-content"') && html.includes('id="dock-next"') && html.includes('aria-controls="screen-content"'), "screen-content controlled by action controls");
+check("primary button resolver keeps setup and blocker precedence", primaryCommandResolverContractOk(), "empty -> create/list; missing next -> setup; blocked -> unblock/review; ready -> stored action");
 check("pack-aware navigation keeps selected work context", source.includes("function routeLinkPackId(route)") && source.includes('item.setAttribute("href", formatRouteHash(item.dataset.route, routeLinkPackId(item.dataset.route)))') && source.includes('data-pack="${escapeAttribute(routeLinkPackId(route))}"'), "nav and route buttons preserve selected work ids");
 check("browser title follows the current screen", source.includes("function updateDocumentTitle(screenTitle)") && source.includes('document.title = screenTitle === "Start" ? "Projects Portfolio Demo" : `${screenTitle} - Projects Portfolio Demo`;') && source.includes("updateDocumentTitle(screenTitle);"), "document title mirrors screen title with portfolio framing");
 check("theme toggle keeps a stable pressed-button name", themeToggleContractOk(), "Dark mode name stays stable while title describes next action");
@@ -243,6 +247,37 @@ function memoryNoteInputContractOk() {
     'autocomplete="off" aria-describedby="memory-note-help"',
     'id="memory-note-help" class="demo-field-help" aria-live="polite"',
     'button id="add-memory" class="btn btn-primary" type="button" aria-describedby="memory-note-help"'
+  ]);
+}
+
+function dueDatePickerContractOk() {
+  return includesAll(source, [
+    'dateField("new-due", "Due", defaults.due',
+    'dateField("edit-due", "Due", pack.due',
+    'function dateField(id, label, value, help = "")',
+    'type="date"',
+    "dateFieldValue(value)"
+  ]);
+}
+
+function dueDateDisplayContractOk() {
+  const supportSummary = functionSource("supportDetailsSummary");
+  const workSubtitle = functionSource("workDetailSubtitle");
+  return includesAll(source, [
+    "function dueDateMeta(pack)",
+    "function dueDateLabel(value)",
+    'const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");',
+    '<time datetime="${date}">${dueDateLabel(date)}</time>',
+    "supportDetailsSummary(showOwnerInline, pack)",
+    "${dueDateMeta(pack)}"
+  ]) && includesAll(supportSummary, [
+    "const due = dueDateLabel(pack?.due);",
+    "Open for optional ${ownerIsInline ? \"title\" : \"owner\"}, due date, and purpose."
+  ]) && includesAll(workSubtitle, [
+    "const due = dueDateLabel(pack.due);",
+    "${duePrefix}Ready. Button runs next: ${command.label}."
+  ]) && includesAll(styles, [
+    ".demo-card-meta time"
   ]);
 }
 
@@ -358,8 +393,8 @@ function workCardTriadContractOk() {
     && includesAll(body, [
       "cardFact(\"Where\", workTitle(pack))",
       "cardFact(\"Blocker\", blockerTextForPack(pack))",
-      "`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}.`",
-      "<span>${escapeHtml(formatDue(pack))}</span>",
+      '`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. ${dueDateLabel(pack.due) || "No due date"}.`',
+      "${dueDateMeta(pack)}",
       "<span>${escapeHtml(pack.owner)}</span>"
     ])
     && !body.includes("`Blocker: ${blockerDisplayValue(pack.blocker)}`")
@@ -466,7 +501,7 @@ function workSearchContractOk() {
 }
 
 function mobileDockContractOk() {
-  const mobileDockStart = styles.indexOf("Mobile dock gives the primary next action a full row");
+  const mobileDockStart = styles.indexOf("scroll-padding-bottom: calc(156px + env(safe-area-inset-bottom));");
   const mobileDock = mobileDockStart < 0 ? "" : styles.slice(mobileDockStart);
   return includesAll(styles, [
     ".demo-bottom-item:focus-visible",
@@ -477,12 +512,41 @@ function mobileDockContractOk() {
     "touch-action: manipulation;",
     ".demo-bottom-item"
   ]) && includesAll(mobileDock, [
+    "scroll-padding-bottom: calc(156px + env(safe-area-inset-bottom));",
     ".demo-bottom-brief",
     "grid-template-columns: repeat(2, minmax(0, 1fr));",
     ".demo-bottom-next",
     "grid-column: 1 / -1;",
+    ".demo-card-actions",
+    ".demo-forward-actions",
+    "scroll-margin-bottom: calc(156px + env(safe-area-inset-bottom));",
     "overflow-wrap: anywhere;",
     "white-space: normal;"
+  ]);
+}
+
+function disabledButtonAffordanceContractOk() {
+  return includesAll(styles, [
+    '.btn:is(:disabled,[aria-disabled="true"])',
+    "cursor: not-allowed;",
+    '.btn-primary:is(:disabled,[aria-disabled="true"])'
+  ]);
+}
+
+function primaryCommandResolverContractOk() {
+  return includesInOrder(functionSource("resolvePrimaryCommandForPack"), [
+    "if (!selected)",
+    "state.packs.length === 0",
+    'action: "open-create"',
+    'action: "open-work-list"',
+    "if (isMissingNextAction(selected))",
+    'label: "Set Button runs next"',
+    'const action = commandActionForLabel(selected.next || "Open");',
+    "if (hasBlocker(selected))",
+    'action.action === "unblock"',
+    'label: "Set Blocker: None"',
+    'label: "Review blocker"',
+    "return { ...action, targetPackId: selected.id };"
   ]);
 }
 
@@ -490,8 +554,33 @@ function includesAll(text, needles) {
   return needles.every((needle) => text.includes(needle));
 }
 
+function includesInOrder(text, needles) {
+  let index = 0;
+  for (const needle of needles) {
+    index = text.indexOf(needle, index);
+    if (index === -1) {
+      return false;
+    }
+    index += needle.length;
+  }
+  return true;
+}
+
 function arraysEqual(left, right) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function functionSource(name) {
+  let match = null;
+  visit(ast, (node) => {
+    if (node.type === "FunctionDeclaration" && node.id?.name === name) {
+      match = node;
+    }
+  });
+  if (!match) {
+    return "";
+  }
+  return source.slice(match.start, match.end);
 }
 
 function extractRouteContract() {

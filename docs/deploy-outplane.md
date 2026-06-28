@@ -132,9 +132,10 @@ After deploy:
    ```
 
    The ship verifier runs local syntax, protected frontend, public
+   generated demo asset sync, local syntax, protected frontend, public
    asset-disclosure, public route, sync sharing, state recovery, public-boundary,
-   Docker deploy-boundary, deploy-config, whitespace, clean git state, and live
-   Outplane checks.
+   Docker deploy-boundary, deploy-config, North Star audit, whitespace, clean
+   git state, and live Outplane checks.
    The git-state step fails if the branch has uncommitted work or is not synced
    with its upstream.
    The deploy-config step keeps this checklist, Docker defaults, ignored local
@@ -145,8 +146,8 @@ After deploy:
    missing the noindex/noarchive robots header, if production minification did
    not run, if hosted seed data does not match this checkout, if unkeyed hosted
    seed data, pack lists, or command previews can load, if the
-   backend-backed frontend helpers are missing, if hosted repo/docs/server
-   paths are served,
+    backend-backed frontend helpers are missing, if hosted repo/docs/server/source
+    paths are served,
    if retired triage code is still public, if hosted state accepts a request
    without a browser client key, if hosted state accepts a weak manual client
    key or readable sync-code-shaped client key, if a missing-key state or

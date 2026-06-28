@@ -145,6 +145,12 @@ h3,
   border-color: var(--cockpit-accent);
 }
 
+.btn:is(:disabled,[aria-disabled="true"]) {
+  background: var(--cockpit-bg);
+  border-color: var(--cockpit-border);
+  color: var(--cockpit-text-muted);
+  cursor: not-allowed;
+}
 .btn-primary {
   background: var(--cockpit-accent);
   border-color: var(--cockpit-accent);
@@ -153,6 +159,12 @@ h3,
 
 .btn-primary:hover {
   background: var(--cockpit-accent-hover);
+}
+
+.btn-primary:is(:disabled,[aria-disabled="true"]) {
+  background: var(--cockpit-border-strong);
+  border-color: var(--cockpit-border-strong);
+  color: var(--cockpit-bg);
 }
 
 .btn-sm {
@@ -2594,7 +2606,8 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   gap: 6px 10px;
 }
 
-.demo-card-meta span {
+.demo-card-meta span,
+.demo-card-meta time {
   align-items: center;
   background: var(--demo-card-meta-bg);
   border: 1px solid var(--demo-card-inner-border);
@@ -4783,7 +4796,6 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 }
 
-/* ===== Projects static demo mobile command spacing finish ===== */
 @media (max-width: 700px) {
   .demo-command-line {
     padding: 6px 8px;
@@ -4892,7 +4904,6 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 }
 
-/* ===== Projects Blazor cockpit finish ===== */
 .demo-app-shell {
   --demo-panel-radius: var(--cockpit-radius);
   --demo-panel-shadow: none;
@@ -5471,7 +5482,6 @@ html[data-theme="dark"] .demo-command-work-path {
 
 }
 
-/* ===== North Star card and dock separation pass ===== */
 .demo-app-shell {
   --demo-work-card-bg: #fffaf1;
   --demo-work-card-bg-alt: #fff7e7;
@@ -5746,7 +5756,6 @@ html[data-theme="dark"] .demo-app-shell {
   }
 }
 
-/* ===== Final mobile command spacing reconciliation ===== */
 @media (max-width: 700px) {
   .demo-command-brief {
     gap: 3px;
@@ -5811,7 +5820,6 @@ html[data-theme="dark"] .demo-app-shell {
   }
 }
 
-/* Mobile command brief density keeps North Star fields visible without turning the brief into a second page. */
 @media (max-width: 720px) {
   .demo-command-brief {
     padding: 10px;
@@ -5942,10 +5950,18 @@ html[data-theme="dark"] .demo-app-shell {
   }
 }
 
-/* Mobile dock gives the primary next action a full row instead of squeezing it into thirds. */
 @media (max-width: 700px) {
+  html {
+    scroll-padding-bottom: calc(156px + env(safe-area-inset-bottom));
+  }
+
   .demo-main {
     padding-bottom: calc(132px + env(safe-area-inset-bottom));
+  }
+
+  .demo-card-actions,
+  .demo-forward-actions {
+    scroll-margin-bottom: calc(156px + env(safe-area-inset-bottom));
   }
 
   .demo-bottom-brief {
@@ -5974,7 +5990,6 @@ html[data-theme="dark"] .demo-app-shell {
   }
 }
 
-/* Static demo uses a visible route strip on narrow screens, not the app drawer. */
 @media (max-width: 980px) {
   body .demo-sidebar.nav-rail {
     align-items: center !important;

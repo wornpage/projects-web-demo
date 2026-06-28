@@ -118,6 +118,7 @@ check("live verifier compares API seed data to checkout", includesAll(liveVerifi
 check("live verifier blocks non-public repo files", includesAll(liveVerifier, [
   "hosted non-public repo files are not served",
   "/server/server.js",
+  "/src/demo/demo.js",
   "/.git/config",
   "/docs/public-exposure-audit.md"
 ]), "live non-public repo file rejection");

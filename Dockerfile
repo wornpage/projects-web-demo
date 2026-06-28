@@ -6,17 +6,20 @@ ENV NODE_ENV=production
 
 COPY server/package*.json ./server/
 RUN npm --prefix server ci --include=dev
-RUN mkdir -p assets data scripts
+RUN mkdir -p assets data scripts src/demo
 
 COPY index.html ./
 COPY assets/demo.css ./assets/demo.css
 COPY assets/demo.js ./assets/demo.js
 COPY assets/favicon.png ./assets/favicon.png
 COPY data/demo-packs.json ./data/demo-packs.json
+COPY src/demo/demo.js ./src/demo/demo.js
+COPY scripts/build-demo-asset.mjs ./scripts/build-demo-asset.mjs
 COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs
 COPY server/server.js ./server/server.js
 
-RUN node scripts/protect-frontend.mjs assets/demo.js assets/demo.js \
+RUN node scripts/build-demo-asset.mjs --check \
+  && node scripts/protect-frontend.mjs assets/demo.js assets/demo.js \
   && npm --prefix server prune --omit=dev
 
 FROM node:24-alpine AS runtime
