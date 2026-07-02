@@ -4054,6 +4054,26 @@ function setPackActionConfirmation(pack, action, changed, unblockedCount = 0) {
   );
 }
 
+function burstConfetti() {
+  const colors = ["#facc15", "#f472b6", "#34d399", "#60a5fa", "#fb923c", "#a78bfa"];
+  const emojis = ["🎉", "✨", "🎊", "✅", "🌟"];
+  const container = document.createElement("div");
+  container.className = "demo-confetti-burst";
+  container.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 20; i++) {
+    const particle = document.createElement("span");
+    particle.className = "demo-confetti-particle";
+    particle.textContent = emojis[i % emojis.length];
+    particle.style.left = `${Math.random() * 100}%`;
+    particle.style.animationDelay = `${Math.random() * 0.4}s`;
+    particle.style.animationDuration = `${1 + Math.random() * 1.5}s`;
+    container.appendChild(particle);
+  }
+  document.body.appendChild(container);
+  container.addEventListener("animationend", () => container.remove());
+  setTimeout(() => container.remove(), 3000);
+}
+
 function packActionSummary(pack, action, actionLabel, changed, unblockedCount = 0) {
   const title = workTitle(pack);
   if (action === "done") {
@@ -4061,6 +4081,9 @@ function packActionSummary(pack, action, actionLabel, changed, unblockedCount = 
     const base = changed
       ? `Done saved for ${title}.`
       : `Done already saved for ${title}.`;
+    if (changed) {
+      requestAnimationFrame(() => burstConfetti());
+    }
     return [base, unblockedReceiptSentence(unblockedCount), proof].filter(Boolean).join(" ");
   }
 

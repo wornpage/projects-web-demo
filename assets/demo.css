@@ -6148,3 +6148,29 @@ html[data-theme="dark"] .demo-app-shell {
     display: none !important;
   }
 }
+
+.demo-confetti-burst {
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+}
+
+.demo-confetti-particle {
+  animation: demo-confetti-fall linear forwards;
+  font-size: 24px;
+  position: absolute;
+  top: -40px;
+}
+
+@keyframes demo-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(720deg) scale(0.3);
+  }
+}
