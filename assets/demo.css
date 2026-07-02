@@ -670,7 +670,7 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-main {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   margin: 0 auto;
   max-width: 960px;
   min-width: 0;
@@ -1999,7 +1999,7 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-screen {
   display: grid;
-  gap: 14px;
+  gap: 18px;
   min-width: 0;
 }
 
@@ -2409,7 +2409,7 @@ html[data-theme="dark"] .demo-meta-row {
 
 .demo-review-card {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   padding: 16px;
 }
 
