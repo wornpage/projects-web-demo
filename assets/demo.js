@@ -2062,7 +2062,6 @@ function memoryRouteCommand(selected, selectedWorkCommand) {
     return {
       title: "Memory",
       ...selectedWorkCommand,
-      blocker: DEMO_BLOCKER_NONE_LABEL,
       next: "Add note",
       stateText: "Ready",
       stateHelp: memoryState.help,
@@ -2074,7 +2073,6 @@ function memoryRouteCommand(selected, selectedWorkCommand) {
   return {
     title: "Memory",
     ...selectedWorkCommand,
-    blocker: "memory note is empty",
     next: "Type memory note",
     stateText: "Needs note",
     stateHelp: memoryState.help,
@@ -2941,7 +2939,7 @@ function renderNext() {
         </div>
         <span class="demo-status">${escapeHtml(workTitle(pack))}</span>
       </div>
-      <p>Pick what Next action stores for this work. The preview shows the button that will actually run after blocker rules apply.</p>
+      <p>Choose the next action for this work. If a blocker is set, the main button keeps running the blocker review until it clears, so the preview below shows what will really run.</p>
       <div class="demo-command-lines compact" data-next-preview>
         ${factLine("Where", workTitle(pack))}
         ${factLine("Blocker", blockerTextForPack(pack))}
@@ -2989,9 +2987,9 @@ function saveNextChoiceHelp(pack, command = resolvePrimaryCommandForPack(pack)) 
 
 function nextChoiceSelectHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
   const blocker = hasBlocker(pack) && command.action !== "unblock"
-    ? "; blocker rules still require review"
+    ? "; the blocker keeps the main button on review until it clears"
     : "";
-  return `Choose what Next action stores on this work${blocker}.`;
+  return `Choose the next action to save on this work${blocker}.`;
 }
 
 function syncNextChoicePreview(pack) {
@@ -3036,10 +3034,9 @@ function nextChoicePreviewPack(pack) {
 }
 
 function nextChoicePreviewHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
-  const blocker = hasBlocker(pack) && command.action !== "unblock"
-    ? " because this work is still blocked"
-    : "";
-  return `After save, Next action shows ${command.label}${blocker}.`;
+  return hasBlocker(pack) && command.action !== "unblock"
+    ? `Your choice saves, but the main button runs ${command.label} until the blocker clears.`
+    : `After save, the main button runs ${command.label}.`;
 }
 
 function resetDemoHelp() {
@@ -5030,19 +5027,19 @@ function memoryNoteSaveState(pack, note) {
   if (!String(note || "").trim()) {
     return {
       canSave: false,
-      help: `Where: Memory. Blocker: memory note is empty. Next action: type a note for ${workTitle(pack)}.`
+      help: `Where: Memory. Blocker: ${blockerTextForPack(pack)}. Next action: type a note for ${workTitle(pack)}.`
     };
   }
 
   return {
     canSave: true,
-    help: `Where: Memory. Blocker: None. Next action: add memory note to ${workTitle(pack)}.`
+    help: `Where: Memory. Blocker: ${blockerTextForPack(pack)}. Next action: add memory note to ${workTitle(pack)}.`
   };
 }
 
 function memoryRouteStatus(pack) {
   if (pack) {
-    return `Where: Memory / ${workTitle(pack)}. Blocker: memory note is empty. Next action: type a note for ${workTitle(pack)}.`;
+    return `Where: Memory / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: type a note for ${workTitle(pack)}.`;
   }
 
   return state.packs.length === 0
