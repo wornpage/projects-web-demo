@@ -324,9 +324,9 @@ h3,
   --demo-card-selected-shadow: none;
   --demo-card-head-bg: transparent;
   --demo-card-banner-bg: var(--cockpit-nav-bg);
-  --demo-work-card-bg: #fffaf2;
-  --demo-work-card-border: #8c9a84;
-  --demo-work-card-shadow: 0 8px 18px rgba(35, 29, 18, 0.08), 0 1px 0 rgba(255, 255, 255, 0.85);
+  --demo-work-card-bg: var(--cockpit-surface);
+  --demo-work-card-border: var(--cockpit-border);
+  --demo-work-card-shadow: var(--cockpit-shadow-sm);
   --demo-work-card-hover-shadow: 0 10px 22px rgba(35, 29, 18, 0.12), 0 1px 0 rgba(255, 255, 255, 0.9);
   --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.28), var(--demo-work-card-hover-shadow);
   --demo-work-card-alert-border: #4f9a88;
