@@ -2657,17 +2657,20 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
 
 .demo-support-reason {
   color: inherit;
-  display: none;
+  display: block;
   font-size: 11px;
   font-weight: 650;
   line-height: 1.25;
-  opacity: 0.78;
-  overflow-wrap: anywhere;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.15s ease, opacity 0.1s ease;
 }
 
 .demo-card-actions .demo-support-reason,
 .demo-card-support[open] .demo-support-reason {
-  display: block;
+  max-height: 2em;
+  opacity: 0.78;
 }
 
 .demo-row-actions .demo-support-action,
@@ -5126,7 +5129,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   border-radius: var(--cockpit-radius);
   box-shadow: var(--demo-work-card-shadow);
   color: var(--cockpit-text);
-  transition: border-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
+  transition: border-color var(--demo-motion-duration) ease;
 }
 
 .demo-panel:hover,

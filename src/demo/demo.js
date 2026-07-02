@@ -895,6 +895,27 @@ function backendPackCommandForSelected(pack) {
   }
 
   const key = backendPackCommandCacheKey(pack);
+  if (backendPackCommandCache.has(key)) {
+    const preview = backendPackCommandCache.get(key);
+    if (!preview) {
+      return null; // Failed previously — use local commands
+    }
+    const localCommand = resolvePrimaryCommandForPack(pack);
+    const localWorkflow = workflowStateForPack(pack, localCommand);
+    return {
+      where: preview.where || workTitle(pack),
+      blocker: preview.blocker || blockerTextForPack(pack),
+      next: preview.next || localCommand.label,
+      stateText: preview.stateText || localWorkflow.label,
+      stateHelp: preview.stateHelp || localWorkflow.help,
+      action: preview.action || localCommand.action,
+      targetPackId: preview.targetPackId || localCommand.targetPackId,
+      flowHint: preview.flowHint || selectedFlowHintForPack(pack, localCommand, preview.blocker || blockerTextForPack(pack)),
+      primaryReason: preview.primaryReason || primaryCommandVisibleReason(pack, localCommand),
+      memory: latestRelevantMemory(pack)
+    };
+  }
+
   const preview = backendPackCommandCache.get(key);
   if (!preview) {
     scheduleBackendPackCommandPreview(pack);
@@ -959,11 +980,11 @@ function scheduleBackendPackCommandPreview(pack) {
   loadBackendPackCommandPreview(pack, key)
     .catch(() => {
       state.status = routeStatus("Command preview", "backend unreachable", "retry or refresh");
+      // Cache null to prevent repeated attempts — use local commands
+      backendPackCommandCache.set(key, null);
     })
     .finally(() => {
       pendingBackendPackCommandRequests.delete(key);
-      el("screen-content").classList.remove("loading");
-      render();
     });
 }
 
@@ -4644,9 +4665,13 @@ function runResolvedPackAction(pack) {
   const resolved = backendPackCommandForSelected(pack) || resolvePrimaryCommandForPack(pack);
   if (isBackendCommandPending(resolved)) {
     scheduleBackendPackCommandPreview(pack);
-    setBackendCommandWaitStatus();
-    render();
-    return;
+    // Fall through to local command if backend preview isn't ready after 3s
+    // (the pending state clears when the preview loads)
+    if (pendingBackendPackCommandRequests.has(backendPackCommandCacheKey(pack))) {
+      setBackendCommandWaitStatus();
+      render();
+      return;
+    }
   }
 
   if (runRouteAction(resolved.action, resolved.targetPackId)) {
