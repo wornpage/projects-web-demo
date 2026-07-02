@@ -7387,6 +7387,11 @@ function renderCalendar() {
   const nextMonth = month === 11 ? 0 : month + 1;
   const nextYear = month === 11 ? year + 1 : year;
   const monthLabel = new Date(year, month, 1).toLocaleString("default", { month: "long", year: "numeric" });
+  const monthOptions = Array.from({ length: 12 }, (_, i) => `<option value="${i}"${i === month ? " selected" : ""}>${new Date(2000, i, 1).toLocaleString("default", { month: "long" })}</option>`).join("");
+  const yearOptions = Array.from({ length: 5 }, (_, i) => {
+    const y = now.getFullYear() - 2 + i;
+    return `<option value="${y}"${y === year ? " selected" : ""}>${y}</option>`;
+  }).join("");
 
   let cells = "";
   for (let i = 0; i < firstDay; i++) cells += `<div class="demo-cal-cell demo-cal-empty"></div>`;
@@ -7411,9 +7416,11 @@ function renderCalendar() {
         <span class="demo-status">${Object.keys(dueMap).length} days with due items</span>
       </div>
       <div class="demo-cal-nav">
-        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${prevYear}/${prevMonth}">← ${new Date(prevYear, prevMonth, 1).toLocaleString("default", { month: "short" })}</button>
-        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${now.getFullYear()}/${now.getMonth()}">Today</button>
-        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${nextYear}/${nextMonth}">${new Date(nextYear, nextMonth, 1).toLocaleString("default", { month: "short" })} →</button>
+        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${prevYear}/${prevMonth}">←</button>
+        <select class="demo-cal-select" data-action="calendar-month">${monthOptions}</select>
+        <select class="demo-cal-select" data-action="calendar-year">${yearOptions}</select>
+        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${nextYear}/${nextMonth}">→</button>
+        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${now.getFullYear()}/${now.getMonth()}" style="margin-left:auto">Today</button>
       </div>
       <div class="demo-calendar-grid">
         ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => `<div class="demo-cal-header">${d}</div>`).join("")}
@@ -7450,6 +7457,16 @@ function bindCalendarNav() {
       go("calendar", `${params[0] || new Date().getFullYear()}/${params[1] || new Date().getMonth()}/${btn.dataset.date}`);
     });
   });
+  const monthSel = document.querySelector("[data-action=calendar-month]");
+  const yearSel = document.querySelector("[data-action=calendar-year]");
+  if (monthSel && yearSel) {
+    const jump = () => {
+      const params = (state.routeParam || "").split("/").filter(Boolean);
+      go("calendar", `${yearSel.value}/${monthSel.value}${params[2] ? "/" + params[2] : ""}`);
+    };
+    monthSel.addEventListener("change", jump);
+    yearSel.addEventListener("change", jump);
+  }
 }
 
 function truncateTitle(text, max) {

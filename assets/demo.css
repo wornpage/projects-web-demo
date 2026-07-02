@@ -6424,7 +6424,8 @@ html[data-theme="dark"] .demo-app-shell {
 
 /* ---- Calendar ---- */
 /* ---- Calendar ---- */
-.demo-cal-nav { display:flex; gap:8px; margin-bottom:16px; align-items:center; justify-content:space-between; }
+.demo-cal-nav { display:flex; gap:8px; margin-bottom:16px; align-items:center; }
+.demo-cal-select { padding:4px 8px; font:inherit; font-size:13px; font-weight:650; background:var(--cockpit-surface); color:var(--cockpit-text); border:1px solid var(--cockpit-border); border-radius:var(--cockpit-radius); cursor:pointer; }
 .demo-calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; background:var(--cockpit-bg); border-radius:var(--cockpit-radius); padding:12px; }
 .demo-cal-header { padding:8px 4px; font-size:12px; font-weight:760; text-transform:uppercase; text-align:center; color:var(--cockpit-text-muted); letter-spacing:0.05em; }
 .demo-cal-cell { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:90px; padding:8px; background:var(--cockpit-surface); border-radius:6px; cursor:pointer; font:inherit; color:var(--cockpit-text); position:relative; transition:background 0.12s, box-shadow 0.12s; border:1px solid transparent; }
