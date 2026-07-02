@@ -430,13 +430,17 @@ function isIndexFile(file) {
 function injectAppApiBase(html) {
   const versionedHtml = html
     .replace(/(href="assets\/demo\.css\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
-    .replace(/(src="assets\/runtime-config\.js\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
     .replace(/(src="assets\/demo\.js\?v=)[^"]*/u, `$1${ASSET_VERSION}`);
-  const script = `<script src="assets/runtime-config.js?v=${validation.normalizeText(ASSET_VERSION, 120).replace(/[^A-Za-z0-9._-]/gu, "-") || "app"}" defer></script>`;
+  const assetVersionId = validation.normalizeText(ASSET_VERSION, 120).replace(/[^A-Za-z0-9._-]/gu, "-") || "app";
+  const configScript = `<script src="assets/runtime-config.js?v=${assetVersionId}" defer></script>`;
+
+  // Update existing runtime-config tag if present
   if (versionedHtml.includes("assets/runtime-config.js")) {
-    return versionedHtml.replace(/<script[^>]*src="assets\/runtime-config\.js[^"]*"[^>]*><\/script>/u, script);
+    return versionedHtml.replace(/<script[^>]*src="assets\/runtime-config\.js[^"]*"[^>]*><\/script>/u, configScript);
   }
-  return versionedHtml;
+
+  // Otherwise inject before the closing </head> tag
+  return versionedHtml.replace("</head>", `${configScript}\n</head>`);
 }
 
 function runtimeConfigScript() {
@@ -446,7 +450,7 @@ function runtimeConfigScript() {
     apiClientHeader: constants.API_CLIENT_HEADER,
     stateStorage: STATE_STORAGE
   };
-  return `window.__projectsDemoConfig=${JSON.stringify(config)};\n`;
+  return `window.__projectsDemoConfig=${JSON.stringify(config)};\nwindow.PROJECTS_API_BASE_URL=${JSON.stringify(config.apiBase)};\n`;
 }
 
 // ---------------------------------------------------------------------------
