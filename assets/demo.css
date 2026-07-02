@@ -125,6 +125,10 @@ h3,
   top: 8px;
 }
 
+.btn[hidden] {
+  display: none;
+}
+
 .btn {
   align-items: center;
   background: var(--cockpit-surface);
@@ -757,6 +761,10 @@ html[data-theme="dark"] .demo-header-metadata {
   color: var(--cockpit-text);
 }
 
+.demo-sync[hidden] {
+  display: none;
+}
+
 .demo-sync {
   align-items: center;
   background: var(--cockpit-surface);
@@ -820,6 +828,10 @@ html[data-theme="dark"] .demo-header-metadata {
   border-color: var(--cockpit-accent);
   outline: 3px solid var(--demo-focus-ring);
   outline-offset: 2px;
+}
+
+.demo-sync-share[hidden] {
+  display: none;
 }
 
 .demo-sync-share {
