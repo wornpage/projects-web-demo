@@ -4565,6 +4565,7 @@ async function handlePackAction(id, action) {
     return;
   } else if (action === "set-next") {
     state.status = selectedWorkStatus("Next setup", pack, "choose next action");
+    queueFocus("next", pack.id);
     go("next", pack.id);
     return;
   }
