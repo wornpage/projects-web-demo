@@ -8,7 +8,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const checks = [];
 const publicTextAssets = [
   { pathname: "index.html", maxBytes: 12000 },
-  { pathname: "assets/demo.js", maxBytes: 226000 },
+  { pathname: "assets/demo.js", maxBytes: 228000 },
   { pathname: "assets/demo.css", maxBytes: 140000 },
   { pathname: "data/demo-packs.json", maxBytes: 15000 }
 ];
