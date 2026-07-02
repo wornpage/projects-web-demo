@@ -1808,7 +1808,7 @@ html[data-theme="dark"] .demo-header-metadata {
   color: var(--cockpit-text);
   font-size: 18px;
   line-height: 1.15;
-  margin: 2px 0 0;
+  margin: 6px 0 0;
 }
 
 .demo-home-spotlight > p,
@@ -5582,7 +5582,8 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-list-panel > .demo-action-receipt,
 .demo-list-panel > .demo-card-receipt,
-.demo-list-panel > .demo-disabled-reason {
+.demo-list-panel > .demo-disabled-reason,
+.demo-list-panel > .demo-home-spotlight {
   margin-bottom: 14px;
 }
 
