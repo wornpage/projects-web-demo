@@ -4004,7 +4004,7 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
 
 .demo-table-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 90px 1fr 1fr auto;
+  grid-template-columns: 2fr 110px 90px 1fr 1fr auto;
   gap: 0;
   background: var(--cockpit-nav-bg);
   border-bottom: 1px solid var(--cockpit-border);
@@ -4027,7 +4027,7 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
 
 .demo-table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 90px 1fr 1fr auto;
+  grid-template-columns: 2fr 110px 90px 1fr 1fr auto;
   gap: 0;
   padding: 0;
   border: none;
