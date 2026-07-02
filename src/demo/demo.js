@@ -125,7 +125,8 @@ const copyProfiles = {
   general: { work: "work", workOne: "work item", workMany: "work items", newWork: "New work", result: "Result", sources: "Sources" },
   dj: { work: "gig", workOne: "gig", workMany: "gigs", newWork: "Book gig", result: "Set recording", sources: "Source refs" },
   developer: { work: "task", workOne: "task", workMany: "tasks", newWork: "New task", result: "PR or commit", sources: "Repos and docs" },
-  climate: { work: "site check", workOne: "site check", workMany: "site checks", newWork: "New check", result: "Finding", sources: "Datasets and notes" }
+  climate: { work: "site check", workOne: "site check", workMany: "site checks", newWork: "New check", result: "Finding", sources: "Datasets and notes" },
+  ai: { work: "prompt", workOne: "prompt", workMany: "prompts", newWork: "New prompt", result: "Output", sources: "Model and docs" }
 };
 
 const DEMO_SCENARIOS = [

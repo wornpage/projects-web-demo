@@ -10,9 +10,17 @@
     "owner": "unassigned",
     "purpose": "Hold venue dates and keep the review queue honest before outreach.",
     "doneWhen": "Venue hold list reviewed and owner assigned.",
-    "sources": ["venue calendar", "agent-log"],
-    "memory": ["Need owner before this can leave review."],
-    "activity": ["Imported from starter work list.", "Review surfaced missing owner."]
+    "sources": [
+      "venue calendar",
+      "agent-log"
+    ],
+    "memory": [
+      "Need owner before this can leave review."
+    ],
+    "activity": [
+      "Imported from starter work list.",
+      "Review surfaced missing owner."
+    ]
   },
   {
     "id": "source-folder-audit",
@@ -25,9 +33,17 @@
     "owner": "Set lead",
     "purpose": "Verify source folders before the next set prep session.",
     "doneWhen": "All source folders are named and reachable.",
-    "sources": ["source folder", "docs"],
-    "memory": ["Keep this blocked until the source folder exists."],
-    "activity": ["Blocker recorded.", "Source-folder review opened."]
+    "sources": [
+      "source folder",
+      "docs"
+    ],
+    "memory": [
+      "Keep this blocked until the source folder exists."
+    ],
+    "activity": [
+      "Blocker recorded.",
+      "Source-folder review opened."
+    ]
   },
   {
     "id": "lighting-checklist",
@@ -40,9 +56,17 @@
     "owner": "Venue lead",
     "purpose": "Prepare a small checklist for stage lighting setup.",
     "doneWhen": "Checklist is ready for the venue handoff.",
-    "sources": ["figma", "docs"],
-    "memory": ["Button needs to say exactly what setup action runs next."],
-    "activity": ["Draft created.", "Needs next action."]
+    "sources": [
+      "figma",
+      "docs"
+    ],
+    "memory": [
+      "Button needs to say exactly what setup action runs next."
+    ],
+    "activity": [
+      "Draft created.",
+      "Needs next action."
+    ]
   },
   {
     "id": "release-flyer-assets",
@@ -56,9 +80,17 @@
     "owner": "Design lead",
     "purpose": "Collect release flyer files and final export notes.",
     "doneWhen": "Final flyer assets are listed and ready to share.",
-    "sources": ["figma", "docs"],
-    "memory": ["Use the dark variant for the first preview."],
-    "activity": ["Owner assigned.", "Blocked waiting on source-folder-audit."]
+    "sources": [
+      "figma",
+      "docs"
+    ],
+    "memory": [
+      "Use the dark variant for the first preview."
+    ],
+    "activity": [
+      "Owner assigned.",
+      "Blocked waiting on source-folder-audit."
+    ]
   },
   {
     "id": "recording-export",
@@ -71,9 +103,16 @@
     "owner": "No owner",
     "purpose": "Export a reference recording for later review.",
     "doneWhen": "Recording export exists and is named.",
-    "sources": ["agent-log"],
-    "memory": ["Done item stays visible for audit context."],
-    "activity": ["Marked done.", "Kept as browser history."]
+    "sources": [
+      "agent-log"
+    ],
+    "memory": [
+      "Done item stays visible for audit context."
+    ],
+    "activity": [
+      "Marked done.",
+      "Kept as browser history."
+    ]
   },
   {
     "id": "warmup-set-notes",
@@ -86,9 +125,16 @@
     "owner": "No owner",
     "purpose": "Keep warmup notes attached to the set planning flow.",
     "doneWhen": "Warmup notes are saved for reference.",
-    "sources": ["docs"],
-    "memory": ["Good example of a completed note."],
-    "activity": ["Saved note.", "Marked done."]
+    "sources": [
+      "docs"
+    ],
+    "memory": [
+      "Good example of a completed note."
+    ],
+    "activity": [
+      "Saved note.",
+      "Marked done."
+    ]
   },
   {
     "id": "climate-site-brief",
@@ -101,9 +147,18 @@
     "owner": "Field lead",
     "purpose": "Review site notes and prepare a short field-check brief.",
     "doneWhen": "Field-check brief names the source, risk, and button result.",
-    "sources": ["dataset", "docs", "map note"],
-    "memory": ["Climate profile should call this a site check in Settings."],
-    "activity": ["Dataset reference added.", "Owner confirmed."]
+    "sources": [
+      "dataset",
+      "docs",
+      "map note"
+    ],
+    "memory": [
+      "Climate profile should call this a site check in Settings."
+    ],
+    "activity": [
+      "Dataset reference added.",
+      "Owner confirmed."
+    ]
   },
   {
     "id": "api-contract-review",
@@ -116,9 +171,18 @@
     "owner": "Dev",
     "purpose": "Check the Next action response contract before the next release.",
     "doneWhen": "Contract examples and response fields agree.",
-    "sources": ["github", "ci", "docs"],
-    "memory": ["Keep Where / Blocker / Next action fields explicit."],
-    "activity": ["CI note imported.", "Review requested."]
+    "sources": [
+      "github",
+      "ci",
+      "docs"
+    ],
+    "memory": [
+      "Keep Where / Blocker / Next action fields explicit."
+    ],
+    "activity": [
+      "CI note imported.",
+      "Review requested."
+    ]
   },
   {
     "id": "owner-cleanup-pass",
@@ -131,9 +195,16 @@
     "owner": "unassigned",
     "purpose": "Find work that should not be ownerless.",
     "doneWhen": "Owner values are assigned or intentionally left blank.",
-    "sources": ["agent-log"],
-    "memory": ["Use the review queue to make owner gaps visible."],
-    "activity": ["Drafted from search.", "Owner gap detected."]
+    "sources": [
+      "agent-log"
+    ],
+    "memory": [
+      "Use the review queue to make owner gaps visible."
+    ],
+    "activity": [
+      "Drafted from search.",
+      "Owner gap detected."
+    ]
   },
   {
     "id": "mobile-current-path-qa",
@@ -146,9 +217,17 @@
     "owner": "QA",
     "purpose": "Check the mobile bottom bar in dark and light themes.",
     "doneWhen": "Dock, buttons, badges, and Current path are readable.",
-    "sources": ["screenshot", "browser smoke"],
-    "memory": ["Watch for light highlights behind white text in dark mode."],
-    "activity": ["Screenshot added.", "Contrast issue reproduced."]
+    "sources": [
+      "screenshot",
+      "browser smoke"
+    ],
+    "memory": [
+      "Watch for light highlights behind white text in dark mode."
+    ],
+    "activity": [
+      "Screenshot added.",
+      "Contrast issue reproduced."
+    ]
   },
   {
     "id": "github-pages-demo-copy",
@@ -161,9 +240,17 @@
     "owner": "Demo owner",
     "purpose": "Keep the public demo honest about what stays in this browser.",
     "doneWhen": "Demo explains static limits and shows the main app surfaces.",
-    "sources": ["github pages", "docs"],
-    "memory": ["Do not imply local saves, memory, or files work on GitHub Pages."],
-    "activity": ["Public demo repo linked.", "Demo-only banner added."]
+    "sources": [
+      "github pages",
+      "docs"
+    ],
+    "memory": [
+      "Do not imply local saves, memory, or files work on GitHub Pages."
+    ],
+    "activity": [
+      "Public demo repo linked.",
+      "Demo-only banner added."
+    ]
   },
   {
     "id": "make-an-old-fashioned",
@@ -176,9 +263,17 @@
     "owner": "Personal",
     "purpose": "Keep a small repeatable checklist for making an Old Fashioned.",
     "doneWhen": "Ingredients, glass, garnish, and stirring steps are ready.",
-    "sources": ["recipe note", "bar checklist"],
-    "memory": ["Use this as a low-stakes example of personal work."],
-    "activity": ["Personal work added.", "Ready to open."]
+    "sources": [
+      "recipe note",
+      "bar checklist"
+    ],
+    "memory": [
+      "Use this as a low-stakes example of personal work."
+    ],
+    "activity": [
+      "Personal work added.",
+      "Ready to open."
+    ]
   },
   {
     "id": "calendar-date-pass",
@@ -191,8 +286,209 @@
     "owner": "Planning",
     "purpose": "Make sure due-date work exercises calendar and today views.",
     "doneWhen": "Today and Calendar routes both show dated work.",
-    "sources": ["calendar", "docs"],
-    "memory": ["Calendar is static here; real scheduling remains local."],
-    "activity": ["Dates reviewed.", "Marked done."]
+    "sources": [
+      "calendar",
+      "docs"
+    ],
+    "memory": [
+      "Calendar is static here; real scheduling remains local."
+    ],
+    "activity": [
+      "Dates reviewed.",
+      "Marked done."
+    ]
+  },
+  {
+    "memory": [
+      "Context window 100K ok. Best results with top-8 chunks.",
+      "Temperature 0.3 works better than 0 for factuality."
+    ],
+    "sources": [
+      "prompt-template",
+      "Anthropic docs"
+    ],
+    "activity": [
+      "Drafted v1 with basic retrieval.",
+      "v2 added citation format.",
+      "v3 tuned chunk size to 512 tokens.",
+      "Evaluated across 10 queries."
+    ],
+    "status": "done",
+    "next": "Done",
+    "title": "RAG retrieval prompt",
+    "doneWhen": "Prompt tested across 10 queries. 90% relevance score.",
+    "blocker": "none",
+    "type": "prompt",
+    "owner": "Claude",
+    "purpose": "System prompt for a RAG pipeline that retrieves from a document store and synthesizes answers with citations.",
+    "id": "prompt-rag-builder"
+  },
+  {
+    "memory": [
+      "Catches SQL injection that human reviewers miss.",
+      "False positive rate ~15% on style nits."
+    ],
+    "sources": [
+      "code-review-examples",
+      "CI logs"
+    ],
+    "activity": [
+      "Drafted from Anthropic code review cookbook.",
+      "v2 added few-shot examples from real bugs."
+    ],
+    "status": "active",
+    "next": "Test",
+    "title": "Code review prompt",
+    "doneWhen": "Blind test on 5 PRs: catches >=80% of seeded bugs.",
+    "blocker": "none",
+    "type": "prompt",
+    "owner": "Claude",
+    "purpose": "Few-shot prompt that catches security bugs, logic errors, and performance issues in pull requests.",
+    "id": "prompt-code-review"
+  },
+  {
+    "sources": [
+      "query-log",
+      "schema-dump"
+    ],
+    "due": "2026-07-10",
+    "owner": "unassigned",
+    "title": "SQL query optimizer prompt",
+    "status": "blocked",
+    "memory": [
+      "Postgres EXPLAIN ANALYZE format needed in system prompt.",
+      "Index suggestions work but sometimes miss partial indexes."
+    ],
+    "type": "prompt",
+    "activity": [
+      "Drafted from production query logs.",
+      "v1 tested on 3 slow queries."
+    ],
+    "next": "Review",
+    "doneWhen": "10 production queries improved: >=2x speedup on 7/10.",
+    "blocker": "needs schema context",
+    "purpose": "Takes a SQL query and schema, suggests indexes and rewrites. Works on Postgres, MySQL, and SQLite.",
+    "id": "prompt-sql-optimizer"
+  },
+  {
+    "sources": [
+      "red-team-dataset",
+      "classifier-v3"
+    ],
+    "due": "2026-07-15",
+    "owner": "Jared",
+    "title": "Safety classifier eval",
+    "status": "active",
+    "memory": [
+      "Current F1 0.78. False negatives on subtle toxicity.",
+      "Adding context about the conversation helps."
+    ],
+    "type": "eval",
+    "activity": [
+      "Loaded 500 red-team prompts.",
+      "Classifier v3 tested.",
+      "Collecting results."
+    ],
+    "next": "Collect results",
+    "doneWhen": "F1 > 0.85, false-positive rate < 5%.",
+    "blocker": "none",
+    "purpose": "Evaluate a prompt-based safety classifier against 500 red-team prompts. Measure precision, recall, false-positive rate.",
+    "id": "eval-safety-classifier"
+  },
+  {
+    "sources": [
+      "eval-harness",
+      "prompt-catalog"
+    ],
+    "due": "2026-07-20",
+    "owner": "Jared",
+    "title": "Model comparison: GPT-4o vs Claude Opus",
+    "status": "draft",
+    "memory": [
+      "Need to standardize temperature at 0 for fair comparison.",
+      "Latency measurement needs same region deployment."
+    ],
+    "type": "eval",
+    "activity": [
+      "Setup eval harness.",
+      "Collected prompt catalog across 8 types."
+    ],
+    "next": "Open",
+    "doneWhen": "Published comparison report with recommendations per task type.",
+    "blocker": "none",
+    "purpose": "Head-to-head evaluation of two frontier models on 8 prompt types: reasoning, coding, creative, factual, summarization, translation, classification, extraction. Measure quality, latency, and cost per 1K tokens.",
+    "id": "eval-model-compare"
+  },
+  {
+    "memory": [
+      "Step 2 (action extraction) is the bottleneck.",
+      "Need explicit instruction not to invent attendees."
+    ],
+    "sources": [
+      "meeting-transcripts",
+      "calendar-api"
+    ],
+    "activity": [
+      "Built transcript→summary step.",
+      "Added action extraction with validation.",
+      "Calendar integration done.",
+      "Tested on 3 meetings."
+    ],
+    "status": "done",
+    "next": "Done",
+    "title": "Meeting notes → action items chain",
+    "doneWhen": "3 meetings processed end-to-end with no hallucinated actions.",
+    "blocker": "none",
+    "type": "chain",
+    "owner": "Claude",
+    "purpose": "Multi-step chain: transcript → summary → action items → calendar entries. Each step validates the previous output.",
+    "id": "chain-meeting-notes"
+  },
+  {
+    "memory": [
+      "Urgency classifier confuses 'billing' and 'account-access' categories.",
+      "Draft responses are good but need tone calibration."
+    ],
+    "sources": [
+      "zendesk-export",
+      "response-templates"
+    ],
+    "activity": [
+      "Classification step built from 10K historical tickets.",
+      "Similar-ticket search uses embeddings.",
+      "Draft response generator uses few-shot examples from best support engineers."
+    ],
+    "status": "blocked",
+    "next": "Review",
+    "title": "Support ticket triage chain",
+    "doneWhen": "Live on 100 tickets: >=85% correctly classified, <5% escalation errors.",
+    "blocker": "missing owner",
+    "type": "chain",
+    "owner": "unassigned",
+    "purpose": "Chain: ticket → classify urgency → find similar → draft response → queue for human review. Reduces support engineer time by 60%.",
+    "id": "chain-support-triage"
+  },
+  {
+    "memory": [
+      "Spa-template passes with 0 issues — good baseline.",
+      "Needs to understand CSS custom properties vs hardcoded hex."
+    ],
+    "sources": [
+      "design-tokens",
+      "component-library"
+    ],
+    "activity": [
+      "Drafted from the Impeccable detector rules.",
+      "Tested on spa-template (0 findings, correct)."
+    ],
+    "status": "draft",
+    "next": "Open",
+    "title": "Design system audit prompt",
+    "doneWhen": "Audited 3 projects: >=90% of human-caught issues also caught by prompt.",
+    "blocker": "none",
+    "type": "prompt",
+    "owner": "Jared",
+    "purpose": "Prompt that audits a codebase against a design system: checks color tokens, spacing consistency, typography scale, component reuse. Outputs a prioritized fix list.",
+    "id": "design-system-audit"
   }
 ]
