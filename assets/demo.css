@@ -6204,3 +6204,28 @@ html[data-theme="dark"] .demo-app-shell {
   line-height: 1.4;
   margin: 6px 0 0;
 }
+
+.demo-help-tip {
+  background: var(--cockpit-accent-50);
+  border: 1px solid var(--cockpit-accent);
+  border-radius: 50%;
+  color: var(--cockpit-accent);
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  height: 18px;
+  width: 18px;
+  line-height: 1;
+  margin-left: 4px;
+  vertical-align: middle;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.demo-help-tip:hover,
+.demo-help-tip:focus {
+  background: var(--cockpit-accent);
+  color: var(--cockpit-accent-text);
+}

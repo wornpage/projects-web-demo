@@ -3248,7 +3248,7 @@ function renderPackDetail() {
       </div>
       <div class="demo-forward-panel" data-forward-motion="pack-detail">
         <div class="demo-forward-head">
-          <span class="section-label">What to do</span>
+          <span class="section-label">What to do ${helpTip("The button that advances this work. When blocked, the button helps clear the blocker first.")}</span>
           <strong>${escapeHtml(commandActionDisplayLabel(packCommand.next))}</strong>
         </div>
         ${workPathStrip(pack, packCommand)}
@@ -3256,8 +3256,8 @@ function renderPackDetail() {
         <div class="demo-form-grid demo-forward-fields">
           ${blockerStateField(pack)}
           ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : ""}
-          ${nextActionSelectField("edit-next", "Next action", editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
-          ${inputField("edit-done-when", "Proof target", pack.doneWhen, "Describe the evidence needed before this work is done.")}
+          ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
+          ${inputField("edit-done-when", `Proof target ${helpTip("The evidence that proves this work is truly done. Describe what 'finished' looks like.")}`, pack.doneWhen, "Describe the evidence needed before this work is done.")}
         </div>
       </div>
       <details class="demo-support-details" data-support-details="pack-detail">
@@ -3353,7 +3353,7 @@ function blockerStateField(pack) {
   const blocker = hasBlocker ? blockerState.reason : "";
   return `
       <fieldset class="demo-field demo-blocker-field" data-blocker-field>
-      <legend>Blocker</legend>
+      <legend>Blocker ${helpTip("What's stopping this work from moving forward. Can be a missing person, missing information, or waiting on something else. Clear it to unblock.")}</legend>
       <div class="demo-segmented-control" role="radiogroup" aria-label="Blocker value">
         <label class="demo-segment${hasBlocker ? "" : " active"}" data-blocker-mode-label="clear" for="edit-blocker-clear">
           <input id="edit-blocker-clear" name="edit-blocker-mode" type="radio" value="clear" data-blocker-mode="clear" aria-describedby="edit-blocker-clear-help" title="Stores Blocker: None so Next action can run after saving."${hasBlocker ? "" : " checked"}>
@@ -6449,7 +6449,7 @@ function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
   );
 
   return `<div class="demo-work-path" data-work-path="selected-work" aria-label="${escapeAttribute(`Work state: ${workflow.label}. Work path: ${current}. Next action: ${command.label}.`)}">
-    <span class="section-label">Work path</span>
+    <span class="section-label">Work path ${helpTip("Draft → Review → Proof → Done. Each stage has a specific job: pick an action, clear blockers, provide evidence.")}</span>
     <div class="demo-work-path-steps">
       ${renderWorkPathStepTrail(steps.map((step) => ({ ...step, active: step.id === current })))}
     </div>
@@ -7157,6 +7157,10 @@ function slugify(value) {
 function capitalize(value) {
   const text = String(value || "");
   return text ? text[0].toUpperCase() + text.slice(1) : "";
+}
+
+function helpTip(text) {
+  return `<span class="demo-help-tip" title="${escapeAttribute(text)}" aria-label="${escapeAttribute(text)}" role="tooltip" tabindex="0">?</span>`;
 }
 
 function escapeHtml(value) {
