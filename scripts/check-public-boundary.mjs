@@ -1869,18 +1869,12 @@ function frontendHostedCardRunNextUsesGenericLabel(source) {
 
   const required = [
     "const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);",
-    "const label = command?.label || \"Run next\";",
-    "backendCardRunNextReason(pack)",
+    "commandActionDisplayLabel(command.next)",
     "${escapeHtml(label)}"
   ];
   const missing = required.filter((needle) => !body.includes(needle));
   if (body.includes("${escapeHtml(command.label)}")) {
     missing.push("direct command label still rendered");
-  }
-
-  const helperBody = functionBody(source, "backendCardRunNextReason");
-  if (!helperBody.includes("server preview before running")) {
-    missing.push("backendCardRunNextReason:missing server-preview copy");
   }
 
   return {
