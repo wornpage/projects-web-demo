@@ -229,6 +229,7 @@ const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || ""
 let apiSaveTimer = null;
 let apiPendingSnapshot = null;
 let apiSaveInFlight = false;
+let apiSavePromise = null;
 let apiSessionClientId = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -410,7 +411,7 @@ async function applyScenario(scenario, options = {}) {
 
   if (DEMO_API_BASE_URL) {
     try {
-      clearPendingBackendStateSave();
+      await clearPendingBackendStateSave();
       const result = await saveBackendScenario(current.id, { preserveProfile: Boolean(options.preserveProfile) });
       if (current.route && options.applyRoute) {
         state.route = current.route;
@@ -473,7 +474,7 @@ async function resetState() {
   state.clipboardReceipt = null;
   if (DEMO_API_BASE_URL) {
     try {
-      clearPendingBackendStateSave();
+      await clearPendingBackendStateSave();
       await saveBackendResetState();
     } catch (error) {
       state.status=routeStatus("Backend reset",error.message||"reset failed","try again");state.suppressNextSave=true;
@@ -519,7 +520,7 @@ async function restoreRecoverySnapshot() {
     snapshot.status = restoredStatus;
     snapshot.actionReceipt = null;
     if (DEMO_API_BASE_URL) {
-      clearPendingBackendStateSave();
+      await clearPendingBackendStateSave();
       loadBackendOwnedState(await restoreBackendStateSnapshot(snapshot));
     } else {
       loadState(snapshot);
@@ -544,7 +545,7 @@ async function eraseBackendState() {
   }
 
   try {
-    clearPendingBackendStateSave();
+    await clearPendingBackendStateSave();
     const response = await fetch(apiUrl("/api/state/erase"), {
       method: "POST",
       headers: await apiHeaders()
@@ -702,13 +703,14 @@ function flushBackendStateSave() {
   const snapshot = apiPendingSnapshot;
   apiPendingSnapshot = null;
   apiSaveInFlight = true;
-  persistBackendStateSnapshot(snapshot)
+  apiSavePromise = persistBackendStateSnapshot(snapshot)
     .catch((error) => {
       apiPendingSnapshot = snapshot;
       console.error("Projects demo API save failed.", error);
     })
     .finally(() => {
       apiSaveInFlight = false;
+      apiSavePromise = null;
       if (apiPendingSnapshot) {
         scheduleBackendStateSave(apiPendingSnapshot);
       }
@@ -741,14 +743,14 @@ async function postBackendStateAction(path, payload, label) {
     headers: await apiHeaders({ "content-type": "application/json" }),
     body: JSON.stringify(payload)
   });
-  const result = await response.json();
   if (!response.ok) throw new Error(`Backend ${label} failed with ${response.status}`);
+  const result = await response.json();
   loadBackendOwnedState(result.state);
   return result;
 }
 
 async function saveBackendStateFilter(filter) {
-  prepareBackendWorkflowRequest();
+  await prepareBackendWorkflowRequest();
   return postBackendStateAction("/api/state/filter", { filter }, "filter");
 }
 
@@ -773,7 +775,7 @@ async function runBackendPackAction(pack, action) {
     return false;
   }
 
-  prepareBackendWorkflowRequest();
+  await prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/actions`), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -801,7 +803,7 @@ async function saveBackendPackNextAction(pack, next) {
     return null;
   }
 
-  prepareBackendWorkflowRequest();
+  await prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/next`), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -822,7 +824,7 @@ async function createBackendPack(values) {
     return null;
   }
 
-  prepareBackendWorkflowRequest();
+  await prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl("/api/packs"), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -843,7 +845,7 @@ async function addBackendPackMemoryNote(pack, note) {
     return null;
   }
 
-  prepareBackendWorkflowRequest();
+  await prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/memory`), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -864,7 +866,7 @@ async function saveBackendPackPath(pack, values) {
     return null;
   }
 
-  prepareBackendWorkflowRequest();
+  await prepareBackendWorkflowRequest();
   const response = await fetch(apiUrl(`/api/packs/${encodeURIComponent(pack.id)}/path`), {
     method: "POST",
     headers: await apiHeaders({ "content-type": "application/json" }),
@@ -880,8 +882,8 @@ async function saveBackendPackPath(pack, values) {
   return result;
 }
 
-function prepareBackendWorkflowRequest() {
-  clearPendingBackendStateSave();
+async function prepareBackendWorkflowRequest() {
+  await clearPendingBackendStateSave();
 }
 
 function backendPackCommandForSelected(pack) {
@@ -952,8 +954,8 @@ function scheduleBackendPackCommandPreview(pack) {
 
   pendingBackendPackCommandRequests.add(key);
   loadBackendPackCommandPreview(pack, key)
-    .catch((error) => {
-      console.error("Projects demo backend command preview failed.", error);
+    .catch(() => {
+      state.status = routeStatus("Command preview", "backend unreachable", "retry or refresh");
     })
     .finally(() => {
       pendingBackendPackCommandRequests.delete(key);
@@ -1182,16 +1184,16 @@ async function activateSyncCode(value, options = {}) {
     return;
   }
 
-  clearPendingBackendStateSave();
+  await clearPendingBackendStateSave();
   if (options.copyCurrentState) {
     await postBackendStateAction("/api/state/sync-copy",{targetClientId:await syncClientId(code)},"sync copy");
     writeSyncCode(code);
     apiSessionClientId = "";
     state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "use code elsewhere");
   } else {
-    writeSyncCode(code);
     apiSessionClientId = "";
     loadBackendOwnedState(await loadBackendState());
+    writeSyncCode(code);
     state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "review shared demo state");
   }
 
@@ -1207,7 +1209,7 @@ async function leaveSyncCode() {
     return;
   }
 
-  clearPendingBackendStateSave();
+  await clearPendingBackendStateSave();
   clearSyncCode();
   clearLaunchSyncCodeParam();
   apiSessionClientId = "";
@@ -1218,9 +1220,12 @@ async function leaveSyncCode() {
   renderDemoSyncControls("Sync code left. This device is back to its own demo state.");
 }
 
-function clearPendingBackendStateSave() {
+async function clearPendingBackendStateSave() {
   window.clearTimeout(apiSaveTimer);
   apiPendingSnapshot = null;
+  if (apiSavePromise) {
+    await apiSavePromise;
+  }
   apiSaveInFlight = false;
 }
 
@@ -3558,7 +3563,6 @@ function bindToolbar() {
         } catch (error) {
           state.filter = filter;
           state.status = `Where: Filters. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
-          state.suppressNextSave = true;
         }
         // Targeted update: chips + list, no full re-render
         document.querySelectorAll(".demo-chip").forEach((chip) => {
@@ -3597,6 +3601,7 @@ function updateWorkListAfterFilter() {
     scopeEl.textContent = `${visibleCount} of ${state.packs.length} ${workNoun(state.packs.length)} visible.`;
   }
   updateActionReceipt();
+  renderCommand(currentPack());
 }
 
 function workCard(pack) {
@@ -4706,7 +4711,7 @@ function savePendingForwardPathForAction(targetPackId) {
     return true;
   }
 
-  savePackForwardPathFromForm(pack).then(() => render());
+  savePackForwardPathFromForm(pack).then(() => render()).catch(() => render());
   return true;
 }
 
