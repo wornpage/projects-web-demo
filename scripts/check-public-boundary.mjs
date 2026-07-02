@@ -1772,7 +1772,7 @@ function declaredBodyLimitBeforeStream(source) {
 function backendCommandPendingMarkers(source) {
   const markers = [
     "function backendCommandPendingForPack(pack)",
-    "return backendCommandPendingForPack(pack);",
+    "return null;",
     "function isBackendCommandPending(command)",
     "action: \"backend-command-pending\"",
     "syncCommandActionButton(el(\"primary-action\"), command);",
