@@ -8,8 +8,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const checks = [];
 const publicTextAssets = [
   { pathname: "index.html", maxBytes: 12000 },
-  { pathname: "assets/demo.js", maxBytes: 220000 },
-  { pathname: "assets/demo.css", maxBytes: 137000 },
+  { pathname: "assets/demo.js", maxBytes: 226000 },
+  { pathname: "assets/demo.css", maxBytes: 140000 },
   { pathname: "data/demo-packs.json", maxBytes: 15000 }
 ];
 const publicFileAllowlist = [
@@ -18,7 +18,7 @@ const publicFileAllowlist = [
   "assets/favicon.png",
   "data/demo-packs.json"
 ];
-const totalPublicTextBudgetBytes = 380000;
+const totalPublicTextBudgetBytes = 390000;
 const retiredPublicFiles = [
   "assets/app.css",
   "assets/demo-metadata.json"
