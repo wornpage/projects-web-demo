@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: projects_demo
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo -d projects_demo"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "5179:5179"
+    environment:
+      PROJECTS_STATE_STORAGE: postgres
+      PGHOST: db
+      PGDATABASE: projects_demo
+      PGUSER: demo
+      PGPASSWORD: demo
+      PGSSLMODE: disable
+      HOST: 0.0.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -15,13 +15,15 @@
     "static:check": "npm run demo:check && node ../scripts/check-static-preview.mjs",
     "publish:check": "npm run demo:check && node ../scripts/check-static-publish.mjs",
     "routes:check": "npm run demo:check && node ../scripts/check-public-routes.mjs",
+    "test": "node --test server.test.js",
     "sync:check": "npm run demo:check && node ../scripts/check-sync-surface.mjs",
     "recovery:check": "npm run demo:check && node ../scripts/check-state-recovery.mjs",
     "docker:check": "node ../scripts/check-docker-boundary.mjs",
     "deploy:check": "node ../scripts/check-deploy-config.mjs",
     "northstar:check": "node ../scripts/check-north-star-audit.mjs",
     "boundary:check": "npm run demo:check && node ../scripts/check-public-assets.mjs && node ../scripts/check-public-boundary.mjs",
-    "ship:check": "node ../scripts/check-ship.mjs"
+    "ship:check": "node ../scripts/check-ship.mjs",
+    "test:smoke": "node ../scripts/check-api-smoke.mjs"
   },
   "engines": {
     "node": ">=18"

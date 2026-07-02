@@ -17,6 +17,7 @@ COPY src/demo/demo.js ./src/demo/demo.js
 COPY scripts/build-demo-asset.mjs ./scripts/build-demo-asset.mjs
 COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs
 COPY server/server.js ./server/server.js
+COPY server/src ./server/src
 
 RUN node scripts/build-demo-asset.mjs --check \
   && node scripts/protect-frontend.mjs assets/demo.js assets/demo.js \
@@ -38,6 +39,7 @@ COPY --from=build /app/assets/demo.js ./assets/demo.js
 COPY --from=build /app/assets/favicon.png ./assets/favicon.png
 COPY --from=build /app/data/demo-packs.json ./data/demo-packs.json
 COPY --from=build /app/server/server.js ./server/server.js
+COPY --from=build /app/server/src ./server/src
 
 RUN mkdir -p /app/state \
   && addgroup -S app \

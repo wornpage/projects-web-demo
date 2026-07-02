@@ -1,0 +1,64 @@
+name: Ship check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies
+        run: npm --prefix server ci
+
+      - name: Syntax check
+        run: npm --prefix server run check
+
+      - name: Unit tests
+        run: npm --prefix server test
+
+      - name: Demo asset check
+        run: npm --prefix server run demo:check
+
+      - name: Protected frontend
+        run: node scripts/check-protected-frontend.mjs
+
+      - name: Public asset disclosure
+        run: node scripts/check-public-assets.mjs
+
+      - name: Risk decisions
+        run: node scripts/check-risk-decisions.mjs
+
+      - name: Public route contract
+        run: node scripts/check-public-routes.mjs
+
+      - name: Sync sharing surface
+        run: node scripts/check-sync-surface.mjs
+
+      - name: State recovery
+        run: node scripts/check-state-recovery.mjs
+
+      - name: Public boundary
+        run: node scripts/check-public-boundary.mjs
+
+      - name: Docker boundary
+        run: node scripts/check-docker-boundary.mjs
+
+      - name: Deploy config
+        run: node scripts/check-deploy-config.mjs
+
+      - name: North Star audit
+        run: node scripts/check-north-star-audit.mjs
+
+      - name: Git whitespace
+        run: git diff --check
