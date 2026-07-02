@@ -408,10 +408,11 @@ function pathChangeSummary(pack, beforeSignature, next) {
 }
 
 function changePackStatusField(pack, source, field, label) {
-  const value = validation.workflowTextField(source, field, 40);
-  if (value && constants.VALID_PACK_STATUSES.has(value)) {
-    pack.status = value;
+  const value = validation.workflowTextField(source, field, 40, { required: true });
+  if (!value || !constants.VALID_PACK_STATUSES.has(value)) {
+    throw validation.httpError(400, "Work path status is not supported.");
   }
+  pack.status = value;
 }
 
 function changePackBlockerField(pack, source, field, label) {

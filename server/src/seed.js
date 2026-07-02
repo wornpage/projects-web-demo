@@ -168,8 +168,10 @@ function browserStatePayload(payload, currentState = {}) {
     ...currentState,
     packs: payload.state.packs,
     filter: payload.state.filter,
-    query: payload.state.query,
-    selectedId: payload.state.selectedId
+    selectedId: payload.state.selectedId,
+    status: currentState.status || "",
+    actionReceipt: null,
+    query: ""
   };
 }
 
@@ -187,18 +189,47 @@ function validateStatePayload(payload, options = {}) {
 
 function validateStateMetadata(payload) {
   const text = validation.normalizeText(payload.kind, 80);
-  if (text === "projects-browser-state-v1") {
+  if (text !== "projects-browser-state-v1") {
+    const version = validation.normalizeText(payload.version, 20);
+    if (version) {
+      throw validation.httpError(400, "Demo state schema is not supported.");
+    }
+  }
+  validateStateMetadataValue(payload, "copyProfile", 40, constants.VALID_COPY_PROFILES, "Demo state copy profile is not supported.");
+  validateStateMetadataValue(payload, "scenarioId", 80, constants.VALID_SCENARIOS, "Demo state scenario is not supported.");
+  validateStateMetadataValue(payload, "filter", 40, constants.VALID_STATE_FILTERS, "Demo state filter is not supported.");
+}
+
+function validateStateMetadataValue(payload, key, maxLength, validValues, message) {
+  if (!Object.prototype.hasOwnProperty.call(payload, key)) {
     return;
   }
-  const version = validation.normalizeText(payload.version, 20);
-  if (version) {
-    throw validation.httpError(400, "Demo state schema is not supported.");
+  if (typeof payload[key] !== "string") {
+    throw validation.httpError(400, `Demo state ${key} must be text.`);
+  }
+  const value = validation.normalizeText(payload[key], maxLength);
+  if (!value || !validValues.has(value)) {
+    throw validation.httpError(400, message);
   }
 }
 
 function validateStateTextFields(payload) {
-  validation.workflowTextField({ filter: payload.filter }, "filter", 40);
-  validation.workflowTextField({ query: payload.query }, "query", 200);
+  validateStateTextField(payload, "status", 1000);
+  validateStateTextField(payload, "query", 200);
+  validateStateTextField(payload, "savedAt", 80);
+}
+
+function validateStateTextField(payload, key, maxLength) {
+  if (!Object.prototype.hasOwnProperty.call(payload, key)) {
+    return;
+  }
+  if (typeof payload[key] !== "string") {
+    throw validation.httpError(400, `Demo state ${key} must be text.`);
+  }
+  const value = validation.normalizeText(payload[key], maxLength + 1);
+  if (value.length > maxLength) {
+    throw validation.httpError(400, `Demo state ${key} cannot be more than ${maxLength} characters.`);
+  }
 }
 
 function validateStatePacks(packs, options) {
@@ -218,14 +249,79 @@ function validateStatePacks(packs, options) {
     if (!pack || typeof pack !== "object" || Array.isArray(pack)) {
       throw validation.httpError(400, "Each demo pack must be a JSON object.");
     }
-    const id = validation.workflowTextField(pack, "id", 120, { required: true });
+    const { id, status } = validatePackTextFields(pack);
+    if (!constants.VALID_PACK_STATUSES.has(status)) {
+      throw validation.httpError(400, "Demo state work items need a valid status.");
+    }
     if (ids.includes(id)) {
       throw validation.httpError(400, "Demo state packs cannot share the same ID.");
     }
+    validatePackStringArrays(pack);
     ids.push(id);
   }
 
   return ids;
+}
+
+function validatePackTextFields(pack) {
+  const id = validatePackTextField(pack, "id", 120, true);
+  const title = validatePackTextField(pack, "title", 200, true);
+  const status = validatePackTextField(pack, "status", 40, true);
+  validatePackTextField(pack, "blocker", 200);
+  validatePackTextField(pack, "next", 200);
+  validatePackTextField(pack, "due", 40);
+  validatePackTextField(pack, "owner", 120);
+  validatePackTextField(pack, "purpose", 1000);
+  validatePackTextField(pack, "doneWhen", 1000);
+  validatePackTextField(pack, "signature", 80);
+  return { id, title, status };
+}
+
+function validatePackTextField(pack, key, maxLength, required = false) {
+  if (!Object.prototype.hasOwnProperty.call(pack, key)) {
+    if (required) {
+      throw validation.httpError(400, `Demo state work items need ${key} text.`);
+    }
+    return "";
+  }
+  if (typeof pack[key] !== "string") {
+    throw validation.httpError(400, `Demo state work item ${key} must be text.`);
+  }
+  const value = validation.normalizeText(pack[key], maxLength + 1);
+  if (required && !value) {
+    throw validation.httpError(400, `Demo state work items need ${key} text.`);
+  }
+  if (value.length > maxLength) {
+    throw validation.httpError(400, `Demo state work item ${key} cannot be more than ${maxLength} characters.`);
+  }
+  return value;
+}
+
+function validatePackStringArrays(pack) {
+  validatePackStringArray(pack, "sources", 50, 200);
+  validatePackStringArray(pack, "memory", 100, 2000);
+  validatePackStringArray(pack, "activity", 100, 400);
+}
+
+function validatePackStringArray(pack, key, maxItems, maxLength) {
+  if (!Object.prototype.hasOwnProperty.call(pack, key)) {
+    return;
+  }
+  if (!Array.isArray(pack[key])) {
+    throw validation.httpError(400, `Demo state work item ${key} must be a text array.`);
+  }
+  if (pack[key].length > maxItems) {
+    throw validation.httpError(400, `Demo state work item ${key} cannot contain more than ${maxItems} entries.`);
+  }
+  for (const entry of pack[key]) {
+    if (typeof entry !== "string") {
+      throw validation.httpError(400, `Demo state work item ${key} entries must be text.`);
+    }
+    const normalized = validation.normalizeText(entry, maxLength + 1);
+    if (!normalized || normalized.length > maxLength) {
+      throw validation.httpError(400, `Demo state work item ${key} entries must be nonblank text up to ${maxLength} characters.`);
+    }
+  }
 }
 
 function validateSelectedPackId(selectedId, packIds, options) {
@@ -241,14 +337,14 @@ function validateSelectedPackId(selectedId, packIds, options) {
 }
 
 function validateActionReceipt(payload) {
-  const receipt = payload.actionReceipt;
-  if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)) {
+  if (!Object.prototype.hasOwnProperty.call(payload, "actionReceipt") || payload.actionReceipt === null) {
     return;
   }
-  const summary = validation.workflowTextField(receipt, "summary", 1000, { required: true });
-  if (summary) {
-    validation.validatePlainValueShape(receipt);
+  const receipt = payload.actionReceipt;
+  if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)) {
+    throw validation.httpError(400, "Demo state action receipt must be an object.");
   }
+  validation.validatePlainValueShape(receipt);
 }
 
 // --- Copy / sync ---
