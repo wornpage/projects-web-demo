@@ -254,6 +254,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       state.status = routeStatus("Sync code", DEMO_BLOCKER_NONE, "review shared demo state");
       clearLaunchSyncCodeParam();
     }
+    state.ready = true;
     routeFromHash();
     render();
     if (launchedSyncCode) {
@@ -295,6 +296,9 @@ async function loadStaticSeedPacks() {
 }
 
 window.addEventListener("hashchange", () => {
+  if (!state.ready) {
+    return;
+  }
   routeFromHash();
   render();
 });
@@ -1734,16 +1738,37 @@ function routeFromHash() {
   const previousRoute = state.route;
   state.route = parsedRoute.route;
 
+  if (parsedRoute.malformedPackId || parsedRoute.unexpectedPackId) {
+    state.status = routeStatus(
+      ROUTE_CONTRACT[state.route]?.title || "Demo",
+      DEMO_BLOCKER_NONE,
+      `open ${state.route}`
+    );
+  }
+
   if (parsedRoute.fallback) {
     history.replaceState({}, "", `${location.pathname}${location.search}${formatRouteHash("home")}`);
   }
 
-  if (parsedRoute.packId) {
+  if (parsedRoute.packId && findPack(parsedRoute.packId)) {
     state.selectedId = parsedRoute.packId;
+  } else if (parsedRoute.packId) {
+    state.selectedId = state.packs[0]?.id || "";
   } else if (state.route === "review") {
     state.selectedId = preferredReviewPack()?.id || state.selectedId;
   } else if (state.route === "next") {
     state.selectedId = preferredNextSetupPack()?.id || state.selectedId;
+  }
+
+  if ((state.route === "next" || state.route === "memory") && !findPack(state.selectedId)) {
+    const fallback = state.packs[0];
+    if (fallback) {
+      state.selectedId = fallback.id;
+    } else {
+      state.route = "home";
+      history.replaceState({}, "", `${location.pathname}${location.search}${formatRouteHash("home")}`);
+      state.status = routeStatus("Demo", `no ${profile().work} to act on`, profile().newWork);
+    }
   }
 
   const selectedWorkChanged = state.selectedId !== previousSelectedId && findPack(state.selectedId);
@@ -1821,7 +1846,8 @@ function decodeRoutePackId(value) {
 function render() {
   const previousHash = state.lastRenderedHash;
   const currentHash = location.hash || `#/${state.route}`;
-  const shouldResetScroll = Boolean(previousHash !== currentHash && !state.pendingFocus);
+  const isSameRoute = state.route === (state.lastRenderedRoute || "");
+  const shouldResetScroll = Boolean(previousHash !== currentHash && !state.pendingFocus && !isSameRoute);
 
   if (!state.packs.find((pack) => pack.id === state.selectedId)) {
     state.selectedId = state.packs[0]?.id || "";
@@ -1848,9 +1874,18 @@ function render() {
 
   const screenTitle = screenTitleForRoute();
   document.documentElement.dataset.demoRoute = state.route;
+  if (state.route === "pack") {
+    document.documentElement.dataset.demoRoute = "work";
+  }
   el("screen-title").textContent = screenTitle;
   updateDocumentTitle(screenTitle);
   renderCommand(currentPack());
+
+  if (DEMO_API_BASE_URL) {
+    const current = currentPack();
+    const isLoadingBackendCommand = current && pendingBackendPackCommandRequests.has(backendPackCommandCacheKey(current));
+    el("screen-content").style.opacity = isLoadingBackendCommand ? "0.6" : "";
+  }
 
   switch (state.route) {
     case "home":
@@ -1887,6 +1922,7 @@ function render() {
 
   applyPendingFocus();
   state.lastRenderedHash = currentHash;
+  state.lastRenderedRoute = state.route;
   saveState();
 }
 
@@ -2597,7 +2633,7 @@ function focusSelectors(kind, packId) {
 }
 
 function focusAndPulse(target, options = {}) {
-  const behavior = options.behavior || "smooth";
+  const behavior = options.behavior || "auto";
   const block = options.block || "center";
   target.scrollIntoView({ behavior, block, inline: "nearest" });
   if (options.ensureTopVisible) {
@@ -3483,10 +3519,33 @@ function detailsOpenAttribute(...targetIds) {
 function bindToolbar() {
   const search = el("demo-search");
   if (search) {
+    let searchTimer = null;
     search.addEventListener("input", (event) => {
       state.query = event.currentTarget.value;
-      state.suppressNextSave=true;
-      render();
+      state.suppressNextSave = true;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        const summaryEl = el("demo-search-summary");
+        if (summaryEl) {
+          summaryEl.textContent = workToolbarSummary();
+        }
+        const listContainer = document.querySelector(".demo-work-list");
+        if (listContainer) {
+          const visible = filteredPacks();
+          const orderedVisible = selectedFirstPacks(visible);
+          const emptyHtml = state.packs.length === 0
+            ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
+            : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
+          listContainer.innerHTML = orderedVisible.length ? orderedVisible.map(workCard).join("") : emptyHtml;
+          bindWorkCards();
+        }
+        const scopeEl = el("command-scope");
+        if (scopeEl) {
+          const visibleCount = filteredPacks().length;
+          scopeEl.textContent = `${visibleCount} of ${state.packs.length} ${workNoun(state.packs.length)} visible.`;
+        }
+        updateActionReceipt();
+      }, 150);
     });
   }
 
@@ -3496,21 +3555,48 @@ function bindToolbar() {
       if (DEMO_API_BASE_URL) {
         try {
           await saveBackendStateFilter(filter);
-          render();
         } catch (error) {
           state.filter = filter;
           state.status = `Where: Filters. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
-          state.suppressNextSave=true;
-          render();
+          state.suppressNextSave = true;
         }
+        // Targeted update: chips + list, no full re-render
+        document.querySelectorAll(".demo-chip").forEach((chip) => {
+          chip.setAttribute("aria-pressed", String(chip.dataset.filter === state.filter));
+        });
+        document.querySelector(".demo-chip[data-filter=\"" + state.filter + "\"]")?.classList.add("active");
+        updateWorkListAfterFilter();
         return;
       }
 
       state.filter = filter;
       state.status = filterStatusMessage(state.filter);
-      render();
+      // Targeted update: chips + list, no full re-render
+      document.querySelectorAll(".demo-chip").forEach((chip) => {
+        chip.setAttribute("aria-pressed", String(chip.dataset.filter === state.filter));
+      });
+      updateWorkListAfterFilter();
     });
   });
+}
+
+function updateWorkListAfterFilter() {
+  const listContainer = document.querySelector(".demo-work-list");
+  if (listContainer) {
+    const visible = filteredPacks();
+    const orderedVisible = selectedFirstPacks(visible);
+    const emptyHtml = state.packs.length === 0
+      ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
+      : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
+    listContainer.innerHTML = orderedVisible.length ? orderedVisible.map(workCard).join("") : emptyHtml;
+    bindWorkCards();
+  }
+  const scopeEl = el("command-scope");
+  if (scopeEl) {
+    const visibleCount = filteredPacks().length;
+    scopeEl.textContent = `${visibleCount} of ${state.packs.length} ${workNoun(state.packs.length)} visible.`;
+  }
+  updateActionReceipt();
 }
 
 function workCard(pack) {
