@@ -962,6 +962,7 @@ function scheduleBackendPackCommandPreview(pack) {
     })
     .finally(() => {
       pendingBackendPackCommandRequests.delete(key);
+      render();
     });
 }
 
