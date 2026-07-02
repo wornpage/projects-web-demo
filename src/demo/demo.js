@@ -1891,12 +1891,6 @@ function render() {
   updateDocumentTitle(screenTitle);
   renderCommand(currentPack());
 
-  if (DEMO_API_BASE_URL) {
-    const current = currentPack();
-    const isLoadingBackendCommand = current && pendingBackendPackCommandRequests.has(backendPackCommandCacheKey(current));
-    el("screen-content").classList.toggle("loading", isLoadingBackendCommand);
-  }
-
   switch (state.route) {
     case "home":
       renderHome();

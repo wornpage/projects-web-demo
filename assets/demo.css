@@ -2003,10 +2003,6 @@ html[data-theme="dark"] .demo-header-metadata {
   min-width: 0;
 }
 
-.demo-screen.loading {
-  opacity: 0.6;
-}
-
 .demo-grid {
   display: grid;
   gap: 8px;
