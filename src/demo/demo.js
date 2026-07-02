@@ -258,9 +258,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     state.ready = true;
     routeFromHash();
     render();
-    if (launchedSyncCode) {
-      renderDemoSyncControls("Sync link active. This device opens shared demo state.");
-    }
+    renderDemoSyncControls(launchedSyncCode ? "Sync link active. This device opens shared demo state." : "");
   } catch (error) {
     const blocker = DEMO_API_BASE_URL ? "backend API could not load" : "static JSON could not load";
     state.status = routeStatus("Demo", blocker, "refresh");
