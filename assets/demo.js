@@ -2900,7 +2900,6 @@ function reviewQueuePanel(review, firstReview) {
       ${reviewQueueStat("Missing action", missingNextCount, "Needs next action")}
       ${reviewQueueStat("Owner gaps", ownerGapCount, "Needs owner")}
     </div>
-    ${homeSpotlightFacts(firstReview, command)}
     <div class="demo-home-spotlight-actions demo-review-spotlight-actions">
       ${primaryCommandButton(firstReview)}
       ${supportActionButton("open", "Open work path", firstReview, "btn")}
@@ -2967,6 +2966,7 @@ function renderNext() {
           <h2>Work that needs a clearer button</h2>
         </div>
       </div>
+      <p>Set next action saves a choice for that row. The Focus action under a row opens the work without changing it.</p>
       <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No work needs next setup.", "Open work, add a blocker, or clear next action to create a candidate.", emptyStateContextFor("Next setup", "every visible work item already has a clear next action path", "open work or create a review candidate"))}</div>
     </section>
   `;
@@ -3446,7 +3446,7 @@ function nextCandidateRow(pack) {
     <div class="demo-row-actions">
       ${supportActionButton("set-next", "Set next action", pack, "btn btn-sm btn-primary")}
     </div>
-    ${compactRowSupport("Focus this work without changing Next action.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
+    ${compactRowSupport("Focus", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </div>`;
 }
 
