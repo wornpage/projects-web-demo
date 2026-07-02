@@ -4039,10 +4039,19 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
   cursor: pointer;
   width: 100%;
   align-items: center;
-  transition: background-color 0.12s ease;
+  transition: background-color 0.12s ease, box-shadow 0.08s ease;
 }
 
 .demo-table-row:hover {
+  background: var(--cockpit-hover-bg);
+  box-shadow: 0 1px 4px var(--cockpit-accent-10, rgba(0,0,0,0.06));
+}
+
+.demo-table-row:nth-child(even) {
+  background: var(--cockpit-nav-bg);
+}
+
+.demo-table-row:nth-child(even):hover {
   background: var(--cockpit-hover-bg);
 }
 
