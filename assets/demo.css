@@ -3952,6 +3952,23 @@ html[data-theme="dark"] .demo-theme-toggle:focus-visible {
   -webkit-text-fill-color: var(--cockpit-text);
 }
 
+html[data-theme="forest"] .demo-theme-toggle,
+html[data-theme="ocean"] .demo-theme-toggle,
+html[data-theme="sepia"] .demo-theme-toggle {
+  background: var(--cockpit-accent-50);
+  border-color: var(--cockpit-accent);
+  color: var(--cockpit-accent);
+  -webkit-text-fill-color: var(--cockpit-accent);
+}
+
+html[data-theme="forest"] .demo-theme-toggle:hover,
+html[data-theme="ocean"] .demo-theme-toggle:hover,
+html[data-theme="sepia"] .demo-theme-toggle:hover {
+  background: var(--cockpit-accent);
+  color: var(--cockpit-accent-text);
+  -webkit-text-fill-color: var(--cockpit-accent-text);
+}
+
 .demo-app-shell .btn-primary,
 html.dark .demo-app-shell .btn-primary,
 html[data-theme="dark"] .demo-app-shell .btn-primary {
