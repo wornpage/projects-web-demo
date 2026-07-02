@@ -2015,7 +2015,7 @@ function createRouteCommand() {
     where: "Create",
     blocker: blockerDisplayValue(createState.blocker),
     next: createState.canSave ? persistenceVerb() : createActionForBlocker(createState.blocker),
-    stateText: createState.canSave ? "Ready" : "Needs field",
+    stateText: createReadinessLabel(createState),
     stateHelp: createState.help,
     action: createState.canSave ? "create-sample" : createFocusActionForBlocker(createState.blocker),
     targetPackId: ""
@@ -2202,7 +2202,7 @@ function workflowStateForPack(pack, command = null) {
   if (isMissingNextAction(pack)) {
     return {
       id: "needs-action",
-      label: "Needs setup",
+      label: "Needs next action",
       path: "draft",
       help: "Next action is missing."
     };
@@ -3081,7 +3081,7 @@ function createReadinessPanel(values, createState) {
         <span class="section-label">Ready to save</span>
         <h3>Create path</h3>
       </div>
-      <span id="create-readiness-state" class="demo-state-pill" title="${escapeAttribute(createState.help)}">${escapeHtml(createState.canSave ? "Ready" : "Needs field")}</span>
+      <span id="create-readiness-state" class="demo-state-pill" title="${escapeAttribute(createState.help)}">${escapeHtml(createReadinessLabel(createState))}</span>
     </div>
     <div class="demo-home-spotlight-facts" aria-label="${escapeAttribute(createState.help)}">
       ${homeSpotlightFact("Where", profile().newWork, "create-readiness-where")}
@@ -4921,6 +4921,12 @@ function createSaveState(values) {
   };
 }
 
+function createReadinessLabel(createState) {
+  return createState.canSave
+    ? "Ready"
+    : `Needs ${normalizeCopy(createState.blocker).replace(/^missing /, "")}`;
+}
+
 function createActionForBlocker(blocker) {
   if (blocker === "missing title") {
     return "Fill title";
@@ -4969,7 +4975,7 @@ function syncCreateReadinessPanel(values, createState) {
   const note = el("create-readiness-note");
 
   if (statePill) {
-    statePill.textContent = createState.canSave ? "Ready" : "Needs field";
+    statePill.textContent = createReadinessLabel(createState);
     statePill.title = createState.help;
   }
   if (blocker) {

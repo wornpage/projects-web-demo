@@ -1601,7 +1601,7 @@ function workflowStateForPack(pack, command = null) {
   }
   if (isMissingNextAction(pack)) {
     return {
-      label: "Needs setup",
+      label: "Needs next action",
       help: "Next action is missing."
     };
   }
