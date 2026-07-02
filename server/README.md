@@ -146,11 +146,11 @@ base instead of the incoming Host header.
 | `POST /api/state/reset` | Rebuild the current row from checked-in seed data and return the server-owned row state. |
 | `POST /api/state/erase` | Erase the current keyed demo state row. |
 | `GET /api/packs` | Load only work items. |
-| `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Button runs next` preview for one work item. |
+| `GET /api/packs/{id}/command` | Resolve the server-owned `Where`, `Blocker`, and `Next action` preview for one work item. |
 | `POST /api/packs` | Create one work item using server-owned workflow defaults. |
 | `POST /api/packs/{id}/path` | Save one work path with a supported status and return the server-owned receipt/state. |
 | `POST /api/packs/{id}/actions` | Run a server-owned pack action such as `start`, `unblock`, `block`, `done`, or `open`. |
-| `POST /api/packs/{id}/next` | Set the server-owned `Button runs next` value for one work item. |
+| `POST /api/packs/{id}/next` | Set the server-owned `Next action` value for one work item. |
 | `POST /api/packs/{id}/memory` | Add one memory note and return the server-owned receipt/state. |
 
 Hosted run-next dispatch reads from the server command preview and stops at a

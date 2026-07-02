@@ -66,7 +66,7 @@ The important public paths are:
 | `#/review` | Work that needs review or setup. |
 | `#/work` | Work list and selected-work browsing. |
 | `#/pack/{packId}` | Edit one work item path. |
-| `#/next/{packId}` | Choose what Button runs next for one work item. |
+| `#/next/{packId}` | Choose the next action for one work item. |
 | `#/memory/{packId}` | Add browser-local memory for one work item. |
 | `#/create` | Add browser-local sample work. |
 

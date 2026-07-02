@@ -18,8 +18,8 @@ const ast = acorn.parse(source, {
 const checks = [];
 const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create"];
 const expectedContractRoutes = [...expectedNavRoutes, "pack"];
-const expectedNavLabels = ["Start", "Review", "Work", "Next Action", "Memory", "Create"];
-const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Next Action", memory: "Memory", create: "Create", pack: "Work path" };
+const expectedNavLabels = ["Start", "Review", "Work", "Choose action", "Memory", "Create"];
+const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Choose action", memory: "Memory", create: "Create", pack: "Work path" };
 const blockedPublicRoutes = [
   "board",
   "calendar",
@@ -124,18 +124,18 @@ check("create field help names only current public surfaces", source.includes("O
 check("due fields use native date pickers", dueDatePickerContractOk(), "new-due and edit-due render through dateField with type=date");
 check("due dates stay visible and readable after save", dueDateDisplayContractOk(), "cards render semantic dates and Work path summary names saved due date");
 check("runtime status copy avoids retired settings and check screens", !source.includes("Where: Settings") && !source.includes("Where: Check"), "status copy stays on public surfaces");
-check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Button runs next");
+check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Next action");
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
-check("work cards expose where and blocker before the next button", workCardTriadContractOk(), "structured work-card facts precede Button runs next");
+check("work cards expose where and blocker before the next button", workCardTriadContractOk(), "structured work-card facts precede Next action");
 check("card support actions stay readable and tappable", cardSupportActionStylesContractOk(), "grid tiles plus single-column mobile actions");
 check("card title buttons keep a readable hit area", cardTitleButtonStylesContractOk(), "title buttons keep padding and focus radius");
 check("card state pills stay compact in headers", cardStatePillStylesContractOk(), "desktop badge cap plus mobile start alignment");
 check("panel forms group labels controls and help", panelFormFieldStylesContractOk(), "field-card grouping plus focus state");
 check("work filters stay scannable and tappable", workFilterStylesContractOk(), "equal-width chip grid plus compact mobile columns");
 check("work search reports visible result context", workSearchContractOk(), "search summary describes visible count and active filter; placeholder advertises searchable blocker");
-check("empty states expose semantic context", source.includes('class="demo-empty" role="note" aria-label="${escapeAttribute(label)}"') && source.includes("Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Button runs next: ${context.next}."), "empty state note labels include triad");
-check("mobile dock gives Button runs next a full row", mobileDockContractOk(), "two status cells plus full-width next action");
+check("empty states expose semantic context", source.includes('class="demo-empty" role="note" aria-label="${escapeAttribute(label)}"') && source.includes("Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Next action: ${context.next}."), "empty state note labels include triad");
+check("mobile dock gives Next action a full row", mobileDockContractOk(), "two status cells plus full-width next action");
 check("disabled buttons look inactive", disabledButtonAffordanceContractOk(), "disabled button styling removes pointer affordance and hover accent");
 check("primary nav label stays compact and portfolio-facing", html.includes('id="demo-nav"') && html.includes('aria-label="Portfolio demo screens"'), "Portfolio demo screens");
 check("sidebar landmark label keeps portfolio framing", html.includes('class="demo-sidebar nav-rail" aria-label="Portfolio demo navigation"'), "Portfolio demo navigation");
@@ -148,13 +148,13 @@ check("sync help keeps sample-data boundary", html.includes('<p id="sync-code-he
 check("runtime notices keep no-login framing", source.includes("Saves in this browser; no login.") && source.includes("Saves to this backend row; no login.") && source.includes("No login or private storage.") && source.includes("No private project data.") && !source.includes("not an account") && !source.includes("Do not enter private project data"), "no-login runtime notices");
 check("demo data notice is exposed as supporting context", html.includes('id="demo-notice"') && html.includes('role="note"') && html.includes('aria-label="Starting point and demo data notice"'), "demo notice role=note with specific label");
 check("sidebar idea note is exposed as supporting context", sidebarNoteContractOk(), "sidebar note names the idea and starting point");
-check("next action label matches screen naming", html.includes('<span class="demo-command-label">Next Action</span>'), "Next Action");
+check("next action label matches screen naming", html.includes('<span class="demo-command-label">Now</span>'), "Now");
 check("next action panel is labelled by its visible title", html.includes('class="demo-command-brief sidecar" aria-labelledby="command-title" aria-describedby="command-scope command-flow"'), "command-title labels next action panel");
 check("next action panel exposes scope and flow summary", html.includes('aria-describedby="command-scope command-flow"') && html.includes('id="command-scope"') && html.includes('id="command-flow"'), "command-scope and command-flow describe next action panel");
 check("next action state announces changes politely", html.includes('id="command-state" class="demo-command-state" role="status" aria-live="polite" aria-atomic="true"'), "command-state status region");
 check("command receipt announces complete status updates", html.includes('id="command-receipt"') && html.includes('aria-atomic="true"'), "command receipt aria-atomic");
 check("empty memory placeholders use sentence-case visible copy", emptyMemoryPlaceholderContractOk(), "No memory yet");
-check("bottom dock label describes purpose instead of layout", html.includes('class="demo-bottom-brief" aria-label="Next Action summary" aria-describedby="dock-where dock-blocker dock-next-label"'), "Next Action summary");
+check("bottom dock label describes purpose instead of layout", html.includes('class="demo-bottom-brief" aria-label="Now summary" aria-describedby="dock-where dock-blocker dock-next-label"'), "Now summary");
 check("bottom dock exposes where blocker and next labels", html.includes('aria-describedby="dock-where dock-blocker dock-next-label"') && html.includes('id="dock-where"') && html.includes('id="dock-blocker"') && html.includes('id="dock-next-label"'), "dock summary fields describe bottom dock");
 check("next action controls declare the content region they update", html.includes('id="primary-action"') && html.includes('id="dock-where-item" class="demo-bottom-item" href="#/work" aria-controls="screen-content"') && html.includes('id="dock-review-item" class="demo-bottom-item" href="#/review" aria-controls="screen-content"') && html.includes('id="dock-next"') && html.includes('aria-controls="screen-content"'), "screen-content controlled by action controls");
 check("primary button resolver keeps setup and blocker precedence", primaryCommandResolverContractOk(), "empty -> create/list; missing next -> setup; blocked -> unblock/review; ready -> stored action");
@@ -201,10 +201,10 @@ function reviewSpotlightContractOk() {
     "function reviewQueuePanel(review, firstReview)",
     "Up next",
     "reviewQueueStat(\"Blocked\", blockedCount, \"Needs blocker decision\")",
-    "reviewQueueStat(\"Missing action\", missingNextCount, \"Needs Button runs next\")",
+    "reviewQueueStat(\"Missing action\", missingNextCount, \"Needs next action\")",
     "reviewQueueStat(\"Owner gaps\", ownerGapCount, \"Needs owner\")",
     "primaryCommandButton(firstReview)",
-    "supportActionButton(\"set-next\", \"Set Button runs next\", firstReview, \"btn\")"
+    "supportActionButton(\"set-next\", \"Set next action\", firstReview, \"btn\")"
   ]);
 }
 
@@ -275,7 +275,7 @@ function dueDateDisplayContractOk() {
     "Open for optional ${ownerIsInline ? \"title\" : \"owner\"}, due date, and purpose."
   ]) && includesAll(workSubtitle, [
     "const due = dueDateLabel(pack.due);",
-    "${duePrefix}Ready. Button runs next: ${command.label}."
+    "${duePrefix}Ready. Next action: ${command.label}."
   ]) && includesAll(styles, [
     ".demo-card-meta time"
   ]);
@@ -339,7 +339,7 @@ function spotlightFactsContractOk() {
     "function homeSpotlightFacts(pack, command)",
     "homeSpotlightFact(\"Where\", workTitle(pack))",
     "homeSpotlightFact(\"Blocker\", blockerTextForPack(pack))",
-    "homeSpotlightFact(\"Button runs next\", command.label)",
+    "homeSpotlightFact(\"Next action\", command.label)",
     "function homeSpotlightFact(label, value"
   ]);
 }
@@ -495,7 +495,7 @@ function workSearchContractOk() {
     'aria-describedby="demo-search-summary"',
     'id="demo-search-summary" class="demo-status-line" role="status" aria-live="polite"',
     "function workToolbarSummary()",
-    "placeholder=\"Search ${escapeAttribute(currentWork)} title, blocker, Button runs next, owner, or due date\"",
+    "placeholder=\"Search ${escapeAttribute(currentWork)} title, blocker, Next action, owner, or due date\"",
     "const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${pack.sources.join(\" \")}`.toLowerCase();"
   ]);
 }
@@ -540,7 +540,7 @@ function primaryCommandResolverContractOk() {
     'action: "open-create"',
     'action: "open-work-list"',
     "if (isMissingNextAction(selected))",
-    'label: "Set Button runs next"',
+    'label: "Set next action"',
     'const action = commandActionForLabel(selected.next || "Open");',
     "if (hasBlocker(selected))",
     'action.action === "unblock"',

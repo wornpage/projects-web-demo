@@ -44,7 +44,7 @@ const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
   ["blocker", "blocker"],
   ["owner", "owner"],
   ["due", "due date"],
-  ["next", "Button runs next"],
+  ["next", "Next action"],
   ["doneWhen", "proof target"],
   ["purpose", "purpose"]
 ]);
@@ -857,7 +857,7 @@ function createPackFromPayload(state, payload) {
   const next = resolvePrimaryCommandForPack(pack);
   const receipt = actionReceiptForPack(
     pack,
-    `Created ${workTitle(pack)}. State: ${workflowStateForPack(pack, next).label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`,
+    `Created ${workTitle(pack)}. State: ${workflowStateForPack(pack, next).label}. Blocker: ${blockerTextForPack(pack)}. Next action: ${next.label}.`,
     next
   );
   state.status = receipt.summary;
@@ -962,17 +962,17 @@ async function resetStateAction() {
 }
 
 function resetStatusMessage() {
-  return "Where: Start. Blocker: None. Button runs next: review reset backend row.";
+  return "Where: Start. Blocker: None. Next action: review reset backend row.";
 }
 
 function syncCopyStatusMessage() {
-  return "Where: Sync code. Blocker: None. Button runs next: use code on another device.";
+  return "Where: Sync code. Blocker: None. Next action: use code on another device.";
 }
 
 function profileStatusMessage(profile, sourceLabel) {
   const label = capitalizeText(profile);
   const work = stateWorkLabel(profile);
-  return `Where: ${sourceLabel}. Blocker: None. Button runs next: use ${label} copy labels for ${work}.`;
+  return `Where: ${sourceLabel}. Blocker: None. Next action: use ${label} copy labels for ${work}.`;
 }
 
 function stateWorkLabel(profile) {
@@ -1067,7 +1067,7 @@ function reviewScenarioPack(pack) {
   if (isMissingNextAction(pack)) {
     return {
       ...pack,
-      blocker: "missing Button runs next",
+      blocker: "missing next action",
       next: "",
       status: "draft"
     };
@@ -1109,7 +1109,7 @@ function dueTodayScenarioPack(pack) {
 }
 
 function scenarioStatusMessage(scenario) {
-  return `Where: Start. Blocker: None. Button runs next: review ${scenario.label} scenario.`;
+  return `Where: Start. Blocker: None. Next action: review ${scenario.label} scenario.`;
 }
 
 function todayIsoDate(date = new Date()) {
@@ -1220,7 +1220,7 @@ function initialWorkflowForCreatedPack(title, owner, next) {
     return createBlockedWorkflow("missing title", "Fill title");
   }
   if (isPlaceholderNext(next)) {
-    return createBlockedWorkflow("missing Button runs next", "Choose Button runs next");
+    return createBlockedWorkflow("missing next action", "Choose next action");
   }
   if (isMissingOwnerValue(owner)) {
     return createBlockedWorkflow("missing owner", "Fill owner");
@@ -1229,7 +1229,7 @@ function initialWorkflowForCreatedPack(title, owner, next) {
     status: "active",
     blocker: DEMO_BLOCKER_NONE,
     canSave: true,
-    help: "Where: Create. Blocker: None. Button runs next: save work."
+    help: "Where: Create. Blocker: None. Next action: save work."
   };
 }
 
@@ -1238,7 +1238,7 @@ function createBlockedWorkflow(blocker, next) {
     status: "draft",
     blocker,
     canSave: false,
-    help: `Where: Create. Blocker: ${blocker}. Button runs next: ${next}.`
+    help: `Where: Create. Blocker: ${blocker}. Next action: ${next}.`
   };
 }
 
@@ -1260,15 +1260,15 @@ function setPackNextAction(state, packId, rawNext) {
   pack.blocker = forwardPath.blocker;
   pack.status = forwardPath.status;
   const changed = packActionSignature(pack) !== before;
-  const label = buttonRunsNextDisplayLabel(pack.next);
+  const label = nextActionDisplayLabel(pack.next);
   if (changed) {
-    addPackActivity(pack, `Button runs next changed to ${label}.`);
+    addPackActivity(pack, `Next action changed to ${label}.`);
   }
 
   state.selectedId = pack.id;
   const command = resolvePrimaryCommandForPack(pack);
   const summary = changed
-    ? `Button runs next set to ${label} for ${workTitle(pack)}.`
+    ? `Next action set to ${label} for ${workTitle(pack)}.`
     : `Button already runs ${label} for ${workTitle(pack)}.`;
   const receipt = actionReceiptForPack(pack, summary, command);
   state.status = receipt.summary;
@@ -1419,7 +1419,7 @@ function packPathChangeSummary(before, after) {
 
 function nextChoiceForwardPath(pack, value) {
   const next = normalizeText(value, 120) || "Open";
-  const blocker = normalizeStoredBlocker(pack?.blocker) === "missing Button runs next"
+  const blocker = normalizeStoredBlocker(pack?.blocker) === "missing next action"
     ? DEMO_BLOCKER_NONE
     : normalizeStoredBlocker(pack?.blocker);
   return {
@@ -1443,7 +1443,7 @@ function forwardPathStatusForBlocker(status, blocker, next = "") {
   return "active";
 }
 
-function buttonRunsNextDisplayLabel(value) {
+function nextActionDisplayLabel(value) {
   return commandActionForLabel(value || "Open").label;
 }
 
@@ -1588,7 +1588,7 @@ function actionReceiptSummary(summary, pack, next) {
 }
 
 function actionReceiptContext(pack, next) {
-  return `Where: ${sentenceValue(workTitle(pack))}. Blocker: ${sentenceValue(blockerTextForPack(pack))}. Button runs next: ${sentenceValue(next.label)}. Proof target: ${sentenceValue(proofTargetForPack(pack))}.`;
+  return `Where: ${sentenceValue(workTitle(pack))}. Blocker: ${sentenceValue(blockerTextForPack(pack))}. Next action: ${sentenceValue(next.label)}. Proof target: ${sentenceValue(proofTargetForPack(pack))}.`;
 }
 
 function workflowStateForPack(pack, command = null) {
@@ -1602,7 +1602,7 @@ function workflowStateForPack(pack, command = null) {
   if (isMissingNextAction(pack)) {
     return {
       label: "Needs setup",
-      help: "Button runs next is missing."
+      help: "Next action is missing."
     };
   }
   if (hasBlocker(pack)) {
@@ -1625,14 +1625,14 @@ function workflowStateForPack(pack, command = null) {
   }
   return {
     label: "Ready",
-    help: `Button runs next: ${resolved.label}.`
+    help: `Next action: ${resolved.label}.`
   };
 }
 
 function selectedFlowHintForPack(pack, command = resolvePrimaryCommandForPack(pack), blocker = blockerTextForPack(pack)) {
   const title = workTitle(pack);
   if (isMissingNextAction(pack)) {
-    return `Flow: set Button runs next for ${title}.`;
+    return `Flow: set next action for ${title}.`;
   }
 
   if (hasBlocker(pack)) {
@@ -1678,7 +1678,7 @@ function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPac
 
 function resolvePrimaryCommandForPack(pack) {
   if (isMissingNextAction(pack)) {
-    return { label: "Set Button runs next", action: "set-next", targetPackId: pack.id };
+    return { label: "Set next action", action: "set-next", targetPackId: pack.id };
   }
 
   const action = commandActionForLabel(pack.next || "Open");
@@ -1701,8 +1701,8 @@ function commandActionForLabel(label) {
   if (normalized === "review" || normalized === "review work") {
     return { label: "Review work", action: "review-work" };
   }
-  if (normalized === "set next" || normalized === "set button runs next" || normalized === "choose next action") {
-    return { label: "Set Button runs next", action: "set-next" };
+  if (normalized === "set next" || normalized === "set next action" || normalized === "set button runs next" || normalized === "choose next action") {
+    return { label: "Set next action", action: "set-next" };
   }
   if (normalized === "focus") {
     return { label: value, action: "focus" };
@@ -1793,7 +1793,7 @@ function blockerTextForPack(pack) {
       : "blocked";
   }
   if (isMissingNextAction(pack)) {
-    return "missing Button runs next";
+    return "missing next action";
   }
   return DEMO_BLOCKER_NONE_LABEL;
 }
@@ -1812,14 +1812,23 @@ function isMissingNextAction(pack) {
 
 function isPlaceholderNext(label) {
   const value = normalizeText(label, 120).toLowerCase();
-  return !value || value === "choose action" || value === "choose next action" || value === "set button runs next" || value === "set next";
+  return !value || value === "choose action" || value === "choose next action" || value === "set next action" || value === "set button runs next" || value === "set next";
 }
 
 function normalizeStoredBlocker(value) {
-  const blocker = normalizeText(value, 200);
+  const blocker = normalizeLegacyBlockerCopy(normalizeText(value, 200));
   return blocker && blocker.toLowerCase() !== DEMO_BLOCKER_NONE
     ? blocker
     : DEMO_BLOCKER_NONE;
+}
+
+function normalizeLegacyBlockerCopy(value) {
+  return value
+    .replace(/Button-runs-next/g, "Button runs next")
+    .replace(/Button Runs Next/g, "Button runs next")
+    .replace(/missing Button runs next/g, "missing next action")
+    .replace(/Button runs next/g, "Next action")
+    .replace(/button runs next/g, "next action");
 }
 
 function visibleText(value, limit) {

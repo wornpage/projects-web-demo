@@ -34,7 +34,7 @@
     "title": "lighting-checklist",
     "type": "show",
     "status": "draft",
-    "blocker": "missing Button runs next",
+    "blocker": "missing next action",
     "next": "",
     "due": "2026-06-18",
     "owner": "Venue lead",
@@ -42,7 +42,7 @@
     "doneWhen": "Checklist is ready for the venue handoff.",
     "sources": ["figma", "docs"],
     "memory": ["Button needs to say exactly what setup action runs next."],
-    "activity": ["Draft created.", "Needs Button runs next."]
+    "activity": ["Draft created.", "Needs next action."]
   },
   {
     "id": "release-flyer-assets",
@@ -113,10 +113,10 @@
     "next": "Review",
     "due": "2026-06-19",
     "owner": "Dev",
-    "purpose": "Check the Button runs next response contract before the next release.",
+    "purpose": "Check the Next action response contract before the next release.",
     "doneWhen": "Contract examples and response fields agree.",
     "sources": ["github", "ci", "docs"],
-    "memory": ["Keep Where / Blocker / Button runs next fields explicit."],
+    "memory": ["Keep Where / Blocker / Next action fields explicit."],
     "activity": ["CI note imported.", "Review requested."]
   },
   {

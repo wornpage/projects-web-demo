@@ -54,7 +54,7 @@ const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
   ["blocker", "blocker"],
   ["owner", "owner"],
   ["due", "due date"],
-  ["next", "Button runs next"],
+  ["next", "Next action"],
   ["doneWhen", "proof target"],
   ["purpose", "purpose"]
 ]);
@@ -84,7 +84,7 @@ const ROUTE_CONTRACT = Object.freeze({
   home: { pattern: "#/home", title: "Start", commandSource: "route", navKey: "1", navLabel: "Start" },
   review: { pattern: "#/review/{packId}", title: "Review", commandSource: "selected-work", acceptsPackId: true, navKey: "2", navLabel: "Review" },
   work: { pattern: "#/work/{packId}", title: "Work", commandSource: "selected-work", acceptsPackId: true, navKey: "3", navLabel: "Work" },
-  next: { pattern: "#/next/{packId}", title: "Next Action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "4", navLabel: "Next Action" },
+  next: { pattern: "#/next/{packId}", title: "Choose action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "4", navLabel: "Choose action" },
   memory: { pattern: "#/memory/{packId}", title: "Memory", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "5", navLabel: "Memory" },
   create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true }
@@ -105,7 +105,7 @@ const navItems = Object.freeze(NAV_ROUTE_IDS.map((route) => {
   return Object.freeze({ route, key: contract.navKey, label: contract.navLabel, group: navGroupIdForRoute(route) });
 }));
 
-const BUTTON_RUNS_NEXT_CHOICES = Object.freeze(["Review", "Open", "Focus", "Set Blocker: None", "Start", "Finish with proof"]);
+const NEXT_ACTION_CHOICES = Object.freeze(["Review", "Open", "Focus", "Set Blocker: None", "Start", "Finish with proof"]);
 
 const filters = [
   ["all", "All"],
@@ -145,7 +145,7 @@ const DEMO_SCENARIOS = [
   {
     id: "healthy",
     label: "Healthy queue",
-    description: "Normalize blockers and Button runs next values to reduce friction in the demo.",
+    description: "Normalize blockers and Next action values to reduce friction in the demo.",
     profile: "general",
     route: "work",
     filter: "active",
@@ -161,7 +161,7 @@ const DEMO_SCENARIOS = [
   {
     id: "onboarding",
     label: "Onboarding",
-    description: "Compact first-run path with clear labels and Button runs next values.",
+    description: "Compact first-run path with clear labels and Next action values.",
     profile: "climate",
     route: "home",
     filter: "all",
@@ -209,7 +209,7 @@ function reviewScenarioPack(pack) {
   if (isMissingNextAction(pack)) {
     return {
       ...pack,
-      blocker: "missing Button runs next",
+      blocker: "missing next action",
       next: "",
       status: "draft"
     };
@@ -416,7 +416,7 @@ async function applyScenario(scenario, options = {}) {
       render();
       return result;
     } catch (error) {
-      state.status = `Where: Scenario. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+      state.status = `Where: Scenario. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
       state.suppressNextSave=true;
       render();
       return null;
@@ -528,7 +528,7 @@ async function restoreRecoverySnapshot() {
     syncSearchParam("profile", state.copyProfile === "general" ? null : state.copyProfile);
     render();
   } catch (error) {
-    state.status = `Where: Recovery. Blocker: ${error.message || "invalid backup"}. Button runs next: paste a valid demo backup.`;
+    state.status = `Where: Recovery. Blocker: ${error.message || "invalid backup"}. Next action: paste a valid demo backup.`;
     if(DEMO_API_BASE_URL)state.suppressNextSave=true;
     render();
   }
@@ -599,7 +599,7 @@ function normalizeRecoveryState(source) {
     selectedId: normalizedPacks.some((pack) => pack.id === selectedId)
       ? selectedId
       : normalizedPacks[0]?.id || "",
-    status: normalizeRecoveryText(source.status, 1000) || "Where: Recovery. Blocker: None. Button runs next: review restored demo state.",
+    status: normalizeRecoveryText(source.status, 1000) || "Where: Recovery. Blocker: None. Next action: review restored demo state.",
     actionReceipt: normalizeActionReceipt(source.actionReceipt),
     filter,
     query: normalizeRecoveryText(source.query, 200)
@@ -1684,22 +1684,22 @@ function persistenceCreatedActivity() {
 function profileStatus(profileKey, source = "Start") {
   const value = copyProfiles[profileKey] || copyProfiles.general;
   const label = capitalize(copyProfiles[profileKey] ? profileKey : "general");
-  return `Where: ${source}. Blocker: None. Button runs next: use ${label} copy labels for ${value.work}.`;
+  return `Where: ${source}. Blocker: None. Next action: use ${label} copy labels for ${value.work}.`;
 }
 
 function scenarioStatus(scenario) {
   const current = DEMO_SCENARIO_BY_ID[scenario?.id] || DEMO_SCENARIO_BY_ID.default;
   const routeTitle = ROUTE_CONTRACT[current.route]?.title || "demo route";
-  return `Where: Scenario ${current.label}. Blocker: None. Button runs next: open ${routeTitle}.`;
+  return `Where: Scenario ${current.label}. Blocker: None. Next action: open ${routeTitle}.`;
 }
 
 function resetDemoStatus() {
-  return "Where: Start. Blocker: None. Button runs next: review reset demo data in this browser.";
+  return "Where: Start. Blocker: None. Next action: review reset demo data in this browser.";
 }
 
 function routeStatus(where, blocker, next) {
   const visibleBlocker = blockerDisplayValue(blocker);
-  return `Where: ${where}. Blocker: ${visibleBlocker}. Button runs next: ${next}.`;
+  return `Where: ${where}. Blocker: ${visibleBlocker}. Next action: ${next}.`;
 }
 
 function renderNav() {
@@ -1750,7 +1750,7 @@ function routeFromHash() {
   if (DEMO_API_BASE_URL && selectedWorkChanged) {
     state.suppressNextSave=true;
     saveBackendSelectedWork(state.selectedId).catch((error) => {
-      state.status = `Where: Selected work. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+      state.status = `Where: Selected work. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
       state.suppressNextSave=true;
       render();
     });
@@ -2037,7 +2037,7 @@ function createFocusActionForBlocker(blocker) {
     return "focus-create-owner";
   }
 
-  if (blocker === "missing Button runs next") {
+  if (blocker === "missing next action") {
     return "focus-create-next";
   }
 
@@ -2097,7 +2097,7 @@ function selectedFlowHintForPack(pack, command = resolvePrimaryCommandForPack(pa
 
   const title = workTitle(pack);
   if (isMissingNextAction(pack)) {
-    return `Flow: set Button runs next for ${title}.`;
+    return `Flow: set next action for ${title}.`;
   }
 
   if (hasBlocker(pack)) {
@@ -2156,7 +2156,7 @@ function resolvePrimaryCommandForPack(selected) {
   }
 
   if (isMissingNextAction(selected)) {
-    return { label: "Set Button runs next", action: "set-next", targetPackId: selected.id };
+    return { label: "Set next action", action: "set-next", targetPackId: selected.id };
   }
 
   const action = commandActionForLabel(selected.next || "Open");
@@ -2206,7 +2206,7 @@ function workflowStateForPack(pack, command = null) {
       id: "needs-action",
       label: "Needs setup",
       path: "draft",
-      help: "Button runs next is missing."
+      help: "Next action is missing."
     };
   }
 
@@ -2241,7 +2241,7 @@ function workflowStateForPack(pack, command = null) {
     id: "ready",
     label: "Ready",
     path: "review",
-    help: `Button runs next: ${resolved.label}.`
+    help: `Next action: ${resolved.label}.`
   };
 }
 
@@ -2249,7 +2249,7 @@ function updateCommand(command) {
   el("command-title").textContent = command.title;
   setCopySurface(el("command-where"), command.where, "Where", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   setCopySurface(el("command-blocker"), command.blocker, "Blocker", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
-  setCopySurface(el("command-next"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(el("command-next"), command.next, "Next action", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   el("command-state").textContent = command.stateText;
   el("command-state").title = command.stateHelp || `State: ${command.stateText}`;
   el("command-state").setAttribute("aria-label", command.stateHelp || `State: ${command.stateText}`);
@@ -2275,11 +2275,11 @@ function updateCommand(command) {
   if (el("command-memory-text")) {
     el("command-memory-text").textContent = commandMemoryVisibleText(commandMemory);
   }
-  setCopySurface(el("primary-action"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(el("primary-action"), command.next, "Next action", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   syncCommandActionButton(el("primary-action"), command);
   setCopySurface(el("dock-where"), command.where, "Where", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   setCopySurface(el("dock-blocker"), command.blocker, "Blocker", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
-  setCopySurface(el("dock-next-label"), command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(el("dock-next-label"), command.next, "Next action", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   syncCommandActionButton(el("dock-next"), command);
   updateActionReceipt();
   scheduleBottomDockVisibility();
@@ -2313,14 +2313,14 @@ function commandFlowCopy(flowHint) {
 function commandMemoryHelpText(command, commandMemory) {
   const next = normalizeCopy(command?.next) || "choose work";
   if (commandMemory) {
-    return `Relevant Memory: ${sentenceValue(commandMemory)}. Button runs next: ${next}.`;
+    return `Relevant Memory: ${sentenceValue(commandMemory)}. Next action: ${next}.`;
   }
 
   if (!currentPack()) {
     return "No selected work memory context.";
   }
 
-  return `Relevant Memory: No memory yet. Add memory on selected work or the Memory screen. Button runs next: ${next}.`;
+  return `Relevant Memory: No memory yet. Add memory on selected work or the Memory screen. Next action: ${next}.`;
 }
 
 function commandMemoryVisibleText(commandMemory) {
@@ -2394,7 +2394,7 @@ function commandWorkPathSteps(command, pack = commandWorkPathPack(command)) {
     return [
       { id: "where", label: "Where", active: true, help: `Where: ${command.where}.` },
       { id: "blocker", label: "Blocker", active: false, help: `Blocker: ${command.blocker}.` },
-      { id: "next", label: "Run", active: false, help: `Button runs next: ${command.next}.` }
+      { id: "next", label: "Run", active: false, help: `Next action: ${command.next}.` }
     ];
   }
 
@@ -2434,14 +2434,14 @@ function commandWorkPathDetail(command, pack) {
     return `${workflow.label}: ${visibleCopy(workflow.help, DEMO_COPY_LIMITS.commandFlowVisible)}`;
   }
 
-  return `Button runs next: ${visibleCopy(command.next, DEMO_COPY_LIMITS.commandFlowVisible)}`;
+  return `Next action: ${visibleCopy(command.next, DEMO_COPY_LIMITS.commandFlowVisible)}`;
 }
 
 function commandRunLabel(command) {
   const runNote = normalizeCopy(command.runNote);
   const runCopy = runNote ? ` ${runNote}.` : "";
   return helpCopy(
-    `Where: ${command.where}. Blocker: ${command.blocker}. Button runs next: ${command.next}.${runCopy}`,
+    `Where: ${command.where}. Blocker: ${command.blocker}. Next action: ${command.next}.${runCopy}`,
     DEMO_COPY_LIMITS.commandFlowHelp
   );
 }
@@ -2703,7 +2703,7 @@ function renderHome() {
           <span>3</span>
           <strong>Next</strong>
           <small>Set the action the main button will run.</small>
-          ${navButton("next", "Set Button runs next")}
+          ${navButton("next", "Set next action")}
         </div>
       </div>
       <div class="demo-quick-actions demo-secondary-paths" aria-label="Small demo actions">
@@ -2731,7 +2731,7 @@ function homeSpotlightPanel() {
   const workflow = workflowStateForPack(pack, command);
   const purpose = normalizeCopy(pack.purpose) || `Review this sample ${workNoun(1)}.`;
   const reason = primaryCommandVisibleReason(pack, command);
-  return `<article class="demo-home-spotlight" data-pack-id="${escapeAttribute(pack.id)}" aria-label="${escapeAttribute(`Sample work: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`)}">
+  return `<article class="demo-home-spotlight" data-pack-id="${escapeAttribute(pack.id)}" aria-label="${escapeAttribute(`Sample work: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: ${command.label}.`)}">
     <div class="demo-home-spotlight-head">
       <div>
         <span class="section-label">Live sample</span>
@@ -2753,10 +2753,10 @@ function homeSpotlightPanel() {
 }
 
 function homeSpotlightFacts(pack, command) {
-  return `<div class="demo-home-spotlight-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`)}">
+  return `<div class="demo-home-spotlight-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: ${command.label}.`)}">
     ${homeSpotlightFact("Where", workTitle(pack))}
     ${homeSpotlightFact("Blocker", blockerTextForPack(pack))}
-    ${homeSpotlightFact("Button runs next", command.label)}
+    ${homeSpotlightFact("Next action", command.label)}
   </div>`;
 }
 
@@ -2853,11 +2853,11 @@ function renderReview() {
   const orderedReview = selectedFirstPacks(review);
   const selected = currentPack();
   const firstReview = selected && review.some((pack) => pack.id === selected.id) ? selected : review[0] || null;
-  const reviewButtonReason = "Where: Review. Blocker: no work needs review. Button runs next: create or edit work.";
+  const reviewButtonReason = "Where: Review. Blocker: no work needs review. Next action: create or edit work.";
   const reviewState = firstReview ? `${review.length} needs decision` : "clear";
   const emptyReview = state.packs.length === 0
     ? emptyState(`No ${profile().work} is available.`, `${profile().newWork}, reset demo data, or choose a scenario with ${profile().work}.`, emptyStateContextFor("Review", `no ${workNoun(2)} exist in this browser`, `${profile().newWork.toLowerCase()}, reset demo data, or choose a scenario with ${profile().work}`))
-    : emptyState(`No ${profile().work} needs review.`, `Choose a different scenario or add a blocker to ${profile().work}.`, emptyStateContextFor("Review", `no blockers or missing Button runs next items are visible`, `create or edit ${profile().work}`));
+    : emptyState(`No ${profile().work} needs review.`, `Choose a different scenario or add a blocker to ${profile().work}.`, emptyStateContextFor("Review", `no blockers or missing next action items are visible`, `create or edit ${profile().work}`));
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-list-panel">
       <div class="demo-panel-head">
@@ -2887,7 +2887,7 @@ function reviewQueuePanel(review, firstReview) {
   const missingNextCount = review.filter(isMissingNextAction).length;
   const ownerGapCount = review.filter((pack) => ownerSupportNeededForPack(pack)).length;
   const reason = primaryCommandVisibleReason(firstReview, command);
-  return `<article class="demo-home-spotlight demo-review-spotlight" data-pack-id="${escapeAttribute(firstReview.id)}" aria-label="${escapeAttribute(`Up next: ${workTitle(firstReview)}. Blocker: ${blockerTextForPack(firstReview)}. Button runs next: ${command.label}.`)}">
+  return `<article class="demo-home-spotlight demo-review-spotlight" data-pack-id="${escapeAttribute(firstReview.id)}" aria-label="${escapeAttribute(`Up next: ${workTitle(firstReview)}. Blocker: ${blockerTextForPack(firstReview)}. Next action: ${command.label}.`)}">
     <div class="demo-home-spotlight-head demo-review-spotlight-head">
       <div>
         <span class="section-label">Up next</span>
@@ -2899,14 +2899,14 @@ function reviewQueuePanel(review, firstReview) {
     </div>
     <div class="demo-review-queue-stats" aria-label="Review queue status">
       ${reviewQueueStat("Blocked", blockedCount, "Needs blocker decision")}
-      ${reviewQueueStat("Missing action", missingNextCount, "Needs Button runs next")}
+      ${reviewQueueStat("Missing action", missingNextCount, "Needs next action")}
       ${reviewQueueStat("Owner gaps", ownerGapCount, "Needs owner")}
     </div>
     ${homeSpotlightFacts(firstReview, command)}
     <div class="demo-home-spotlight-actions demo-review-spotlight-actions">
       ${primaryCommandButton(firstReview)}
       ${supportActionButton("open", "Open work path", firstReview, "btn")}
-      ${supportActionButton("set-next", "Set Button runs next", firstReview, "btn")}
+      ${supportActionButton("set-next", "Set next action", firstReview, "btn")}
       <small>${escapeHtml(reason)}</small>
     </div>
   </article>`;
@@ -2941,17 +2941,17 @@ function renderNext() {
         </div>
         <span class="demo-status">${escapeHtml(workTitle(pack))}</span>
       </div>
-      <p>Pick what Button runs next stores for this work. The preview shows the button that will actually run after blocker rules apply.</p>
+      <p>Pick what Next action stores for this work. The preview shows the button that will actually run after blocker rules apply.</p>
       <div class="demo-command-lines compact" data-next-preview>
         ${factLine("Where", workTitle(pack))}
         ${factLine("Blocker", blockerTextForPack(pack))}
-        ${factLine("Button runs next", nextCommand.label)}
+        ${factLine("Next action", nextCommand.label)}
       </div>
       <div class="demo-inline-form">
         <label class="demo-field" for="next-action-choice">
-          <span>Button runs next</span>
+          <span>Next action</span>
           <select id="next-action-choice" class="demo-search-input" aria-describedby="next-choice-preview-help" title="${escapeAttribute(nextSelectHelp)}">
-            ${BUTTON_RUNS_NEXT_CHOICES.map((option) => {
+            ${NEXT_ACTION_CHOICES.map((option) => {
               const selected = option === pack.next || (option === "Set Blocker: None" && commandActionForLabel(pack.next).action === "unblock");
               return `<option value="${escapeAttribute(option)}"${selected ? " selected" : ""}>${escapeHtml(option)}</option>`;
             }).join("")}
@@ -2959,7 +2959,7 @@ function renderNext() {
           <small id="next-choice-preview-help" class="demo-field-help" aria-live="polite">${escapeHtml(nextPreviewHelp)}</small>
         </label>
         <span id="apply-next-action-help" class="sr-only">${escapeHtml(saveNextHelp)}</span>
-        <button id="apply-next-action" class="btn btn-primary" type="button"${controlHelpAttributes(false, saveNextHelp, "apply-next-action-help")}>Save Button runs next</button>
+        <button id="apply-next-action" class="btn btn-primary" type="button"${controlHelpAttributes(false, saveNextHelp, "apply-next-action-help")}>Save next action</button>
       </div>
     </section>
     <section class="demo-panel">
@@ -2969,7 +2969,7 @@ function renderNext() {
           <h2>Work that needs a clearer button</h2>
         </div>
       </div>
-      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No work needs next setup.", "Open work, add a blocker, or clear Button runs next to create a candidate.", emptyStateContextFor("Next setup", "every visible work item already has a clear Button runs next path", "open work or create a review candidate"))}</div>
+      <div class="demo-list">${state.packs.filter(isReview).map(nextCandidateRow).join("") || emptyState("No work needs next setup.", "Open work, add a blocker, or clear next action to create a candidate.", emptyStateContextFor("Next setup", "every visible work item already has a clear next action path", "open work or create a review candidate"))}</div>
     </section>
   `;
   el("next-action-choice").addEventListener("change", () => syncNextChoicePreview(pack));
@@ -2984,14 +2984,14 @@ function todayIsoDate(date = new Date()) {
 }
 
 function saveNextChoiceHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
-  return `Where: Next setup / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: save choice; preview shows ${command.label}.`;
+  return `Where: Next setup / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: save choice; preview shows ${command.label}.`;
 }
 
 function nextChoiceSelectHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
   const blocker = hasBlocker(pack) && command.action !== "unblock"
     ? "; blocker rules still require review"
     : "";
-  return `Choose what Button runs next stores on this work${blocker}.`;
+  return `Choose what Next action stores on this work${blocker}.`;
 }
 
 function syncNextChoicePreview(pack) {
@@ -3039,7 +3039,7 @@ function nextChoicePreviewHelp(pack, command = resolvePrimaryCommandForPack(pack
   const blocker = hasBlocker(pack) && command.action !== "unblock"
     ? " because this work is still blocked"
     : "";
-  return `After save, Button runs next shows ${command.label}${blocker}.`;
+  return `After save, Next action shows ${command.label}${blocker}.`;
 }
 
 function resetDemoHelp() {
@@ -3062,7 +3062,7 @@ function renderCreate() {
       <div class="demo-form-grid">
         ${inputField("new-title", "Title", defaults.title, `Name the ${profile().work} before Save can run.`)}
         ${inputField("new-owner", "Owner", defaults.owner, "Name the person, team, or role responsible for the next step.")}
-        ${buttonRunsNextSelectField("new-next", "Button runs next", defaults.next, "Choose the first action. Choose action means Save work stays paused.")}
+        ${nextActionSelectField("new-next", "Next action", defaults.next, "Choose the first action. Choose action means Save work stays paused.")}
         ${dateField("new-due", "Due", defaults.due, "Optional date kept on the work path and searchable in the work list.")}
         ${textField("new-purpose", "Why it matters", defaults.purpose, `Optional context for why this ${profile().work} exists.`)}
       </div>
@@ -3089,7 +3089,7 @@ function createReadinessPanel(values, createState) {
     <div class="demo-home-spotlight-facts" aria-label="${escapeAttribute(createState.help)}">
       ${homeSpotlightFact("Where", profile().newWork, "create-readiness-where")}
       ${homeSpotlightFact("Blocker", blockerDisplayValue(createState.blocker), "create-readiness-blocker")}
-      ${homeSpotlightFact("Button runs next", action.label, "create-readiness-next")}
+      ${homeSpotlightFact("Next action", action.label, "create-readiness-next")}
     </div>
     <div class="demo-create-readiness-list" aria-label="Required create fields">
       ${createReadinessStep("Title", values.title, "create-readiness-title")}
@@ -3153,7 +3153,7 @@ function renderPackDetail() {
         <div class="demo-form-grid demo-forward-fields">
           ${blockerStateField(pack)}
           ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : ""}
-          ${buttonRunsNextSelectField("edit-next", "Button runs next", editableButtonRunsNextValue(pack.next), "Choose the action the main button runs for the selected work.")}
+          ${nextActionSelectField("edit-next", "Next action", editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
           ${inputField("edit-done-when", "Proof target", pack.doneWhen, "Describe the evidence needed before this work is done.")}
         </div>
       </div>
@@ -3239,8 +3239,8 @@ function memoryWorkChoiceButton(pack, selected) {
   const active = pack.id === selected?.id;
   const label = active ? "Selected" : "Choose";
   const help = active
-    ? `Current memory target: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: add memory note.`
-    : `Use ${workTitle(pack)} as the memory target. Blocker: ${blockerTextForPack(pack)}. Button runs next: add memory note.`;
+    ? `Current memory target: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: add memory note.`
+    : `Use ${workTitle(pack)} as the memory target. Blocker: ${blockerTextForPack(pack)}. Next action: add memory note.`;
   return `<button type="button" class="demo-chip" aria-pressed="${active}" data-action="memory" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(help)}>${escapeHtml(workTitle(pack))}<span class="demo-chip-count">${escapeHtml(label)}</span></button>`;
 }
 
@@ -3253,14 +3253,14 @@ function blockerStateField(pack) {
       <legend>Blocker</legend>
       <div class="demo-segmented-control" role="radiogroup" aria-label="Blocker value">
         <label class="demo-segment${hasBlocker ? "" : " active"}" data-blocker-mode-label="clear" for="edit-blocker-clear">
-          <input id="edit-blocker-clear" name="edit-blocker-mode" type="radio" value="clear" data-blocker-mode="clear" aria-describedby="edit-blocker-clear-help" title="Stores Blocker: None so Button runs next can run after saving."${hasBlocker ? "" : " checked"}>
+          <input id="edit-blocker-clear" name="edit-blocker-mode" type="radio" value="clear" data-blocker-mode="clear" aria-describedby="edit-blocker-clear-help" title="Stores Blocker: None so Next action can run after saving."${hasBlocker ? "" : " checked"}>
           <span>None</span>
-          <small id="edit-blocker-clear-help" class="sr-only">Stores Blocker: None so Button runs next can run after saving.</small>
+          <small id="edit-blocker-clear-help" class="sr-only">Stores Blocker: None so Next action can run after saving.</small>
         </label>
         <label class="demo-segment${hasBlocker ? " active" : ""}" data-blocker-mode-label="set" for="edit-blocker-set">
-          <input id="edit-blocker-set" name="edit-blocker-mode" type="radio" value="set" data-blocker-mode="set" aria-describedby="edit-blocker-set-help" title="Names the blocker reason; Button runs next stays paused until it clears."${hasBlocker ? " checked" : ""}>
+          <input id="edit-blocker-set" name="edit-blocker-mode" type="radio" value="set" data-blocker-mode="set" aria-describedby="edit-blocker-set-help" title="Names the blocker reason; Next action stays paused until it clears."${hasBlocker ? " checked" : ""}>
           <span>Blocked</span>
-          <small id="edit-blocker-set-help" class="sr-only">Names the blocker reason; Button runs next stays paused until it clears.</small>
+          <small id="edit-blocker-set-help" class="sr-only">Names the blocker reason; Next action stays paused until it clears.</small>
         </label>
       </div>
       ${ownerBlockerGuide(pack)}
@@ -3270,7 +3270,7 @@ function blockerStateField(pack) {
         ${blockerPresetButtons(blocker)}
         <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="missing owner, source, approval..." aria-describedby="edit-blocker-help"${hasBlocker ? "" : disabledReasonAttributes(true, blockerInputDisabledReason())}>
       </div>
-      <p id="edit-blocker-help" class="demo-field-help" data-blocker-help>${hasBlocker ? "Blocked pauses Button runs next until this reason clears." : "None stores Blocker: None automatically; no typing required."}</p>
+      <p id="edit-blocker-help" class="demo-field-help" data-blocker-help>${hasBlocker ? "Blocked pauses Next action until this reason clears." : "None stores Blocker: None automatically; no typing required."}</p>
       <div class="demo-blocker-resolution" data-blocker-resolution hidden aria-live="polite">
         <span data-blocker-resolution-copy></span>
         <button class="btn btn-sm" type="button" data-clear-owner-blocker>Set Blocker: None</button>
@@ -3313,10 +3313,10 @@ function ownerBlockerGuideSummary(ownerFilled, blockerClear) {
   }
 
   if (!blockerClear) {
-    return "Owner filled. Button runs next: Set Blocker: None.";
+    return "Owner filled. Next action: Set Blocker: None.";
   }
 
-  return "Blocker is None. Button runs next: Save work path.";
+  return "Blocker is None. Next action: Save work path.";
 }
 
 function ownerBlockerGuideState(ownerFilled, blockerClear) {
@@ -3333,8 +3333,8 @@ function blockerPresetButtons(currentBlocker = "") {
     ${BLOCKER_REASON_PRESETS.map((preset) => {
       const active = normalizeCopy(preset).toLowerCase() === current;
       const help = active
-        ? `Current blocker reason is ${preset}. Button runs next stays paused until this clears.`
-        : `Set blocker reason to ${preset}. Button runs next stays paused until this clears.`;
+        ? `Current blocker reason is ${preset}. Next action stays paused until this clears.`
+        : `Set blocker reason to ${preset}. Next action stays paused until this clears.`;
       return `<button class="demo-blocker-preset${active ? " active" : ""}" type="button" data-blocker-preset="${escapeAttribute(preset)}" aria-pressed="${active}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">${escapeHtml(preset)}</button>`;
     }).join("")}
   </div>`;
@@ -3351,7 +3351,7 @@ function workflowStatePreviewField(workflow) {
 }
 
 function blockerInputDisabledReason() {
-  return "Where: Blocker. Blocker: None is selected. Button runs next: choose Blocked before typing a blocker reason.";
+  return "Where: Blocker. Blocker: None is selected. Next action: choose Blocked before typing a blocker reason.";
 }
 
 function workToolbar(label) {
@@ -3360,7 +3360,7 @@ function workToolbar(label) {
   return `
     <section class="demo-toolbar" aria-label="${escapeAttribute(label)}">
       <label class="sr-only" for="demo-search">Search demo ${escapeHtml(currentWork)}</label>
-      <input id="demo-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search ${escapeAttribute(currentWork)} title, blocker, Button runs next, owner, or due date" autocomplete="off" aria-describedby="demo-search-summary">
+      <input id="demo-search" class="demo-search-input" type="search" value="${escapeAttribute(state.query)}" placeholder="Search ${escapeAttribute(currentWork)} title, blocker, Next action, owner, or due date" autocomplete="off" aria-describedby="demo-search-summary">
       <p id="demo-search-summary" class="demo-status-line" role="status" aria-live="polite">${escapeHtml(summary)}</p>
       <div id="status-chips" class="demo-chip-row" aria-label="Status filters">
         ${renderFilterChips()}
@@ -3407,16 +3407,16 @@ function filterLabel(filterKey) {
 function noSelectedWorkStatus(next = "choose work") {
   if (state.packs.length === 0) {
     const emptyNext = next === "choose work" ? `create or reset ${profile().work}` : next;
-    return `Where: No ${profile().work} loaded. Blocker: no ${workNoun(2)} exist. Button runs next: ${emptyNext}.`;
+    return `Where: No ${profile().work} loaded. Blocker: no ${workNoun(2)} exist. Next action: ${emptyNext}.`;
   }
 
-  return `Where: No ${profile().work} selected. Blocker: choose a ${workNoun(1)}. Button runs next: ${next}.`;
+  return `Where: No ${profile().work} selected. Blocker: choose a ${workNoun(1)}. Next action: ${next}.`;
 }
 
 function setBackendCommandWaitStatus(){state.status=routeStatus("Backend command","waiting for server-owned command preview","try again after it loads");state.suppressNextSave=true}
 
 function selectedWorkStatus(surface, pack, next = resolvePrimaryCommandForPack(pack).label) {
-  return `Where: ${surface} / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next}.`;
+  return `Where: ${surface} / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: ${next}.`;
 }
 
 function profileCardHelp(key, value, active) {
@@ -3432,7 +3432,7 @@ function scenarioCardHelp(scenario, active) {
 function cardTitleButtonHelp(pack, action = "select") {
   const verb = action === "focus" ? "Focus" : "Select";
   const command = resolvePrimaryCommandForPack(pack);
-  return `${verb} ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`;
+  return `${verb} ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: ${command.label}.`;
 }
 
 function cardTitleButtonAttributes(pack, action = "select") {
@@ -3444,12 +3444,12 @@ function nextCandidateRow(pack) {
   return `<div class="demo-row has-row-support" data-pack-id="${escapeAttribute(pack.id)}">
     <div>
       <strong>${escapeHtml(workTitle(pack))}</strong>
-      <span>${escapeHtml(isUnblockedBlockerValue(pack.blocker) ? "Ready for a clearer Button runs next." : blockerDisplayValue(pack.blocker))}</span>
+      <span>${escapeHtml(isUnblockedBlockerValue(pack.blocker) ? "Ready for a clearer Next action." : blockerDisplayValue(pack.blocker))}</span>
     </div>
     <div class="demo-row-actions">
-      ${supportActionButton("set-next", "Set Button runs next", pack, "btn btn-sm btn-primary")}
+      ${supportActionButton("set-next", "Set next action", pack, "btn btn-sm btn-primary")}
     </div>
-    ${compactRowSupport("Focus this work without changing Button runs next.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
+    ${compactRowSupport("Focus this work without changing Next action.", supportActionButton("focus", "Focus", pack, "btn btn-sm"))}
   </div>`;
 }
 
@@ -3502,7 +3502,7 @@ function bindToolbar() {
           render();
         } catch (error) {
           state.filter = filter;
-          state.status = `Where: Filters. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+          state.status = `Where: Filters. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
           state.suppressNextSave=true;
           render();
         }
@@ -3534,7 +3534,7 @@ function workCard(pack) {
     </div>
     <div class="demo-command-row">
       <div>
-        <span>Button runs next</span>
+        <span>Next action</span>
         <strong>${escapeHtml(command.label)}</strong>
       </div>
       ${primaryCommandButton(pack)}
@@ -3569,7 +3569,7 @@ function reviewCard(pack) {
     ? supportActionButton("unblock", "Clear blocker", pack)
     : supportActionButton("block", "Mark blocked", pack);
   const nextHelpId = `next-${pack.id}-help`;
-  const nextHelp = `Set the exact Button runs next value for ${workTitle(pack)}.`;
+  const nextHelp = `Set the exact Next action value for ${workTitle(pack)}.`;
 
   return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head demo-review-card-head">
@@ -3579,7 +3579,7 @@ function reviewCard(pack) {
     <div class="demo-review-card-main">
       <div class="demo-card-facts">
         ${cardFact("Blocker", blockerTextForPack(pack))}
-        ${cardFact("Button runs next", command.label)}
+        ${cardFact("Next action", command.label)}
       </div>
       <div class="demo-review-card-actions">
         ${primaryCommandButton(pack)}
@@ -3595,7 +3595,7 @@ function reviewCard(pack) {
     <details class="demo-card-support" data-support-actions="review-card">
       <summary>
         <span>Other actions</span>
-        <strong>Extra tools for focusing, editing, clearing blockers, or setting Button runs next.</strong>
+        <strong>Extra tools for focusing, editing, clearing blockers, or setting Next action.</strong>
       </summary>
       <div class="demo-card-actions">
         ${supportActionButton("focus", "Focus", pack)}
@@ -3603,8 +3603,8 @@ function reviewCard(pack) {
         ${blockerAction}
       </div>
       <div class="demo-inline-form">
-        ${buttonRunsNextSelectField(`next-${pack.id}`, "Button runs next", editableButtonRunsNextValue(pack.next), nextHelp)}
-        ${supportActionButton("set-next", "Save Button runs next", pack)}
+        ${nextActionSelectField(`next-${pack.id}`, "Next action", editableNextActionValue(pack.next), nextHelp)}
+        ${supportActionButton("set-next", "Save next action", pack)}
       </div>
     </details>
   </article>`;
@@ -3636,11 +3636,11 @@ function primaryCommandButton(pack, className = "btn btn-primary") {
 }
 
 function backendCardRunNextReason(pack) {
-  return `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: server preview before running.`;
+  return `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: server preview before running.`;
 }
 
 function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)) {
-  return `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${command.label}.`;
+  return `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: ${command.label}.`;
 }
 
 function primaryCommandReasonNote(pack, command = resolvePrimaryCommandForPack(pack)) {
@@ -3685,7 +3685,7 @@ function syncPackPrimaryAction(command) {
     return;
   }
 
-  setCopySurface(button, command.next, "Button runs next", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  setCopySurface(button, command.next, "Next action", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   syncCommandActionButton(button, command);
 }
 
@@ -3707,15 +3707,15 @@ function supportActionReason(action, pack) {
   const where = pack?.title || "selected work";
   const blocker = blockerTextForPack(pack) || "No blocker";
   const commandForSupportAction = resolvePrimaryCommandForPack(pack);
-  const current = isMissingNextAction(pack) ? "Button runs next is missing" : `Button runs next is ${commandForSupportAction.label || "set"}`;
+  const current = isMissingNextAction(pack) ? "Next action is missing" : `Next action is ${commandForSupportAction.label || "set"}`;
   const reasons = {
     open: `Open ${where} to inspect it without changing where Blocker is ${blocker}.`,
     focus: `Open ${where} focus view only; this does not run the main button.`,
     block: `Mark ${where} blocked to pause work while blocker details are confirmed.`,
-    unblock: `Clear blocker for ${where}; this allows Button runs next to continue when set.`,
+    unblock: `Clear blocker for ${where}; this allows Next action to continue when set.`,
     done: `Finish ${where} and capture proof when workflow is ready to close.`,
-    edit: `Edit ${where} path fields used by Button runs next.`,
-    "set-next": `Set Button runs next for ${where} so the next action is deterministic. Current state: ${current}.`,
+    edit: `Edit ${where} path fields used by Next action.`,
+    "set-next": `Set next action for ${where} so the next action is deterministic. Current state: ${current}.`,
     review: `Review path evidence for ${where}.`,
     "review-work": `Review all work items and confirm where the next action should go.`,
     start: `Start ${where} from the current state.`
@@ -3733,27 +3733,27 @@ function supportActionDisabledReason(action, pack) {
   }
 
   if (pack?.status === "done") {
-    return `Where: ${where} / done. Blocker: proof is already saved. Button runs next: Open to inspect this work.`;
+    return `Where: ${where} / done. Blocker: proof is already saved. Next action: Open to inspect this work.`;
   }
 
   const command = resolvePrimaryCommandForPack(pack);
   if (command.action === "done") {
     if (!normalizeCopy(pack?.doneWhen)) {
-      return `Where: ${where}. Blocker: proof target is missing. Button runs next: add proof target before finishing with proof.`;
+      return `Where: ${where}. Blocker: proof target is missing. Next action: add proof target before finishing with proof.`;
     }
 
     return "";
   }
 
   if (isMissingNextAction(pack)) {
-    return `Where: ${where}. Blocker: Button runs next is missing. Button runs next: set Button runs next before finishing with proof.`;
+    return `Where: ${where}. Blocker: Next action is missing. Next action: set next action before finishing with proof.`;
   }
 
   if (hasBlocker(pack)) {
-    return `Where: ${where}. Blocker: ${blockerTextForPack(pack)}. Button runs next: clear blocker before finishing with proof.`;
+    return `Where: ${where}. Blocker: ${blockerTextForPack(pack)}. Next action: clear blocker before finishing with proof.`;
   }
 
-  return `Where: ${where}. Blocker: Button runs next is ${command.label}. Button runs next: choose Finish with proof before saving proof.`;
+  return `Where: ${where}. Blocker: Next action is ${command.label}. Next action: choose Finish with proof before saving proof.`;
 }
 
 function supportActionDisabledVisibleReason(action, pack) {
@@ -3767,7 +3767,7 @@ function supportActionDisabledVisibleReason(action, pack) {
   }
 
   if (isMissingNextAction(pack)) {
-    return "Set Button runs next for this work before finishing with proof.";
+    return "Set next action for this work before finishing with proof.";
   }
 
   if (hasBlocker(pack)) {
@@ -3779,7 +3779,7 @@ function supportActionDisabledVisibleReason(action, pack) {
     return "Add proof target first before finishing with proof.";
   }
 
-  return "Choose Finish with proof as Button runs next.";
+  return "Choose Finish with proof as Next action.";
 }
 
 function supportActionVisibleReason(action) {
@@ -3790,7 +3790,7 @@ function supportActionVisibleReason(action) {
     unblock: "Stores Blocker: None.",
     done: "Finish with proof visible.",
     edit: "Edit work path fields.",
-    "set-next": "Choose the exact Button runs next value."
+    "set-next": "Choose the exact Next action value."
   };
   return reasons[action] || "Other button.";
 }
@@ -3826,15 +3826,15 @@ function bindListActions() {
               }
             } catch (error) {
               console.error("Projects demo backend next action failed.", error);
-              state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+              state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
             }
           } else {
-            state.status = selectedWorkStatus("Next setup", pack, "choose Button runs next");
+            state.status = selectedWorkStatus("Next setup", pack, "choose next action");
             go("next", pack.id);
             return;
           }
         } else {
-          state.status = noSelectedWorkStatus("choose work before setting Button runs next");
+          state.status = noSelectedWorkStatus("choose work before setting Next action");
         }
       } else {
         if (runRouteAction(action, button.dataset.pack || "")) {
@@ -3854,7 +3854,7 @@ function actionLabelFromKey(action) {
     select: "Select",
     "run-next": "Run next",
     review: "Review",
-    "set-next": "Set Button runs next",
+    "set-next": "Set next action",
     "review-work": "Review work",
     start: "Start",
     unblock: "Set Blocker: None",
@@ -3983,9 +3983,9 @@ function setSaveConfirmation(pack, result) {
 function setNextConfirmation(pack, result) {
   if (!pack) return;
 
-  const nextLabel = result?.label || buttonRunsNextDisplayLabel(result?.next);
+  const nextLabel = result?.label || nextActionDisplayLabel(result?.next);
   const summary = result.changed
-    ? `Button runs next set to ${nextLabel} for ${workTitle(pack)}.`
+    ? `Next action set to ${nextLabel} for ${workTitle(pack)}.`
     : `Button already runs ${nextLabel} for ${workTitle(pack)}.`;
   setActionReceipt(
     pack,
@@ -4001,7 +4001,7 @@ function setCreateConfirmation(pack) {
   const workflow = workflowStateForPack(pack, next);
   setActionReceipt(
     pack,
-    `Created ${workTitle(pack)}. State: ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.`,
+    `Created ${workTitle(pack)}. State: ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Next action: ${next.label}.`,
     next
   );
 }
@@ -4047,7 +4047,7 @@ function actionReceiptContext(pack, next, summary = "") {
   const proof = /(^|\s)Proof target:/iu.test(summary)
     ? ""
     : ` Proof target: ${proofTargetForPack(pack)}.`;
-  return `Where: ${workTitle(pack)} / ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Button runs next: ${next.label}.${proof}`;
+  return `Where: ${workTitle(pack)} / ${workflow.label}. Blocker: ${blockerTextForPack(pack)}. Next action: ${next.label}.${proof}`;
 }
 
 function updateActionReceipt() {
@@ -4085,7 +4085,7 @@ function updateActionReceipt() {
     <div class="demo-command-receipt-lines">
       ${receiptLine("Where", receipt.where)}
       ${receiptLine("Blocker", receipt.blocker)}
-      ${receiptLine("Button runs next", receipt.next)}
+      ${receiptLine("Next action", receipt.next)}
       ${receiptLine("Proof target", receipt.proof)}
     </div>
     ${commandReceiptFollowUpAction(receipt)}`;
@@ -4151,7 +4151,7 @@ function receiptCardLines(receipt) {
   return `<div class="demo-card-receipt-lines">
     ${receiptLine("Where", receipt.where)}
     ${receiptLine("Blocker", receipt.blocker)}
-    ${receiptLine("Button runs next", receipt.next)}
+    ${receiptLine("Next action", receipt.next)}
     ${receiptLine("Proof target", receipt.proof)}
   </div>`;
 }
@@ -4170,10 +4170,10 @@ function receiptFollowUpAction(pack, receipt) {
   }
 
   const next = resolvePrimaryCommandForPack(pack);
-  const help = `Where: Memory / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: continue work; next action is ${next.label}.`;
+  const help = `Where: Memory / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: continue work; next action is ${next.label}.`;
   return `<div class="demo-card-receipt-actions">
     <button class="btn btn-sm btn-primary" type="button" data-go="pack" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(help)}>Continue work</button>
-    <small>${escapeHtml(`Returns to selected work. Button runs next stays ${next.label}.`)}</small>
+    <small>${escapeHtml(`Returns to selected work. Next action stays ${next.label}.`)}</small>
   </div>`;
 }
 
@@ -4188,10 +4188,10 @@ function commandReceiptFollowUpAction(receipt) {
   }
 
   const next = resolvePrimaryCommandForPack(pack);
-  const help = `Where: Memory / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Button runs next: continue work; next action is ${next.label}.`;
+  const help = `Where: Memory / ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: continue work; next action is ${next.label}.`;
   return `<div class="demo-command-receipt-actions">
     <button class="btn btn-sm btn-primary" type="button" data-go="pack" data-pack="${escapeAttribute(pack.id)}"${controlLabelAttributes(help)}>Continue work</button>
-    <small>${escapeHtml(`Returns to selected work. Button runs next stays ${next.label}.`)}</small>
+    <small>${escapeHtml(`Returns to selected work. Next action stays ${next.label}.`)}</small>
   </div>`;
 }
 
@@ -4200,7 +4200,7 @@ function bindCommandReceiptActions(receiptElement) {
 }
 
 function receiptAccessibleSummary(receipt) {
-  const context = `Where: ${sentenceValue(receipt.where)}. Blocker: ${sentenceValue(receipt.blocker)}. Button runs next: ${sentenceValue(receipt.next)}. Proof target: ${sentenceValue(receipt.proof)}.`;
+  const context = `Where: ${sentenceValue(receipt.where)}. Blocker: ${sentenceValue(receipt.blocker)}. Next action: ${sentenceValue(receipt.next)}. Proof target: ${sentenceValue(receipt.proof)}.`;
   const result = normalizeCopy(receipt.visibleSummary || receipt.summary);
   return helpCopy(`${context}${result ? ` Result: ${sentenceValue(result)}.` : ""}`, DEMO_COPY_LIMITS.receiptHelp);
 }
@@ -4298,7 +4298,7 @@ async function savePackMemoryNote(pack, note) {
     return result;
   } catch (error) {
     console.error("Projects demo backend memory action failed.", error);
-    state.status = `Where: Backend memory. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+    state.status = `Where: Backend memory. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
     return null;
   }
 }
@@ -4321,9 +4321,9 @@ function setPackNextAction(pack, value) {
   const changed = beforeStatus !== normalizeCopy(pack.status)
     || beforeNext !== normalizeCopy(pack.next)
     || beforeBlocker !== normalizeCopy(pack.blocker);
-  const label = buttonRunsNextDisplayLabel(pack.next);
+  const label = nextActionDisplayLabel(pack.next);
   if (changed) {
-    addPackActivity(pack, `Button runs next changed to ${label}.`);
+    addPackActivity(pack, `Next action changed to ${label}.`);
   }
 
   return { changed, next: pack.next, label };
@@ -4331,7 +4331,7 @@ function setPackNextAction(pack, value) {
 
 function nextChoiceForwardPath(pack, value) {
   const next = normalizeCopy(value) || "Open";
-  const blocker = normalizeCopy(pack?.blocker) === "missing Button runs next"
+  const blocker = normalizeCopy(pack?.blocker) === "missing next action"
     ? DEMO_BLOCKER_NONE
     : normalizeStoredBlocker(pack?.blocker);
   return {
@@ -4372,7 +4372,7 @@ async function applyNextChoice(id) {
     }
   } catch (error) {
     console.error("Projects demo backend next action failed.", error);
-    state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+    state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
     render();
     return;
   }
@@ -4415,7 +4415,7 @@ async function handlePackAction(id, action) {
     openReviewFixPath(pack);
     return;
   } else if (action === "set-next") {
-    state.status = selectedWorkStatus("Next setup", pack, "choose Button runs next");
+    state.status = selectedWorkStatus("Next setup", pack, "choose next action");
     go("next", pack.id);
     return;
   }
@@ -4427,7 +4427,7 @@ async function handlePackAction(id, action) {
       }
     } catch (error) {
       console.error("Projects demo backend action failed.", error);
-      state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+      state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
       render();
       return;
     }
@@ -4586,7 +4586,7 @@ function reviewFixNextForPack(pack) {
   }
 
   if (focusKind === "next") {
-    return "set Button runs next";
+    return "set next action";
   }
 
   return "choose None or describe blocker";
@@ -4637,7 +4637,7 @@ function pendingForwardPathBlocksAction(targetPackId) {
     return false;
   }
 
-  state.status = `Where: Work path. Blocker: ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`;
+  state.status = `Where: Work path. Blocker: ${issue}. Next action: ${blockerModeFixNext(issue)}.`;
   syncPackDetailValidation(pack);
   requestAnimationFrame(() => focusCommandTarget(blockerModeFocusKind(issue), pack.id));
   return true;
@@ -4677,7 +4677,7 @@ function runRouteAction(action, targetPackId) {
     if (selected) {
       const issue = blockerModeIssue() || "blocked mode needs a real blocker";
       queueFocus(blockerModeFocusKind(issue), selected.id);
-      state.status = `Where: Work path. Blocker: ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`;
+      state.status = `Where: Work path. Blocker: ${issue}. Next action: ${blockerModeFixNext(issue)}.`;
       render();
     }
     return true;
@@ -4709,7 +4709,7 @@ function runRouteAction(action, targetPackId) {
     const selected = findPack(targetPackId) || currentPack();
     if (state.route === "next") {
       if (!selected) {
-        state.status = noSelectedWorkStatus("choose work before setting Button runs next");
+        state.status = noSelectedWorkStatus("choose work before setting Next action");
         render();
         return true;
       }
@@ -4846,7 +4846,7 @@ function reviewFocusKindForPack(pack) {
     return "support-owner";
   }
 
-  if (blocker.includes("button runs next")) {
+  if (blocker.includes("next action") || blocker.includes("button runs next")) {
     return "next";
   }
 
@@ -4865,8 +4865,8 @@ function commandActionForLabel(label) {
     return { label: "Review work", action: "review-work" };
   }
 
-  if (normalized === "set next" || normalized === "set button runs next" || normalized === "choose next action") {
-    return { label: "Set Button runs next", action: "set-next" };
+  if (normalized === "set next" || normalized === "set next action" || normalized === "set button runs next" || normalized === "choose next action") {
+    return { label: "Set next action", action: "set-next" };
   }
 
   if (normalized === "focus") {
@@ -4888,7 +4888,7 @@ function commandActionForLabel(label) {
   return { label: label === "Open" ? "Open" : label, action: "open" };
 }
 
-function buttonRunsNextDisplayLabel(value) {
+function nextActionDisplayLabel(value) {
   return commandActionForLabel(value || "Open").label;
 }
 
@@ -4920,7 +4920,7 @@ function createSaveState(values) {
   return {
     ...workflow,
     canSave,
-    help: `Where: Create. Blocker: ${blockerDisplayValue(workflow.blocker)}. Button runs next: ${next}.`
+    help: `Where: Create. Blocker: ${blockerDisplayValue(workflow.blocker)}. Next action: ${next}.`
   };
 }
 
@@ -4933,8 +4933,8 @@ function createActionForBlocker(blocker) {
     return "Fill owner";
   }
 
-  if (blocker === "missing Button runs next") {
-    return "Choose Button runs next";
+  if (blocker === "missing next action") {
+    return "Choose next action";
   }
 
   return persistenceVerb();
@@ -5022,32 +5022,32 @@ function memoryNoteSaveState(pack, note) {
     return {
       canSave: false,
       help: state.packs.length === 0
-        ? "Where: Memory. Blocker: no work exists. Button runs next: create or reset work before adding memory."
-        : "Where: Memory. Blocker: no work is selected. Button runs next: choose work before adding memory."
+        ? "Where: Memory. Blocker: no work exists. Next action: create or reset work before adding memory."
+        : "Where: Memory. Blocker: no work is selected. Next action: choose work before adding memory."
     };
   }
 
   if (!String(note || "").trim()) {
     return {
       canSave: false,
-      help: `Where: Memory. Blocker: memory note is empty. Button runs next: type a note for ${workTitle(pack)}.`
+      help: `Where: Memory. Blocker: memory note is empty. Next action: type a note for ${workTitle(pack)}.`
     };
   }
 
   return {
     canSave: true,
-    help: `Where: Memory. Blocker: None. Button runs next: add memory note to ${workTitle(pack)}.`
+    help: `Where: Memory. Blocker: None. Next action: add memory note to ${workTitle(pack)}.`
   };
 }
 
 function memoryRouteStatus(pack) {
   if (pack) {
-    return `Where: Memory / ${workTitle(pack)}. Blocker: memory note is empty. Button runs next: type a note for ${workTitle(pack)}.`;
+    return `Where: Memory / ${workTitle(pack)}. Blocker: memory note is empty. Next action: type a note for ${workTitle(pack)}.`;
   }
 
   return state.packs.length === 0
-    ? "Where: Memory. Blocker: no work exists. Button runs next: create or reset work before adding memory."
-    : "Where: Memory. Blocker: no work is selected. Button runs next: choose work before adding memory.";
+    ? "Where: Memory. Blocker: no work exists. Next action: create or reset work before adding memory."
+    : "Where: Memory. Blocker: no work is selected. Next action: choose work before adding memory.";
 }
 
 function bindMemoryValidation(pack) {
@@ -5081,8 +5081,8 @@ function packDetailSaveState(pack) {
     return {
       canSave: false,
       help: state.packs.length === 0
-        ? "Where: Work path. Blocker: no work exists. Button runs next: create or reset work before saving."
-        : "Where: Work path. Blocker: no work is selected. Button runs next: choose work before saving."
+        ? "Where: Work path. Blocker: no work exists. Next action: create or reset work before saving."
+        : "Where: Work path. Blocker: no work is selected. Next action: choose work before saving."
     };
   }
 
@@ -5090,14 +5090,14 @@ function packDetailSaveState(pack) {
   if (blockerIssue) {
     return {
       canSave: false,
-      help: `Where: Work path. Blocker: ${blockerIssue}. Button runs next: ${blockerModeFixNext(blockerIssue)}.`
+      help: `Where: Work path. Blocker: ${blockerIssue}. Next action: ${blockerModeFixNext(blockerIssue)}.`
     };
   }
 
   if (ownerBlockerNeedsClear()) {
     return {
       canSave: false,
-      help: "Where: Work path. Blocker: owner is filled but Blocker is still set. Button runs next: Set Blocker: None."
+      help: "Where: Work path. Blocker: owner is filled but Blocker is still set. Next action: Set Blocker: None."
     };
   }
 
@@ -5105,14 +5105,14 @@ function packDetailSaveState(pack) {
   if (!changed) {
     return {
       canSave: false,
-      help: "Where: Work path. Blocker: no changes to save. Button runs next: edit a field first."
+      help: "Where: Work path. Blocker: no changes to save. Next action: edit a field first."
     };
   }
 
   const pending = pendingPackFromForwardPathForm(pack);
   return {
     canSave: true,
-    help: `Where: Work path. Blocker: ${blockerTextForPack(pending)}. Button runs next: save work path for ${workTitle(pending)}.`
+    help: `Where: Work path. Blocker: ${blockerTextForPack(pending)}. Next action: save work path for ${workTitle(pending)}.`
   };
 }
 
@@ -5123,7 +5123,7 @@ function packDetailSaveNote(stateForSave) {
   }
 
   if (stateForSave.canSave) {
-    return "Unsaved work-path changes. Button runs next saves them first.";
+    return "Unsaved work-path changes. Next action saves them first.";
   }
 
   if (help.includes("no changes to save")) {
@@ -5131,7 +5131,7 @@ function packDetailSaveNote(stateForSave) {
   }
 
   if (help.includes("owner is filled but Blocker is still set")) {
-    return "Owner is filled. Button runs next saves Blocker: None.";
+    return "Owner is filled. Next action saves Blocker: None.";
   }
 
   return help.replace(/^Where: Work path\. /, "");
@@ -5332,7 +5332,7 @@ function syncBlockerFieldHelp() {
     const clearHelp = ownerResolvedBlocker
       ? "Owner filled; Set Blocker: None saves this fix."
       : "None stores Blocker: None automatically; no typing required.";
-    help.textContent = issue || (hasBlocker && !ownerResolvedBlocker ? "Blocked pauses Button runs next until this reason clears." : clearHelp);
+    help.textContent = issue || (hasBlocker && !ownerResolvedBlocker ? "Blocked pauses Next action until this reason clears." : clearHelp);
   }
   syncOwnerBlockerGuide();
 }
@@ -5392,14 +5392,14 @@ function ownerBlockerResolutionHelp() {
 
 function ownerBlockerResolutionDisabledReason(blocker, owner) {
   if (!normalizeCopy(blocker).toLowerCase().includes("owner")) {
-    return "Where: Blocker. Blocker: not owner-related. Button runs next: choose None or edit the blocker reason.";
+    return "Where: Blocker. Blocker: not owner-related. Next action: choose None or edit the blocker reason.";
   }
 
   if (isMissingOwnerValue(owner)) {
-    return "Where: Blocker. Blocker: owner is still missing. Button runs next: fill Owner before setting Blocker: None.";
+    return "Where: Blocker. Blocker: owner is still missing. Next action: fill Owner before setting Blocker: None.";
   }
 
-  return "Where: Blocker. Blocker: no owner blocker to clear. Button runs next: choose Blocked with an owner blocker first.";
+  return "Where: Blocker. Blocker: no owner blocker to clear. Next action: choose Blocked with an owner blocker first.";
 }
 
 function syncPackDetailForwardPanel(pack) {
@@ -5428,7 +5428,7 @@ function syncPackDetailForwardPanel(pack) {
   syncWorkPathStrip(panel, pending, actionCommand, workflow);
   if (issue) {
     if (head) head.textContent = blockerModeFixNext(issue);
-    setWorkDetailSubtitle(`Fix ${issue}. Button runs next: ${blockerModeFixNext(issue)}.`);
+    setWorkDetailSubtitle(`Fix ${issue}. Next action: ${blockerModeFixNext(issue)}.`);
     syncSelectedWorkTriad(panel, pending, { label: blockerModeFixNext(issue) });
     if (stateLabel) stateLabel.textContent = "Fix blocker";
     if (stateHelp) stateHelp.textContent = issue;
@@ -5448,7 +5448,7 @@ function syncPackDetailForwardPanel(pack) {
 
   if (ownerBlockerNeedsClear()) {
     if (head) head.textContent = "Set Blocker: None";
-    setWorkDetailSubtitle("Owner filled. Button runs next: Set Blocker: None.");
+    setWorkDetailSubtitle("Owner filled. Next action: Set Blocker: None.");
     syncSelectedWorkTriad(panel, pending, { label: "Set Blocker: None" });
     if (stateLabel) stateLabel.textContent = "Fix blocker";
     if (stateHelp) stateHelp.textContent = "Owner is filled; Set Blocker: None saves this blocker fix.";
@@ -5473,11 +5473,11 @@ function syncPackDetailForwardPanel(pack) {
     command.targetPackId = pending.id;
     const editedWorkflow = { ...workflow, label: "Edited", help: "Unsaved work path changes." };
     command.stateText = "Edited";
-    command.stateHelp = `Unsaved work path changes. Button runs next saves them first. After save, the button shows ${nextAfterSave}.`;
+    command.stateHelp = `Unsaved work path changes. Next action saves them first. After save, the button shows ${nextAfterSave}.`;
     command.flowHint = `Flow: save work path, then ${nextAfterSave}.`;
     command.runNote = `Saves pending work path changes. After save, ${nextAfterSave} is visible.`;
     if (head) head.textContent = saveAction;
-    setWorkDetailSubtitle(`Unsaved changes. Button runs next: ${saveAction}.`);
+    setWorkDetailSubtitle(`Unsaved changes. Next action: ${saveAction}.`);
     syncSelectedWorkTriad(panel, pending, { label: saveAction });
     syncWorkPathStrip(panel, pending, { label: saveAction }, editedWorkflow);
   } else if (head) {
@@ -5503,7 +5503,7 @@ function syncWorkPathStrip(panel, pack, command = resolvePrimaryCommandForPack(p
     DEMO_COPY_LIMITS.commandFlowHelp
   );
   const aria = helpCopy(
-    `Work state: ${stateLabel}. Work path: ${current}. Button runs next: ${label}.`,
+    `Work state: ${stateLabel}. Work path: ${current}. Next action: ${label}.`,
     DEMO_COPY_LIMITS.commandFlowHelp
   );
   strip.setAttribute("aria-label", aria);
@@ -5553,7 +5553,7 @@ async function createSamplePack() {
     }
   } catch (error) {
     console.error("Projects demo backend create failed.", error);
-    state.status = `Where: Backend create. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+    state.status = `Where: Backend create. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
     render();
     return;
   }
@@ -5590,7 +5590,7 @@ function initialWorkflowForCreatedPack(title, owner, next) {
   }
 
   if (isPlaceholderNext(next)) {
-    return { status: "draft", blocker: "missing Button runs next" };
+    return { status: "draft", blocker: "missing next action" };
   }
 
   if (isMissingOwnerValue(owner)) {
@@ -5622,7 +5622,7 @@ async function savePackForwardPathFromForm(pack) {
     }
   } catch (error) {
     console.error("Projects demo backend work path action failed.", error);
-    state.status = `Where: Backend work path. Blocker: ${error.message || "API failed"}. Button runs next: retry or refresh.`;
+    state.status = `Where: Backend work path. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
     return false;
   }
 
@@ -5803,10 +5803,10 @@ function isMissingNextAction(pack) {
 
 function isPlaceholderNext(label) {
   const value = String(label || "").trim().toLowerCase();
-  return !value || value === "choose action" || value === "choose next action" || value === "set button runs next" || value === "set next";
+  return !value || value === "choose action" || value === "choose next action" || value === "set next action" || value === "set button runs next" || value === "set next";
 }
 
-function editableButtonRunsNextValue(value) {
+function editableNextActionValue(value) {
   return isPlaceholderNext(value) ? "" : normalizeCopy(value);
 }
 
@@ -5866,7 +5866,7 @@ function blockerTextForPack(pack) {
   }
 
   if (isMissingNextAction(pack)) {
-    return "missing Button runs next";
+    return "missing next action";
   }
 
   return blockerState.label;
@@ -5939,8 +5939,8 @@ function routeButtonReason(route, label) {
     home: "Return to the simplified demo start.",
     work: `Open the ${workNoun(2)} list to choose one ${workNoun(1)}.`,
     review: `Open review ${profile().work} and resolve the next blocker.`,
-    next: "Open Button runs next setup for review work.",
-    create: `Create ${profile().work} with title, owner, and Button runs next.`,
+    next: "Open Next action setup for review work.",
+    create: `Create ${profile().work} with title, owner, and Next action.`,
     memory: `Open Memory to add recall notes to selected ${profile().work}.`
   };
   return reasons[route] || `Open ${label}.`;
@@ -5966,7 +5966,7 @@ function selectedWorkTriad(pack, command = resolvePrimaryCommandForPack(pack)) {
   return `<div class="demo-command-lines compact demo-forward-triad" data-selected-work-triad>
     ${selectedWorkTriadLine("Where", workTitle(pack), "where")}
     ${selectedWorkTriadLine("Blocker", blockerTextForPack(pack), "blocker")}
-    ${selectedWorkTriadLine("Button runs next", command.label, "next")}
+    ${selectedWorkTriadLine("Next action", command.label, "next")}
   </div>`;
 }
 
@@ -5989,7 +5989,7 @@ function syncSelectedWorkTriad(panel, pack, command = resolvePrimaryCommandForPa
   };
   Object.entries(fields).forEach(([key, value]) => {
     const field = panel?.querySelector(`[data-selected-work-field="${key}"] strong`);
-    const label = key === "next" ? "Button runs next" : capitalize(key);
+    const label = key === "next" ? "Next action" : capitalize(key);
     setCopySurface(field, value, label, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   });
 }
@@ -5999,12 +5999,12 @@ function workDetailSubtitle(pack, command = resolvePrimaryCommandForPack(pack)) 
   const due = dueDateLabel(pack.due);
   const duePrefix = due ? `${due}. ` : "";
   if (isMissingNextAction(pack)) {
-    return `${duePrefix}Needs Button runs next. Choose what the main button should do.`;
+    return `${duePrefix}Needs next action. Choose what the main button should do.`;
   }
 
   return hasBlocker(pack)
-    ? `${duePrefix}Blocked by ${blocker}. Button runs next: ${command.label}.`
-    : `${duePrefix}Ready. Button runs next: ${command.label}.`;
+    ? `${duePrefix}Blocked by ${blocker}. Next action: ${command.label}.`
+    : `${duePrefix}Ready. Next action: ${command.label}.`;
 }
 
 function setWorkDetailSubtitle(value) {
@@ -6093,23 +6093,23 @@ function memoryStripActionLabel(pack, latest = latestRelevantMemory(pack)) {
 function memoryStripNextLine(pack) {
   if (!pack) {
     return state.packs.length === 0
-      ? "Button runs next: create or reset work"
-      : "Button runs next: choose work";
+      ? "Next action: create or reset work"
+      : "Next action: choose work";
   }
 
-  return `Button runs next: ${resolvePrimaryCommandForPack(pack).label}`;
+  return `Next action: ${resolvePrimaryCommandForPack(pack).label}`;
 }
 
 function memoryStripActionHelp(pack, latest = latestRelevantMemory(pack)) {
   if (!pack) {
     return state.packs.length === 0
-      ? "Where: Relevant Memory. Blocker: no work exists. Button runs next: create or reset work before adding memory."
-      : "Where: Relevant Memory. Blocker: no work is selected. Button runs next: choose work before adding memory.";
+      ? "Where: Relevant Memory. Blocker: no work exists. Next action: create or reset work before adding memory."
+      : "Where: Relevant Memory. Blocker: no work is selected. Next action: choose work before adding memory.";
   }
 
   return latest
-    ? `Where: Relevant Memory / ${workTitle(pack)}. Blocker: None. Button runs next: open saved memory for this work.`
-    : `Where: Relevant Memory / ${workTitle(pack)}. Blocker: no saved memory note yet. Button runs next: add memory note.`;
+    ? `Where: Relevant Memory / ${workTitle(pack)}. Blocker: None. Next action: open saved memory for this work.`
+    : `Where: Relevant Memory / ${workTitle(pack)}. Blocker: no saved memory note yet. Next action: add memory note.`;
 }
 
 function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
@@ -6122,7 +6122,7 @@ function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
     DEMO_COPY_LIMITS.commandFlowHelp
   );
 
-  return `<div class="demo-work-path" data-work-path="selected-work" aria-label="${escapeAttribute(`Work state: ${workflow.label}. Work path: ${current}. Button runs next: ${command.label}.`)}">
+  return `<div class="demo-work-path" data-work-path="selected-work" aria-label="${escapeAttribute(`Work state: ${workflow.label}. Work path: ${current}. Next action: ${command.label}.`)}">
     <span class="section-label">Work path</span>
     <div class="demo-work-path-steps">
       ${renderWorkPathStepTrail(steps.map((step) => ({ ...step, active: step.id === current })))}
@@ -6145,8 +6145,8 @@ function renderWorkPathStepTrail(steps) {
 function workPathSteps() {
   return [
     { id: "draft", label: "Draft", help: "Set the work path." },
-    { id: "review", label: "Review", help: "Clear the blocker or run Button runs next." },
-    { id: "proof", label: "Proof", help: "Run Button runs next and keep the proof target visible." },
+    { id: "review", label: "Review", help: "Clear the blocker or run Next action." },
+    { id: "proof", label: "Proof", help: "Run Next action and keep the proof target visible." },
     { id: "done", label: "Done", help: "Finish when proof is ready." }
   ];
 }
@@ -6178,22 +6178,22 @@ function dateFieldValue(value) {
   return /^\d{4}-\d{2}-\d{2}$/u.test(date) ? date : "";
 }
 
-function buttonRunsNextSelectField(id, label, value, help = "") {
+function nextActionSelectField(id, label, value, help = "") {
   const describedBy = help ? `${id}-help` : "";
   return `<label class="demo-field demo-action-choice-field" for="${escapeAttribute(id)}">
     <span>${escapeHtml(label)}</span>
     <select id="${escapeAttribute(id)}" class="demo-search-input"${fieldHelpAttributes(describedBy, help)}>
-      ${buttonRunsNextOptions(value).map((option) => `<option value="${escapeAttribute(option.value)}"${option.selected ? " selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
+      ${nextActionOptions(value).map((option) => `<option value="${escapeAttribute(option.value)}"${option.selected ? " selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
     </select>
     ${fieldHelp(id, help)}
   </label>`;
 }
 
-function buttonRunsNextOptions(value) {
-  const current = normalizedButtonRunsNextChoice(value);
-  const options = current && !BUTTON_RUNS_NEXT_CHOICES.includes(current)
-    ? [current, ...BUTTON_RUNS_NEXT_CHOICES]
-    : [...BUTTON_RUNS_NEXT_CHOICES];
+function nextActionOptions(value) {
+  const current = normalizedNextActionChoice(value);
+  const options = current && !NEXT_ACTION_CHOICES.includes(current)
+    ? [current, ...NEXT_ACTION_CHOICES]
+    : [...NEXT_ACTION_CHOICES];
 
   return [
     { value: "", label: "Choose action (required)", selected: !current },
@@ -6201,7 +6201,7 @@ function buttonRunsNextOptions(value) {
   ];
 }
 
-function normalizedButtonRunsNextChoice(value) {
+function normalizedNextActionChoice(value) {
   const current = normalizeCopy(value);
   return current.toLowerCase() === "done" ? "Finish with proof" : current;
 }
@@ -6382,7 +6382,7 @@ function clipboardNoticePanel(controlId) {
     </div>
     <span class="demo-clipboard-detail">${escapeHtml(receipt.detail)}</span>
     <div class="demo-clipboard-next">
-      <span>Button runs next</span>
+      <span>Next action</span>
       <strong>${escapeHtml(receipt.next)}</strong>
     </div>
     ${clipboardPayloadPreviewPanel(receipt)}
@@ -6457,7 +6457,7 @@ function setClipboardCommandReceipt(receipt) {
   state.actionReceipt = {
     kind: "clipboard",
     tone: receipt.kind,
-    summary: helpCopy(`${summary} Where: ${where}. Blocker: ${blocker}. Button runs next: ${next}. Proof target: ${proof}.`, DEMO_COPY_LIMITS.receiptHelp),
+    summary: helpCopy(`${summary} Where: ${where}. Blocker: ${blocker}. Next action: ${next}. Proof target: ${proof}.`, DEMO_COPY_LIMITS.receiptHelp),
     visibleSummary: visibleCopy(summary, DEMO_COPY_LIMITS.receiptVisible),
     where,
     blocker,
@@ -6636,21 +6636,21 @@ function copyWithSelectionFallback(value, targetId = "") {
 }
 
 function clipboardStatus(where, next) {
-  return `Where: ${where}. Blocker: None. Button runs next: ${next}.`;
+  return `Where: ${where}. Blocker: None. Next action: ${next}.`;
 }
 
 function clipboardBlockedStatus() {
-  return "Where: Clipboard. Blocker: browser blocked clipboard access. Button runs next: copy from the visible text area.";
+  return "Where: Clipboard. Blocker: browser blocked clipboard access. Next action: copy from the visible text area.";
 }
 
 function emptyState(text, help = "Use the nearby controls or reset demo data.", context = emptyStateContext()) {
-  const label = `Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Button runs next: ${context.next}.`;
+  const label = `Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Next action: ${context.next}.`;
   return `<div class="demo-empty" role="note" aria-label="${escapeAttribute(label)}">
     <strong>${escapeHtml(text)}</strong>
     <span><b>How to fill:</b> ${escapeHtml(help)}</span>
     <small><b>Where:</b> ${escapeHtml(context.where)}</small>
     <small><b>Blocker:</b> ${escapeHtml(context.blocker)}</small>
-    <small><b>Button runs next:</b> ${escapeHtml(context.next)}</small>
+    <small><b>Next action:</b> ${escapeHtml(context.next)}</small>
   </div>`;
 }
 
@@ -6734,7 +6734,15 @@ function normalizeLegacyVisibleCopy(value) {
   if (typeof value === "string") {
     return value
       .replace(/Button-runs-next/g, "Button runs next")
-      .replace(/Button Runs Next/g, "Button runs next");
+      .replace(/Button Runs Next/g, "Button runs next")
+      .replace(/missing Button runs next/g, "missing next action")
+      .replace(/Set Button runs next/g, "Set next action")
+      .replace(/set Button runs next/g, "set next action")
+      .replace(/Needs Button runs next/g, "Needs next action")
+      .replace(/Choose Button runs next/g, "Choose next action")
+      .replace(/choose Button runs next/g, "choose next action")
+      .replace(/Button runs next/g, "Next action")
+      .replace(/button runs next/g, "next action");
   }
 
   if (Array.isArray(value)) {

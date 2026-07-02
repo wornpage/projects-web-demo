@@ -279,7 +279,7 @@ Use a thinner frontend:
 Do not rely on obfuscation for security.
 
 The first server-side slice is pack workflow execution. In backend app mode,
-pack creation runs through `POST /api/packs`, `Button runs next` changes run
+pack creation runs through `POST /api/packs`, `Next action` changes run
 through `POST /api/packs/{id}/next`, selected-work command previews run
 through `GET /api/packs/{id}/command`, work-path edits run through
 `POST /api/packs/{id}/path`, memory notes run through `POST
