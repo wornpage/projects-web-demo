@@ -121,8 +121,7 @@ const copyProfiles = {
   general: { work: "work", workOne: "work item", workMany: "work items", newWork: "New work", result: "Result", sources: "Sources" },
   dj: { work: "gig", workOne: "gig", workMany: "gigs", newWork: "Book gig", result: "Set recording", sources: "Source refs" },
   developer: { work: "task", workOne: "task", workMany: "tasks", newWork: "New task", result: "PR or commit", sources: "Repos and docs" },
-  climate: { work: "site check", workOne: "site check", workMany: "site checks", newWork: "New check", result: "Finding", sources: "Datasets and notes" },
-  finance: { work: "close item", workOne: "close item", workMany: "close items", newWork: "New close item", result: "Sign-off", sources: "Statements and reports" }
+  climate: { work: "site check", workOne: "site check", workMany: "site checks", newWork: "New check", result: "Finding", sources: "Datasets and notes" }
 };
 
 const DEMO_SCENARIOS = [
@@ -190,54 +189,6 @@ const DEMO_SCENARIOS = [
           ...pack,
           due: todayIsoDate()
         })
-  },
-  {
-    id: "close",
-    label: "Month-end close",
-    description: "Day-1 through Day-5 close items with blockers, due dates, and sign-off proofs.",
-    profile: "finance",
-    route: "review",
-    filter: "review",
-    transform: (packs) => {
-      const titles = [
-        "Reconcile cash accounts",
-        "Post month-end accruals",
-        "Flux review — revenue",
-        "Bank rec — operating account",
-        "Review intercompany balances",
-        "Fixed asset roll-forward",
-        "Prepaid amortization schedule",
-        "Accrued liabilities review",
-        "Equity reconciliation",
-        "AP aging review",
-        "AR subledger tie-out",
-        "Financial statement tie-out",
-        "Sign-off package prep"
-      ];
-      const blockers = [
-        "missing bank statement",
-        "waiting on sign-off",
-        "unreconciled entry",
-        "pending flux review",
-        "needs supporting doc"
-      ];
-      return packs.map((pack, index) => {
-        const day = (index % 5) + 1;
-        const daysOut = day - 1;
-        const due = new Date();
-        due.setDate(due.getDate() + daysOut);
-        const dueStr = due.toISOString().slice(0, 10);
-        return pack.status === "done" ? pack : {
-          ...pack,
-          title: titles[index % titles.length],
-          blocker: blockers[index % blockers.length],
-          next: "Open",
-          due: dueStr,
-          owner: pack.owner === "No owner" ? "Preparer pending" : pack.owner,
-          status: "blocked"
-        };
-      });
-    }
   },
   {
     id: "empty",

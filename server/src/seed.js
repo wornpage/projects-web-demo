@@ -440,7 +440,6 @@ function stateWorkLabel(profile) {
     climate: "site check",
     developer: "task",
     dj: "gig",
-    finance: "close item",
     general: "work"
   };
   return labels[profile] || labels.general;
