@@ -4144,11 +4144,15 @@ function burstConfetti() {
   const container = document.createElement("div");
   container.className = "demo-confetti-burst";
   container.setAttribute("aria-hidden", "true");
+  const randomBytes = new Uint8Array(60);
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(randomBytes);
+  }
   for (let i = 0; i < 20; i++) {
     const particle = document.createElement("span");
-    const leftClass = `demo-confetti-left-${Math.floor(Math.random() * 10)}`;
-    const delayClass = `demo-confetti-delay-${Math.floor(Math.random() * 5)}`;
-    const durClass = `demo-confetti-dur-${Math.floor(Math.random() * 4)}`;
+    const leftClass = `demo-confetti-left-${randomBytes[i * 3] % 10}`;
+    const delayClass = `demo-confetti-delay-${randomBytes[i * 3 + 1] % 5}`;
+    const durClass = `demo-confetti-dur-${randomBytes[i * 3 + 2] % 4}`;
     particle.className = `demo-confetti-particle ${leftClass} ${delayClass} ${durClass}`;
     particle.textContent = emojis[i % emojis.length];
     container.appendChild(particle);
