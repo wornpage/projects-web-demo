@@ -441,10 +441,10 @@ try {
     "/assets/demo-metadata.json",
     "/assets/not-allowlisted.txt",
     "/assets/private/demo.js",
-    "/data/demo-packs.json",
     "/data/not-allowlisted.json",
     "/render.yaml"
   ].map(async (pathname) => [pathname, await readStatus(pathname)]));
+  const liveSeedDataStatus = await readStatus("/data/demo-packs.json");
   const hostedNonPublicRepoStatuses = await Promise.all([
     "/README.md",
     "/Dockerfile",
@@ -473,7 +473,7 @@ try {
   check("app shell opts out of search indexing", htmlResponse.headers.get("x-robots-tag") === "noindex, nofollow, noarchive", htmlResponse.headers.get("x-robots-tag") || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API config loads before the frontend script", runtimeConfigPath && html.indexOf("assets/runtime-config.js") < html.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
-  check("runtime API config is served as same-origin JavaScript", runtimeConfig.includes("window.PROJECTS_API_BASE_URL = location.origin;"), runtimeConfig.trim() || "missing");
+  check("runtime API config is served as same-origin JavaScript", runtimeConfig.startsWith("window.__projectsDemoConfig=") && runtimeConfig.includes("\"apiBase\":\"\"") && runtimeConfig.includes("window.PROJECTS_API_BASE_URL=") && !/https?:\/\//u.test(runtimeConfig), runtimeConfig.trim() || "missing");
   check("sync copy-code control is deployed", html.includes('id="sync-code-copy-code"') && html.includes("Copy code"), "sync-code-copy-code");
   check("app shell contains no inline scripts", !hasInlineScript(html), "external scripts only");
   check("script policy avoids unsafe inline scripts", scriptSrcDirective(csp) === "script-src 'self'", scriptSrcDirective(csp) || "missing");
@@ -498,7 +498,8 @@ try {
   check("recovery controls are deployed", script.includes("copy-recovery-state") && script.includes("restore-recovery-state"), "copy/restore recovery controls");
   check("public assets have no source map references", publicSourceMapReferences.length === 0, publicSourceMapReferences.join(", ") || "absent");
   check("public assets hide private paths", publicPrivatePathReferences.length === 0, publicPrivatePathReferences.join(", ") || "absent");
-  check("source map, retired metadata, unlisted public files, direct seed JSON, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
+  check("source map, retired metadata, unlisted public files, and retired provider config are not served", sourceMapStatuses.every(([, status]) => status === 404), sourceMapStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
+  check("public seed data stays readable", liveSeedDataStatus === 200, liveSeedDataStatus);
   check("hosted non-public repo files are not served", hostedNonPublicRepoStatuses.every(([, status]) => status === 404), hostedNonPublicRepoStatuses.map(([pathname, status]) => `${pathname}:${status}`).join(", "));
   check("API state route returns demo packs", Array.isArray(liveState.packs) && liveState.packs.length > 0, `${liveState.packs?.length || 0} pack(s)`);
   check("API seed data route returns demo packs", Array.isArray(liveSeedPacks) && liveSeedPacks.length > 0, `${liveSeedPacks?.length || 0} pack(s)`);
