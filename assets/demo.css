@@ -329,12 +329,12 @@ h3,
   --demo-work-card-shadow: var(--cockpit-shadow-sm);
   --demo-work-card-hover-shadow: 0 10px 22px rgba(35, 29, 18, 0.12), 0 1px 0 rgba(255, 255, 255, 0.9);
   --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.28), var(--demo-work-card-hover-shadow);
-  --demo-work-card-alert-border: #4f9a88;
-  --demo-card-inner-bg: #faf5ed;
-  --demo-card-inner-border: #d3c8b8;
-  --demo-card-divider: #d2c7b7;
+  --demo-work-card-alert-border: var(--cockpit-accent);
+  --demo-card-inner-bg: var(--cockpit-nav-bg);
+  --demo-card-inner-border: var(--cockpit-border);
+  --demo-card-divider: var(--cockpit-border);
   --demo-card-command-bg: #d9eee7;
-  --demo-card-memory-bg: #e3f3ee;
+  --demo-card-memory-bg: var(--cockpit-accent-50);
   --demo-card-memory-border: #9fc6b8;
   --demo-card-meta-bg: #faf4eb;
   --demo-card-status-bg: #e7f5ec;
@@ -388,11 +388,11 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-command-line-border: var(--cockpit-border);
   --demo-command-bg: var(--cockpit-surface);
   --demo-meta-bg: var(--cockpit-nav-bg);
-  --demo-work-card-bg: #24302b;
-  --demo-work-card-border: #70877d;
-  --demo-work-card-shadow: 0 10px 22px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --demo-work-card-hover-shadow: 0 12px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --demo-work-card-selected-shadow: 0 0 0 2px rgba(76, 164, 143, 0.42), var(--demo-work-card-hover-shadow);
+  --demo-work-card-bg: var(--cockpit-surface);
+  --demo-work-card-border: var(--cockpit-border);
+  --demo-work-card-shadow: var(--cockpit-shadow-sm);
+  --demo-work-card-hover-shadow: var(--cockpit-shadow-md, var(--cockpit-shadow-sm));
+  --demo-work-card-selected-shadow: 0 0 0 2px var(--cockpit-accent);
   --demo-work-card-alert-border: #5cae9b;
   --demo-card-inner-bg: #101916;
   --demo-card-inner-border: #75847b;
@@ -5760,9 +5760,9 @@ html[data-theme="dark"] .demo-command-work-path {
 }
 
 .demo-app-shell {
-  --demo-work-card-bg: #fffaf1;
+  --demo-work-card-bg: var(--cockpit-surface);
   --demo-work-card-bg-alt: #fff7e7;
-  --demo-work-card-border: #837661;
+  --demo-work-card-border: var(--cockpit-border);
   --demo-work-card-shadow: 0 0 0 1px rgba(82, 63, 35, 0.14), 0 10px 20px rgba(35, 29, 18, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --demo-work-card-hover-shadow: 0 0 0 1px rgba(82, 63, 35, 0.2), 0 12px 24px rgba(35, 29, 18, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.42), 0 12px 24px rgba(35, 29, 18, 0.18);
@@ -5771,8 +5771,8 @@ html[data-theme="dark"] .demo-command-work-path {
   --demo-card-divider: #b9a993;
   --demo-card-command-bg: #d8eee7;
   --demo-card-memory-bg: #e4f2ed;
-  --demo-card-memory-border: #88b4a4;
-  --demo-card-status-bg: #e4f2ed;
+  --demo-card-memory-border: var(--cockpit-accent);
+  --demo-card-status-bg: var(--cockpit-accent-50);
   --demo-card-status-border: #8daf9f;
   --demo-card-field-bg: #fffdf8;
   --demo-card-field-bg-alt: #fbf1df;
@@ -5790,9 +5790,9 @@ html[data-theme="dark"] .demo-command-work-path {
 
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
-  --demo-work-card-bg: #18251f;
+  --demo-work-card-bg: var(--cockpit-surface);
   --demo-work-card-bg-alt: #121f1a;
-  --demo-work-card-border: #a8beb4;
+  --demo-work-card-border: var(--cockpit-border);
   --demo-work-card-shadow: 0 0 0 1px rgba(212, 244, 232, 0.2), 0 10px 22px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --demo-work-card-hover-shadow: 0 0 0 1px rgba(212, 244, 232, 0.3), 0 12px 24px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   --demo-work-card-selected-shadow: 0 0 0 2px rgba(117, 218, 195, 0.68), 0 12px 24px rgba(0, 0, 0, 0.6);
@@ -5802,7 +5802,7 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-card-command-bg: #17352d;
   --demo-card-memory-bg: #15312a;
   --demo-card-memory-border: #62a892;
-  --demo-card-status-bg: #173f35;
+  --demo-card-status-bg: var(--cockpit-accent-50);
   --demo-card-status-border: #66b39e;
   --demo-card-field-bg: #101d18;
   --demo-card-field-bg-alt: #142720;
