@@ -80,7 +80,7 @@ html[data-theme="forest"] {
   --cockpit-border-strong: #556b4e;
   --cockpit-text: #e8f2e0;
   --cockpit-text-secondary: #c5d6bf;
-  --cockpit-text-muted: #8c9e84;
+  --cockpit-text-muted: #9aaa9c;
   --cockpit-hover-bg: #1e3819;
   --cockpit-success-bg: #0a2e0a;
   --cockpit-success-border: #4ade80;
@@ -108,7 +108,7 @@ html[data-theme="ocean"] {
   --cockpit-border-strong: #4a6b8a;
   --cockpit-text: #e6eff7;
   --cockpit-text-secondary: #c5d5e6;
-  --cockpit-text-muted: #8aa0b8;
+  --cockpit-text-muted: #97b0c5;
   --cockpit-hover-bg: #152a42;
   --cockpit-success-bg: #0a2e1a;
   --cockpit-success-border: #34d399;
@@ -136,7 +136,7 @@ html[data-theme="sepia"] {
   --cockpit-border-strong: #6b5a48;
   --cockpit-text: #efe0cc;
   --cockpit-text-secondary: #d4c5b0;
-  --cockpit-text-muted: #a89880;
+  --cockpit-text-muted: #b09070;
   --cockpit-hover-bg: #3a2818;
   --cockpit-success-bg: #1e2e0a;
   --cockpit-success-border: #65a30d;
@@ -335,7 +335,7 @@ h3,
   --demo-primary-bg: var(--cockpit-accent);
   --demo-primary-border: var(--cockpit-accent);
   --demo-primary-focus-bg: #56ad9c;
-  --demo-primary-on-accent: #f7fffc;
+  --demo-primary-on-accent: var(--cockpit-accent-text);
   --demo-form-band-bg: var(--cockpit-nav-bg);
   --demo-form-section-bg: var(--cockpit-surface);
   --demo-form-field-bg: var(--cockpit-surface);
@@ -367,10 +367,10 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-card-banner-bg: var(--cockpit-nav-bg);
   --demo-command-accent: var(--cockpit-selected-bg);
   --demo-focus-ring: var(--cockpit-accent);
-  --demo-primary-bg: #1d6f64;
-  --demo-primary-border: #5cae9b;
-  --demo-primary-focus-bg: #155a50;
-  --demo-primary-on-accent: #f7fffc;
+  --demo-primary-bg: var(--cockpit-accent);
+  --demo-primary-border: var(--cockpit-accent);
+  --demo-primary-focus-bg: var(--cockpit-accent-hover);
+  --demo-primary-on-accent: var(--cockpit-accent-text);
   --demo-command-line-accent: var(--cockpit-border-strong);
   --demo-command-line-border: var(--cockpit-border);
   --demo-command-bg: var(--cockpit-surface);
