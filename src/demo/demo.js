@@ -2507,6 +2507,18 @@ function commandWorkPathDetail(command, pack) {
   return `Next action: ${visibleCopy(command.next, DEMO_COPY_LIMITS.commandFlowVisible)}`;
 }
 
+function commandActionDisplayLabel(next = "") {
+  const value = normalizeCopy(next).toLowerCase();
+  if (value === "open") return "Open work path";
+  if (value === "start") return "Start work";
+  if (value === "set blocker: none" || value === "unblock") return "Clear blocker";
+  if (value === "review" || value === "review blocker") return "Review blocker";
+  if (value === "done" || value === "finish with proof") return "Mark done";
+  if (value === "set next action") return "Pick what runs next";
+  if (value === "loading backend command") return "Loading…";
+  return next;
+}
+
 function commandRunLabel(command) {
   const runNote = normalizeCopy(command.runNote);
   const runCopy = runNote ? ` ${runNote}.` : "";
@@ -3229,13 +3241,14 @@ function renderPackDetail() {
           <span class="section-label">${escapeHtml(workLabelTitle())} path</span>
           <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
           <p class="demo-pack-subtitle"${copySurfaceAttributes("Work path summary", detailSubtitle)}>${escapeHtml(detailSubtitle.visible)}</p>
+          ${pack.purpose ? `<p class="demo-pack-purpose">${escapeHtml(pack.purpose)}</p>` : ""}
         </div>
         <span class="demo-status">${escapeHtml(persistenceEditStatus("Edits stay in this browser"))}</span>
       </div>
       <div class="demo-forward-panel" data-forward-motion="pack-detail">
         <div class="demo-forward-head">
-          <span class="section-label">Next step</span>
-          <strong>${escapeHtml(packCommand.label)}</strong>
+          <span class="section-label">What to do</span>
+          <strong>${escapeHtml(commandActionDisplayLabel(packCommand.next))}</strong>
         </div>
         ${workPathStrip(pack, packCommand)}
         ${selectedWorkTriad(pack, packCommand)}
@@ -3823,7 +3836,7 @@ function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPac
 function packPrimaryActionButton(command) {
   const pending = isBackendCommandPending(command);
   const copy = pending ? backendCommandPendingReason(command) : commandRunLabel(command);
-  const label = command.next || "Open work list";
+  const label = commandActionDisplayLabel(command.next) || command.next || "Open work list";
   const stateAttributes = pending
     ? `${disabledReasonAttributes(true, copy)} aria-label="${escapeAttribute(copy)}"`
     : ` title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}"`;
