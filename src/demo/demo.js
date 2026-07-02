@@ -920,7 +920,7 @@ function backendPackCommandForSelected(pack) {
   const preview = backendPackCommandCache.get(key);
   if (!preview) {
     scheduleBackendPackCommandPreview(pack);
-    return backendCommandPendingForPack(pack);
+    return null;
   }
 
   const localCommand = resolvePrimaryCommandForPack(pack);
