@@ -198,22 +198,46 @@ const DEMO_SCENARIOS = [
     profile: "finance",
     route: "review",
     filter: "review",
-    transform: (packs) => packs.map((pack, index) => {
-      const day = (index % 5) + 1;
-      const daysOut = day - 1;
-      const due = new Date();
-      due.setDate(due.getDate() + daysOut);
-      const dueStr = due.toISOString().slice(0, 10);
-      const blockers = ["missing bank statement", "waiting on sign-off", "unreconciled entry", "pending flux review", "needs supporting doc"];
-      return pack.status === "done" ? pack : {
-        ...pack,
-        blocker: blockers[index % blockers.length],
-        next: "Open",
-        due: dueStr,
-        owner: pack.owner === "No owner" ? "Preparer pending" : pack.owner,
-        status: "blocked"
-      };
-    })
+    transform: (packs) => {
+      const titles = [
+        "Reconcile cash accounts",
+        "Post month-end accruals",
+        "Flux review — revenue",
+        "Bank rec — operating account",
+        "Review intercompany balances",
+        "Fixed asset roll-forward",
+        "Prepaid amortization schedule",
+        "Accrued liabilities review",
+        "Equity reconciliation",
+        "AP aging review",
+        "AR subledger tie-out",
+        "Financial statement tie-out",
+        "Sign-off package prep"
+      ];
+      const blockers = [
+        "missing bank statement",
+        "waiting on sign-off",
+        "unreconciled entry",
+        "pending flux review",
+        "needs supporting doc"
+      ];
+      return packs.map((pack, index) => {
+        const day = (index % 5) + 1;
+        const daysOut = day - 1;
+        const due = new Date();
+        due.setDate(due.getDate() + daysOut);
+        const dueStr = due.toISOString().slice(0, 10);
+        return pack.status === "done" ? pack : {
+          ...pack,
+          title: titles[index % titles.length],
+          blocker: blockers[index % blockers.length],
+          next: "Open",
+          due: dueStr,
+          owner: pack.owner === "No owner" ? "Preparer pending" : pack.owner,
+          status: "blocked"
+        };
+      });
+    }
   },
   {
     id: "empty",
