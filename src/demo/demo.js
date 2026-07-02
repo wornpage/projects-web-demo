@@ -971,7 +971,7 @@ function backendCommandPendingReason() {
 }
 
 function backendCommandPendingFlowHint() {
-  return "Flow: wait for the backend command preview, then run next.";
+  return "Flow: wait for the backend command preview, then do next.";
 }
 
 function scheduleBackendPackCommandPreview(pack) {
@@ -2057,15 +2057,15 @@ function commandForRoute(selected, visibleCount, reviewCount) {
 
   const routeCommandsHints = {
     home: hasSampleWork ? "Review blocked work first." : "Create work, then review it.",
-    work: selectedActionFlow ? `${selectedActionFlow}` : "Flow: choose work, run next.",
+    work: selectedActionFlow ? `${selectedActionFlow}` : "Flow: choose work, do next.",
     review: selectedActionFlow
       ? `${selectedActionFlow}`
       : "Flow: resolve blockers first.",
-    next: "Flow: set button, return, run next.",
+    next: "Flow: set button, return, do next.",
     memory: selected
       ? memoryRouteFlowHint(selected)
       : (hasSampleWork ? "Flow: choose work, add memory." : "Flow: create work, add memory."),
-    pack: selected ? `${selectedActionFlow}` : "Flow: review work, run next.",
+    pack: selected ? `${selectedActionFlow}` : "Flow: review work, do next.",
     create: createRouteFlowHint(createCommand)
   };
 
@@ -2118,7 +2118,7 @@ function createFocusActionForBlocker(blocker) {
 
 function createRouteFlowHint(command) {
   if (command?.action === "create-sample") {
-    return "Flow: save work, review, run next.";
+    return "Flow: save work, review, do next.";
   }
 
   return `Flow: ${normalizeCopy(command?.next).toLowerCase()}, then save work.`;
@@ -2162,7 +2162,7 @@ function memoryRouteFlowHint(selected) {
 
 function selectedFlowHintForPack(pack, command = resolvePrimaryCommandForPack(pack), blocker = blockerTextForPack(pack)) {
   if (!pack) {
-    return "Flow: choose work, run next.";
+    return "Flow: choose work, do next.";
   }
 
   const title = workTitle(pack);
@@ -2325,7 +2325,7 @@ function updateCommand(command) {
   el("command-state").setAttribute("aria-label", command.stateHelp || `State: ${command.stateText}`);
   el("command-scope").textContent = command.scope;
   if (el("command-flow")) {
-    const flowHint = commandFlowCopy(command.flowHint || "Flow: choose work, run next.");
+    const flowHint = commandFlowCopy(command.flowHint || "Flow: choose work, do next.");
     el("command-flow").textContent = visibleCopy(flowHint, DEMO_COPY_LIMITS.commandFlowVisible);
     el("command-flow").title = helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp);
     el("command-flow").setAttribute("aria-label", helpCopy(flowHint, DEMO_COPY_LIMITS.commandFlowHelp));
@@ -2376,7 +2376,7 @@ function syncCommandActionButton(control, command) {
 }
 
 function commandFlowCopy(flowHint) {
-  const hint = normalizeCopy(flowHint) || "Flow: choose work, run next.";
+  const hint = normalizeCopy(flowHint) || "Flow: choose work, do next.";
   return hint.replace(/^Flow:\s*/iu, "Next step: ");
 }
 
@@ -2514,7 +2514,7 @@ function commandActionDisplayLabel(next = "") {
   if (value === "set blocker: none" || value === "unblock") return "Clear blocker";
   if (value === "review" || value === "review blocker") return "Review blocker";
   if (value === "done" || value === "finish with proof") return "Mark done";
-  if (value === "set next action") return "Pick what runs next";
+  if (value === "set next action") return "Pick what to do next";
   if (value === "loading backend command") return "Loading…";
   return next;
 }
@@ -3792,7 +3792,7 @@ function cardFact(label, value) {
 
 function primaryCommandButton(pack, className = "btn btn-primary") {
   const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);
-  const label = command ? commandActionDisplayLabel(command.next) : "Run next";
+  const label = command ? commandActionDisplayLabel(command.next) : "Do next";
   const reason = command
     ? primaryCommandReason(pack, command)
     : `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: server preview before running.`;
@@ -4015,7 +4015,7 @@ function bindListActions() {
 function actionLabelFromKey(action) {
   const labels = {
     select: "Select",
-    "run-next": "Run next",
+    "run-next": "Do next",
     review: "Review",
     "set-next": "Set next action",
     "review-work": "Review work",
@@ -6471,8 +6471,8 @@ function renderWorkPathStepTrail(steps) {
 function workPathSteps() {
   return [
     { id: "draft", label: "Draft", help: "Set the work path." },
-    { id: "review", label: "Review", help: "Clear the blocker or run Next action." },
-    { id: "proof", label: "Proof", help: "Run Next action and keep the proof target visible." },
+    { id: "review", label: "Review", help: "Clear the blocker or use the Do next button." },
+    { id: "proof", label: "Proof", help: "Use the Do next button and keep the proof target visible." },
     { id: "done", label: "Done", help: "Finish when proof is ready." }
   ];
 }
