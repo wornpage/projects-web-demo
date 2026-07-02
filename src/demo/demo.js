@@ -1884,7 +1884,7 @@ function render() {
   if (DEMO_API_BASE_URL) {
     const current = currentPack();
     const isLoadingBackendCommand = current && pendingBackendPackCommandRequests.has(backendPackCommandCacheKey(current));
-    el("screen-content").style.opacity = isLoadingBackendCommand ? "0.6" : "";
+    el("screen-content").classList.toggle("loading", isLoadingBackendCommand);
   }
 
   switch (state.route) {
@@ -4490,7 +4490,8 @@ async function handlePackAction(id, action) {
 
   if (action === "select") {
     state.status = selectedWorkStatus("Work list", pack);
-    queueFocus("selected-card", pack.id);
+    go("work", pack.id);
+    return;
   } else if (action === "run-next") {
     runResolvedPackAction(pack);
     return;

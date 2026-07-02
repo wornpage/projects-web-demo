@@ -4,6 +4,10 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const terser = require("../server/node_modules/terser");
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(repoRoot, "src", "demo", "demo.js");
@@ -28,7 +32,16 @@ if (checkOnly) {
 
 async function readGeneratedSource() {
   const source = await fs.readFile(sourcePath, "utf8");
-  return source.replace(/\r\n?/gu, "\n");
+  const normalized = source.replace(/\r\n?/gu, "\n");
+  const result = await terser.minify(normalized, {
+    compress: true,
+    mangle: true,
+    output: { comments: false }
+  });
+  if (result.error) {
+    throw new Error(`Terser minification failed: ${result.error}`);
+  }
+  return result.code || normalized;
 }
 
 function assertSourceSyntax() {
