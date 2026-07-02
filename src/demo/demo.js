@@ -4770,7 +4770,6 @@ async function handlePackAction(id, action) {
     pack.status = "done";
     pack.blocker = DEMO_BLOCKER_NONE;
     pack.blockedBy = "";
-    pack.next = "Open";
     const changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, proofSavedActivity(pack));
