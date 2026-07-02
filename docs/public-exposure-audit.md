@@ -35,7 +35,7 @@ Observed responses:
 |---|---:|---|
 | `/` | `200` | Public app shell |
 | `/assets/demo.js` | `200` | Public browser logic |
-| `/data/demo-packs.json` | `404` | Static sample data file is not served by the hosted app |
+| `/data/demo-packs.json` | `200` | Public seed data, also committed to the repo and served by the static demo |
 | `/README.md` | `404` | Repo docs not served by Outplane |
 | `/Dockerfile` | `404` | Deploy file not served by Outplane |
 | `/.git/config` | `404` | Git metadata not served |
@@ -204,7 +204,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Browser-side diagnostic metadata is public | Fixed | Removed the public metadata asset and retired browser-side audit helpers |
 | Docker image contains extra docs/source helpers | Fixed | Docker uses a build stage for generated-asset verification, frontend protection, and package install, then the runtime stage copies only pruned production dependencies, named public files, seed JSON, and `server/server.js` |
 | Broad shared app stylesheet is public | Fixed | Removed `assets/app.css`; demo-owned tokens now live in `assets/demo.css` |
-| Hosted app serves static sample JSON directly | Fixed | `/data/demo-packs.json` is no longer served by the app server; seed work loads through `GET /api/demo-packs` with the browser client key |
+| Hosted app serves static sample JSON directly | True | `/data/demo-packs.json` is committed public seed data already published by the static demo; the hosted app serves it read-only while keyed `GET /api/demo-packs` stays the app load path |
 | Hosted seed API accepts unkeyed reads | Fixed | Local and live gates prove `/api/demo-packs` rejects missing browser keys |
 | Server-owned workflow reads accept unkeyed requests | Fixed | Local and live gates prove `/api/packs` and `/api/packs/{id}/command` reject missing browser keys |
 | Backend app mode can briefly run browser fallback commands | Fixed | Selected-work command controls wait in a disabled state until `/api/packs/{id}/command` returns |

@@ -17,7 +17,7 @@ try {
   const byRisk = new Map(rows.map((row) => [row.risk, row]));
 
   check("observed response table is present", observedRows.length > 0, `${observedRows.length} row(s)`);
-  requireObservedResult(observedByPath, "/data/demo-packs.json", "404");
+  requireObservedResult(observedByPath, "/data/demo-packs.json", "200");
   requireObservedResult(observedByPath, "/api/demo-packs without client key", "400");
   requireObservedResult(observedByPath, "/api/demo-packs with client key", "200");
   requireObservedResult(observedByPath, "/api/packs without client key", "400");
