@@ -116,18 +116,18 @@ for (const required of requiredRows) {
 
 check(
   "server package exposes compliance audit check",
-  packageJson.scripts?.["compliance:check"] === "node ../scripts/check-north-star-audit.mjs",
+  packageJson.scripts?.["compliance:check"] === "node ../scripts/check-compliance-audit.mjs",
   packageJson.scripts?.["compliance:check"] || "missing"
 );
-check("README lists north star audit doc", readme.includes("`docs/compliance-audit.md`"), "docs/compliance-audit.md");
-check("README lists north star audit check", readme.includes("`scripts/check-north-star-audit.mjs`"), "scripts/check-north-star-audit.mjs");
-check("README ship summary includes north star audit", readme.includes("Compliance audit"), "Compliance audit");
-check("server README ship summary includes north star audit", serverReadme.includes("Compliance audit"), "Compliance audit");
-check("ship gate runs north star audit", includesAll(shipGate, [
+check("README lists compliance audit doc", readme.includes("`docs/compliance-audit.md`"), "docs/compliance-audit.md");
+check("README lists compliance audit check", readme.includes("`scripts/check-compliance-audit.mjs`"), "scripts/check-compliance-audit.mjs");
+check("README ship summary includes compliance audit", readme.includes("Compliance audit"), "Compliance audit");
+check("server README ship summary includes compliance audit", serverReadme.includes("Compliance audit"), "Compliance audit");
+check("ship gate runs compliance audit", includesAll(shipGate, [
   'label: "Compliance audit"',
-  'args: ["scripts/check-north-star-audit.mjs"]'
-]), "check-north-star-audit.mjs");
-check("ship gate runs north star audit before live", sourceOrder(shipGate, [
+  'args: ["scripts/check-compliance-audit.mjs"]'
+]), "check-compliance-audit.mjs");
+check("ship gate runs compliance audit before live", sourceOrder(shipGate, [
   'label: "deploy config"',
   'label: "Compliance audit"',
   'label: "diff whitespace"',
