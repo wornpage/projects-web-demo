@@ -1,3 +1,6 @@
 assets/demo.js text eol=lf
+assets/demo.css text eol=lf
+index.html text eol=lf
+data/demo-packs.json text eol=lf
 src/demo/demo.js text eol=lf
 scripts/*.mjs text eol=lf
