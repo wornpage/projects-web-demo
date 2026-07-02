@@ -33,9 +33,15 @@ if (checkOnly) {
 
 async function readGeneratedSource() {
   const telemetryPath = path.join(repoRoot, "src", "demo", "telemetry.js");
-  const telemetry = await fs.readFile(telemetryPath, "utf8");
+  let telemetry = "";
+  try {
+    telemetry = await fs.readFile(telemetryPath, "utf8");
+    telemetry = telemetry.replace(/\r\n?/gu, "\n") + "\n";
+  } catch {
+    // telemetry.js is optional — skip if not present
+  }
   const source = await fs.readFile(sourcePath, "utf8");
-  const combined = telemetry.replace(/\r\n?/gu, "\n") + "\n" + source.replace(/\r\n?/gu, "\n");
+  const combined = telemetry + source.replace(/\r\n?/gu, "\n");
   const result = await terser.minify(combined, {
     compress: true,
     mangle: false,
