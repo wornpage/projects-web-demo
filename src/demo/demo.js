@@ -4055,22 +4055,20 @@ function setPackActionConfirmation(pack, action, changed, unblockedCount = 0) {
 }
 
 function burstConfetti() {
-  const colors = ["#facc15", "#f472b6", "#34d399", "#60a5fa", "#fb923c", "#a78bfa"];
   const emojis = ["🎉", "✨", "🎊", "✅", "🌟"];
   const container = document.createElement("div");
   container.className = "demo-confetti-burst";
   container.setAttribute("aria-hidden", "true");
   for (let i = 0; i < 20; i++) {
     const particle = document.createElement("span");
-    particle.className = "demo-confetti-particle";
+    const leftClass = `demo-confetti-left-${Math.floor(Math.random() * 10)}`;
+    const delayClass = `demo-confetti-delay-${Math.floor(Math.random() * 5)}`;
+    const durClass = `demo-confetti-dur-${Math.floor(Math.random() * 4)}`;
+    particle.className = `demo-confetti-particle ${leftClass} ${delayClass} ${durClass}`;
     particle.textContent = emojis[i % emojis.length];
-    particle.style.left = `${Math.random() * 100}%`;
-    particle.style.animationDelay = `${Math.random() * 0.4}s`;
-    particle.style.animationDuration = `${1 + Math.random() * 1.5}s`;
     container.appendChild(particle);
   }
   document.body.appendChild(container);
-  container.addEventListener("animationend", () => container.remove());
   setTimeout(() => container.remove(), 3000);
 }
 
