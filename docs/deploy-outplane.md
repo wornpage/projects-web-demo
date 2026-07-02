@@ -134,7 +134,7 @@ After deploy:
    The ship verifier runs local syntax, protected frontend, public
    generated demo asset sync, local syntax, protected frontend, public
    asset-disclosure, public route, sync sharing, state recovery, public-boundary,
-   Docker deploy-boundary, deploy-config, North Star audit, whitespace, clean
+   Docker deploy-boundary, deploy-config, Compliance audit, whitespace, clean
    git state, and live Outplane checks.
    The git-state step fails if the branch has uncommitted work or is not synced
    with its upstream.

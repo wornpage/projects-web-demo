@@ -213,14 +213,14 @@ check("live verifier cleans temporary hosted rows", includesAll(liveVerifier, [
   "hosted verifier cleanup erases reset row"
 ]), "live verifier cleanup");
 check("README lists deploy config check", readme.includes("`scripts/check-deploy-config.mjs`"), "README file table");
-check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+North Star audit, whitespace, clean git state, and live/u.test(readme), "README ship summary");
+check("README ship summary includes deploy config", /Docker deploy-boundary, deploy-config,\s+Compliance audit, whitespace, clean git state, and live/u.test(readme), "README ship summary");
 check("README documents live app-shell matching", /app shell and\s+protected frontend content matching/u.test(readme), "app shell matching");
 check("README documents live seed-data matching", /seed-data matching/u.test(readme), "seed-data matching");
 check("README documents unkeyed seed-data rejection", /unkeyed seed data\s+rejection/u.test(readme), "unkeyed seed data rejection");
 check("README documents content-derived asset fallback", readme.includes("content-derived asset fallback"), "content-derived asset fallback");
 check("README documents invalid storage fail-fast", readme.includes("Invalid `PROJECTS_STATE_STORAGE` values fail startup"), "invalid storage fail-fast");
 check("README documents API write rate limits", readme.includes("State-write throttling runs after client-key validation but before JSON"), "API write rate limits");
-check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, North Star audit, whitespace, clean git state,\s+and live/u.test(serverReadme), "server README ship summary");
+check("server README ship summary includes deploy config", /Docker\s+deploy-boundary, deploy-config, Compliance audit, whitespace, clean git state,\s+and live/u.test(serverReadme), "server README ship summary");
 check("server README documents unkeyed seed-data rejection", /unkeyed seed data\s+rejection/u.test(serverReadme), "unkeyed seed data rejection");
 check("server README documents invalid storage fail-fast", serverReadme.includes("Invalid `PROJECTS_STATE_STORAGE` values fail startup"), "invalid storage fail-fast");
 check("server README documents API write rate limits", serverReadme.includes("State-write throttling runs after client-key validation but before JSON"), "API write rate limits");

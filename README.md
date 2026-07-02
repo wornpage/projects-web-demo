@@ -46,14 +46,14 @@ Keep this repo focused on the public portfolio demo.
 | `scripts/check-public-boundary.mjs` | Local proof that the app server only serves public files and keyed demo states do not mix. |
 | `scripts/check-docker-boundary.mjs` | Local proof that the Docker image copies only the deploy allowlist and runs protected output. |
 | `scripts/check-deploy-config.mjs` | Local proof that the Outplane docs, Docker defaults, ignored state paths, and live verifier target stay aligned. |
-| `scripts/check-north-star-audit.mjs` | Local proof that the North Star audit stays mapped to checked evidence and remains in the ship gate. |
+| `scripts/check-compliance-audit.mjs` | Local proof that the Compliance audit stays mapped to checked evidence and remains in the ship gate. |
 | `scripts/check-git-ship-state.mjs` | Local proof that the ship gate is running from a clean branch synced with its upstream. |
 | `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app shell, protected JS, CSS, API seed data, and blocked repo paths match this checkout. |
 | `scripts/check-ship.mjs` | Runs the local gates plus live Outplane verification before a ship. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
 | `docs/deploy-outplane.md` | Outplane development deploy checklist. |
 | `docs/public-exposure-audit.md` | Public file exposure audit and frontend privacy boundary. |
-| `docs/north-star-audit.md` | Requirement-by-requirement map from the North Star goal to current proof and remaining slices. |
+| `docs/compliance-audit.md` | Requirement-by-requirement map from the compliance goal to current proof and remaining slices. |
 
 ## Routes
 
@@ -372,7 +372,7 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 That command runs generated demo asset sync, frontend syntax, backend syntax,
 protected frontend, public asset-disclosure, static publish artifact, public
 route-contract, sync sharing, state recovery, public-boundary, Docker deploy-boundary, deploy-config,
-North Star audit, whitespace, clean git state, and live Outplane checks,
+Compliance audit, whitespace, clean git state, and live Outplane checks,
 including app shell and protected frontend content matching, seed-data matching,
 unkeyed seed data rejection, hosted repo-file blocking, invalid work-path status
 rejection, and rejection of weak manual API client keys.

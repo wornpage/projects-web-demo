@@ -1,4 +1,4 @@
-# North Star Audit
+# Compliance Audit
 
 Overall status: Complete for the public demo scope.
 
@@ -22,7 +22,7 @@ verification.
 | recovery | Keep demo state recoverable and erasable without mixing users. | `scripts/check-state-recovery.mjs`; `scripts/check-live-deploy.mjs`; `README.md` | Proven | Keep recovery JSON bounded and versioned as state shape changes. |
 | sync-sharing | Make two-device sync simple while documenting that it is shared demo state, not encrypted account storage. | `scripts/check-sync-surface.mjs`; `scripts/check-live-deploy.mjs`; `docs/deploy-outplane.md` | Accepted demo tradeoff | Keep copy-code, copy-link, QR, and leave-row flows simple; add auth or encryption before private use. |
 | outplane-reproducible | Deploy reproducibly on Outplane with Docker, managed Postgres, defensive headers, and live app matching the checkout. | `Dockerfile`; `docs/deploy-outplane.md`; `scripts/check-deploy-config.mjs`; `scripts/check-live-deploy.mjs` | Proven | Keep the checked live URL, deploy docs, and Docker runtime aligned. |
-| ship-gate | Require green local checks plus live Outplane verification before every ship. | `scripts/check-ship.mjs`; `scripts/check-git-ship-state.mjs`; `scripts/check-live-deploy.mjs`; `server/package.json` | Proven | Keep every new North Star invariant wired into `npm --prefix server run ship:check`. |
+| ship-gate | Require green local checks plus live Outplane verification before every ship. | `scripts/check-ship.mjs`; `scripts/check-git-ship-state.mjs`; `scripts/check-live-deploy.mjs`; `server/package.json` | Proven | Keep every new compliance audit invariant wired into `npm --prefix server run ship:check`. |
 
 ## Completion Boundary
 

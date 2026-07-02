@@ -217,7 +217,7 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 
 That command runs generated demo asset sync, backend syntax, frontend
 protection, public asset-disclosure, public route-contract, sync sharing, state
-recovery, public boundary, Docker deploy-boundary, deploy-config, North Star audit, whitespace, clean git state,
+recovery, public boundary, Docker deploy-boundary, deploy-config, Compliance audit, whitespace, clean git state,
 and live Outplane checks, including app shell and protected frontend content
 matching, seed-data matching, unkeyed seed data rejection, hosted repo-file
 blocking, invalid work-path status rejection, and rejection of weak manual API

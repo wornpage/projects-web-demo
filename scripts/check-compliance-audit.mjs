@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checks = [];
 
-const auditDoc = await readRepoFile("docs/north-star-audit.md");
+const auditDoc = await readRepoFile("docs/compliance-audit.md");
 const readme = await readRepoFile("README.md");
 const serverReadme = await readRepoFile("server/README.md");
 const packageJson = JSON.parse(await readRepoFile("server/package.json"));
@@ -115,25 +115,25 @@ for (const required of requiredRows) {
 }
 
 check(
-  "server package exposes north star check",
-  packageJson.scripts?.["northstar:check"] === "node ../scripts/check-north-star-audit.mjs",
-  packageJson.scripts?.["northstar:check"] || "missing"
+  "server package exposes compliance audit check",
+  packageJson.scripts?.["compliance:check"] === "node ../scripts/check-north-star-audit.mjs",
+  packageJson.scripts?.["compliance:check"] || "missing"
 );
-check("README lists north star audit doc", readme.includes("`docs/north-star-audit.md`"), "docs/north-star-audit.md");
+check("README lists north star audit doc", readme.includes("`docs/compliance-audit.md`"), "docs/compliance-audit.md");
 check("README lists north star audit check", readme.includes("`scripts/check-north-star-audit.mjs`"), "scripts/check-north-star-audit.mjs");
-check("README ship summary includes north star audit", readme.includes("North Star audit"), "North Star audit");
-check("server README ship summary includes north star audit", serverReadme.includes("North Star audit"), "North Star audit");
+check("README ship summary includes north star audit", readme.includes("Compliance audit"), "Compliance audit");
+check("server README ship summary includes north star audit", serverReadme.includes("Compliance audit"), "Compliance audit");
 check("ship gate runs north star audit", includesAll(shipGate, [
-  'label: "North Star audit"',
+  'label: "Compliance audit"',
   'args: ["scripts/check-north-star-audit.mjs"]'
 ]), "check-north-star-audit.mjs");
 check("ship gate runs north star audit before live", sourceOrder(shipGate, [
   'label: "deploy config"',
-  'label: "North Star audit"',
+  'label: "Compliance audit"',
   'label: "diff whitespace"',
   'label: "git ship state"',
   'label: "live Outplane deploy"'
-]), "deploy config -> North Star audit -> clean git -> live");
+]), "deploy config -> Compliance audit -> clean git -> live");
 
 for (const row of checks) {
   console.log(`${row.ok ? "PASS" : "FAIL"} ${row.name}: ${row.detail}`);
@@ -143,7 +143,7 @@ const failed = checks.filter((row) => !row.ok);
 if (failed.length > 0) {
   process.exitCode = 1;
 } else {
-  console.log("\nNorth Star audit check passed.");
+  console.log("\nCompliance audit check passed.");
 }
 
 async function readRepoFile(relativePath) {

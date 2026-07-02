@@ -20,7 +20,7 @@
     "recovery:check": "npm run demo:check && node ../scripts/check-state-recovery.mjs",
     "docker:check": "node ../scripts/check-docker-boundary.mjs",
     "deploy:check": "node ../scripts/check-deploy-config.mjs",
-    "northstar:check": "node ../scripts/check-north-star-audit.mjs",
+    "compliance:check": "node ../scripts/check-compliance-audit.mjs",
     "boundary:check": "npm run demo:check && node ../scripts/check-public-assets.mjs && node ../scripts/check-public-boundary.mjs",
     "ship:check": "node ../scripts/check-ship.mjs",
     "test:smoke": "node ../scripts/check-api-smoke.mjs"

@@ -23,7 +23,7 @@ authentication, encryption, or customer-data handling.
 
 - Full local plus live ship gate passed with `npm --prefix server run ship:check`.
 - Live Outplane verification passed against the protected current frontend.
-- North Star audit now has no remaining `Needs next slice` rows.
+- Compliance audit now has no remaining `Needs next slice` rows.
 - Backend-boundary evidence is proven by named endpoints, typed browser-row
   envelopes, server-owned command previews, and local-only transient UI.
 - Public surface remains compact, allowlisted, and portfolio-facing.

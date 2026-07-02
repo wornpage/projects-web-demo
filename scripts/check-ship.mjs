@@ -88,9 +88,9 @@ const steps = [
     args: ["scripts/check-deploy-config.mjs"]
   },
   {
-    label: "North Star audit",
+    label: "Compliance audit",
     command: process.execPath,
-    args: ["scripts/check-north-star-audit.mjs"]
+    args: ["scripts/check-compliance-audit.mjs"]
   },
   {
     label: "diff whitespace",
