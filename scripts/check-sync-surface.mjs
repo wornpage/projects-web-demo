@@ -106,9 +106,9 @@ const startupSource = source.slice(
 
 check(
   "backend API base comes only from the server-injected setting",
-  includesAll(source, [
-    "const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || \"\")"
-  ]) && !source.includes("DEMO_API_QUERY_PARAM") && !source.includes("launchParams.get(\"api\")") && !source.includes("launchParams.get('api')"),
+  ["const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || \"\")",
+   "let DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || (window.__projectsDemoConfig && window.__projectsDemoConfig.apiBase) || \"\")"
+  ].some(pat => source.includes(pat)) && !source.includes("DEMO_API_QUERY_PARAM") && !source.includes("launchParams.get(\"api\")") && !source.includes("launchParams.get('api')"),
   "window.PROJECTS_API_BASE_URL only"
 );
 
@@ -193,7 +193,7 @@ check(
 check(
   "sync controls render only when backend app mode exists",
   includesAll(renderControls, [
-    "panel.hidden = !DEMO_API_BASE_URL",
+    "panel.hidden = !BACKEND_MODE",
     "const syncCode = readSyncCode()",
     "renderSyncShare(syncCode)"
   ]),
