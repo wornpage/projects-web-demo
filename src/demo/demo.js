@@ -3805,6 +3805,7 @@ function workCard(pack) {
       <div class="demo-card-actions">
         ${supportActionButton("open", "Open", pack, "btn btn-sm")}
         ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
+        ${supportActionButton("compare", "Compare", pack, "btn btn-sm")}
         ${blockerAction}
         ${supportActionButton("done", "Finish with proof", pack, "btn btn-sm")}
       </div>
@@ -4769,6 +4770,9 @@ async function handlePackAction(id, action) {
     }
     setPackActionConfirmation(pack, "block", changed);
     go("pack", pack.id);
+    return;
+  } else if (action === "compare") {
+    go("compare", pack.id);
     return;
   } else if (action === "done") {
     const before = packActionSignature(pack);
