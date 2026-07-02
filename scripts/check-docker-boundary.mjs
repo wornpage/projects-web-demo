@@ -24,7 +24,8 @@ const allowedBuildCopyLines = [
   "COPY src/demo/demo.js ./src/demo/demo.js",
   "COPY scripts/build-demo-asset.mjs ./scripts/build-demo-asset.mjs",
   "COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs",
-  "COPY server/server.js ./server/server.js"
+  "COPY server/server.js ./server/server.js",
+  "COPY server/src ./server/src"
 ];
 const allowedRuntimeCopyLines = [
   "COPY --from=build /app/server/node_modules ./server/node_modules",
@@ -33,7 +34,8 @@ const allowedRuntimeCopyLines = [
   "COPY --from=build /app/assets/demo.js ./assets/demo.js",
   "COPY --from=build /app/assets/favicon.png ./assets/favicon.png",
   "COPY --from=build /app/data/demo-packs.json ./data/demo-packs.json",
-  "COPY --from=build /app/server/server.js ./server/server.js"
+  "COPY --from=build /app/server/server.js ./server/server.js",
+  "COPY --from=build /app/server/src ./server/src"
 ];
 const forbiddenRuntimeCopyPatterns = [
   /^COPY\s+\.\s+/u,
@@ -73,7 +75,7 @@ check("Docker image copies only named frontend and seed files", [
   "COPY --from=build /app/assets/favicon.png ./assets/favicon.png",
   "COPY --from=build /app/data/demo-packs.json ./data/demo-packs.json"
 ].every((line) => runtimeCopyLines.includes(line)), runtimeCopyLines.join(" | "));
-check("Docker runtime copies only the app server source", runtimeCopyLines.includes("COPY --from=build /app/server/server.js ./server/server.js"), runtimeCopyLines.join(" | "));
+check("Docker runtime copies only the app server source", runtimeCopyLines.includes("COPY --from=build /app/server/server.js ./server/server.js") && runtimeCopyLines.includes("COPY --from=build /app/server/src ./server/src"), runtimeCopyLines.join(" | "));
 check("Docker runtime copies pruned production dependencies", runtimeCopyLines.includes("COPY --from=build /app/server/node_modules ./server/node_modules"), runtimeCopyLines.join(" | "));
 check("Docker build verifies generated frontend before protection and prune", sourceOrder(buildText, [
   "RUN node scripts/build-demo-asset.mjs --check",

@@ -17,6 +17,8 @@ const deployDoc = await readRepoFile("docs/deploy-outplane.md");
 const liveVerifier = await readRepoFile("scripts/check-live-deploy.mjs");
 const shipGate = await readRepoFile("scripts/check-ship.mjs");
 const serverSource = await readRepoFile("server/server.js");
+const securitySource = await readRepoFile("server/src/security.js");
+const storageSource = await readRepoFile("server/src/state-storage.js");
 const invalidStorageStartup = await invalidStorageModeStartupResult();
 
 const liveUrl = liveVerifier.match(/const DEFAULT_URL = "([^"]+)"/u)?.[1] || "";
@@ -78,13 +80,12 @@ check("ship gate runs deploy config before live", sourceOrder(shipGate, [
   'label: "live Outplane deploy"'
 ]), "deploy config and git state before live");
 check("ship gate verifies clean synced git state", shipGate.includes('args: ["scripts/check-git-ship-state.mjs"]'), "check-git-ship-state.mjs");
-check("server asset fallback is content-derived", includesAll(serverSource, [
-  "|| contentAssetVersion());",
+check("server asset fallback is content-derived", serverSource.includes("|| storage.contentAssetVersion()") && includesAll(storageSource, [
   "function contentAssetVersion()",
   "crypto.createHash(\"sha256\")",
   "\"data/demo-packs.json\""
 ]), "contentAssetVersion");
-check("server asset fallback avoids startup-random keys", !serverSource.includes("Date.now().toString(36)") && !serverSource.includes("crypto.randomUUID().slice(0, 8)"), "no timestamp/random fallback");
+check("server asset fallback avoids startup-random keys", assetVersionAvoidsRandomFallback(), "no timestamp/random fallback");
 const declaredBodyLimit = declaredBodyLimitBeforeStream(serverSource);
 check("server rejects declared oversized bodies before reading", declaredBodyLimit.ok, declaredBodyLimit.detail);
 const apiRateLimit = apiRateLimitConfigured(serverSource);
@@ -271,6 +272,32 @@ function includesAll(text, needles) {
   return needles.every((needle) => text.includes(needle));
 }
 
+function assetVersionAvoidsRandomFallback() {
+  const declarationStart = serverSource.indexOf("const ASSET_VERSION = storage.normalizeAssetVersion(");
+  const declarationEnd = serverSource.indexOf(");", declarationStart);
+  const declaration = declarationStart >= 0 && declarationEnd > declarationStart
+    ? serverSource.slice(declarationStart, declarationEnd)
+    : "";
+  return noRandomSource(declaration)
+    && noRandomSource(functionBody(storageSource, "function contentAssetVersion()"))
+    && noRandomSource(functionBody(storageSource, "function normalizeAssetVersion(value)"));
+}
+
+function functionBody(text, header) {
+  const start = text.indexOf(header);
+  if (start === -1) {
+    return "";
+  }
+  const nextFunction = text.indexOf("\nfunction ", start + header.length);
+  const nextExports = text.indexOf("\nmodule.exports", start + header.length);
+  const stops = [nextFunction, nextExports].filter((index) => index !== -1);
+  return text.slice(start, stops.length ? Math.min(...stops) : undefined);
+}
+
+function noRandomSource(text) {
+  return Boolean(text) && !text.includes("Date.now()") && !text.includes("randomUUID") && !text.includes("Math.random");
+}
+
 function declaredBodyLimitBeforeStream(source) {
   const bodyStart = source.indexOf("async function readJsonBody(request)");
   const guardIndex = source.indexOf("rejectOversizedContentLength(request)", bodyStart);
@@ -284,11 +311,6 @@ function declaredBodyLimitBeforeStream(source) {
 }
 
 function apiRateLimitConfigured(source) {
-  const stateWriteKey = source.indexOf("function stateWriteKeyForRequest(request)");
-  const enforceWrite = source.indexOf("enforceStateWriteRateLimit(request, stateKey)", stateWriteKey);
-  const writeRoute = source.indexOf('if (method === "PUT" && pathname === "/api/state/browser")');
-  const routeWriteKey = source.indexOf("stateWriteKeyForRequest(request)", writeRoute);
-  const bodyRead = source.indexOf("readJsonBody(request)", writeRoute);
   const required = [
     "const RATE_LIMIT_WINDOW_MS",
     "const RATE_LIMIT_API_REQUESTS",
@@ -298,14 +320,23 @@ function apiRateLimitConfigured(source) {
     "function enforceStateWriteRateLimit(request, stateKey)",
     "function enforceRateLimit(bucketKey, limit, message)"
   ];
-  const missing = required.filter((needle) => !source.includes(needle));
+  const missing = required.filter((needle) => !securitySource.includes(needle));
+  const writeKeyFn = securitySource.indexOf("function stateWriteKeyForRequest(request)");
+  const enforceInKeyFn = securitySource.indexOf("enforceStateWriteRateLimit(request, stateKey)", writeKeyFn);
+  const keyFnReturn = securitySource.indexOf("return stateKey;", writeKeyFn);
+  const writeRoute = source.indexOf('if (method === "PUT" && pathname === "/api/state/browser")');
+  const routeWriteKey = source.indexOf("security.stateWriteKeyForRequest(request)", writeRoute);
+  const bodyRead = source.indexOf("readJsonBody(request)", writeRoute);
   return {
     ok: missing.length === 0
-      && stateWriteKey >= 0
-      && enforceWrite > stateWriteKey
+      && writeKeyFn >= 0
+      && enforceInKeyFn > writeKeyFn
+      && keyFnReturn > enforceInKeyFn
+      && source.includes("security.enforceApiSourceRateLimit(request)")
+      && writeRoute >= 0
       && routeWriteKey > writeRoute
       && bodyRead > routeWriteKey,
-    detail: missing.length === 0 ? "stateWriteKeyForRequest before readJsonBody" : `missing ${missing.join(", ")}`
+    detail: missing.length === 0 ? "rate limit inside stateWriteKeyForRequest before readJsonBody" : `missing ${missing.join(", ")}`
   };
 }
 

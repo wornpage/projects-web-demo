@@ -42,6 +42,10 @@ try {
   await waitForHealth(port);
 
   const serverSource = await fs.readFile(path.join(repoRoot, "server/server.js"), "utf8");
+  const securitySource = await fs.readFile(path.join(repoRoot, "server/src/security.js"), "utf8");
+  const storageSource = await fs.readFile(path.join(repoRoot, "server/src/state-storage.js"), "utf8");
+  const seedSource = await fs.readFile(path.join(repoRoot, "server/src/seed.js"), "utf8");
+  const workflowSource = await fs.readFile(path.join(repoRoot, "server/src/workflow.js"), "utf8");
   const frontendSource = await fs.readFile(path.join(repoRoot, "src/demo/demo.js"), "utf8");
   const health = await jsonRequest(port, "/api/health");
   const appShell = await request(port, "/");
@@ -78,7 +82,7 @@ try {
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API config loads before the frontend script", runtimeConfigPath && appShell.text.indexOf("assets/runtime-config.js") < appShell.text.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
   check("runtime asset version is content-derived", appShellUsesAssetVersion(appShell.text, expectedAssetVersion) && runtimeConfigPath === `assets/runtime-config.js?v=${expectedAssetVersion}`, runtimeConfigPath || "missing");
-  check("runtime API config is served as same-origin JavaScript", runtimeConfig.text.includes("window.PROJECTS_API_BASE_URL = location.origin;"), runtimeConfig.text.trim() || "missing");
+  check("runtime API config is served as same-origin JavaScript", runtimeConfig.text.startsWith("window.__projectsDemoConfig=") && runtimeConfig.text.includes(`"apiBase":"//127.0.0.1:${port}"`) && runtimeConfig.text.includes("window.PROJECTS_API_BASE_URL=") && !/https?:\/\//u.test(runtimeConfig.text), runtimeConfig.text.trim() || "missing");
   check("app shell contains no inline scripts", !hasInlineScript(appShell.text), "external scripts only");
   check("script policy avoids unsafe inline scripts", scriptSrcDirective(csp) === "script-src 'self'", scriptSrcDirective(csp) || "missing");
   check("style policy avoids unsafe inline styles", styleSrcDirective(csp) === "style-src 'self'", styleSrcDirective(csp) || "missing");
@@ -88,14 +92,14 @@ try {
   check("health endpoint hides storage internals", !("stateStorage" in health.body) && !healthText.includes(stateFile) && !/state\.json|projects_demo_state|DATABASE_URL|PGHOST|PGPASSWORD/iu.test(healthText), healthText);
   check("invalid Host header stays inside normal request handling", invalidHostHealth.status === 200 && /projects-web-demo-api/u.test(invalidHostHealth.text), invalidHostHealth.status);
   check("API health sends shared security headers", sharedSecurityHeadersOk(health.headers), sharedSecurityHeaderDetail(health.headers));
-  check("Postgres state keys are hashed before storage", /function postgresStateKey\(stateKey\)[\s\S]*v2:\$\{crypto\.createHash\("sha256"\)\.update\(normalized\)\.digest\("hex"\)\}/u.test(serverSource), "postgresStateKey");
-  check("Postgres raw state-key fallback is retired", !serverSource.includes("postgresStateKeys(") && !serverSource.includes("WHERE state_key = $1 OR state_key = $2") && !serverSource.includes("DELETE FROM projects_demo_state WHERE state_key = $1"), "digest-only state_key path");
+  check("Postgres state keys are hashed before storage", /function postgresStateKey\(stateKey\)[\s\S]*v2:\$\{crypto\.createHash\("sha256"\)\.update\(normalized\)\.digest\("hex"\)\}/u.test(storageSource), "postgresStateKey");
+  check("Postgres raw state-key fallback is retired", ![serverSource, storageSource].some((source) => source.includes("postgresStateKeys(") || source.includes("WHERE state_key = $1 OR state_key = $2") || source.includes("DELETE FROM projects_demo_state WHERE state_key = $1")), "digest-only state_key path");
   const declaredBodyLimit = declaredBodyLimitBeforeStream(serverSource);
   check("declared oversized body length is rejected before stream reading", declaredBodyLimit.ok, declaredBodyLimit.detail);
-  check("state write rate limits are configured", stateWriteRateLimitConfigured(serverSource), "stateWriteKeyForRequest before body read");
+  check("state write rate limits are configured", stateWriteRateLimitConfigured(securitySource), "stateWriteKeyForRequest before body read");
   const writeRouteOrder = writeRoutesValidateKeyBeforeBody(serverSource);
   check("state-changing routes validate client keys and write limits before body parsing", writeRouteOrder.ok, writeRouteOrder.detail);
-  const browserWritePreservesStatus = browserWriteRoutePreservesBackendStatus(serverSource);
+  const browserWritePreservesStatus = browserWriteRoutePreservesBackendStatus(serverSource, seedSource);
   check("browser-row write preserves backend-owned status", browserWritePreservesStatus.ok, browserWritePreservesStatus.detail);
   check("state reset validates client key before storage", resetRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
   check("state erase validates client key before deleting", eraseRouteValidatesKey(serverSource), "stateWriteKeyForRequest required");
@@ -133,7 +137,7 @@ try {
   check("backend app mode runs next from server command preview", runNextBoundary.ok, runNextBoundary.detail);
   const cardRunNextBoundary = frontendHostedCardRunNextUsesGenericLabel(frontendSource);
   check("hosted card run-next buttons avoid browser command labels", cardRunNextBoundary.ok, cardRunNextBoundary.detail);
-  const serverPreviewMarkers = serverCommandPreviewCopyMarkers(serverSource);
+  const serverPreviewMarkers = serverCommandPreviewCopyMarkers(workflowSource);
   check("server command preview owns selected-work flow copy", serverPreviewMarkers.ok, serverPreviewMarkers.detail);
   const workflowPreflight = frontendWorkflowHelpersAvoidFullStatePreflight(frontendSource);
   check("server-owned workflow calls avoid full-state preflight writes", workflowPreflight.ok, workflowPreflight.detail);
@@ -300,12 +304,16 @@ try {
     "/assets/%2e%2e/server/server.js",
     "/assets/not-allowlisted.txt",
     "/assets/private/demo.js",
-    "/data/demo-packs.json",
-    "/data/not-allowlisted.json"
+    "/data/not-allowlisted.json",
+    "/server/src/security.js",
+    "/server/src/state-storage.js"
   ]) {
     const response = await request(port, pathname);
     check(`non-public app file blocked: ${pathname}`, response.status === 404, response.status);
   }
+
+  const seedDataResponse = await request(port, "/data/demo-packs.json");
+  check("public seed data stays readable", seedDataResponse.status === 200, seedDataResponse.status);
 
   for (const pathname of [
     "/assets/app.css",
@@ -911,7 +919,7 @@ try {
   check("erasing one keyed state keeps another client row", stateHasPackTitle(clientBStateAfterErase.body, clientBTitle), clientBStateAfterErase.status);
 
   const files = await fs.readdir(tmpDir);
-  check("keyed local state uses hashed filenames", files.some((file) => /^state\.[a-f0-9]{32}\.json$/u.test(file)), files.join(", "));
+  check("keyed local state uses hashed filenames", files.some((file) => /^state.[a-f0-9]{64}.json$/u.test(file)), files.join(", "));
   check("keyed local state filenames hide raw client keys", files.every((file) => !file.includes(clientA) && !file.includes(clientB)), files.join(", "));
   check("unkeyed local state file is not written", !files.includes("state.json"), files.join(", "));
 
@@ -1187,15 +1195,15 @@ function writeRoutesValidateKeyBeforeBody(source) {
   };
 }
 
-function browserWriteRoutePreservesBackendStatus(source) {
+function browserWriteRoutePreservesBackendStatus(source, seedSource) {
   const routeStart = source.indexOf('if (method === "PUT" && pathname === "/api/state/browser")');
   const routeEnd = source.indexOf("\n  }\n\n", routeStart);
   const routeSource = routeStart >= 0
     ? source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined)
     : "";
-  const helperBody = functionBody(source, "browserStatePayload");
-  const ok = routeSource.includes("const current = await readState(stateKey)")
-    && routeSource.includes("browserStatePayload(payload, current)")
+  const helperBody = functionBody(seedSource, "browserStatePayload");
+  const ok = routeSource.includes("const current = await stateStorage.read(stateKey)")
+    && routeSource.includes("seed.browserStatePayload(payload, current)")
     && helperBody.includes("validateStatePayload(payload.state)")
     && helperBody.includes("status: currentState.status || \"\"")
     && helperBody.includes("actionReceipt: null")
@@ -1326,10 +1334,10 @@ function frontendSearchStaysLocalOnly(source) {
     : toolbarBody.slice(inputIndex, filterIndex > inputIndex ? filterIndex : undefined);
   const queryIndex = searchBody.indexOf("state.query = event.currentTarget.value");
   const suppressIndex = suppressNextSaveIndex(searchBody);
-  const renderIndex = searchBody.indexOf("render();");
+  const debounceIndex = searchBody.indexOf("searchTimer = setTimeout(");
   const ok = queryIndex >= 0
     && suppressIndex > queryIndex
-    && renderIndex > suppressIndex
+    && debounceIndex > suppressIndex
     && !searchBody.includes("saveBackend")
     && !searchBody.includes("scheduleBackendStateSave")
     && !searchBody.includes("saveState();");
@@ -1603,8 +1611,8 @@ function resetRouteValidatesKey(source) {
 
   const routeEnd = source.indexOf("\n  }\n\n", routeStart);
   const routeSource = source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined);
-  return routeSource.includes("const stateKey = stateWriteKeyForRequest(request)")
-    && routeSource.includes("await writeState(result.state, stateKey)");
+  return routeSource.includes("const stateKey = security.stateWriteKeyForRequest(request)")
+    && routeSource.includes("await stateStorage.write(result.state, stateKey)");
 }
 
 function eraseRouteValidatesKey(source) {
@@ -1615,11 +1623,11 @@ function eraseRouteValidatesKey(source) {
 
   const routeEnd = source.indexOf("\n  }\n\n", routeStart);
   const routeSource = source.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined);
-  return routeSource.includes("eraseState(stateWriteKeyForRequest(request))");
+  return routeSource.includes("stateStorage.erase(security.stateWriteKeyForRequest(request))");
 }
 
 function stateWriteRateLimitConfigured(source) {
-  return [
+  const needlesOk = [
     "const RATE_LIMIT_WINDOW_MS",
     "const RATE_LIMIT_API_REQUESTS",
     "const RATE_LIMIT_SOURCE_WRITE_REQUESTS",
@@ -1628,6 +1636,10 @@ function stateWriteRateLimitConfigured(source) {
     "enforceStateWriteRateLimit(request, stateKey)",
     "function enforceRateLimit(bucketKey, limit, message)"
   ].every((needle) => source.includes(needle));
+  const writeKeyFn = source.indexOf("function stateWriteKeyForRequest(request)");
+  const enforceInKeyFn = source.indexOf("enforceStateWriteRateLimit(request, stateKey)", writeKeyFn);
+  const keyFnReturn = source.indexOf("return stateKey;", writeKeyFn);
+  return needlesOk && writeKeyFn >= 0 && enforceInKeyFn > writeKeyFn && keyFnReturn > enforceInKeyFn;
 }
 
 function rateLimitStatusesOk(statuses) {

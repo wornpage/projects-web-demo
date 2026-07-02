@@ -100,7 +100,7 @@ try {
   check("client B does not read client A overwrite", !stateHasPackTitle(clientBState.body, overwriteTitle), clientBState.status);
 
   const files = await fs.readdir(tmpDir);
-  check("recovery state stays in keyed local file", files.some((file) => /^state\.[a-f0-9]{32}\.json$/u.test(file)), files.join(", "));
+  check("recovery state stays in keyed local file", files.some((file) => /^state.[a-f0-9]{64}.json$/u.test(file)), files.join(", "));
   check("recovery filenames hide client keys", files.every((file) => !file.includes(clientA) && !file.includes(clientB)), files.join(", "));
   check("recovery does not write an unkeyed local state file", !files.includes("state.json"), files.join(", "));
 
@@ -251,7 +251,7 @@ async function checkDefaultStatePath() {
     const files = (await listFiles(defaultRoot))
       .map((file) => path.relative(defaultRoot, file).replace(/\\/gu, "/"));
     check("default file state writes successfully", savedState.status === 200, savedState.status);
-    check("default file state uses user data directory", files.some((file) => file.startsWith(expectedPrefix) && /state\.[a-f0-9]{32}\.json$/u.test(file)), files.join(", ") || "none");
+    check("default file state uses user data directory", files.some((file) => file.startsWith(expectedPrefix) && /state.[a-f0-9]{64}.json$/u.test(file)), files.join(", ") || "none");
     check("default file state avoids the repo data directory", !files.some((file) => file.startsWith("server/data/")), files.join(", ") || "none");
   } catch (error) {
     if (defaultStdout.trim()) {
