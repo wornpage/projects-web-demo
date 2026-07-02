@@ -793,11 +793,8 @@ async function runBackendPackAction(pack, action) {
   state.selectedId = result.pack?.id || pack.id;
   if (action === "open") {
     queueFocus("pack-detail", state.selectedId);
-    go("pack", state.selectedId);
-    return true;
   }
-
-  render();
+  go("pack", state.selectedId);
   return true;
 }
 
