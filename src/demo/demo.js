@@ -4052,7 +4052,7 @@ function bindTableRows() {
 
 function bindListActions() {
   el("screen-content").querySelectorAll("[data-action]").forEach((button) => {
-    if (button.closest(".demo-work-card") || button.id === "pack-primary-action" || button.closest(".demo-table-row")) {
+    if (button.closest(".demo-work-card") || button.id === "pack-primary-action" || button.matches(".demo-table-row")) {
       return;
     }
 
