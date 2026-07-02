@@ -3683,7 +3683,7 @@ function bindToolbar() {
 }
 
 function updateWorkListAfterFilter() {
-  const listContainer = document.querySelector(".demo-work-list");
+  const listContainer = document.querySelector(".demo-work-list, .demo-work-table");
   if (listContainer) {
     const visible = filteredPacks();
     const orderedVisible = workListDisplayPacks(visible);
@@ -3707,6 +3707,7 @@ function updateWorkListAfterFilter() {
     }
     bindWorkCards();
     bindTableRows();
+    bindListActions();
   }
   const scopeEl = el("command-scope");
   if (scopeEl) {
