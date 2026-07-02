@@ -71,6 +71,8 @@ The important public paths are:
 | `#/next/{packId}` | Choose the next action for one work item. |
 | `#/memory/{packId}` | Add browser-local memory for one work item. |
 | `#/create` | Add browser-local sample work. |
+| `#/compare/{packId}/{packId}` | Compare two work items side by side. |
+| `#/calendar` | Month view of work by date. |
 
 Unknown and retired hashes fall back to `#/home`.
 
