@@ -203,6 +203,24 @@ const DEMO_SCENARIOS = [
     route: "review",
     filter: "all",
     transform: () => []
+  },
+  {
+    id: "ai-prompts",
+    label: "Prompt library",
+    description: "Explore and iterate on prompts with versioned memory and evaluation results.",
+    profile: "ai",
+    route: "review",
+    filter: "all",
+    transform: (packs) => packs.filter((p) => p.type === "prompt" || !p.type)
+  },
+  {
+    id: "ai-evals",
+    label: "Model evaluations",
+    description: "Track eval runs and model comparisons with proof targets and pass/fail results.",
+    profile: "ai",
+    route: "review",
+    filter: "all",
+    transform: (packs) => packs.filter((p) => p.type === "eval" || !p.type)
   }
 ];
 
@@ -3750,6 +3768,7 @@ function workCard(pack) {
   return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${escapeHtml(workTitle(pack))}</button>
+      ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span>` : ""}
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
     <div class="demo-card-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. ${dueDateLabel(pack.due) || "No due date"}.`)}">
