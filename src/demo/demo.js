@@ -3809,7 +3809,7 @@ function workRow(pack) {
   const workflow = workflowStateForPack(pack, command);
   const cellClass = `demo-table-row ${pack.id === state.selectedId ? "demo-table-row-selected" : ""}`;
   return `<button type="button" class="${escapeAttribute(cellClass)}" data-action="select" data-pack="${escapeAttribute(pack.id)}">
-    <span class="demo-table-cell demo-table-title">${escapeHtml(workTitle(pack))}</span>
+    <span class="demo-table-cell demo-table-title">${escapeHtml(workTitle(pack))}${pack.type && pack.type !== "general" ? ` <span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span>` : ""}</span>
     <span class="demo-table-cell demo-table-owner">${escapeHtml(pack.owner)}</span>
     <span class="demo-table-cell demo-table-status" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.statusLabel || workflow.label)}</span>
     <span class="demo-table-cell demo-table-blocker">${escapeHtml(blockerTextForPack(pack))}</span>
