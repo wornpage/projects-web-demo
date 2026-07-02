@@ -4619,14 +4619,10 @@ function packActionSignature(pack) {
 }
 
 function packCommandSignature(pack) {
-  return JSON.stringify({
-    title: pack?.title || "",
-    status: pack?.status || "",
-    blocker: pack?.blocker || "",
-    blockedBy: pack?.blockedBy || "",
-    next: pack?.next || "",
-    doneWhen: pack?.doneWhen || ""
-  });
+  const status = normalizeCopy(pack?.status).slice(0, 40) || "unknown";
+  const blocker = normalizeStoredBlocker(normalizeCopy(pack?.blocker).slice(0, 200));
+  const next = normalizeCopy(pack?.next).slice(0, 200);
+  return `${status}|${blocker}|${next}`;
 }
 
 async function applyNextChoice(id) {
