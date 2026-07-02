@@ -7364,9 +7364,11 @@ function bindComparePickers() {
 }
 
 function renderCalendar() {
+  const params = (state.routeParam || "").split("/").filter(Boolean);
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  let year = parseInt(params[0], 10) || now.getFullYear();
+  let month = parseInt(params[1], 10);
+  if (isNaN(month) || month < 0 || month > 11) month = now.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dueMap = {};
@@ -7378,6 +7380,14 @@ function renderCalendar() {
     }
   });
   const today = now.toISOString().slice(0, 10);
+  const selectedDate = params[2] || "";
+  const selectedItems = dueMap[selectedDate] || [];
+
+  const prevMonth = month === 0 ? 11 : month - 1;
+  const prevYear = month === 0 ? year - 1 : year;
+  const nextMonth = month === 11 ? 0 : month + 1;
+  const nextYear = month === 11 ? year + 1 : year;
+  const monthLabel = new Date(year, month, 1).toLocaleString("default", { month: "long", year: "numeric" });
 
   let cells = "";
   for (let i = 0; i < firstDay; i++) cells += `<div class="demo-cal-cell demo-cal-empty"></div>`;
@@ -7385,10 +7395,11 @@ function renderCalendar() {
     const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     const items = dueMap[date] || [];
     const isToday = date === today;
-    cells += `<div class="demo-cal-cell${isToday ? " demo-cal-today" : ""}${items.length ? " demo-cal-has-items" : ""}">
+    const isSelected = date === selectedDate;
+    cells += `<button class="demo-cal-cell${isToday ? " demo-cal-today" : ""}${items.length ? " demo-cal-has-items" : ""}${isSelected ? " demo-cal-selected" : ""}" type="button" data-action="calendar-day" data-date="${date}">
       <span class="demo-cal-day">${d}</span>
-      ${items.map((p) => `<button class="demo-cal-item" type="button" data-action="select" data-pack="${escapeAttribute(p.id)}" title="${escapeAttribute(workTitle(p))}">${escapeHtml(truncateTitle(workTitle(p), 18))}</button>`).join("")}
-    </div>`;
+      ${items.length ? `<span class="demo-cal-count">${items.length}</span>` : ""}
+    </button>`;
   }
 
   el("screen-content").innerHTML = `
@@ -7396,17 +7407,50 @@ function renderCalendar() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">Calendar</span>
-          <h2>${now.toLocaleString("default", { month: "long", year: "numeric" })}</h2>
+          <h2>${monthLabel}</h2>
         </div>
         <span class="demo-status">${Object.keys(dueMap).length} days with due items</span>
+      </div>
+      <div class="demo-cal-nav">
+        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${prevYear}/${prevMonth}">← ${new Date(prevYear, prevMonth, 1).toLocaleString("default", { month: "short" })}</button>
+        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${now.getFullYear()}/${now.getMonth()}">Today</button>
+        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${nextYear}/${nextMonth}">${new Date(nextYear, nextMonth, 1).toLocaleString("default", { month: "short" })} →</button>
       </div>
       <div class="demo-calendar-grid">
         ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => `<div class="demo-cal-header">${d}</div>`).join("")}
         ${cells}
       </div>
+      ${selectedDate ? `
+        <div class="demo-cal-detail">
+          <h3>${new Date(selectedDate + "T00:00:00").toLocaleString("default", { weekday: "long", month: "long", day: "numeric" })}</h3>
+          ${selectedItems.length ? selectedItems.map((p) => {
+            const command = resolvePrimaryCommandForPack(p);
+            return `<div class="demo-cal-item-detail">
+              <button class="demo-card-title" type="button" data-action="select" data-pack="${escapeAttribute(p.id)}">${escapeHtml(workTitle(p))}</button>
+              <span class="demo-state-pill">${escapeHtml(p.status)}</span>
+              <small>${escapeHtml(command.label)}</small>
+            </div>`;
+          }).join("") : `<p class="demo-field-help">No items due this day.</p>`}
+        </div>
+      ` : `<p class="demo-field-help">Click a day to see what is due.</p>`}
     </section>
   `;
+  bindCalendarNav();
   bindListActions();
+}
+
+function bindCalendarNav() {
+  document.querySelectorAll("[data-action=calendar-nav]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      go("calendar", btn.dataset.date);
+    });
+  });
+  document.querySelectorAll("[data-action=calendar-day]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const params = (state.routeParam || "").split("/").filter(Boolean);
+      go("calendar", `${params[0] || new Date().getFullYear()}/${params[1] || new Date().getMonth()}/${btn.dataset.date}`);
+    });
+  });
 }
 
 function truncateTitle(text, max) {
