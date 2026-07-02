@@ -32,9 +32,11 @@ if (checkOnly) {
 }
 
 async function readGeneratedSource() {
+  const telemetryPath = path.join(repoRoot, "src", "demo", "telemetry.js");
+  const telemetry = await fs.readFile(telemetryPath, "utf8");
   const source = await fs.readFile(sourcePath, "utf8");
-  const normalized = source.replace(/\r\n?/gu, "\n");
-  const result = await terser.minify(normalized, {
+  const combined = telemetry.replace(/\r\n?/gu, "\n") + "\n" + source.replace(/\r\n?/gu, "\n");
+  const result = await terser.minify(combined, {
     compress: true,
     mangle: false,
     output: { comments: false }
@@ -42,7 +44,7 @@ async function readGeneratedSource() {
   if (result.error) {
     throw new Error(`Terser minification failed: ${result.error}`);
   }
-  return result.code || normalized;
+  return result.code || combined;
 }
 
 function assertSourceSyntax() {
