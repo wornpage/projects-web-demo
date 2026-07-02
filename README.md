@@ -31,8 +31,8 @@ Keep this repo focused on the public portfolio demo.
 | `assets/demo.js` | Generated public browser file served by GitHub Pages and app mode. |
 | `assets/demo.css` | Public demo layout and interaction styling. |
 | `assets/favicon.png` | Demo favicon. |
-| `data/demo-packs.json` | Fake browser-local work data for static publishing; app mode reads it server-side and does not serve the JSON URL directly. |
-| `server/` | Optional Node app and static preview helpers for backend persistence experiments. |
+| `data/demo-packs.json` | Fake sample work data. Public by design: committed to the repo, published by GitHub Pages, and served read-only by app mode alongside the keyed `GET /api/demo-packs` route. |
+| `server/` | Optional Node app (`server.js` plus `server/src/` modules for constants, security, seed, state storage, validation, and workflow) and static preview helpers for backend persistence experiments. |
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
 | `scripts/build-demo-asset.mjs` | Copies `src/demo/demo.js` to the single shipped `assets/demo.js`, or checks that they match. |
 | `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
@@ -89,6 +89,10 @@ http://localhost:5181/#/home
 HTML, CSS, and data edits can preview directly. After editing `src/demo/demo.js`,
 run `npm --prefix server run demo:build` before previewing or shipping.
 
+`.gitattributes` pins LF endings on the budgeted public text assets so the
+byte-size gates measure the same deployed bytes on every platform; Windows
+checkouts should not see CRLF inflation on those files.
+
 ## App Mode
 
 Run the single-process app from the repository root:
@@ -104,16 +108,16 @@ http://localhost:5179/#/home
 ```
 
 The same Node process serves the frontend and `/api`. In app mode,
-`index.html` is served with a small runtime setting that points
-`assets/demo.js` at the same-origin API, so no `?api=` query parameter is
-needed.
+`index.html` loads `assets/runtime-config.js`, a small generated script that
+sets `window.__projectsDemoConfig` with the same-origin API base, backend mode
+flag, and asset version, so no `?api=` query parameter is needed.
 
 In app mode, seed demo work loads through `GET /api/demo-packs` with the same
-anonymous browser client key as the rest of the API. The static
-`data/demo-packs.json` file remains in the repo for GitHub Pages and static
-preview, but the Node app does not serve that URL directly. Seed data requests
+anonymous browser client key as the rest of the API. Seed data requests
 without the browser client key are rejected instead of falling back to a public
-API row.
+API row. The static `data/demo-packs.json` file is also served read-only by the
+app server; it is committed public sample data, so this discloses nothing that
+GitHub Pages does not already publish.
 
 The Node app also rewrites the CSS/JS asset query string at startup using
 `PROJECTS_ASSET_VERSION`, a known commit environment variable, or a
@@ -187,6 +191,9 @@ memory, and activity lists must also be bounded text arrays. That keeps browser
 rows, backup restores, and sync copies from silently creating duplicate rows,
 dangling selections, malformed notes, malformed receipts, or off-contract work
 rows.
+Saved state that still uses the retired "Button runs next" vocabulary migrates
+to the current "Next action" copy on read, in both browser-local state and
+backend rows, so older demo rows keep working after the rename.
 Selected-work commands in hosted app mode wait for the server command preview
 before enabling the primary command buttons, so the browser does not briefly run
 the local workflow fallback while `/api/packs/{id}/command` is loading.
