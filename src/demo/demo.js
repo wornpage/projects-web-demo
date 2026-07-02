@@ -3913,6 +3913,7 @@ function bindListActions() {
             }
           } else {
             state.status = selectedWorkStatus("Next setup", pack, "choose next action");
+            queueFocus("next", pack.id);
             go("next", pack.id);
             return;
           }
