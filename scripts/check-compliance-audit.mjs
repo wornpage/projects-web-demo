@@ -78,7 +78,7 @@ const requiredRows = [
   },
   {
     id: "ship-gate",
-    evidence: ["scripts/check-ship.mjs", "scripts/check-git-ship-state.mjs", "scripts/check-live-deploy.mjs", "server/package.json"]
+    evidence: ["scripts/check-ship.mjs", "scripts/check-git-ship-state.mjs", "scripts/check-live-deploy.mjs", "server/package.json", "docs/compliance-audit.md", "README.md"]
   }
 ];
 

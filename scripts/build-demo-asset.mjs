@@ -11,6 +11,7 @@ const terser = require("../server/node_modules/terser");
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(repoRoot, "src", "demo", "demo.js");
+const cssSourcePath = path.join(repoRoot, "assets", "demo.css");
 const assetPath = path.join(repoRoot, "assets", "demo.js");
 const checkOnly = process.argv.includes("--check");
 
