@@ -1765,6 +1765,9 @@ function routeFromHash() {
   const previousSelectedId = state.selectedId;
   const previousRoute = state.route;
   state.route = parsedRoute.route;
+  if (previousRoute !== state.route) {
+    workListKeepOrder = false;
+  }
 
   if (parsedRoute.malformedPackId || parsedRoute.unexpectedPackId) {
     state.status = routeStatus(
@@ -2879,9 +2882,29 @@ function bindRecoveryControls() {
   el("erase-backend-state")?.addEventListener("click", eraseBackendState);
 }
 
+let workListOrderIds = [];
+let workListKeepOrder = false;
+
+function workListDisplayPacks(visible) {
+  const keepOrder = workListKeepOrder;
+  workListKeepOrder = false;
+  if (keepOrder && workListOrderIds.length) {
+    const byId = new Map(visible.map((pack) => [pack.id, pack]));
+    const kept = workListOrderIds.map((id) => byId.get(id)).filter(Boolean);
+    const keptIds = new Set(kept.map((pack) => pack.id));
+    const ordered = [...kept, ...visible.filter((pack) => !keptIds.has(pack.id))];
+    workListOrderIds = ordered.map((pack) => pack.id);
+    return ordered;
+  }
+
+  const ordered = selectedFirstPacks(visible);
+  workListOrderIds = ordered.map((pack) => pack.id);
+  return ordered;
+}
+
 function renderWork() {
   const visible = filteredPacks();
-  const orderedVisible = selectedFirstPacks(visible);
+  const orderedVisible = workListDisplayPacks(visible);
   const emptyWork = state.packs.length === 0
     ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
     : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
@@ -3554,7 +3577,7 @@ function bindToolbar() {
         const listContainer = document.querySelector(".demo-work-list");
         if (listContainer) {
           const visible = filteredPacks();
-          const orderedVisible = selectedFirstPacks(visible);
+          const orderedVisible = workListDisplayPacks(visible);
           const emptyHtml = state.packs.length === 0
             ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
             : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
@@ -3605,7 +3628,7 @@ function updateWorkListAfterFilter() {
   const listContainer = document.querySelector(".demo-work-list");
   if (listContainer) {
     const visible = filteredPacks();
-    const orderedVisible = selectedFirstPacks(visible);
+    const orderedVisible = workListDisplayPacks(visible);
     const emptyHtml = state.packs.length === 0
       ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
       : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
@@ -3904,6 +3927,7 @@ function bindWorkCards() {
   document.querySelectorAll(".demo-work-card button").forEach((button) => {
     button.addEventListener("click", () => {
       const card = button.closest(".demo-work-card");
+      workListKeepOrder = true;
       handlePackAction(card.dataset.packId, button.dataset.action);
     });
   });
