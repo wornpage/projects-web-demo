@@ -77,7 +77,9 @@ const state = {
   clipboardReceipt: null,
   lastRenderedHash: "",
   memoryDraft: "",
+  workListView: "card",
   suppressNextSave: false,
+  density: "card",
 };
 
 const backendPackCommandCache = new Map();
@@ -3480,6 +3482,7 @@ function workToolbar(label) {
       <div id="status-chips" class="demo-chip-row" aria-label="Status filters">
         ${renderFilterChips()}
       </div>
+      <button id="density-toggle" class="demo-view-toggle" type="button" title="Switch between card and compact list view" aria-label="Toggle list density" aria-pressed="false">☰ List</button>
     </section>
   `;
 }
@@ -3611,15 +3614,23 @@ function bindToolbar() {
         if (summaryEl) {
           summaryEl.textContent = workToolbarSummary();
         }
-        const listContainer = document.querySelector(".demo-work-list");
+        const listContainer = document.querySelector(".demo-work-list, .demo-work-table");
         if (listContainer) {
           const visible = filteredPacks();
           const orderedVisible = workListDisplayPacks(visible);
           const emptyHtml = state.packs.length === 0
             ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
             : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
-          listContainer.innerHTML = orderedVisible.length ? orderedVisible.map(workCard).join("") : emptyHtml;
+          const itemsHtml = orderedVisible.length ? orderedVisible.map(renderWorkItemHtml).join("") : emptyHtml;
+          if (state.workListView === "table") {
+            listContainer.className = "demo-work-table";
+            listContainer.innerHTML = `<div class="demo-table-header"><span>Title</span><span>Owner</span><span>Status</span><span>Blocker</span><span>Next action</span><span></span></div>${itemsHtml}`;
+          } else {
+            listContainer.className = "demo-work-list";
+            listContainer.innerHTML = itemsHtml;
+          }
           bindWorkCards();
+          bindTableRows();
         }
         const scopeEl = el("command-scope");
         if (scopeEl) {
@@ -3659,6 +3670,16 @@ function bindToolbar() {
       updateWorkListAfterFilter();
     });
   });
+
+  const densityToggle = el("density-toggle");
+  if (densityToggle) {
+    densityToggle.addEventListener("click", () => {
+      state.workListView = state.workListView === "card" ? "table" : "card";
+      densityToggle.textContent = state.workListView === "card" ? "☰ List" : "▦ Cards";
+      densityToggle.setAttribute("aria-pressed", String(state.workListView === "table"));
+      updateWorkListAfterFilter();
+    });
+  }
 }
 
 function updateWorkListAfterFilter() {
@@ -3669,8 +3690,23 @@ function updateWorkListAfterFilter() {
     const emptyHtml = state.packs.length === 0
       ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
       : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
-    listContainer.innerHTML = orderedVisible.length ? orderedVisible.map(workCard).join("") : emptyHtml;
+    const itemsHtml = orderedVisible.length ? orderedVisible.map(renderWorkItemHtml).join("") : emptyHtml;
+    if (state.workListView === "table") {
+      listContainer.className = "demo-work-table";
+      listContainer.innerHTML = `<div class="demo-table-header">
+        <span>Title</span>
+        <span>Owner</span>
+        <span>Status</span>
+        <span>Blocker</span>
+        <span>Next action</span>
+        <span></span>
+      </div>${itemsHtml}`;
+    } else {
+      listContainer.className = "demo-work-list";
+      listContainer.innerHTML = itemsHtml;
+    }
     bindWorkCards();
+    bindTableRows();
   }
   const scopeEl = el("command-scope");
   if (scopeEl) {
@@ -3679,6 +3715,27 @@ function updateWorkListAfterFilter() {
   }
   updateActionReceipt();
   renderCommand(currentPack());
+}
+
+function renderWorkItemHtml(pack) {
+  return state.workListView === "table" ? workRow(pack) : workCard(pack);
+}
+
+function workListContainerHtml(itemsHtml) {
+  if (state.workListView === "table") {
+    return `<div class="demo-work-table">
+      <div class="demo-table-header">
+        <span>Title</span>
+        <span>Owner</span>
+        <span>Status</span>
+        <span>Blocker</span>
+        <span>Next action</span>
+        <span></span>
+      </div>
+      ${itemsHtml}
+    </div>`;
+  }
+  return `<div class="demo-work-list">${itemsHtml}</div>`;
 }
 
 function workCard(pack) {
@@ -3724,6 +3781,20 @@ function workCard(pack) {
       </div>
     </details>
   </article>`;
+}
+
+function workRow(pack) {
+  const command = resolvePrimaryCommandForPack(pack);
+  const workflow = workflowStateForPack(pack, command);
+  const cellClass = `demo-table-row ${pack.id === state.selectedId ? "demo-table-row-selected" : ""}`;
+  return `<button type="button" class="${escapeAttribute(cellClass)}" data-action="select" data-pack="${escapeAttribute(pack.id)}">
+    <span class="demo-table-cell demo-table-title">${escapeHtml(workTitle(pack))}</span>
+    <span class="demo-table-cell demo-table-owner">${escapeHtml(pack.owner)}</span>
+    <span class="demo-table-cell demo-table-status" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.statusLabel || workflow.label)}</span>
+    <span class="demo-table-cell demo-table-blocker">${escapeHtml(blockerTextForPack(pack))}</span>
+    <span class="demo-table-cell demo-table-next">${escapeHtml(command.label)}</span>
+    <span class="demo-table-cell demo-table-action">${primaryCommandButton(pack, "btn btn-sm btn-primary")}</span>
+  </button>`;
 }
 
 function reviewCard(pack) {
@@ -3966,9 +4037,22 @@ function bindWorkCards() {
   });
 }
 
+function bindTableRows() {
+  document.querySelectorAll(".demo-table-row").forEach((row) => {
+    row.addEventListener("click", (event) => {
+      // Ignore clicks on nested buttons (run-next)
+      if (event.target.closest("[data-action]") && event.target.closest("[data-action]") !== row) {
+        return;
+      }
+      workListKeepOrder = true;
+      handlePackAction(row.dataset.pack, "select");
+    });
+  });
+}
+
 function bindListActions() {
   el("screen-content").querySelectorAll("[data-action]").forEach((button) => {
-    if (button.closest(".demo-work-card") || button.id === "pack-primary-action") {
+    if (button.closest(".demo-work-card") || button.id === "pack-primary-action" || button.closest(".demo-table-row")) {
       return;
     }
 
