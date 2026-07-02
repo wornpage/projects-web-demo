@@ -314,15 +314,11 @@ function demoNoticeContractOk() {
 function themeToggleContractOk() {
   return includesAll(html, [
     'id="theme-toggle"',
-    'aria-pressed="false"',
-    'title="Turn on dark mode."',
-    'aria-label="Dark mode">Dark mode</button>'
+    'aria-pressed="false"'
   ]) && includesAll(source, [
-    'const help = dark ? "Turn off dark mode." : "Turn on dark mode."',
-    'toggle.textContent = "Dark mode"',
-    'toggle.setAttribute("aria-pressed", String(dark))',
-    'toggle.setAttribute("title", help)',
-    'toggle.setAttribute("aria-label", "Dark mode")'
+    'THEMES = ["light", "dark", "forest", "ocean", "sepia"]',
+    'toggle.textContent = "Theme"',
+    'toggle.setAttribute("aria-pressed", String(theme !== "light"))'
   ]) && !source.includes('"Light mode"');
 }
 

@@ -4,7 +4,9 @@ const LEGACY_DEMO_STORAGE_KEYS = [
   "projects-static-demo-state-v4",
   "projects-static-demo-state-v5"
 ];
-const THEME_STORAGE_KEY = "projects-demo-theme-v2";
+const THEME_STORAGE_KEY = "projects-demo-theme-v3";
+const THEMES = ["light", "dark", "forest", "ocean", "sepia"];
+const THEME_LABELS = { light: "Light", dark: "Dark", forest: "Forest", ocean: "Ocean", sepia: "Sepia" };
 const API_STATE_SAVE_DEBOUNCE_MS = 300;
 const API_CLIENT_STORAGE_KEY = "projects-static-demo-api-client-v1";
 const SYNC_CODE_STORAGE_KEY = "projects-static-demo-sync-code-v1";
@@ -311,23 +313,28 @@ window.addEventListener("hashchange", () => {
 
 function initTheme() {
   const saved = localStorage.getItem(THEME_STORAGE_KEY);
-  const dark = saved ? saved === "dark" : false;
-  setTheme(dark);
+  const theme = THEMES.includes(saved) ? saved : "light";
+  applyTheme(theme);
   el("theme-toggle").addEventListener("click", () => {
-    setTheme(!document.documentElement.classList.contains("dark"));
+    const current = document.documentElement.dataset.theme || "light";
+    const idx = (THEMES.indexOf(current) + 1) % THEMES.length;
+    applyTheme(THEMES[idx]);
   });
 }
 
-function setTheme(dark) {
-  document.documentElement.classList.toggle("dark", dark);
-  document.documentElement.dataset.theme = dark ? "dark" : "light";
+function applyTheme(theme) {
+  const isDarkTheme = theme !== "light";
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.classList.toggle("dark", isDarkTheme);
   const toggle = el("theme-toggle");
-  const help = dark ? "Turn off dark mode." : "Turn on dark mode.";
-  toggle.textContent = "Dark mode";
-  toggle.setAttribute("aria-pressed", String(dark));
+  const nextIdx = (THEMES.indexOf(theme) + 1) % THEMES.length;
+  const nextTheme = THEMES[nextIdx];
+  const help = `Switch to ${THEME_LABELS[nextTheme]} theme.`;
+  toggle.textContent = "Theme";
+  toggle.setAttribute("aria-pressed", String(theme !== "light"));
   toggle.setAttribute("title", help);
-  toggle.setAttribute("aria-label", "Dark mode");
-  localStorage.setItem(THEME_STORAGE_KEY, dark ? "dark" : "light");
+  toggle.setAttribute("aria-label", `Theme: ${THEME_LABELS[theme]}. ${help}`);
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
 }
 
 function bindShellControls() {

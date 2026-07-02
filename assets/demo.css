@@ -66,6 +66,90 @@ html[data-theme="dark"] {
   --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+html[data-theme="forest"] {
+  --cockpit-bg: #1a2318;
+  --cockpit-surface: #243024;
+  --cockpit-nav-bg: #1c261b;
+  --cockpit-accent: #5b9a4b;
+  --cockpit-accent-hover: #7fbf6b;
+  --cockpit-accent-text: #ecffe8;
+  --cockpit-accent-50: #1e3819;
+  --cockpit-selected-bg: #1e3d1a;
+  --cockpit-selected-fg: #f2ffee;
+  --cockpit-border: #3a4d36;
+  --cockpit-border-strong: #556b4e;
+  --cockpit-text: #e8f2e0;
+  --cockpit-text-secondary: #c5d6bf;
+  --cockpit-text-muted: #8c9e84;
+  --cockpit-hover-bg: #1e3819;
+  --cockpit-success-bg: #0a2e0a;
+  --cockpit-success-border: #4ade80;
+  --cockpit-success-text: #bbf7d0;
+  --cockpit-warning-bg: #3b2e0a;
+  --cockpit-warning-border: #facc15;
+  --cockpit-warning-text: #fef08a;
+  --cockpit-danger-bg: #450a0a;
+  --cockpit-danger-border: #fca5a5;
+  --cockpit-danger-text: #fecaca;
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="ocean"] {
+  --cockpit-bg: #0d1b2a;
+  --cockpit-surface: #162a40;
+  --cockpit-nav-bg: #101f30;
+  --cockpit-accent: #3b82c4;
+  --cockpit-accent-hover: #60a5d6;
+  --cockpit-accent-text: #e8f4fd;
+  --cockpit-accent-50: #152a42;
+  --cockpit-selected-bg: #1a3d5c;
+  --cockpit-selected-fg: #f0f8ff;
+  --cockpit-border: #2a4560;
+  --cockpit-border-strong: #4a6b8a;
+  --cockpit-text: #e6eff7;
+  --cockpit-text-secondary: #c5d5e6;
+  --cockpit-text-muted: #8aa0b8;
+  --cockpit-hover-bg: #152a42;
+  --cockpit-success-bg: #0a2e1a;
+  --cockpit-success-border: #34d399;
+  --cockpit-success-text: #a7f3d0;
+  --cockpit-warning-bg: #3b300a;
+  --cockpit-warning-border: #fbbf24;
+  --cockpit-warning-text: #fde68a;
+  --cockpit-danger-bg: #450a0a;
+  --cockpit-danger-border: #fca5a5;
+  --cockpit-danger-text: #fecaca;
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="sepia"] {
+  --cockpit-bg: #2b2218;
+  --cockpit-surface: #3a3024;
+  --cockpit-nav-bg: #2d2419;
+  --cockpit-accent: #c18642;
+  --cockpit-accent-hover: #d99f5c;
+  --cockpit-accent-text: #fff6ec;
+  --cockpit-accent-50: #3a2818;
+  --cockpit-selected-bg: #3d2a1a;
+  --cockpit-selected-fg: #fff2e0;
+  --cockpit-border: #4a3c2e;
+  --cockpit-border-strong: #6b5a48;
+  --cockpit-text: #efe0cc;
+  --cockpit-text-secondary: #d4c5b0;
+  --cockpit-text-muted: #a89880;
+  --cockpit-hover-bg: #3a2818;
+  --cockpit-success-bg: #1e2e0a;
+  --cockpit-success-border: #65a30d;
+  --cockpit-success-text: #d9f99d;
+  --cockpit-warning-bg: #3b280a;
+  --cockpit-warning-border: #d97706;
+  --cockpit-warning-text: #fde68a;
+  --cockpit-danger-bg: #450a0a;
+  --cockpit-danger-border: #fca5a5;
+  --cockpit-danger-text: #fecaca;
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
 * {
   box-sizing: border-box;
 }
