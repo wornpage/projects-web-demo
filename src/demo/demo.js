@@ -3791,16 +3791,12 @@ function cardFact(label, value) {
 
 function primaryCommandButton(pack, className = "btn btn-primary") {
   const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);
-  const label = command?.label || "Run next";
+  const label = command ? commandActionDisplayLabel(command.next) : "Run next";
   const reason = command
     ? primaryCommandReason(pack, command)
-    : backendCardRunNextReason(pack);
+    : `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: server preview before running.`;
   const copy = helpCopy(reason, DEMO_COPY_LIMITS.commandFlowHelp);
   return `<button class="${escapeAttribute(className)}" type="button" data-action="run-next" data-pack="${escapeAttribute(pack.id)}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
-}
-
-function backendCardRunNextReason(pack) {
-  return `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: server preview before running.`;
 }
 
 function primaryCommandReason(pack, command = resolvePrimaryCommandForPack(pack)) {
