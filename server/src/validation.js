@@ -96,6 +96,7 @@ function sanitizePack(source) {
     purpose: normalizeText(source.purpose, 1000),
     status: normalizeText(source.status, 40) || "active",
     blocker: normalizeStoredBlocker(source.blocker),
+    blockedBy: normalizeText(source.blockedBy, 120),
     next: normalizeText(source.next, 200),
     doneWhen: normalizeText(source.doneWhen, 1000),
     owner: normalizeText(source.owner, 120),
@@ -182,6 +183,7 @@ function validatePlainValueShape(value, depth = 0) {
 function sanitizeState(payload) {
   const source = payload && typeof payload === "object" ? payload : {};
   const packs = Array.isArray(source.packs) ? source.packs.slice(0, constants.MAX_STATE_PACKS).map(sanitizePack).filter((pack) => pack.id) : [];
+  clearDanglingBlockedBy(packs);
   const selectedId = normalizeText(source.selectedId, 120);
   return {
     packs,
@@ -194,6 +196,16 @@ function sanitizeState(payload) {
     query: normalizeText(source.query, 200),
     savedAt: normalizeText(source.savedAt, 80)
   };
+}
+
+function clearDanglingBlockedBy(packs) {
+  const ids = new Set(packs.map((pack) => pack.id));
+  for (const pack of packs) {
+    if (pack.blockedBy && (pack.blockedBy === pack.id || !ids.has(pack.blockedBy))) {
+      pack.blockedBy = "";
+    }
+  }
+  return packs;
 }
 
 function envInteger(name, fallback, min, max) {
@@ -235,6 +247,7 @@ module.exports = {
   sanitizePlainValue,
   validatePlainValueShape,
   sanitizeState,
+  clearDanglingBlockedBy,
   envInteger,
   httpError
 };

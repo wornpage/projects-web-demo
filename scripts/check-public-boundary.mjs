@@ -836,6 +836,70 @@ try {
       next: { label: "Open" }
     })
   });
+  const blockedByUnknownWrite = await request(port, "/api/packs/release-flyer-assets/path", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ blockedBy: "missing-work" })
+  });
+  const blockedBySelfWrite = await request(port, "/api/packs/source-folder-audit/path", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ blockedBy: "source-folder-audit" })
+  });
+  const blockedByDoneWrite = await request(port, "/api/packs/release-flyer-assets/path", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ blockedBy: "recording-export" })
+  });
+  const blockedByCycleWrite = await request(port, "/api/packs/source-folder-audit/path", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": clientA
+    },
+    body: JSON.stringify({ blockedBy: "release-flyer-assets" })
+  });
+  const cascadeClient = "demo-00000000-0000-4000-8000-000000000007";
+  const cascadeDoneWrite = await jsonRequest(port, "/api/packs/source-folder-audit/actions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": cascadeClient
+    },
+    body: JSON.stringify({ action: "done" })
+  });
+  const cascadeStateAfterDone = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": cascadeClient }
+  });
+  const blockedByEdgeClient = "demo-00000000-0000-4000-8000-000000000008";
+  const blockedByEdgeWrite = await jsonRequest(port, "/api/state/browser", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": blockedByEdgeClient
+    },
+    body: JSON.stringify(browserWritePayload(stateWithBlockedByEdge("blocked-by-boundary")))
+  });
+  const blockedByEdgeStateAfter = await jsonRequest(port, "/api/state", {
+    headers: { "x-projects-demo-client": blockedByEdgeClient }
+  });
+  const danglingBlockedByWrite = await request(port, "/api/state/browser", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      "x-projects-demo-client": blockedByEdgeClient
+    },
+    body: JSON.stringify(browserWritePayload(stateWithDanglingBlockedBy("dangling-blocked-by")))
+  });
   const clientAStateAfterRejectedWrite = await jsonRequest(port, "/api/state", {
     headers: { "x-projects-demo-client": clientA }
   });
@@ -913,6 +977,31 @@ try {
   check("malformed workflow actions are rejected", invalidWorkflowActionWrite.status === 400, invalidWorkflowActionWrite.status);
   check("overlong workflow memory notes are rejected", overlongWorkflowMemoryWrite.status === 400, overlongWorkflowMemoryWrite.status);
   check("malformed workflow path text fields are rejected", invalidWorkflowPathTextWrite.status === 400, invalidWorkflowPathTextWrite.status);
+  check("work-path blockedBy must reference existing work", blockedByUnknownWrite.status === 400, blockedByUnknownWrite.status);
+  check("work-path blockedBy rejects self reference", blockedBySelfWrite.status === 400, blockedBySelfWrite.status);
+  check("work-path blockedBy rejects finished work", blockedByDoneWrite.status === 400, blockedByDoneWrite.status);
+  check("work-path blockedBy rejects dependency loops", blockedByCycleWrite.status === 400, blockedByCycleWrite.status);
+  check(
+    "finishing work with proof reports unblocked dependents",
+    cascadeDoneWrite.status === 200 && /Unblocked 1 work item\./u.test(cascadeDoneWrite.body?.receipt?.summary || ""),
+    `${cascadeDoneWrite.status} / ${cascadeDoneWrite.body?.receipt?.summary || "missing"}`
+  );
+  const cascadedPack = (cascadeStateAfterDone.body?.packs || []).find((pack) => pack.id === "release-flyer-assets");
+  check(
+    "finish-with-proof cascade clears dependent blockers",
+    cascadedPack?.blocker === "none"
+      && cascadedPack?.blockedBy === ""
+      && cascadedPack?.status === "active"
+      && (cascadedPack?.activity || []).some((entry) => entry.includes("finished with proof.")),
+    JSON.stringify({ blocker: cascadedPack?.blocker, blockedBy: cascadedPack?.blockedBy, status: cascadedPack?.status })
+  );
+  const savedBlockedByPack = (blockedByEdgeStateAfter.body?.packs || []).find((pack) => pack.blockedBy);
+  check(
+    "browser-row writes keep blockedBy edges",
+    blockedByEdgeWrite.status === 200 && savedBlockedByPack?.blockedBy === "blocked-by-boundary-1",
+    `${blockedByEdgeWrite.status} / ${savedBlockedByPack?.blockedBy || "missing"}`
+  );
+  check("dangling blockedBy snapshots are rejected", danglingBlockedByWrite.status === 400, danglingBlockedByWrite.status);
   check("unkeyed backend state erase is rejected", unkeyedErase.status === 400, unkeyedErase.status);
   check("current keyed backend state can be erased", eraseClientAState.status === 200 && eraseClientAState.text.includes("\"ok\":true"), eraseClientAState.status);
   check("erased keyed backend state no longer has client work", !stateHasPackTitle(clientAStateAfterErase.body, packTitle), clientAStateAfterErase.status);
@@ -989,6 +1078,20 @@ function stateWithGeneratedPacks(count, prefix, options = {}) {
 function stateWithDuplicatePackIds(prefix) {
   const state = stateWithGeneratedPacks(2, prefix);
   state.packs[1].id = state.packs[0].id;
+  return state;
+}
+
+function stateWithBlockedByEdge(prefix) {
+  const state = stateWithGeneratedPacks(2, prefix);
+  state.packs[1].blockedBy = state.packs[0].id;
+  state.packs[1].blocker = `waiting on ${state.packs[0].title}`;
+  state.packs[1].status = "blocked";
+  return state;
+}
+
+function stateWithDanglingBlockedBy(prefix) {
+  const state = stateWithGeneratedPacks(1, prefix);
+  state.packs[0].blockedBy = `${prefix}-missing`;
   return state;
 }
 

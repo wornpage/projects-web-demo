@@ -48,16 +48,17 @@
     "id": "release-flyer-assets",
     "title": "release-flyer-assets",
     "type": "design",
-    "status": "active",
-    "blocker": "none",
-    "next": "Open",
+    "status": "blocked",
+    "blocker": "waiting on source-folder-audit",
+    "blockedBy": "source-folder-audit",
+    "next": "Review",
     "due": "2026-06-24",
     "owner": "Design lead",
     "purpose": "Collect release flyer files and final export notes.",
     "doneWhen": "Final flyer assets are listed and ready to share.",
     "sources": ["figma", "docs"],
     "memory": ["Use the dark variant for the first preview."],
-    "activity": ["Owner assigned.", "Ready to open."]
+    "activity": ["Owner assigned.", "Blocked waiting on source-folder-audit."]
   },
   {
     "id": "recording-export",

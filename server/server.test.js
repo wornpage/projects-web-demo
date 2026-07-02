@@ -13,7 +13,12 @@ const {
   isSyncStateKey,
   forwardPathStatusForBlocker,
   envInteger,
-  normalizedCorsOrigin
+  normalizedCorsOrigin,
+  runPackAction,
+  savePackPathAction,
+  createsBlockedByCycle,
+  unblockPacksBlockedBy,
+  unblockedReceiptSentence
 } = require("./server.js");
 
 // ---------------------------------------------------------------------------
@@ -297,5 +302,175 @@ describe("normalizedCorsOrigin", () => {
 
   it("rejects non-http/https protocols", () => {
     assert.strictEqual(normalizedCorsOrigin("ftp://example.com"), "");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Blocked-by dependencies
+// ---------------------------------------------------------------------------
+function dependencyPack(id, overrides = {}) {
+  return {
+    id,
+    title: id,
+    status: "active",
+    blocker: "none",
+    blockedBy: "",
+    next: "Open",
+    due: "",
+    owner: "test owner",
+    purpose: "test",
+    doneWhen: "test proof",
+    sources: [],
+    memory: [],
+    activity: [],
+    ...overrides
+  };
+}
+
+function dependencyState(packs) {
+  return {
+    packs,
+    copyProfile: "general",
+    scenarioId: "default",
+    selectedId: packs[0]?.id || "",
+    status: "",
+    actionReceipt: null,
+    filter: "all",
+    query: ""
+  };
+}
+
+describe("createsBlockedByCycle", () => {
+  it("detects a direct two-item loop", () => {
+    const packs = [
+      dependencyPack("a", { blockedBy: "b" }),
+      dependencyPack("b")
+    ];
+    assert.strictEqual(createsBlockedByCycle(packs, "b", "a"), true);
+  });
+
+  it("detects a longer chain loop", () => {
+    const packs = [
+      dependencyPack("a", { blockedBy: "b" }),
+      dependencyPack("b", { blockedBy: "c" }),
+      dependencyPack("c")
+    ];
+    assert.strictEqual(createsBlockedByCycle(packs, "c", "a"), true);
+  });
+
+  it("detects self reference", () => {
+    const packs = [dependencyPack("a")];
+    assert.strictEqual(createsBlockedByCycle(packs, "a", "a"), true);
+  });
+
+  it("allows a safe chain", () => {
+    const packs = [
+      dependencyPack("a", { blockedBy: "b" }),
+      dependencyPack("b"),
+      dependencyPack("c")
+    ];
+    assert.strictEqual(createsBlockedByCycle(packs, "c", "b"), false);
+  });
+
+  it("stays bounded on a pre-existing loop", () => {
+    const packs = [
+      dependencyPack("a", { blockedBy: "b" }),
+      dependencyPack("b", { blockedBy: "a" }),
+      dependencyPack("c")
+    ];
+    assert.strictEqual(createsBlockedByCycle(packs, "c", "a"), false);
+  });
+});
+
+describe("unblockPacksBlockedBy", () => {
+  it("clears only direct dependents", () => {
+    const finished = dependencyPack("a", { status: "done" });
+    const direct = dependencyPack("b", { status: "blocked", blocker: "waiting on a", blockedBy: "a" });
+    const transitive = dependencyPack("c", { status: "blocked", blocker: "waiting on b", blockedBy: "b" });
+    const state = dependencyState([finished, direct, transitive]);
+    const unblocked = unblockPacksBlockedBy(state, finished);
+    assert.strictEqual(unblocked.length, 1);
+    assert.strictEqual(direct.blocker, "none");
+    assert.strictEqual(direct.blockedBy, "");
+    assert.strictEqual(direct.status, "active");
+    assert.strictEqual(transitive.blockedBy, "b");
+    assert.strictEqual(transitive.status, "blocked");
+    assert.ok(direct.activity.some((entry) => entry.includes("finished with proof.")));
+  });
+
+  it("recomputes draft status when next is a placeholder", () => {
+    const finished = dependencyPack("a", { status: "done" });
+    const dependent = dependencyPack("b", { status: "blocked", blocker: "waiting on a", blockedBy: "a", next: "" });
+    const state = dependencyState([finished, dependent]);
+    unblockPacksBlockedBy(state, finished);
+    assert.strictEqual(dependent.status, "draft");
+  });
+});
+
+describe("runPackAction done cascade", () => {
+  it("unblocks dependents and reports the count once", () => {
+    const upstream = dependencyPack("a");
+    const dependent = dependencyPack("b", { status: "blocked", blocker: "waiting on a", blockedBy: "a" });
+    const state = dependencyState([upstream, dependent]);
+    const result = runPackAction(state, "a", "done");
+    assert.match(result.receipt.summary, /Unblocked 1 work item\./u);
+    assert.strictEqual(result.state.packs.find((pack) => pack.id === "b").blocker, "none");
+
+    const again = runPackAction(state, "a", "done");
+    assert.doesNotMatch(again.receipt.summary, /Unblocked/u);
+  });
+});
+
+describe("savePackPathAction blockedBy", () => {
+  it("rejects unknown targets", () => {
+    const state = dependencyState([dependencyPack("a")]);
+    assert.throws(() => savePackPathAction(state, "a", { blockedBy: "missing" }), /was not found/u);
+  });
+
+  it("rejects self reference", () => {
+    const state = dependencyState([dependencyPack("a")]);
+    assert.throws(() => savePackPathAction(state, "a", { blockedBy: "a" }), /blocked by itself/u);
+  });
+
+  it("rejects finished targets", () => {
+    const state = dependencyState([dependencyPack("a"), dependencyPack("b", { status: "done" })]);
+    assert.throws(() => savePackPathAction(state, "a", { blockedBy: "b" }), /finished work/u);
+  });
+
+  it("rejects dependency loops", () => {
+    const state = dependencyState([
+      dependencyPack("a", { blockedBy: "b", status: "blocked", blocker: "waiting on b" }),
+      dependencyPack("b")
+    ]);
+    assert.throws(() => savePackPathAction(state, "b", { blockedBy: "a" }), /loop/u);
+  });
+
+  it("derives the blocker text and blocks the pack", () => {
+    const state = dependencyState([dependencyPack("a"), dependencyPack("b")]);
+    const result = savePackPathAction(state, "a", { blockedBy: "b" });
+    const saved = result.state.packs.find((pack) => pack.id === "a");
+    assert.strictEqual(saved.blockedBy, "b");
+    assert.strictEqual(saved.blocker, "waiting on b");
+    assert.strictEqual(saved.status, "blocked");
+  });
+
+  it("cascades when a path save finishes the work", () => {
+    const upstream = dependencyPack("a");
+    const dependent = dependencyPack("b", { status: "blocked", blocker: "waiting on a", blockedBy: "a" });
+    const state = dependencyState([upstream, dependent]);
+    const result = savePackPathAction(state, "a", { status: "done" });
+    assert.match(result.receipt.summary, /Unblocked 1 work item\./u);
+    assert.strictEqual(result.state.packs.find((pack) => pack.id === "b").blockedBy, "");
+  });
+});
+
+describe("unblockedReceiptSentence", () => {
+  it("is empty for zero", () => {
+    assert.strictEqual(unblockedReceiptSentence(0), "");
+  });
+
+  it("uses singular and plural forms", () => {
+    assert.strictEqual(unblockedReceiptSentence(1), "Unblocked 1 work item.");
+    assert.strictEqual(unblockedReceiptSentence(3), "Unblocked 3 work items.");
   });
 });

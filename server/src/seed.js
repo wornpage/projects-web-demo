@@ -260,7 +260,27 @@ function validateStatePacks(packs, options) {
     ids.push(id);
   }
 
+  validateBlockedByReferences(packs, ids);
   return ids;
+}
+
+function validateBlockedByReferences(packs, ids) {
+  for (const pack of packs) {
+    const blockedBy = validation.normalizeText(pack.blockedBy, 120);
+    if (!blockedBy) {
+      continue;
+    }
+    if (!ids.includes(blockedBy)) {
+      throw validation.httpError(400, "Demo state work item blockedBy must reference another work item.");
+    }
+    const packId = validation.normalizeText(pack.id, 120);
+    if (blockedBy === packId) {
+      throw validation.httpError(400, "Demo state work items cannot be blocked by themselves.");
+    }
+    if (workflow.createsBlockedByCycle(packs, packId, blockedBy)) {
+      throw validation.httpError(400, "Demo state work items cannot block each other in a loop.");
+    }
+  }
 }
 
 function validatePackTextFields(pack) {
@@ -268,6 +288,7 @@ function validatePackTextFields(pack) {
   const title = validatePackTextField(pack, "title", 200, true);
   const status = validatePackTextField(pack, "status", 40, true);
   validatePackTextField(pack, "blocker", 200);
+  validatePackTextField(pack, "blockedBy", 120);
   validatePackTextField(pack, "next", 200);
   validatePackTextField(pack, "due", 40);
   validatePackTextField(pack, "owner", 120);
@@ -523,6 +544,7 @@ function healthyScenarioPack(pack) {
   return {
     ...pack,
     blocker: constants.DEMO_BLOCKER_NONE,
+    blockedBy: "",
     next: validation.isPlaceholderNext(pack.next) ? "Open" : pack.next,
     status: pack.status === "draft" ? "active" : pack.status
   };

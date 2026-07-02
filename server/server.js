@@ -573,5 +573,9 @@ module.exports = {
   defaultState: seed.defaultState,
   findPackOrThrow: workflow.findPackOrThrow,
   createPackFromPayload: seed.createPackFromPayload,
-  runPackAction: workflow.runPackAction
+  runPackAction: workflow.runPackAction,
+  savePackPathAction: workflow.savePackPathAction,
+  createsBlockedByCycle: workflow.createsBlockedByCycle,
+  unblockPacksBlockedBy: workflow.unblockPacksBlockedBy,
+  unblockedReceiptSentence: workflow.unblockedReceiptSentence
 };

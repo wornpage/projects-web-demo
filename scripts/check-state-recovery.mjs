@@ -70,6 +70,12 @@ try {
     headers: clientAHeaders
   });
   check("client A can export saved snapshot", stateHasPackTitle(exportedSnapshot.body, snapshotTitle), exportedSnapshot.status);
+  const exportedCheckPack = (exportedSnapshot.body?.packs || []).find((pack) => pack?.id === "recovery-snapshot-check");
+  check(
+    "client A snapshot keeps blockedBy reference",
+    Boolean(exportedCheckPack?.blockedBy) && (exportedSnapshot.body?.packs || []).some((pack) => pack?.id === exportedCheckPack.blockedBy),
+    exportedCheckPack?.blockedBy || "missing"
+  );
 
   const overwrittenState = stateWithCheckPack(exportedSnapshot.body, "recovery-snapshot-check", overwriteTitle);
   const savedOverwrite = await jsonRequest(port, "/api/state/browser", {
@@ -153,6 +159,7 @@ function checkRecoverySurfaceSource() {
   check("recovery import caps work count", source.includes("const DEMO_STATE_MAX_PACKS = 50") && source.includes("packs.length > DEMO_STATE_MAX_PACKS"), "50 pack cap");
   check("recovery import rejects invalid work items", source.includes("backup work items need an id and title"), "id/title required");
   check("recovery import rejects duplicate work ids", source.includes("backup work item ids must be unique"), "unique ids required");
+  check("recovery import keeps blockedBy references", source.includes("blockedBy: normalizeRecoveryText(source.blockedBy, 120)") && source.includes("clearDanglingBlockedBy(normalizedPacks)"), "blockedBy field with dangling clear");
 }
 
 function recoveryPanelStylesOk() {
@@ -183,6 +190,7 @@ function stateWithCheckPack(state, id, title) {
     type: "recovery-check",
     status: "active",
     blocker: "none",
+    blockedBy: packs.find((pack) => pack?.id && pack.id !== id)?.id || "",
     next: "Open",
     due: "",
     owner: "state recovery verifier",

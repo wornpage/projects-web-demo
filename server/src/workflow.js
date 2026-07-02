@@ -233,6 +233,7 @@ function runPackAction(state, packId, rawAction) {
   const pack = findPackOrThrow(state, packId);
   const before = packActionSignature(pack);
   let changed = false;
+  let unblockedCount = 0;
 
   if (action === "start") {
     pack.status = "active";
@@ -259,20 +260,25 @@ function runPackAction(state, packId, rawAction) {
       addPackActivity(pack, "Blocked.");
     }
   } else if (action === "done") {
+    const wasDone = pack.status === "done";
     pack.status = "done";
     pack.blocker = constants.DEMO_BLOCKER_NONE;
+    pack.blockedBy = "";
     pack.next = "Open";
     changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, proofSavedActivity(pack));
     }
+    unblockedCount = wasDone ? 0 : unblockPacksBlockedBy(state, pack).length;
   } else if (action === "open") {
     changed = addPackActivity(pack, "Opened.");
   }
 
   state.selectedId = pack.id;
   const next = resolvePrimaryCommandForPack(pack);
-  const summary = packActionSummary(pack, action, actionLabelFromKey(action), changed);
+  const summary = [packActionSummary(pack, action, actionLabelFromKey(action), changed), unblockedReceiptSentence(unblockedCount)]
+    .filter(Boolean)
+    .join(" ");
   const receipt = actionReceiptForPack(pack, summary, next);
   state.status = receipt.summary;
   state.actionReceipt = receipt;
@@ -335,12 +341,74 @@ function proofSavedActivity(pack) {
     : "Finished work.";
 }
 
+// --- Blocked-by dependencies ---
+
+function blockedByBlockerText(targetPack) {
+  return validation.normalizeText(`waiting on ${workTitle(targetPack)}`, 200);
+}
+
+function createsBlockedByCycle(packs, packId, targetId) {
+  let currentId = targetId;
+  for (let hops = 0; hops < packs.length && currentId; hops++) {
+    if (currentId === packId) {
+      return true;
+    }
+    currentId = packs.find((pack) => pack.id === currentId)?.blockedBy || "";
+  }
+  return false;
+}
+
+function changePackBlockedByField(state, pack, source, field, label) {
+  const value = validation.workflowTextField(source, field, 120);
+  if (!value) {
+    pack.blockedBy = "";
+    return;
+  }
+  if (value === pack.id) {
+    throw validation.httpError(400, "Work cannot be blocked by itself.");
+  }
+  const target = state.packs.find((candidate) => candidate.id === value);
+  if (!target) {
+    throw validation.httpError(400, "Workflow blockedBy work item was not found.");
+  }
+  if (validation.normalizeText(target.status, 40) === "done") {
+    throw validation.httpError(400, "Work cannot be blocked by finished work.");
+  }
+  if (createsBlockedByCycle(state.packs, pack.id, target.id)) {
+    throw validation.httpError(400, "Work items cannot block each other in a loop.");
+  }
+  pack.blockedBy = target.id;
+  pack.blocker = blockedByBlockerText(target);
+}
+
+function unblockPacksBlockedBy(state, finishedPack) {
+  const unblocked = [];
+  for (const pack of state.packs) {
+    if (pack.id !== finishedPack.id && pack.blockedBy === finishedPack.id) {
+      pack.blockedBy = "";
+      pack.blocker = constants.DEMO_BLOCKER_NONE;
+      pack.status = forwardPathStatusForBlocker(pack.status, constants.DEMO_BLOCKER_NONE, pack.next);
+      addPackActivity(pack, `Unblocked: ${workTitle(finishedPack)} finished with proof.`);
+      unblocked.push(pack);
+    }
+  }
+  return unblocked;
+}
+
+function unblockedReceiptSentence(count) {
+  if (!count) {
+    return "";
+  }
+  return `Unblocked ${count} work item${count === 1 ? "" : "s"}.`;
+}
+
 // --- Path actions ---
 
 function savePackPathAction(state, packId, payload) {
   const pack = findPackOrThrow(state, packId);
   const source = validation.workflowPayloadObject(payload);
   const before = pathChangeSignature(pack);
+  const statusBefore = validation.normalizeText(pack.status, 40);
 
   for (const [field, label] of constants.FORWARD_PATH_CHANGE_FIELDS) {
     if (Object.prototype.hasOwnProperty.call(source, field)) {
@@ -348,6 +416,8 @@ function savePackPathAction(state, packId, payload) {
         changePackStatusField(pack, source, field, label);
       } else if (field === "blocker") {
         changePackBlockerField(pack, source, field, label);
+      } else if (field === "blockedBy") {
+        changePackBlockedByField(state, pack, source, field, label);
       } else if (field === "next") {
         changePackNextField(pack, source, field, label);
       } else if (field === "due") {
@@ -371,8 +441,18 @@ function savePackPathAction(state, packId, payload) {
     pack.status = forwardStatus;
   }
 
+  let unblockedCount = 0;
+  if (statusBefore !== "done" && pack.status === "done") {
+    pack.blocker = constants.DEMO_BLOCKER_NONE;
+    pack.blockedBy = "";
+    unblockedCount = unblockPacksBlockedBy(state, pack).length;
+  }
+
   const next = resolvePrimaryCommandForPack(pack);
-  const receipt = actionReceiptForPack(pack, pathChangeSummary(pack, before, next), next);
+  const summary = [pathChangeSummary(pack, before, next), unblockedReceiptSentence(unblockedCount)]
+    .filter(Boolean)
+    .join(" ");
+  const receipt = actionReceiptForPack(pack, summary, next);
   state.status = receipt.summary;
   state.actionReceipt = receipt;
   pack.signature = packCommandSignature(pack);
@@ -390,6 +470,7 @@ function pathChangeSignature(pack) {
     title: pack.title,
     status: pack.status,
     blocker: validation.normalizeStoredBlocker(pack.blocker),
+    blockedBy: validation.normalizeText(pack.blockedBy, 120),
     owner: pack.owner,
     due: pack.due,
     next: pack.next,
@@ -546,6 +627,11 @@ module.exports = {
   actionReceiptContext,
   addPackActivity,
   proofSavedActivity,
+  blockedByBlockerText,
+  createsBlockedByCycle,
+  changePackBlockedByField,
+  unblockPacksBlockedBy,
+  unblockedReceiptSentence,
   savePackPathAction,
   setPackNextAction,
   addPackMemoryAction

@@ -29,6 +29,7 @@ const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
   ["title", "title"],
   ["status", "status"],
   ["blocker", "blocker"],
+  ["blockedBy", "blocked by work item"],
   ["owner", "owner"],
   ["due", "due date"],
   ["next", "Next action"],

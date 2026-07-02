@@ -52,6 +52,7 @@ const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
   ["title", "title"],
   ["status", "status"],
   ["blocker", "blocker"],
+  ["blockedBy", "blocked by work item"],
   ["owner", "owner"],
   ["due", "due date"],
   ["next", "Next action"],
@@ -154,6 +155,7 @@ const DEMO_SCENARIOS = [
       : {
           ...pack,
           blocker: DEMO_BLOCKER_NONE,
+          blockedBy: "",
           next: isPlaceholderNext(pack.next) ? "Open" : pack.next,
           status: pack.status === "draft" ? "active" : pack.status
         })
@@ -359,7 +361,7 @@ function loadState(backendState = null) {
   const saved = DEMO_API_BASE_URL
     ? normalizeStoredDemoState(backendState)
     : safeJson(localStorage.getItem(DEMO_STORAGE_KEY));
-  state.packs = normalizeLegacyVisibleCopy(Array.isArray(saved?.packs) ? saved.packs : structuredClone(state.basePacks));
+  state.packs = clearDanglingBlockedBy(normalizeLegacyVisibleCopy(Array.isArray(saved?.packs) ? saved.packs : structuredClone(state.basePacks)));
   state.copyProfile = saved?.copyProfile || "general";
   state.scenarioId = saved?.scenarioId || "default";
   state.filter = saved?.filter || "all";
@@ -431,7 +433,7 @@ async function applyScenario(scenario, options = {}) {
     }
   }
 
-  const next = current.transform(structuredClone(state.basePacks));
+  const next = clearDanglingBlockedBy(current.transform(structuredClone(state.basePacks)));
   state.packs = next;
   state.scenarioId = current.id;
   state.filter = current.filter || "all";
@@ -594,6 +596,7 @@ function normalizeRecoveryState(source) {
     }
     packIds.add(pack.id);
   }
+  clearDanglingBlockedBy(normalizedPacks);
 
   const selectedId = normalizeRecoveryText(source.selectedId, 120);
   const copyProfile = copyProfiles[source.copyProfile] ? source.copyProfile : "general";
@@ -631,6 +634,7 @@ function normalizeRecoveryPack(source) {
     type: normalizeRecoveryText(source.type, 80) || "general",
     status: normalizeRecoveryStatus(source.status),
     blocker: normalizeStoredBlocker(source.blocker),
+    blockedBy: normalizeRecoveryText(source.blockedBy, 120),
     next: normalizeRecoveryText(source.next, 120),
     due: normalizeRecoveryText(source.due, 40),
     owner: normalizeRecoveryText(source.owner, 120),
@@ -3343,6 +3347,7 @@ function blockerStateField(pack) {
       </div>
       ${ownerBlockerGuide(pack)}
       <div class="demo-blocker-reason" data-blocker-reason${hasBlocker ? "" : " hidden"}>
+        ${blockedBySelectField(pack)}
         <label for="edit-blocker">Why blocked?</label>
         <small class="demo-field-help">Choose a common reason, or write the reason that must clear before the button can run.</small>
         ${blockerPresetButtons(blocker)}
@@ -3403,6 +3408,17 @@ function ownerBlockerGuideState(ownerFilled, blockerClear) {
   }
 
   return blockerClear ? "ready-to-save" : "clear-blocker";
+}
+
+function blockedBySelectField(pack) {
+  const choices = blockedByChoices(pack);
+  const current = normalizeCopy(pack?.blockedBy);
+  return `<label for="edit-blocked-by">Blocked by work item (optional)</label>
+        <select id="edit-blocked-by" aria-describedby="edit-blocked-by-help">
+          <option value=""${current ? "" : " selected"}>None — describe the reason below</option>
+          ${choices.map((candidate) => `<option value="${escapeAttribute(candidate.id)}"${candidate.id === current ? " selected" : ""}>${escapeHtml(workTitle(candidate))}</option>`).join("")}
+        </select>
+        <small id="edit-blocked-by-help" class="demo-field-help">Choosing work fills the reason and clears it automatically when that work finishes with proof.</small>`;
 }
 
 function blockerPresetButtons(currentBlocker = "") {
@@ -4010,11 +4026,11 @@ function setActionConfirmation(pack, action) {
   );
 }
 
-function setPackActionConfirmation(pack, action, changed) {
+function setPackActionConfirmation(pack, action, changed, unblockedCount = 0) {
   if (!pack) return;
 
   const actionLabel = actionLabelFromKey(action);
-  const summary = packActionSummary(pack, action, actionLabel, changed);
+  const summary = packActionSummary(pack, action, actionLabel, changed, unblockedCount);
   setActionReceipt(
     pack,
     summary,
@@ -4022,13 +4038,14 @@ function setPackActionConfirmation(pack, action, changed) {
   );
 }
 
-function packActionSummary(pack, action, actionLabel, changed) {
+function packActionSummary(pack, action, actionLabel, changed, unblockedCount = 0) {
   const title = workTitle(pack);
   if (action === "done") {
     const proof = proofTargetSentence(pack);
-    return changed
-      ? `Done saved for ${title}. ${proof}`
-      : `Done already saved for ${title}. ${proof}`;
+    const base = changed
+      ? `Done saved for ${title}.`
+      : `Done already saved for ${title}.`;
+    return [base, unblockedReceiptSentence(unblockedCount), proof].filter(Boolean).join(" ");
   }
 
   if (action === "open") {
@@ -4484,6 +4501,7 @@ function packCommandSignature(pack) {
     title: pack?.title || "",
     status: pack?.status || "",
     blocker: pack?.blocker || "",
+    blockedBy: pack?.blockedBy || "",
     next: pack?.next || "",
     doneWhen: pack?.doneWhen || ""
   });
@@ -4602,14 +4620,17 @@ async function handlePackAction(id, action) {
     return;
   } else if (action === "done") {
     const before = packActionSignature(pack);
+    const wasDone = pack.status === "done";
     pack.status = "done";
     pack.blocker = DEMO_BLOCKER_NONE;
+    pack.blockedBy = "";
     pack.next = "Open";
     const changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, proofSavedActivity(pack));
     }
-    setPackActionConfirmation(pack, "done", changed);
+    const unblocked = wasDone ? [] : unblockPacksBlockedBy(pack);
+    setPackActionConfirmation(pack, "done", changed, unblocked.length);
     go("pack", pack.id);
     return;
   } else if (action === "focus") {
@@ -5315,9 +5336,32 @@ function bindPackDetailValidation(pack) {
       if (input) {
         input.value = button.dataset.blockerPreset || "";
       }
+      const blockedBySelect = el("edit-blocked-by");
+      if (blockedBySelect) {
+        blockedBySelect.value = "";
+      }
       syncPackDetailValidation(pack);
       input?.focus();
     });
+  });
+  el("edit-blocked-by")?.addEventListener("change", () => {
+    const target = findPack(valueOf("edit-blocked-by"));
+    const input = el("edit-blocker");
+    if (target && input) {
+      setBlockerMode(true);
+      input.value = blockedByBlockerText(target);
+    }
+    syncPackDetailValidation(pack);
+  });
+  el("edit-blocker")?.addEventListener("input", () => {
+    const blockedBySelect = el("edit-blocked-by");
+    if (!blockedBySelect || !blockedBySelect.value) {
+      return;
+    }
+    const target = findPack(blockedBySelect.value);
+    if (!target || normalizeCopy(el("edit-blocker")?.value) !== blockedByBlockerText(target)) {
+      blockedBySelect.value = "";
+    }
   });
   document.querySelector("[data-clear-owner-blocker]")?.addEventListener("click", () => {
     runRouteAction("clear-owner-blocker", pack.id);
@@ -5349,6 +5393,12 @@ function setBlockerMode(hasBlocker) {
     }
     if (hasBlocker) {
       input.focus();
+    }
+  }
+  if (!hasBlocker) {
+    const blockedBySelect = el("edit-blocked-by");
+    if (blockedBySelect) {
+      blockedBySelect.value = "";
     }
   }
   if (reason) {
@@ -5786,18 +5836,26 @@ async function savePackForwardPathFromForm(pack) {
 
 function applyPackForwardPathFormValues(pack) {
   const before = packForwardPathSignature(pack);
+  const statusBefore = normalizeCopy(pack.status) || "active";
   const values = packForwardPathFormValues(pack);
   pack.title = values.title || pack.title;
   pack.status = values.status || pack.status;
   pack.blocker = values.blocker;
+  pack.blockedBy = values.blockedBy;
   pack.owner = values.owner || pack.owner;
   pack.due = values.due;
   pack.next = values.next || pack.next;
   pack.doneWhen = values.doneWhen || pack.doneWhen;
   pack.purpose = values.purpose || pack.purpose;
   pack.blocker = pack.status === "done" ? DEMO_BLOCKER_NONE : pack.blocker;
+  if (pack.status === "done") {
+    pack.blockedBy = "";
+  }
   if (pack.status === "blocked" && isUnblockedBlockerValue(pack.blocker)) {
     pack.status = "active";
+  }
+  if (statusBefore !== "done" && pack.status === "done") {
+    unblockPacksBlockedBy(pack);
   }
   const changed = packForwardPathSignature(pack) !== before;
   if (changed) {
@@ -5811,6 +5869,7 @@ function packForwardPathSnapshot(pack) {
     title: normalizeCopy(pack?.title),
     status: normalizeCopy(pack?.status),
     blocker: normalizeCopy(pack?.blocker),
+    blockedBy: normalizeCopy(pack?.blockedBy),
     owner: normalizeCopy(pack?.owner),
     due: normalizeCopy(pack?.due),
     next: normalizeCopy(pack?.next),
@@ -5864,8 +5923,16 @@ function packForwardPathFormValues(pack) {
   const blockerMode = selectedBlockerMode
     ? (selectedBlockerMode.value === "set" ? "set" : "clear")
     : (isUnblockedBlockerValue(pack.blocker) ? "clear" : "set");
+  const blockedBySelect = el("edit-blocked-by");
+  const requestedBlockedBy = blockedBySelect ? normalizeCopy(valueOf("edit-blocked-by")) : normalizeCopy(pack.blockedBy);
+  const blockedByTarget = blockerMode === "set" && currentStatus !== "done" && requestedBlockedBy
+    ? findPack(requestedBlockedBy)
+    : null;
+  const blockedBy = blockedByTarget ? blockedByTarget.id : "";
   const rawBlocker = blockerMode === "set"
-    ? normalizeCopy(blockerInput ? blockerInput.value : pack.blocker) || "needs review"
+    ? (blockedByTarget
+      ? blockedByBlockerText(blockedByTarget)
+      : normalizeCopy(blockerInput ? blockerInput.value : pack.blocker) || "needs review")
     : DEMO_BLOCKER_NONE;
   const blocker = currentStatus === "done" ? DEMO_BLOCKER_NONE : rawBlocker;
   const status = forwardPathStatusForBlocker(currentStatus, blocker, requestedNext);
@@ -5874,6 +5941,7 @@ function packForwardPathFormValues(pack) {
     title: fieldValue("edit-title", pack.title) || pack.title || "",
     status,
     blocker,
+    blockedBy,
     owner,
     due: fieldValue("edit-due", pack.due),
     next: requestedNext,
@@ -5894,6 +5962,61 @@ function forwardPathStatusForBlocker(status, blocker, next = "") {
     return "blocked";
   }
   return "active";
+}
+
+function blockedByBlockerText(targetPack) {
+  return normalizeCopy(`waiting on ${workTitle(targetPack)}`).slice(0, 200);
+}
+
+function createsBlockedByCycle(packs, packId, targetId) {
+  let currentId = targetId;
+  for (let hops = 0; hops < packs.length && currentId; hops++) {
+    if (currentId === packId) {
+      return true;
+    }
+    currentId = packs.find((pack) => pack.id === currentId)?.blockedBy || "";
+  }
+  return false;
+}
+
+function clearDanglingBlockedBy(packs) {
+  if (!Array.isArray(packs)) {
+    return packs;
+  }
+  const ids = new Set(packs.map((pack) => pack?.id));
+  for (const pack of packs) {
+    if (pack && pack.blockedBy && (pack.blockedBy === pack.id || !ids.has(pack.blockedBy))) {
+      pack.blockedBy = "";
+    }
+  }
+  return packs;
+}
+
+function unblockPacksBlockedBy(finishedPack) {
+  const unblocked = [];
+  for (const pack of state.packs) {
+    if (pack.id !== finishedPack.id && pack.blockedBy === finishedPack.id) {
+      pack.blockedBy = "";
+      pack.blocker = DEMO_BLOCKER_NONE;
+      pack.status = forwardPathStatusForBlocker(pack.status, DEMO_BLOCKER_NONE, pack.next);
+      addPackActivity(pack, `Unblocked: ${workTitle(finishedPack)} finished with proof.`);
+      unblocked.push(pack);
+    }
+  }
+  return unblocked;
+}
+
+function unblockedReceiptSentence(count) {
+  if (!count) {
+    return "";
+  }
+  return `Unblocked ${count} work item${count === 1 ? "" : "s"}.`;
+}
+
+function blockedByChoices(pack) {
+  return state.packs.filter((candidate) => candidate.id !== pack.id
+    && candidate.status !== "done"
+    && !createsBlockedByCycle(state.packs, pack.id, candidate.id));
 }
 
 function filteredPacks() {

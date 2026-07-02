@@ -386,6 +386,21 @@ For UI-only work, also smoke the main routes locally in light and dark mode:
 - `#/memory/source-folder-audit`
 - `#/create`
 
+## Work Dependencies
+
+A work item's blocker can reference another work item. On the work path edit
+screen, "Blocked by work item" fills the blocker reason as `waiting on {title}`
+and stores the reference; the select only offers targets that are not the item
+itself, not already done, and would not create a dependency loop. When the
+referenced work finishes with proof, every directly dependent item unblocks
+automatically — blocker cleared, status recomputed, an "Unblocked" activity
+line added — and the finish receipt reports `Unblocked N work items.`
+Dependencies are non-transitive (a chain clears one hop per finished item) and
+behave identically in browser-local static mode and backend app mode. The
+backend rejects unknown, self, finished, or loop-creating references before
+storage, and dangling references left by scenario switches or imports are
+cleared on read while the blocker text is kept.
+
 ## Product Rule
 
 The public demo should explain one idea clearly:
