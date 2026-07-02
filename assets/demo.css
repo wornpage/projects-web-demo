@@ -5783,7 +5783,7 @@ html[data-theme="dark"] .demo-command-work-path {
   --demo-dock-action-border: var(--demo-primary-border);
   --demo-dock-action-text: var(--demo-primary-on-accent);
   --demo-dock-action-label: var(--cockpit-accent-text);
-  --demo-work-card-state-rail: #6e806f;
+  --demo-work-card-state-rail: var(--cockpit-accent);
   --demo-work-card-setup-border: var(--cockpit-warning-border);
   --demo-work-card-setup-rail: var(--cockpit-warning-border);
 }
@@ -5791,7 +5791,7 @@ html[data-theme="dark"] .demo-command-work-path {
 html.dark .demo-app-shell,
 html[data-theme="dark"] .demo-app-shell {
   --demo-work-card-bg: var(--cockpit-surface);
-  --demo-work-card-bg-alt: #121f1a;
+  --demo-work-card-bg-alt: var(--cockpit-nav-bg);
   --demo-work-card-border: var(--cockpit-border);
   --demo-work-card-shadow: var(--cockpit-shadow-sm);
   --demo-work-card-hover-shadow: var(--cockpit-shadow-md, 0 4px 12px rgba(0,0,0,0.15));
@@ -5813,7 +5813,7 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-dock-action-border: var(--demo-primary-border);
   --demo-dock-action-text: var(--demo-primary-on-accent);
   --demo-dock-action-label: var(--cockpit-accent-text);
-  --demo-work-card-state-rail: #8aa79c;
+  --demo-work-card-state-rail: var(--cockpit-accent);
   --demo-work-card-setup-border: var(--cockpit-warning-border);
   --demo-work-card-setup-rail: var(--cockpit-warning-border);
 }
