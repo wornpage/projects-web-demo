@@ -1,0 +1,8 @@
+{
+  "detector": {
+    "ignoreRules": [
+      "side-tab",
+      "layout-transition"
+    ]
+  }
+}

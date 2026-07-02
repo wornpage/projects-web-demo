@@ -847,7 +847,7 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-notice {
-  border-left: 3px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   color: var(--cockpit-text-secondary);
   font-size: 13px;
   line-height: 1.35;
@@ -866,7 +866,7 @@ html[data-theme="dark"] .demo-header-metadata {
   align-items: center;
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
-  border-left: 3px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--demo-panel-radius);
   color: var(--cockpit-text-secondary);
   display: flex;
@@ -1174,7 +1174,7 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-command-memory {
   background: var(--cockpit-selected-bg);
   border: 1px solid var(--cockpit-border);
-  border-left: 3px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
   display: grid;
   gap: 4px;
@@ -1205,7 +1205,7 @@ html[data-theme="dark"] .demo-header-metadata {
   animation: demo-clipboard-pop 180ms ease-out;
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
-  border-left: 5px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
   display: grid;
   gap: 10px;
@@ -1368,7 +1368,7 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-copy-payload {
   border-radius: calc(var(--cockpit-radius) + 4px);
   padding: 0;
-  transition: background-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease, outline-color var(--demo-motion-duration) ease, padding var(--demo-motion-duration) ease;
+  transition: background-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease, outline-color var(--demo-motion-duration) ease;
 }
 
 .demo-inline-form.demo-copy-payload {
@@ -1633,7 +1633,7 @@ html[data-theme="dark"] .demo-header-metadata {
   align-items: start;
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
-  border-left: 3px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
   color: var(--cockpit-text-secondary);
   display: grid;
@@ -1877,7 +1877,7 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-create-spotlight {
   background: var(--demo-card-bg);
   border: 1px solid var(--demo-card-border);
-  border-left: 4px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--demo-panel-radius);
   box-shadow: var(--demo-card-shadow);
   display: grid;
@@ -3235,7 +3235,7 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-forward-panel {
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border-strong);
-  border-left: 4px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
   box-shadow: var(--cockpit-shadow-sm);
   display: grid;
@@ -3294,7 +3294,7 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-forward-triad .selected-work-where {
   background: var(--cockpit-selected-bg);
   border-color: var(--cockpit-accent);
-  border-left: 4px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   padding-left: 10px;
 }
 
@@ -3369,7 +3369,7 @@ html[data-theme="dark"] .demo-state-pill {
   align-items: center;
   background: var(--cockpit-selected-bg);
   border: 1px solid var(--cockpit-border);
-  border-left: 3px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
   color: var(--cockpit-text);
   display: grid;
@@ -3470,7 +3470,7 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-owner-blocker-guide {
   background: var(--cockpit-selected-bg);
   border: 1px solid var(--cockpit-border);
-  border-left: 3px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
   display: grid;
   gap: 8px;
@@ -5267,7 +5267,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 .demo-command-brief.sidecar {
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
-  border-left: 4px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
   box-shadow: none;
   gap: 10px;
@@ -5502,7 +5502,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 .demo-scenario-card[aria-pressed="true"] {
   background: var(--cockpit-selected-bg);
   border-color: var(--cockpit-border);
-  border-left: 3px solid var(--cockpit-accent);
+  border-left: 2px solid var(--cockpit-accent);
   box-shadow: none;
   padding-left: 9px;
 }
