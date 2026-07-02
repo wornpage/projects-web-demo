@@ -16,13 +16,12 @@ const ast = acorn.parse(source, {
   sourceType: "script"
 });
 const checks = [];
-const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create"];
-const expectedContractRoutes = [...expectedNavRoutes, "pack"];
-const expectedNavLabels = ["Start", "Review", "Work", "Choose action", "Memory", "Create"];
-const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Choose action", memory: "Memory", create: "Create", pack: "Work path" };
+const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create", "calendar"];
+const expectedContractRoutes = ["home", "review", "work", "next", "memory", "create", "pack", "compare", "calendar"];
+const expectedNavLabels = ["Start", "Review", "Work", "Choose action", "Memory", "Create", "Calendar"];
+const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Choose action", memory: "Memory", create: "Create", pack: "Work path", calendar: "Calendar" };
 const blockedPublicRoutes = [
   "board",
-  "calendar",
   "check",
   "feedback",
   "files",
@@ -58,7 +57,6 @@ const blockedRouteActions = [
 ].filter((action) => source.includes(`action === "${action}"`) || source.includes(`action: "${action}"`));
 const blockedRenderFunctions = [
   "renderBoard",
-  "renderCalendar",
   "renderCheck",
   "renderFeedback",
   "renderFiles",
