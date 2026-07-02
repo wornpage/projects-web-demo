@@ -6196,3 +6196,11 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-confetti-dur-1 { animation-duration: 1.6s; }
 .demo-confetti-dur-2 { animation-duration: 2.0s; }
 .demo-confetti-dur-3 { animation-duration: 2.5s; }
+
+.demo-pack-guidance {
+  color: var(--cockpit-text-secondary);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+  margin: 6px 0 0;
+}

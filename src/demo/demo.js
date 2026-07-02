@@ -3242,6 +3242,7 @@ function renderPackDetail() {
           <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
           <p class="demo-pack-subtitle"${copySurfaceAttributes("Work path summary", detailSubtitle)}>${escapeHtml(detailSubtitle.visible)}</p>
           ${pack.purpose ? `<p class="demo-pack-purpose">${escapeHtml(pack.purpose)}</p>` : ""}
+          ${packGuidanceLine(pack, packCommand, workflow)}
         </div>
         <span class="demo-status">${escapeHtml(persistenceEditStatus("Edits stay in this browser"))}</span>
       </div>
@@ -6302,6 +6303,21 @@ function syncSelectedWorkTriad(panel, pack, command = resolvePrimaryCommandForPa
     const label = key === "next" ? "Next action" : capitalize(key);
     setCopySurface(field, value, label, DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   });
+}
+
+function packGuidanceLine(pack, command, workflow) {
+  if (!pack) return "";
+  const title = workTitle(pack);
+  if (pack.status === "done") {
+    return `<p class="demo-pack-guidance">${escapeHtml(title)} is marked done — proof saved.</p>`;
+  }
+  if (isMissingNextAction(pack)) {
+    return `<p class="demo-pack-guidance">👉 ${escapeHtml(title)} needs a next action. Pick what the button should do below.</p>`;
+  }
+  if (hasBlocker(pack)) {
+    return `<p class="demo-pack-guidance">⛔ ${escapeHtml(title)} is blocked by "${blockerTextForPack(pack)}". Clear the blocker to continue.</p>`;
+  }
+  return `<p class="demo-pack-guidance">✅ ${escapeHtml(title)} is ready. Next: ${escapeHtml(commandActionDisplayLabel(command.next))}.</p>`;
 }
 
 function workDetailSubtitle(pack, command = resolvePrimaryCommandForPack(pack)) {
