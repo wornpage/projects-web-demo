@@ -6483,8 +6483,9 @@ function workPathStage(pack, command = resolvePrimaryCommandForPack(pack)) {
 
 function inputField(id, label, value, help = "") {
   const describedBy = help ? `${id}-help` : "";
+  const labelHtml = label.includes("<") ? label : escapeHtml(label);
   return `<label class="demo-field" for="${escapeAttribute(id)}">
-    <span>${escapeHtml(label)}</span>
+    <span>${labelHtml}</span>
     <input id="${escapeAttribute(id)}" type="text" value="${escapeAttribute(value || "")}"${fieldHelpAttributes(describedBy, help)}>
     ${fieldHelp(id, help)}
   </label>`;
@@ -6492,8 +6493,9 @@ function inputField(id, label, value, help = "") {
 
 function dateField(id, label, value, help = "") {
   const describedBy = help ? `${id}-help` : "";
+  const labelHtml = label.includes("<") ? label : escapeHtml(label);
   return `<label class="demo-field" for="${escapeAttribute(id)}">
-    <span>${escapeHtml(label)}</span>
+    <span>${labelHtml}</span>
     <input id="${escapeAttribute(id)}" type="date" value="${escapeAttribute(dateFieldValue(value))}"${fieldHelpAttributes(describedBy, help)}>
     ${fieldHelp(id, help)}
   </label>`;
@@ -6506,8 +6508,9 @@ function dateFieldValue(value) {
 
 function nextActionSelectField(id, label, value, help = "") {
   const describedBy = help ? `${id}-help` : "";
+  const labelHtml = label.includes("<") ? label : escapeHtml(label);
   return `<label class="demo-field demo-action-choice-field" for="${escapeAttribute(id)}">
-    <span>${escapeHtml(label)}</span>
+    <span>${labelHtml}</span>
     <select id="${escapeAttribute(id)}" class="demo-search-input"${fieldHelpAttributes(describedBy, help)}>
       ${nextActionOptions(value).map((option) => `<option value="${escapeAttribute(option.value)}"${option.selected ? " selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
     </select>
