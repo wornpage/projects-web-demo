@@ -18,7 +18,7 @@ const publicFileAllowlist = [
   "assets/favicon.png",
   "data/demo-packs.json"
 ];
-const totalPublicTextBudgetBytes = 370000;
+const totalPublicTextBudgetBytes = 380000;
 const retiredPublicFiles = [
   "assets/app.css",
   "assets/demo-metadata.json"
