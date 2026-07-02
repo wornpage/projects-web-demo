@@ -449,8 +449,10 @@ function injectAppApiBase(html) {
 }
 
 function runtimeConfigScript() {
+  const isProxyDeploy = HOST === "0.0.0.0";
   const config = {
-    apiBase: `//${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`,
+    apiBase: isProxyDeploy ? "" : `//${HOST}:${PORT}`,
+    backendMode: STATE_STORAGE === "postgres",
     assetVersion: ASSET_VERSION,
     apiClientHeader: constants.API_CLIENT_HEADER,
     stateStorage: STATE_STORAGE

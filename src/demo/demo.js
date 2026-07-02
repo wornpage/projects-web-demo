@@ -226,6 +226,7 @@ function reviewScenarioPack(pack) {
 const el = (id) => document.getElementById(id);
 const launchParams = new URLSearchParams(location.search);
 const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || (window.__projectsDemoConfig && window.__projectsDemoConfig.apiBase) || "");
+const BACKEND_MODE = Boolean((window.__projectsDemoConfig && window.__projectsDemoConfig.backendMode) || DEMO_API_BASE_URL);
 let apiSaveTimer = null;
 let apiPendingSnapshot = null;
 let apiSaveInFlight = false;
@@ -1046,8 +1047,8 @@ function renderDemoSyncControls(message = "") {
     return;
   }
 
-  panel.hidden = !DEMO_API_BASE_URL;
-  if (!DEMO_API_BASE_URL) {
+  panel.hidden = !BACKEND_MODE;
+  if (!BACKEND_MODE) {
     return;
   }
 
