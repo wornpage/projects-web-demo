@@ -44,7 +44,7 @@ html[data-theme="dark"] {
   --cockpit-nav-bg: #101a16;
   --cockpit-accent: #4ca48f;
   --cockpit-accent-hover: #7ddac3;
-  --cockpit-accent-text: #ecfffa;
+  --cockpit-accent-text: #d1f5e8;
   --cockpit-accent-50: #16372f;
   --cockpit-selected-bg: #16453b;
   --cockpit-selected-fg: #f7fffc;
@@ -128,7 +128,7 @@ html[data-theme="sepia"] {
   --cockpit-nav-bg: #2d2419;
   --cockpit-accent: #c18642;
   --cockpit-accent-hover: #d99f5c;
-  --cockpit-accent-text: #fff6ec;
+  --cockpit-accent-text: #1a1008;
   --cockpit-accent-50: #3a2818;
   --cockpit-selected-bg: #3d2a1a;
   --cockpit-selected-fg: #fff2e0;
@@ -188,6 +188,19 @@ h3,
 :focus-visible {
   outline: 2px solid var(--cockpit-accent);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .btn-primary, .demo-chip[aria-pressed="true"], .demo-state-pill {
+    border: 2px solid ButtonText;
+  }
 }
 
 .skip-link {
