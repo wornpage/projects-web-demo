@@ -1,7 +1,7 @@
 [
   {
     "id": "venue-hold-calendar",
-    "title": "venue-hold-calendar",
+    "title": "Venue hold calendar",
     "type": "operations",
     "status": "blocked",
     "blocker": "missing owner",
@@ -16,7 +16,7 @@
   },
   {
     "id": "source-folder-audit",
-    "title": "source-folder-audit",
+    "title": "Source folder audit",
     "type": "music",
     "status": "blocked",
     "blocker": "missing source folder",
@@ -31,7 +31,7 @@
   },
   {
     "id": "lighting-checklist",
-    "title": "lighting-checklist",
+    "title": "Lighting checklist",
     "type": "show",
     "status": "draft",
     "blocker": "missing next action",
@@ -46,7 +46,7 @@
   },
   {
     "id": "release-flyer-assets",
-    "title": "release-flyer-assets",
+    "title": "Release flyer assets",
     "type": "design",
     "status": "blocked",
     "blocker": "waiting on source-folder-audit",
@@ -62,7 +62,7 @@
   },
   {
     "id": "recording-export",
-    "title": "recording-export",
+    "title": "Recording export",
     "type": "music",
     "status": "done",
     "blocker": "none",
@@ -77,7 +77,7 @@
   },
   {
     "id": "warmup-set-notes",
-    "title": "warmup-set-notes",
+    "title": "Warmup set notes",
     "type": "music",
     "status": "done",
     "blocker": "none",
@@ -92,7 +92,7 @@
   },
   {
     "id": "climate-site-brief",
-    "title": "climate-site-brief",
+    "title": "Climate site brief",
     "type": "climate",
     "status": "active",
     "blocker": "none",
@@ -107,7 +107,7 @@
   },
   {
     "id": "api-contract-review",
-    "title": "api-contract-review",
+    "title": "API contract review",
     "type": "developer",
     "status": "active",
     "blocker": "none",
@@ -122,7 +122,7 @@
   },
   {
     "id": "owner-cleanup-pass",
-    "title": "owner-cleanup-pass",
+    "title": "Owner cleanup pass",
     "type": "operations",
     "status": "draft",
     "blocker": "missing owner",
@@ -137,7 +137,7 @@
   },
   {
     "id": "mobile-current-path-qa",
-    "title": "mobile-current-path-qa",
+    "title": "Mobile current path QA",
     "type": "qa",
     "status": "blocked",
     "blocker": "bottom bar contrast needs review",
@@ -152,7 +152,7 @@
   },
   {
     "id": "github-pages-demo-copy",
-    "title": "github-pages-demo-copy",
+    "title": "GitHub Pages demo copy",
     "type": "demo",
     "status": "active",
     "blocker": "none",
@@ -167,7 +167,7 @@
   },
   {
     "id": "make-an-old-fashioned",
-    "title": "make-an-old-fashioned",
+    "title": "Make an Old Fashioned",
     "type": "personal",
     "status": "active",
     "blocker": "none",
@@ -182,7 +182,7 @@
   },
   {
     "id": "calendar-date-pass",
-    "title": "calendar-date-pass",
+    "title": "Calendar date pass",
     "type": "planning",
     "status": "done",
     "blocker": "none",
