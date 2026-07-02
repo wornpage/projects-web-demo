@@ -225,7 +225,7 @@ function reviewScenarioPack(pack) {
 
 const el = (id) => document.getElementById(id);
 const launchParams = new URLSearchParams(location.search);
-const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || "");
+const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || (window.__projectsDemoConfig && window.__projectsDemoConfig.apiBase) || "");
 let apiSaveTimer = null;
 let apiPendingSnapshot = null;
 let apiSaveInFlight = false;
