@@ -19,8 +19,8 @@ const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work
 
 const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"]);
 const VALID_PACK_STATUSES = new Set(["active", "blocked", "draft", "done"]);
-const VALID_COPY_PROFILES = new Set(["climate", "developer", "dj", "general"]);
-const VALID_SCENARIOS = new Set(["default", "due-view", "empty", "healthy", "onboarding", "review"]);
+const VALID_COPY_PROFILES = new Set(["climate", "developer", "dj", "finance", "general"]);
+const VALID_SCENARIOS = new Set(["close", "default", "due-view", "empty", "healthy", "onboarding", "review"]);
 const VALID_STATE_FILTERS = new Set(["active", "all", "blocked", "done", "draft", "review"]);
 
 const RUNTIME_CONFIG_PATHNAME = "/assets/runtime-config.js";
