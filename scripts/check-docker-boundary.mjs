@@ -22,6 +22,7 @@ const allowedBuildCopyLines = [
   "COPY assets/favicon.png ./assets/favicon.png",
   "COPY data/demo-packs.json ./data/demo-packs.json",
   "COPY src/demo/demo.js ./src/demo/demo.js",
+  "COPY src/demo/telemetry.js ./src/demo/telemetry.js",
   "COPY scripts/build-demo-asset.mjs ./scripts/build-demo-asset.mjs",
   "COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs",
   "COPY server/server.js ./server/server.js",
