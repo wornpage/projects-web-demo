@@ -327,8 +327,8 @@ h3,
   --demo-work-card-bg: var(--cockpit-surface);
   --demo-work-card-border: var(--cockpit-border);
   --demo-work-card-shadow: var(--cockpit-shadow-sm);
-  --demo-work-card-hover-shadow: 0 10px 22px rgba(35, 29, 18, 0.12), 0 1px 0 rgba(255, 255, 255, 0.9);
-  --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.28), var(--demo-work-card-hover-shadow);
+  --demo-work-card-hover-shadow: var(--cockpit-shadow-md, 0 4px 12px rgba(0,0,0,0.1));
+  --demo-work-card-selected-shadow: 0 0 0 2px var(--cockpit-accent);
   --demo-work-card-alert-border: var(--cockpit-accent);
   --demo-card-inner-bg: var(--cockpit-nav-bg);
   --demo-card-inner-border: var(--cockpit-border);
@@ -347,7 +347,7 @@ h3,
   --demo-meta-bg: var(--cockpit-nav-bg);
   --demo-primary-bg: var(--cockpit-accent);
   --demo-primary-border: var(--cockpit-accent);
-  --demo-primary-focus-bg: #56ad9c;
+  --demo-primary-focus-bg: var(--cockpit-accent-hover);
   --demo-primary-on-accent: var(--cockpit-accent-text);
   --demo-form-band-bg: var(--cockpit-nav-bg);
   --demo-form-section-bg: var(--cockpit-surface);
@@ -667,7 +667,7 @@ html[data-theme="dark"] .demo-app-shell {
 body .demo-sidebar.nav-rail .demo-nav-item.nav-rail-btn.active .nav-rail-icon {
   background: var(--demo-primary-on-accent) !important;
   border-color: var(--demo-primary-on-accent) !important;
-  color: #1d6f64 !important;
+  color: var(--cockpit-accent) !important;
 }
 
 .demo-sidebar-note {
@@ -5763,9 +5763,9 @@ html[data-theme="dark"] .demo-command-work-path {
   --demo-work-card-bg: var(--cockpit-surface);
   --demo-work-card-bg-alt: var(--cockpit-nav-bg);
   --demo-work-card-border: var(--cockpit-border);
-  --demo-work-card-shadow: 0 0 0 1px rgba(82, 63, 35, 0.14), 0 10px 20px rgba(35, 29, 18, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --demo-work-card-hover-shadow: 0 0 0 1px rgba(82, 63, 35, 0.2), 0 12px 24px rgba(35, 29, 18, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --demo-work-card-selected-shadow: 0 0 0 2px rgba(29, 111, 100, 0.42), 0 12px 24px rgba(35, 29, 18, 0.18);
+  --demo-work-card-shadow: var(--cockpit-shadow-sm);
+  --demo-work-card-hover-shadow: var(--cockpit-shadow-md, 0 4px 12px rgba(0,0,0,0.12));
+  --demo-work-card-selected-shadow: 0 0 0 2px var(--cockpit-accent);
   --demo-card-inner-bg: var(--cockpit-nav-bg);
   --demo-card-inner-border: var(--cockpit-border);
   --demo-card-divider: var(--cockpit-border);
@@ -5784,8 +5784,8 @@ html[data-theme="dark"] .demo-command-work-path {
   --demo-dock-action-text: var(--demo-primary-on-accent);
   --demo-dock-action-label: var(--cockpit-accent-text);
   --demo-work-card-state-rail: #6e806f;
-  --demo-work-card-setup-border: #8d681e;
-  --demo-work-card-setup-rail: #9a6b12;
+  --demo-work-card-setup-border: var(--cockpit-warning-border);
+  --demo-work-card-setup-rail: var(--cockpit-warning-border);
 }
 
 html.dark .demo-app-shell,
@@ -5793,9 +5793,9 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-work-card-bg: var(--cockpit-surface);
   --demo-work-card-bg-alt: #121f1a;
   --demo-work-card-border: var(--cockpit-border);
-  --demo-work-card-shadow: 0 0 0 1px rgba(212, 244, 232, 0.2), 0 10px 22px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  --demo-work-card-hover-shadow: 0 0 0 1px rgba(212, 244, 232, 0.3), 0 12px 24px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  --demo-work-card-selected-shadow: 0 0 0 2px rgba(117, 218, 195, 0.68), 0 12px 24px rgba(0, 0, 0, 0.6);
+  --demo-work-card-shadow: var(--cockpit-shadow-sm);
+  --demo-work-card-hover-shadow: var(--cockpit-shadow-md, 0 4px 12px rgba(0,0,0,0.15));
+  --demo-work-card-selected-shadow: 0 0 0 2px var(--cockpit-accent);
   --demo-card-inner-bg: var(--cockpit-nav-bg);
   --demo-card-inner-border: var(--cockpit-border);
   --demo-card-divider: var(--cockpit-border);
@@ -5814,8 +5814,8 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-dock-action-text: var(--demo-primary-on-accent);
   --demo-dock-action-label: var(--cockpit-accent-text);
   --demo-work-card-state-rail: #8aa79c;
-  --demo-work-card-setup-border: #d4b263;
-  --demo-work-card-setup-rail: #d7bd72;
+  --demo-work-card-setup-border: var(--cockpit-warning-border);
+  --demo-work-card-setup-rail: var(--cockpit-warning-border);
 }
 
 .demo-work-list,
