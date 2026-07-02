@@ -4553,6 +4553,8 @@ async function handlePackAction(id, action) {
       addPackActivity(pack, "Started.");
     }
     setPackActionConfirmation(pack, "start", changed);
+    go("pack", pack.id);
+    return;
   } else if (action === "unblock") {
     const before = packActionSignature(pack);
     pack.status = "active";
@@ -4563,6 +4565,8 @@ async function handlePackAction(id, action) {
       addPackActivity(pack, "Blocker set to None.");
     }
     setPackActionConfirmation(pack, "unblock", changed);
+    go("pack", pack.id);
+    return;
   } else if (action === "block") {
     const before = packActionSignature(pack);
     pack.status = "blocked";
@@ -4573,6 +4577,8 @@ async function handlePackAction(id, action) {
       addPackActivity(pack, "Blocked.");
     }
     setPackActionConfirmation(pack, "block", changed);
+    go("pack", pack.id);
+    return;
   } else if (action === "done") {
     const before = packActionSignature(pack);
     pack.status = "done";
@@ -4583,6 +4589,8 @@ async function handlePackAction(id, action) {
       addPackActivity(pack, proofSavedActivity(pack));
     }
     setPackActionConfirmation(pack, "done", changed);
+    go("pack", pack.id);
+    return;
   } else if (action === "focus") {
     setActionConfirmation(pack, "focus");
     go("pack", pack.id);
