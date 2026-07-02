@@ -60,5 +60,14 @@ jobs:
       - name: Compliance audit
         run: node scripts/check-compliance-audit.mjs
 
+      - name: Static publish artifact
+        run: node scripts/check-static-publish.mjs
+
+      - name: Static preview boundary
+        run: node scripts/check-static-preview.mjs
+
+      - name: API smoke
+        run: node scripts/check-api-smoke.mjs
+
       - name: Git whitespace
         run: git diff --check
