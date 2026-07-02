@@ -6407,3 +6407,33 @@ html[data-theme="dark"] .demo-app-shell {
   background: var(--cockpit-accent);
   color: var(--cockpit-accent-text);
 }
+
+
+/* ---- Compare page ---- */
+.demo-compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.demo-compare-col { background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:var(--cockpit-radius); padding:16px; }
+.demo-compare-empty { display:flex; align-items:center; justify-content:center; min-height:120px; color:var(--cockpit-text-muted); }
+.demo-compare-fields { display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+.demo-compare-field { display:flex; flex-direction:column; gap:2px; }
+.demo-compare-field span { font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--cockpit-text-muted); }
+.demo-compare-field strong { font-size:14px; font-weight:650; }
+.demo-compare-picker { margin-top:20px; }
+.demo-compare-chip { display:flex; justify-content:space-between; width:100%; padding:8px 12px; margin:4px 0; background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:var(--cockpit-radius); cursor:pointer; font:inherit; font-size:13px; color:var(--cockpit-text); text-align:left; transition:background 0.12s; }
+.demo-compare-chip:hover,.demo-compare-chip:focus-visible { background:var(--cockpit-hover-bg); border-color:var(--cockpit-accent); }
+.demo-compare-chip small { color:var(--cockpit-text-muted); }
+
+/* ---- Calendar ---- */
+.demo-calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.demo-cal-header { padding:6px 4px; font-size:11px; font-weight:760; text-transform:uppercase; text-align:center; color:var(--cockpit-text-muted); }
+.demo-cal-cell { min-height:80px; padding:4px; background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:4px; }
+.demo-cal-empty { background:transparent; border-color:transparent; }
+.demo-cal-today { border-color:var(--cockpit-accent); box-shadow:inset 0 0 0 1px var(--cockpit-accent); }
+.demo-cal-has-items { background:var(--cockpit-accent-50); }
+.demo-cal-day { display:block; font-size:12px; font-weight:700; margin-bottom:4px; color:var(--cockpit-text-muted); }
+.demo-cal-item { display:block; width:100%; padding:2px 4px; margin:1px 0; font-size:11px; background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:3px; cursor:pointer; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--cockpit-text); }
+.demo-cal-item:hover,.demo-cal-item:focus-visible { background:var(--cockpit-accent-50); border-color:var(--cockpit-accent); }
+
+@media (max-width:640px) {
+  .demo-compare-grid { grid-template-columns:1fr; }
+  .demo-cal-cell { min-height:60px; }
+}

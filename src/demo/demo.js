@@ -92,14 +92,16 @@ const ROUTE_CONTRACT = Object.freeze({
   next: { pattern: "#/next/{packId}", title: "Choose action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "4", navLabel: "Choose action" },
   memory: { pattern: "#/memory/{packId}", title: "Memory", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "5", navLabel: "Memory" },
   create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
-  pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true }
+  pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true },
+  compare: { pattern: "#/compare/{packId}/{packId}", title: "Compare", commandSource: "route", acceptsPackId: true },
+  calendar: { pattern: "#/calendar", title: "Calendar", commandSource: "route", navKey: "📅", navLabel: "Calendar" }
 });
 
 const NAV_ROUTE_GROUPS = Object.freeze([
   Object.freeze({
     id: "public",
     label: "Demo",
-    routes: Object.freeze(["home", "review", "work", "next", "memory", "create"])
+    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar"])
   })
 ]);
 
@@ -7278,6 +7280,138 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function renderCompare() {
+  const ids = (state.routeParam || "").split("/").filter(Boolean);
+  const packA = ids.length > 0 ? findPack(ids[0]) : null;
+  const packB = ids.length > 1 ? findPack(ids[1]) : null;
+
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Compare</span>
+          <h2>Side by side</h2>
+        </div>
+        <span class="demo-status">${packA && packB ? "2 selected" : "Choose two"}</span>
+      </div>
+      <div class="demo-compare-grid">
+        ${renderCompareColumn("A", packA, ids[0])}
+        ${renderCompareColumn("B", packB, ids[1])}
+      </div>
+      ${!packA || !packB ? `<div class="demo-compare-picker">
+        <div class="demo-panel-head"><h3>${!packA ? "Pick first" : "Pick second"} item</h3></div>
+        <div class="demo-work-list">${state.packs.map((p) => `<button class="demo-compare-chip" type="button" data-action="compare-pick" data-slot="${!packA ? "a" : "b"}" data-pack="${escapeAttribute(p.id)}">${escapeHtml(workTitle(p))} <small>${escapeHtml(p.owner)}</small></button>`).join("")}</div>
+      </div>` : ""}
+      ${packA && packB ? compareDiffSummary(packA, packB) : ""}
+    </section>
+  `;
+  bindComparePickers();
+  bindListActions();
+}
+
+function renderCompareColumn(slot, pack, id) {
+  if (!pack) {
+    return `<article class="demo-compare-col demo-compare-empty">
+      <div class="demo-panel-head"><h3>${slot}</h3></div>
+      <p>Select an item to compare.</p>
+    </article>`;
+  }
+  const command = resolvePrimaryCommandForPack(pack);
+  const workflow = workflowStateForPack(pack, command);
+  return `<article class="demo-compare-col">
+    <div class="demo-panel-head">
+      <div><span class="section-label">${slot}</span><h3>${escapeHtml(workTitle(pack))}</h3></div>
+      <span class="demo-state-pill">${escapeHtml(workflow.label)}</span>
+    </div>
+    <div class="demo-compare-fields">
+      <div class="demo-compare-field"><span>Status</span><strong>${escapeHtml(pack.status)}</strong></div>
+      <div class="demo-compare-field"><span>Owner</span><strong>${escapeHtml(pack.owner)}</strong></div>
+      <div class="demo-compare-field"><span>Blocker</span><strong>${escapeHtml(blockerTextForPack(pack))}</strong></div>
+      <div class="demo-compare-field"><span>Next action</span><strong>${escapeHtml(command.label)}</strong></div>
+      <div class="demo-compare-field"><span>Due</span><strong>${escapeHtml(pack.due || "—")}</strong></div>
+      <div class="demo-compare-field"><span>Purpose</span><strong>${escapeHtml(pack.purpose || "—")}</strong></div>
+      <div class="demo-compare-field"><span>Proof target</span><strong>${escapeHtml(pack.doneWhen || "—")}</strong></div>
+      <div class="demo-compare-field"><span>Sources</span><strong>${escapeHtml((pack.sources || []).join(", ") || "—")}</strong></div>
+      <div class="demo-compare-field"><span>Memory</span><strong>${escapeHtml((pack.memory || []).join("; ") || "—")}</strong></div>
+    </div>
+    ${primaryCommandButton(pack)}
+  </article>`;
+}
+
+function compareDiffSummary(a, b) {
+  const diffs = [];
+  if (a.status !== b.status) diffs.push("status");
+  if (a.blocker !== b.blocker) diffs.push("blocker");
+  if (a.owner !== b.owner) diffs.push("owner");
+  if (a.next !== b.next) diffs.push("next action");
+  if (a.due !== b.due) diffs.push("due date");
+  if (!diffs.length) return `<p class="demo-field-help">These two items are identical across key fields.</p>`;
+  return `<p class="demo-field-help">Differs on: ${diffs.join(", ")}.</p>`;
+}
+
+function bindComparePickers() {
+  document.querySelectorAll("[data-action=compare-pick]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const slot = btn.dataset.slot;
+      const packId = btn.dataset.pack;
+      const ids = (state.routeParam || "").split("/").filter(Boolean);
+      if (slot === "a") { ids[0] = packId; } else { ids[1] = packId; }
+      go("compare", ids.filter(Boolean).join("/"));
+    });
+  });
+}
+
+function renderCalendar() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const dueMap = {};
+  state.packs.forEach((p) => {
+    if (p.due) {
+      const d = p.due.slice(0, 10);
+      dueMap[d] = dueMap[d] || [];
+      dueMap[d].push(p);
+    }
+  });
+  const today = now.toISOString().slice(0, 10);
+
+  let cells = "";
+  for (let i = 0; i < firstDay; i++) cells += `<div class="demo-cal-cell demo-cal-empty"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const items = dueMap[date] || [];
+    const isToday = date === today;
+    cells += `<div class="demo-cal-cell${isToday ? " demo-cal-today" : ""}${items.length ? " demo-cal-has-items" : ""}">
+      <span class="demo-cal-day">${d}</span>
+      ${items.map((p) => `<button class="demo-cal-item" type="button" data-action="select" data-pack="${escapeAttribute(p.id)}" title="${escapeAttribute(workTitle(p))}">${escapeHtml(truncateTitle(workTitle(p), 18))}</button>`).join("")}
+    </div>`;
+  }
+
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Calendar</span>
+          <h2>${now.toLocaleString("default", { month: "long", year: "numeric" })}</h2>
+        </div>
+        <span class="demo-status">${Object.keys(dueMap).length} days with due items</span>
+      </div>
+      <div class="demo-calendar-grid">
+        ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => `<div class="demo-cal-header">${d}</div>`).join("")}
+        ${cells}
+      </div>
+    </section>
+  `;
+  bindListActions();
+}
+
+function truncateTitle(text, max) {
+  if (!text || text.length <= max) return text;
+  return text.slice(0, max - 1) + "…";
 }
 
 function escapeAttribute(value) {
