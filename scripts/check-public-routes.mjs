@@ -9,7 +9,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const requireFromServer = createRequire(new URL("../server/package.json", import.meta.url));
 const acorn = requireFromServer("acorn");
 const html = await fs.readFile(path.join(repoRoot, "index.html"), "utf8");
-const source = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+const source = await fs.readFile(path.join(repoRoot, "src/demo/demo.js"), "utf8");
 const styles = await fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8");
 const ast = acorn.parse(source, {
   ecmaVersion: "latest",
@@ -648,6 +648,10 @@ function objectValue(node) {
 function literalValue(node) {
   if (node?.type === "Literal") {
     return node.value;
+  }
+  // Handle terser-minified booleans: !0 → true, !1 → false
+  if (node?.type === "UnaryExpression" && node.operator === "!" && node.argument?.type === "Literal") {
+    return !node.argument.value;
   }
   const arrayExpression = unwrapObjectFreeze(node);
   if (arrayExpression?.type === "ArrayExpression") {

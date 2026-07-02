@@ -9,7 +9,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const requireFromServer = createRequire(new URL("../server/package.json", import.meta.url));
 const acorn = requireFromServer("acorn");
 const html = await fs.readFile(path.join(repoRoot, "index.html"), "utf8");
-const source = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+const source = await fs.readFile(path.join(repoRoot, "src/demo/demo.js"), "utf8");
 const styles = await fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8");
 const ast = acorn.parse(source, {
   ecmaVersion: "latest",

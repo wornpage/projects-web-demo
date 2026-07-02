@@ -40,7 +40,8 @@ const publicStaticFiles = new Set([
   "/index.html",
   "/assets/demo.css",
   "/assets/demo.js",
-  "/assets/favicon.png"
+  "/assets/favicon.png",
+  "/data/demo-packs.json"
 ]);
 
 const contentTypes = {

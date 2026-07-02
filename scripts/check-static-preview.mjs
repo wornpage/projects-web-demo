@@ -31,7 +31,7 @@ server.stderr.on("data", (chunk) => {
 try {
   await waitForPreview(port);
 
-  const frontendSource = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+  const frontendSource = await fs.readFile(path.join(repoRoot, "src/demo/demo.js"), "utf8");
   check("static preview frontend avoids runtime inline style setters", !/\.style\b|setAttribute\(\s*["']style/iu.test(frontendSource), "inline style setter absent");
 
   for (const pathname of [

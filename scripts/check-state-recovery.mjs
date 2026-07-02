@@ -13,7 +13,7 @@ const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "projects-state-recovery-
 const stateFile = path.join(tmpDir, "state.json");
 const port = await freePort();
 const checks = [];
-const source = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+const source = await fs.readFile(path.join(repoRoot, "src/demo/demo.js"), "utf8");
 const styles = await fs.readFile(path.join(repoRoot, "assets/demo.css"), "utf8");
 const server = spawn(process.execPath, ["server/server.js"], {
   cwd: repoRoot,

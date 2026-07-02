@@ -42,7 +42,7 @@ try {
   await waitForHealth(port);
 
   const serverSource = await fs.readFile(path.join(repoRoot, "server/server.js"), "utf8");
-  const frontendSource = await fs.readFile(path.join(repoRoot, "assets/demo.js"), "utf8");
+  const frontendSource = await fs.readFile(path.join(repoRoot, "src/demo/demo.js"), "utf8");
   const health = await jsonRequest(port, "/api/health");
   const appShell = await request(port, "/");
   const runtimeConfigPath = runtimeConfigPathFromHtml(appShell.text);

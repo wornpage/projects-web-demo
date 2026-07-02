@@ -35,7 +35,7 @@ async function readGeneratedSource() {
   const normalized = source.replace(/\r\n?/gu, "\n");
   const result = await terser.minify(normalized, {
     compress: true,
-    mangle: true,
+    mangle: false,
     output: { comments: false }
   });
   if (result.error) {
