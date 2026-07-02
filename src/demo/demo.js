@@ -1965,6 +1965,12 @@ function render() {
     case "pack":
       renderPackDetail();
       break;
+    case "compare":
+      renderCompare();
+      break;
+    case "calendar":
+      renderCalendar();
+      break;
     case "work":
     default:
       renderWork();
