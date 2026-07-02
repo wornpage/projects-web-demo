@@ -225,8 +225,12 @@ function reviewScenarioPack(pack) {
 
 const el = (id) => document.getElementById(id);
 const launchParams = new URLSearchParams(location.search);
-const DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || (window.__projectsDemoConfig && window.__projectsDemoConfig.apiBase) || "");
+let DEMO_API_BASE_URL = normalizeApiBaseUrl(window.PROJECTS_API_BASE_URL || (window.__projectsDemoConfig && window.__projectsDemoConfig.apiBase) || "");
 const BACKEND_MODE = Boolean((window.__projectsDemoConfig && window.__projectsDemoConfig.backendMode) || DEMO_API_BASE_URL);
+// On proxy deployments apiBase is empty but backend is active — use truthy sentinel for boolean gates
+if (!DEMO_API_BASE_URL && BACKEND_MODE) {
+  DEMO_API_BASE_URL = ".";
+}
 let apiSaveTimer = null;
 let apiPendingSnapshot = null;
 let apiSaveInFlight = false;
@@ -652,7 +656,7 @@ function normalizeApiBaseUrl(value) {
   return text ? text.replace(/\/+$/u, "") : "";
 }
 
-function apiUrl(path) {return `${DEMO_API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`}
+function apiUrl(path) {const base = DEMO_API_BASE_URL === "." ? "" : DEMO_API_BASE_URL;return `${base}${path.startsWith("/") ? path : `/${path}`}`}
 
 async function loadBackendState(headers = null) {
   if (!DEMO_API_BASE_URL) {
