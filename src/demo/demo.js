@@ -3161,9 +3161,9 @@ function renderCreate() {
       </div>
       ${createReadinessPanel(defaults, createState)}
       <div class="demo-form-grid">
-        ${inputField("new-title", "Title", defaults.title, `Name the ${profile().work} before Save can run.`)}
-        ${inputField("new-owner", "Owner", defaults.owner, "Name the person, team, or role responsible for the next step.")}
-        ${nextActionSelectField("new-next", "Next action", defaults.next, "Choose the first action. Choose action means Save work stays paused.")}
+        ${inputField("new-title", `Title ${helpTip("A short, descriptive name for this work. Keep it specific so you know what it is at a glance.")}`, defaults.title, `Name the ${profile().work} before Save can run.`)}
+        ${inputField("new-owner", `Owner ${helpTip("Who is responsible for moving this forward. Leave blank or write 'unassigned' if unknown.")}`, defaults.owner, "Name the person, team, or role responsible for the next step.")}
+        ${nextActionSelectField("new-next", `Next action ${helpTip("The first thing the main button will do. 'Choose action' means the button is paused.")}`, defaults.next, "Choose the first action. Choose action means Save work stays paused.")}
         ${dateField("new-due", "Due", defaults.due, "Optional date kept on the work path and searchable in the work list.")}
         ${textField("new-purpose", "Why it matters", defaults.purpose, `Optional context for why this ${profile().work} exists.`)}
       </div>

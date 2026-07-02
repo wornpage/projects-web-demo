@@ -2236,6 +2236,7 @@ html[data-theme="dark"] .demo-header-metadata {
   font: inherit;
   font-size: 15px;
   font-weight: 560;
+  min-width: 0;
   padding: 13px 14px;
   width: 100%;
   transition: border-color var(--demo-motion-duration) ease, background-color var(--demo-motion-duration) ease;
