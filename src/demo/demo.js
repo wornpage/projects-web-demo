@@ -2957,6 +2957,10 @@ function renderHome() {
         ${navButton("settings", "Settings")}
         <button class="btn" type="button" id="reset-demo-home"${controlHelpAttributes(false, resetHelp, "reset-demo-home-help")}>Reset sample</button>
       </div>
+      <div class="demo-home-bookmarklet">
+        <small>Bookmarklet — drag to your bookmarks bar, then click on any page to save it:</small>
+        <a class="btn btn-sm" href="javascript:(function(){location.href='https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app/%23/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href)})()">+ Save to demo</a>
+      </div>
     </section>
   `;
   bindGoButtons();
@@ -3393,6 +3397,7 @@ function renderCreate() {
         ${inputField("new-owner", `Owner ${helpTip("Who is responsible for moving this forward. Leave blank or write 'unassigned' if unknown.")}`, defaults.owner, "Name the person, team, or role responsible for the next step.")}
         ${nextActionSelectField("new-next", `Next action ${helpTip("The first thing the main button will do. 'Choose action' means the button is paused.")}`, defaults.next, "Choose the first action. Choose action means Save work stays paused.")}
         ${dateField("new-due", "Due", defaults.due, "Optional date kept on the work path and searchable in the work list.")}
+        ${inputField("new-url", "URL", defaults.url, "A link to open from this work item. Paste a URL to save it.")}
         ${textField("new-purpose", "Why it matters", defaults.purpose, `Optional context for why this ${profile().work} exists.`)}
       </div>
       <p id="create-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(createState.help)}</p>
@@ -5417,12 +5422,14 @@ function nextActionDisplayLabel(value) {
 }
 
 function defaultCreateValues() {
+  const params = new URLSearchParams(location.search);
   return {
-    title: "",
+    title: params.get("title") || "",
     owner: "",
     next: "",
     due: "",
-    purpose: ""
+    purpose: "",
+    url: params.get("url") || ""
   };
 }
 
