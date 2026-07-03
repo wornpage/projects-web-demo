@@ -3028,18 +3028,7 @@ function renderMethodPicker() {
       </div>
     </section>
   `;
-  document.querySelectorAll("[data-action=load-method]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const scenario = DEMO_SCENARIO_BY_ID[btn.dataset.method];
-      if (scenario) {
-        applyScenario(scenario);
-      } else if (btn.dataset.method === "empty") {
-        state.packs = [];
-        state.scenarioId = "empty";
-        render();
-      }
-    });
-  });
+  bindMethodCards();
 }
 
 function homeSpotlightPanel() {
