@@ -137,7 +137,7 @@ const copyProfiles = {
   ops: { work: "task", workOne: "task", workMany: "tasks", newWork: "New task", result: "Done", sources: "Reference" }
 };
 
-const PROFILE_LABELS = { general: "General", dj: "DJ", developer: "Developer", climate: "Climate", ai: "AI" };
+const PROFILE_LABELS = { general: "General", dj: "DJ", developer: "Developer", climate: "Climate", ai: "AI", ops: "Ops", sales: "Sales" };
 
 const DEMO_SCENARIOS = [
   {
@@ -221,7 +221,7 @@ const DEMO_SCENARIOS = [
     profile: "ai",
     route: "review",
     filter: "all",
-    transform: (packs) => packs.filter((p) => p.type === "prompt" || !p.type)
+    transform: (packs) => packs.filter((p) => p.type === "prompt" || p.type === "eval" || p.type === "chain" || !p.type)
   },
   {
     id: "ai-evals",
@@ -240,6 +240,15 @@ const DEMO_SCENARIOS = [
     route: "review",
     filter: "all",
     transform: (packs) => packs.filter((p) => p.type === "task" || !p.type)
+  },
+  {
+    id: "sales",
+    label: "Sales pipeline",
+    description: "Prospect, qualify, and close leads with owners, blockers, and next actions.",
+    profile: "sales",
+    route: "review",
+    filter: "all",
+    transform: (packs) => packs.filter((p) => p.type === "lead" || !p.type)
   }
 ];
 
@@ -3001,6 +3010,7 @@ function renderMethodPicker() {
   const methods = [
     { id: "ops-day", label: "Daily Operations", desc: "Restock inventory, process payroll, track maintenance, onboard new hires. Everything a small business manages day to day.", icon: "🏪" },
     { id: "ai-prompts", label: "Prompt Engineering", desc: "Build a prompt library, run evals, compare models, and chain agent workflows. Prove what works.", icon: "🤖" },
+    { id: "sales", label: "Sales Pipeline", desc: "Prospect, qualify, and close leads. Track owners, blockers, and the next action for each deal.", icon: "💰" },
     { id: "default", label: "Project Work", desc: "General-purpose work tracking. Blocker management, next actions, proof targets, and memory notes.", icon: "📋" },
     { id: "empty", label: "Start from scratch", desc: "Blank canvas. Create your own work items with your own vocabulary and workflow.", icon: "✨" }
   ];
@@ -8066,6 +8076,7 @@ function renderMethodCards() {
   const methods = [
     { id: "ops-day", label: "Daily Operations", desc: "Restock, payroll, maintenance, onboarding.", icon: "🏪" },
     { id: "ai-prompts", label: "Prompt Engineering", desc: "Prompt library, evals, model comparison.", icon: "🤖" },
+    { id: "sales", label: "Sales Pipeline", desc: "Prospect, qualify, and close leads.", icon: "💰" },
     { id: "default", label: "Project Work", desc: "General-purpose blocker and next-action tracking.", icon: "📋" }
   ];
   return methods.map((m) => `
@@ -8081,16 +8092,12 @@ function bindMethodCards() {
   document.querySelectorAll("[data-action=load-method]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const scenario = DEMO_SCENARIO_BY_ID[btn.dataset.method];
-      if (scenario) {
-        state.status = `Loaded ${scenario.label}. ${state.packs.length} ${workNoun(state.packs.length)} available. Next action: review work.`;
-        applyScenario(scenario);
-        if (scenario.route) {
-          go(scenario.route);
-        }
-      } else if (btn.dataset.method === "empty") {
-        state.packs = [];
-        state.scenarioId = "empty";
-        render();
+      if (!scenario) {
+        return;
+      }
+      applyScenario(scenario, { force: true });
+      if (scenario.route) {
+        go(scenario.route);
       }
     });
   });

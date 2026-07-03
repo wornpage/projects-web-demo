@@ -488,7 +488,11 @@ function stateScenarioDefinition(scenarioId) {
     healthy: { label: "Healthy queue", profile: "general", filter: "active" },
     onboarding: { label: "Onboarding", profile: "climate", filter: "all" },
     "due-view": { label: "Due today", profile: "general", filter: "active" },
-    empty: { label: "Empty state", profile: "general", filter: "all" }
+    empty: { label: "Empty state", profile: "general", filter: "all" },
+    "ai-prompts": { label: "Prompt library", profile: "ai", filter: "all" },
+    "ai-evals": { label: "Model evaluations", profile: "ai", filter: "all" },
+    "ops-day": { label: "Daily operations", profile: "ops", filter: "all" },
+    sales: { label: "Sales pipeline", profile: "sales", filter: "all" }
   };
   return definitions[scenarioId] || definitions.default;
 }
@@ -513,6 +517,18 @@ function scenarioStatePacks(scenarioId, basePacks) {
   }
   if (scenarioId === "empty") {
     return [];
+  }
+  if (scenarioId === "ops-day") {
+    return packs.filter((pack) => pack.type === "task" || !pack.type);
+  }
+  if (scenarioId === "ai-prompts") {
+    return packs.filter((pack) => pack.type === "prompt" || pack.type === "eval" || pack.type === "chain" || !pack.type);
+  }
+  if (scenarioId === "ai-evals") {
+    return packs.filter((pack) => pack.type === "eval" || !pack.type);
+  }
+  if (scenarioId === "sales") {
+    return packs.filter((pack) => pack.type === "lead" || !pack.type);
   }
   return packs;
 }
