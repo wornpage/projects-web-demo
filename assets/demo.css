@@ -6403,6 +6403,12 @@ html[data-theme="dark"] .demo-app-shell {
   font-weight: 700;
   height: 18px;
   width: 18px;
+  position: relative;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+  height: 18px;
+  width: 18px;
   line-height: 1;
   margin-left: 4px;
   vertical-align: middle;
@@ -6413,6 +6419,34 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-help-tip:focus {
   background: var(--cockpit-accent);
   color: var(--cockpit-accent-text);
+}
+
+.demo-help-tip::after {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cockpit-text);
+  color: var(--cockpit-bg);
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 1.35;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: normal;
+  max-width: 260px;
+  width: max-content;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 100;
+}
+
+.demo-help-tip:hover::after,
+.demo-help-tip:focus-visible::after {
+  opacity: 1;
 }
 
 
