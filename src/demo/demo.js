@@ -3454,6 +3454,7 @@ function renderPackDetail() {
         <div>
           <span class="section-label">${escapeHtml(workLabelTitle())} path</span>
           <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
+          <p class="demo-pack-subtitle">${escapeHtml(workDetailSubtitle(pack, packCommand))}</p>
           ${pack.purpose ? `<p class="demo-pack-purpose">${escapeHtml(pack.purpose)}</p>` : ""}
           ${packGuidanceLine(pack, packCommand, workflow)}
         </div>
