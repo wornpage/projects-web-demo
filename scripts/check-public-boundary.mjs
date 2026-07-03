@@ -1869,7 +1869,7 @@ function frontendHostedCardRunNextUsesGenericLabel(source) {
 
   const required = [
     "const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);",
-    "commandActionDisplayLabel(command.next)",
+    "commandActionDisplayLabel(command.label)",
     "${escapeHtml(label)}"
   ];
   const missing = required.filter((needle) => !body.includes(needle));

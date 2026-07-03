@@ -3898,7 +3898,7 @@ function cardFact(label, value) {
 
 function primaryCommandButton(pack, className = "btn btn-primary") {
   const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);
-  const label = command ? commandActionDisplayLabel(command.next) : "Do next";
+  const label = command ? (commandActionDisplayLabel(command.label) || command.label) : "Do next";
   const reason = command
     ? primaryCommandReason(pack, command)
     : `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: server preview before running.`;
@@ -6439,7 +6439,7 @@ function packGuidanceLine(pack, command, workflow) {
   if (hasBlocker(pack)) {
     return `<p class="demo-pack-guidance">⛔ ${escapeHtml(title)} is blocked by "${blockerTextForPack(pack)}". Clear the blocker to continue.</p>`;
   }
-  return `<p class="demo-pack-guidance">✅ ${escapeHtml(title)} is ready. Next: ${escapeHtml(commandActionDisplayLabel(command.next))}.</p>`;
+  return `<p class="demo-pack-guidance">✅ ${escapeHtml(title)} is ready. Next: ${escapeHtml(commandActionDisplayLabel(command.label) || command.label || "Open work path")}.</p>`;
 }
 
 function workDetailSubtitle(pack, command = resolvePrimaryCommandForPack(pack)) {
