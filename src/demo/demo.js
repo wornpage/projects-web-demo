@@ -8082,7 +8082,11 @@ function bindMethodCards() {
     btn.addEventListener("click", () => {
       const scenario = DEMO_SCENARIO_BY_ID[btn.dataset.method];
       if (scenario) {
+        state.status = `Loaded ${scenario.label}. ${state.packs.length} ${workNoun(state.packs.length)} available. Next action: review work.`;
         applyScenario(scenario);
+        if (scenario.route) {
+          go(scenario.route);
+        }
       } else if (btn.dataset.method === "empty") {
         state.packs = [];
         state.scenarioId = "empty";
