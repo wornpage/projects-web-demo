@@ -2505,7 +2505,12 @@ function updateCommand(command) {
   if (el("command-memory-text")) {
     el("command-memory-text").textContent = commandMemoryVisibleText(commandMemory);
   }
-  setCopySurface(el("primary-action"), command.next, "Next action", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  const primaryBtn = el("primary-action");
+  setCopySurface(primaryBtn, command.next, "Next action", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
+  if (command.action) {
+    primaryBtn.dataset.action = command.action;
+    primaryBtn.dataset.pack = command.targetPackId || "";
+  }
   syncCommandActionButton(el("primary-action"), command);
   setCopySurface(el("dock-where"), command.where, "Where", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   setCopySurface(el("dock-blocker"), command.blocker, "Blocker", DEMO_COPY_LIMITS.commandButtonVisible, DEMO_COPY_LIMITS.commandFlowHelp);
