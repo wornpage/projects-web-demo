@@ -69,5 +69,12 @@ jobs:
       - name: API smoke
         run: node scripts/check-api-smoke.mjs
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+        working-directory: server
+
+      - name: Behavior smoke
+        run: node scripts/check-behavior-smoke.mjs
+
       - name: Git whitespace
         run: git diff --check

@@ -44,6 +44,7 @@ Keep this repo focused on the public portfolio demo.
 | `scripts/check-static-preview.mjs` | Local proof that the static preview serves only the static allowlist and sends defensive headers. |
 | `scripts/check-public-routes.mjs` | Local proof that the visible route set stays small and retired route code stays absent. |
 | `scripts/check-sync-surface.mjs` | Local proof that sync links, QR sharing, and sync client keys stay wired. |
+| `scripts/check-behavior-smoke.mjs` | Behavioral proof that loads the static preview in headless Chromium and asserts rendered outcomes — no console errors, no blank command buttons, no hidden-attribute leaks, and every mobile nav destination reachable — catching bugs the source-string gates cannot. |
 | `scripts/check-state-recovery.mjs` | Local proof that one client's exported state can be restored without mixing rows. |
 | `scripts/check-public-boundary.mjs` | Local proof that the app server only serves public files and keyed demo states do not mix. |
 | `scripts/check-docker-boundary.mjs` | Local proof that the Docker image copies only the deploy allowlist and runs protected output. |
