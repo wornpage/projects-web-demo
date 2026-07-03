@@ -6565,3 +6565,5 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-cal-year-active { border-color:var(--cockpit-accent); background:var(--cockpit-accent-50); }
 .demo-cal-year-has span { font-size:10px; font-weight:800; background:var(--cockpit-accent); color:var(--cockpit-accent-text); border-radius:99px; padding:1px 7px; }
 @media (max-width:500px) { .demo-cal-year-grid { grid-template-columns:repeat(3,1fr); } }
+.demo-url-link{display:inline-block;color:var(--cockpit-accent);font-size:18px;text-decoration:none;margin-left:6px;transition:transform 0.12s}
+.demo-url-link:hover{transform:scale(1.2)}

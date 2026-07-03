@@ -3467,7 +3467,7 @@ function renderPackDetail() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">${escapeHtml(workLabelTitle())} path</span>
-          <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
+          <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}${pack.url ? ` <a href="${escapeAttribute(pack.url)}" target="_blank" rel="noopener" class="demo-url-link" title="Open ${escapeAttribute(pack.url)}" aria-label="Open link">↗</a>` : ""}</h2>
           <p class="demo-pack-subtitle">${escapeHtml(workDetailSubtitle(pack, packCommand))}</p>
           ${pack.purpose ? `<p class="demo-pack-purpose">${escapeHtml(pack.purpose)}</p>` : ""}
           ${packGuidanceLine(pack, packCommand, workflow)}
@@ -3480,6 +3480,7 @@ function renderPackDetail() {
         ${blockerStateField(pack)}
         ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
         ${dateField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
+        ${inputField("edit-url", "URL", pack.url, "A link to open from this work item.")}
         ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
         ${inputField("edit-done-when", `Proof target ${helpTip("The evidence that proves this work is truly done. Describe what 'finished' looks like.")}`, pack.doneWhen, "Describe the evidence needed before this work is done.")}
         ${textField("edit-purpose", "Why it matters", pack.purpose, "Context for why this work exists.")}
