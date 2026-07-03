@@ -3357,9 +3357,10 @@ function nextActionWhatText(command) {
     "review": "opens the blocker review screen.",
     "review-work": "opens the blocker review screen.",
     "unblock": "clears the blocker and makes the work ready.",
-    "start": "opens the full work path to edit all fields.",
+    "start": "opens the work path to start working on it.",
     "done": "marks this work finished and saves your proof target.",
-    "open": "opens the full work path for editing."
+    "open": "opens the full work path for editing.",
+    "focus": "opens the full work path (same as Open)."
   };
   return map[command.action] || "runs the selected action.";
 }
