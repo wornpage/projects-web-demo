@@ -3360,7 +3360,7 @@ function nextActionWhatText(command) {
     "start": "opens the work path to start working on it.",
     "done": "marks this work finished and saves your proof target.",
     "open": "opens the full work path for editing.",
-    "focus": "opens the full work path (same as Open)."
+    "focus": "selects and scrolls to this work without opening the path.",
   };
   return map[command.action] || "runs the selected action.";
 }
@@ -4991,8 +4991,11 @@ async function handlePackAction(id, action) {
     go("pack", pack.id);
     return;
   } else if (action === "focus") {
+    state.status = selectedWorkStatus("Work list", pack);
+    workListKeepOrder = true;
+    queueFocus("selected-card", pack.id);
     setActionConfirmation(pack, "focus");
-    go("pack", pack.id);
+    render();
     return;
   } else if (action === "edit") {
     queueFocus("pack-edit", pack.id);
