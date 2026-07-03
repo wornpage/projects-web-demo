@@ -1085,6 +1085,14 @@ html[data-theme="dark"] .demo-header-metadata {
   justify-content: space-between;
 }
 
+.demo-review-head-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  justify-content: flex-end;
+}
+
 .demo-command-top h2,
 .demo-panel h2 {
   font-family: var(--font-family-display);

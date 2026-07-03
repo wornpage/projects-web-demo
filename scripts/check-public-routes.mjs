@@ -125,6 +125,8 @@ check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop g
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
 check("work cards expose where and blocker before the next button", workCardTriadContractOk(), "structured work-card facts precede Next action");
 check("blocked-by select keeps dependency contract", blockedBySelectContractOk(), "edit-blocked-by select offers safe targets and derives the reason");
+check("work-list import keeps its parse-and-load contract", importContractOk(), "import parses pasted work into browser-local packs");
+check("review standup export stays local-only", standupExportContractOk(), "copy standup builds review text through the local clipboard path");
 check("card support actions stay readable and tappable", cardSupportActionStylesContractOk(), "grid tiles plus single-column mobile actions");
 check("card title buttons keep a readable hit area", cardTitleButtonStylesContractOk(), "title buttons keep padding and focus radius");
 check("card state pills stay compact in headers", cardStatePillStylesContractOk(), "desktop badge cap plus mobile start alignment");
@@ -337,6 +339,28 @@ function blockedBySelectContractOk() {
     "!createsBlockedByCycle(state.packs, pack.id, candidate.id)",
     "blockedByBlockerText(",
     "Choosing work fills the reason and clears it automatically when that work finishes with proof."
+  ]);
+}
+
+function importContractOk() {
+  return includesAll(source, [
+    'id="demo-import-input"',
+    'id="import-work-list"',
+    "function parseWorkList(text)",
+    "function importWorkList(",
+    "normalizeRecoveryState({",
+    'el("import-work-list")?.addEventListener("click", importWorkList)'
+  ]) && !source.includes("import-work-list\" data-action");
+}
+
+function standupExportContractOk() {
+  return includesAll(source, [
+    'id="copy-standup"',
+    "function buildStandupText(",
+    "function copyStandup(",
+    "state.packs.filter(isReview)",
+    "copyToClipboard(",
+    'el("copy-standup")?.addEventListener("click", copyStandup)'
   ]);
 }
 

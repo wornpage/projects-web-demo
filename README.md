@@ -407,6 +407,25 @@ backend rejects unknown, self, finished, or loop-creating references before
 storage, and dangling references left by scenario switches or imports are
 cleared on read while the blocker text is kept.
 
+## Import and Standup Export
+
+The Settings screen has an "Import your work" box: paste a task list and it
+replaces the sample work with browser-local packs. `parseWorkList` reads one
+item per line, strips markdown bullets and checkboxes, and pulls `@owner`,
+`(blocked: reason)`, and `due:YYYY-MM-DD` tokens; checked items import as done.
+Parsed items flow through the same `normalizeRecoveryState` pipeline the restore
+feature uses, so the 50-item cap, unique-id, and validation rules apply, and the
+import lands as a browser-local save in static mode or through
+`POST /api/state/restore` in app mode. Nothing is sent anywhere the paste did
+not already contain.
+
+The Review screen has a "Copy standup" button. `buildStandupText` turns the
+current review queue into a shareable plain-text summary — a header with the
+blocked / missing-action / owner-gap counts, one line per item with its blocker,
+owner, and next action, and an "Up next" line — copied through the same
+local-only clipboard path as the sync and recovery copy controls. It never
+schedules a backend write.
+
 ## Product Rule
 
 The public demo should explain one idea clearly:

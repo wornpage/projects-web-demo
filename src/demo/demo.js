@@ -604,6 +604,119 @@ async function eraseBackendState() {
   }
 }
 
+function parseWorkList(text) {
+  const packs = [];
+  for (const rawLine of String(text || "").split(/\r?\n/u)) {
+    if (packs.length >= DEMO_STATE_MAX_PACKS) {
+      break;
+    }
+    const line = normalizeCopy(rawLine);
+    if (!line) {
+      continue;
+    }
+    const done = /^[-*•]?\s*\[[xX]\]/u.test(line);
+    let body = line
+      .replace(/^[-*•]\s*(?:\[[ xX]\]\s*)?/u, "")
+      .replace(/^\d+[.)]\s+/u, "")
+      .replace(/^\[[ xX]\]\s*/u, "");
+    let owner = "";
+    body = body.replace(/(?:^|\s)@(\S+)/u, (match, name) => {
+      owner = name;
+      return " ";
+    });
+    let due = "";
+    body = body.replace(/(?:^|\s)due:(\d{4}-\d{2}-\d{2})/iu, (match, date) => {
+      due = date;
+      return " ";
+    });
+    let blocker = "";
+    body = body.replace(/\(blocked(?::\s*([^)]*))?\)/iu, (match, reason) => {
+      blocker = normalizeCopy(reason) || "blocked";
+      return " ";
+    });
+    const title = normalizeCopy(body);
+    if (!title) {
+      continue;
+    }
+    packs.push({ title, owner, due, blocker, done });
+  }
+  return packs;
+}
+
+function slugForImport(title) {
+  return normalizeCopy(title)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "-")
+    .replace(/^-+|-+$/gu, "")
+    .slice(0, 60) || "work-item";
+}
+
+function importedPackFromEntry(entry, usedIds) {
+  const base = slugForImport(entry.title);
+  let id = base;
+  let suffix = 2;
+  while (usedIds.has(id)) {
+    id = `${base}-${suffix++}`;
+  }
+  usedIds.add(id);
+  const blocker = entry.blocker ? normalizeCopy(entry.blocker) : DEMO_BLOCKER_NONE;
+  const isBlocked = !isUnblockedBlockerValue(blocker);
+  const status = entry.done ? "done" : (isBlocked ? "blocked" : "active");
+  return {
+    id,
+    title: entry.title,
+    type: "general",
+    status,
+    blocker: isBlocked ? blocker : DEMO_BLOCKER_NONE,
+    blockedBy: "",
+    next: isBlocked ? "Review" : "Open",
+    due: entry.due,
+    owner: entry.owner || "Unassigned",
+    purpose: "",
+    doneWhen: "",
+    sources: [],
+    memory: [],
+    activity: ["Imported from your list."]
+  };
+}
+
+async function importWorkList() {
+  try {
+    const parsed = parseWorkList(valueOf("demo-import-input"));
+    if (parsed.length === 0) {
+      throw new Error("add one work item per line");
+    }
+    const usedIds = new Set();
+    const packs = parsed.map((entry) => importedPackFromEntry(entry, usedIds));
+    const importStatus = `Where: Import. Blocker: None. Next action: review ${packs.length} imported ${workNoun(packs.length)}.`;
+    const snapshot = normalizeRecoveryState({
+      packs,
+      selectedId: packs[0].id,
+      copyProfile: state.copyProfile,
+      scenarioId: "default",
+      filter: "all",
+      status: importStatus,
+      query: ""
+    });
+    snapshot.actionReceipt = null;
+    if (DEMO_API_BASE_URL) {
+      await clearPendingBackendStateSave();
+      loadBackendOwnedState(await restoreBackendStateSnapshot(snapshot));
+    } else {
+      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(snapshot));
+      loadState();
+      saveState();
+    }
+    state.status = importStatus;
+    state.clipboardReceipt = null;
+    go("work");
+  } catch (error) {
+    state.status = `Where: Import. Blocker: ${error.message || "could not import"}. Next action: add one work item per line.`;
+    if (DEMO_API_BASE_URL) state.suppressNextSave = true;
+    render();
+  }
+}
+
 function parseRecoverySnapshot(value) {
   const parsed = safeJson(value);
   const source = parsed?.projectsDemoRecovery === RECOVERY_SNAPSHOT_VERSION
@@ -2940,10 +3053,27 @@ function recoveryPanel() {
   </details>`;
 }
 
+function importPanel() {
+  return `<details class="demo-recovery-panel demo-import-panel">
+    <summary>
+      <span>Import your work</span>
+      <small>Paste a task list to try the demo on your own work.</small>
+    </summary>
+    <p>Stays in this browser. One work item per line replaces the current sample work.</p>
+    <div class="demo-inline-form">
+      <label for="demo-import-input">Your work list</label>
+      <textarea id="demo-import-input" class="demo-search-input" spellcheck="false" placeholder="- [ ] Ship pricing page @dan due:2026-07-15&#10;- [ ] SOC2 review @priya (blocked: waiting on legal)"></textarea>
+      <button class="btn btn-sm btn-primary" type="button" id="import-work-list">Import work</button>
+      <small class="demo-field-help">Use @owner, (blocked: reason), and due:YYYY-MM-DD to fill fields. Checked items import as done.</small>
+    </div>
+  </details>`;
+}
+
 function bindRecoveryControls() {
   el("copy-recovery-state")?.addEventListener("click", copyRecoverySnapshot);
   el("restore-recovery-state")?.addEventListener("click", restoreRecoverySnapshot);
   el("erase-backend-state")?.addEventListener("click", eraseBackendState);
+  el("import-work-list")?.addEventListener("click", importWorkList);
 }
 
 let workListOrderIds = [];
@@ -2991,6 +3121,37 @@ function renderWork() {
   bindGoButtons();
 }
 
+function buildStandupText() {
+  const review = selectedFirstPacks(state.packs.filter(isReview));
+  const blockedCount = review.filter(hasBlocker).length;
+  const missingNextCount = review.filter(isMissingNextAction).length;
+  const ownerGapCount = review.filter((pack) => ownerSupportNeededForPack(pack)).length;
+  if (review.length === 0) {
+    return `Standup — every ${workNoun(1)} has a clear next action. Nothing needs a decision.`;
+  }
+  const header = `Standup — ${review.length} ${workNoun(review.length)} ${review.length === 1 ? "needs" : "need"} a decision (${blockedCount} blocked, ${missingNextCount} missing action, ${ownerGapCount} owner ${ownerGapCount === 1 ? "gap" : "gaps"}).`;
+  const lines = review.map((pack) => {
+    const command = resolvePrimaryCommandForPack(pack);
+    const owner = normalizeCopy(pack.owner) || "Unassigned";
+    return `- ${workTitle(pack)} — ${blockerTextForPack(pack)} (owner: ${owner}) -> ${command.label}`;
+  });
+  return [header, ...lines, `Up next: ${workTitle(review[0])}.`].join("\n");
+}
+
+function copyStandup() {
+  copyToClipboard(
+    buildStandupText(),
+    clipboardStatus("Review", "share the copied standup"),
+    {
+      controlId: "copy-standup",
+      targetLabel: "Standup summary",
+      title: "Standup copied",
+      detail: "The review summary is on your clipboard.",
+      next: "Paste it into your standup"
+    }
+  );
+}
+
 function renderReview() {
   const review = state.packs.filter(isReview);
   const orderedReview = selectedFirstPacks(review);
@@ -3008,7 +3169,10 @@ function renderReview() {
           <span class="section-label">Needs decision</span>
           <h2>${review.length} ${escapeHtml(workNoun(review.length))} to review</h2>
         </div>
-        <span class="demo-status">${escapeHtml(reviewState)}</span>
+        <div class="demo-review-head-actions">
+          <span class="demo-status">${escapeHtml(reviewState)}</span>
+          ${firstReview ? `<button class="btn btn-sm" type="button" id="copy-standup" title="Copy a shareable standup summary of the review queue." aria-label="Copy a shareable standup summary of the review queue.">Copy standup</button>` : ""}
+        </div>
       </div>
       ${disabledReasonNotice(!firstReview, reviewButtonReason)}
       ${reviewQueuePanel(review, firstReview)}
@@ -3016,6 +3180,7 @@ function renderReview() {
       <div class="demo-review-list">${orderedReview.length ? orderedReview.map(reviewCard).join("") : emptyReview}</div>
     </section>
   `;
+  el("copy-standup")?.addEventListener("click", copyStandup);
   bindListActions();
 }
 
@@ -7546,6 +7711,7 @@ function renderSettings() {
         <p class="demo-field-help">${escapeHtml(resetHelp)}</p>
         <button class="btn" type="button" id="reset-demo-settings"${controlLabelAttributes(resetHelp)}>Reset sample</button>
       </div>
+      ${importPanel()}
       ${recoveryPanel()}
     </section>
   `;
