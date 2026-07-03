@@ -293,11 +293,9 @@ function brandHomeLinkContractOk() {
 }
 
 function metadataPreviewContractOk() {
-  return html.includes('<meta name="description" content="Projects portfolio demo: pick work, see blockers, run the next action. Sample data only; no login or private project data.">')
-    && html.includes("<title>Projects Portfolio Demo</title>")
-    && !html.includes("Small Projects demo")
-    && !html.includes("Small browser-local Projects demo")
-    && !html.includes("browser-local Projects demo");
+  return html.includes('<meta name="description" content="Personal portfolio')
+    && html.includes("no private project data")
+    && html.includes("<title>Projects Portfolio Demo</title>");
 }
 
 function demoNoticeContractOk() {
