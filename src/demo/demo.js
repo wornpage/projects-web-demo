@@ -2916,43 +2916,31 @@ function renderHome() {
   const homeEmpty = state.packs.length === 0
     ? emptyState("No work is loaded.", "Create work or reset the browser-local sample.", emptyStateContextFor("Start", "no work exists in this browser", "create work or reset the sample"))
     : "";
+  const doneCount = state.packs.filter((p) => p.status === "done").length;
+  const dueCount = state.packs.filter((p) => p.due && new Date(p.due + "T00:00:00") >= new Date()).length;
+  const recentActivity = state.packs.flatMap((p) => (p.activity || []).slice(-1).map((e) => ({ pack: p, entry: e }))).slice(-3).reverse();
+
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-home-hero">
       <div class="demo-panel-head">
         <div>
-          <span class="section-label">Small portfolio demo</span>
-          <h2>Pick work, see what blocks it, run the next action.</h2>
+          <span class="section-label">Dashboard</span>
+          <h2>${state.packs.length} ${escapeHtml(workNoun(state.packs.length))} loaded</h2>
         </div>
       </div>
-      <p>Projects keeps work honest: each item shows where it is, what blocks progress, and the button that runs next. This demo uses sample work so the value is visible without project history.</p>
-      <p class="demo-home-counts">${state.packs.length} sample ${escapeHtml(workNoun(state.packs.length))}; ${reviewCount} need review.</p>
-      ${homeSpotlightPanel()}
-      ${homeEmpty}
-      <div class="demo-start-path" aria-label="Primary demo path">
-        <div class="demo-start-step">
-          <span>1</span>
-          <strong>Review</strong>
-          <small>Start with blocked or unclear work.</small>
-          ${navButton("review", "Review work", "btn btn-primary")}
-        </div>
-        <div class="demo-start-step">
-          <span>2</span>
-          <strong>Work</strong>
-          <small>Choose an item and read its blocker.</small>
-          ${navButton("work", "Open work list")}
-        </div>
-        <div class="demo-start-step">
-          <span>3</span>
-          <strong>Next</strong>
-          <small>Set the action the main button will run.</small>
-          ${navButton("next", "Set next action")}
-        </div>
+      <div class="demo-insights-grid">
+        ${insightCard("Need review", String(reviewCount), `${reviewCount} with blockers`, reviewCount > 0 ? "warn" : "good")}
+        ${insightCard("Complete", `${Math.round((doneCount / Math.max(state.packs.length, 1)) * 100)}%`, `${doneCount} finished`, doneCount > 0 ? "good" : "neutral")}
+        ${insightCard("Due soon", String(dueCount), "Upcoming deadlines", dueCount > 0 ? "warn" : "good")}
       </div>
-      <div class="demo-quick-actions demo-secondary-paths" aria-label="Small demo actions">
-        ${navButton("memory", "Add memory")}
+      ${recentActivity.length ? `<div class="demo-home-activity">
+        <h3>Recent activity</h3>
+        ${recentActivity.map((a) => `<p><button type="button" data-action="select" data-pack="${escapeAttribute(a.pack.id)}">${escapeHtml(workTitle(a.pack))}</button> — ${escapeHtml(a.entry)}</p>`).join("")}
+      </div>` : ""}
+      <div class="demo-quick-actions demo-secondary-paths" aria-label="Demo actions">
+        ${navButton("review", "Review work", "btn btn-primary")}
         ${navButton("create", profile().newWork)}
         ${navButton("settings", "Settings")}
-        <span id="reset-demo-home-help" class="sr-only">${escapeHtml(resetHelp)}</span>
         <button class="btn" type="button" id="reset-demo-home"${controlHelpAttributes(false, resetHelp, "reset-demo-home-help")}>Reset sample</button>
       </div>
     </section>
