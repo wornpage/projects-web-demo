@@ -46,7 +46,9 @@
           Start with Review. Everything here is sample data. No login or private project data.
         </section>
 
-        <section id="demo-sync" class="demo-sync card" aria-label="Demo sync code sharing" aria-describedby="sync-code-help" hidden>
+        <details class="demo-sync-details" id="demo-sync-details">
+          <summary class="demo-sync-summary"><span>Sync</span><small id="sync-code-summary">Off</small></summary>
+          <section id="demo-sync" class="demo-sync card" aria-label="Demo sync code sharing" aria-describedby="sync-code-help" hidden>
           <div class="demo-sync-copy">
             <strong>Sync code</strong>
             <span id="sync-code-state" role="status" aria-live="polite">This device has its own demo state.</span>
@@ -66,6 +68,7 @@
           </div>
           <p id="sync-code-help">Share sample data only. Anyone with this code can open this state.</p>
         </section>
+        </details>
 
         <section class="demo-command-brief sidecar" aria-labelledby="command-title" aria-describedby="command-scope command-flow">
           <div class="demo-command-top">

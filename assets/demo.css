@@ -862,6 +862,45 @@ html[data-theme="dark"] .demo-header-metadata {
   display: none;
 }
 
+.demo-sync-details {
+  border-bottom: 1px solid var(--cockpit-border);
+  font-size: 12px;
+}
+
+.demo-sync-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--cockpit-text-muted);
+  list-style: none;
+  user-select: none;
+}
+
+.demo-sync-summary::-webkit-details-marker {
+  display: none;
+}
+
+.demo-sync-summary span {
+  font-weight: 700;
+  color: var(--cockpit-text);
+}
+
+.demo-sync-summary small {
+  font-size: 11px;
+}
+
+.demo-sync-summary::before {
+  content: "▶";
+  font-size: 8px;
+  transition: transform 0.15s ease;
+}
+
+.demo-sync-details[open] .demo-sync-summary::before {
+  transform: rotate(90deg);
+}
+
 .demo-sync {
   align-items: center;
   background: var(--cockpit-surface);

@@ -1242,6 +1242,15 @@ function renderDemoSyncControls(message = "") {
       ? `Using ${syncCode}. Other devices can use this code.`
       : "This device has its own demo state.";
   }
+  if (el("sync-code-summary")) {
+    el("sync-code-summary").textContent = syncCode
+      ? `Active — ${syncCode.slice(0, 10)}…`
+      : "Off";
+  }
+  const details = el("demo-sync-details");
+  if (details && syncCode) {
+    details.open = true;
+  }
   if (el("sync-code-leave")) {
     el("sync-code-leave").hidden = !syncCode;
   }
