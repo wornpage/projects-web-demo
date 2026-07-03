@@ -267,11 +267,10 @@ function dueDateDisplayContractOk() {
     "function dueDateLabel(value)",
     'const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");',
     '<time datetime="${date}">${dueDateLabel(date)}</time>',
-    "supportDetailsSummary(showOwnerInline, pack)",
     "${dueDateMeta(pack)}"
   ]) && includesAll(supportSummary, [
     "const due = dueDateLabel(pack?.due);",
-    "Open for optional ${ownerIsInline ? \"title\" : \"owner\"}, due date, and purpose."
+    "due date, and purpose."
   ]) && includesAll(workSubtitle, [
     "const due = dueDateLabel(pack.due);",
     "${duePrefix}Ready. Next action: ${command.label}."

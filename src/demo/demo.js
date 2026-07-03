@@ -3466,38 +3466,22 @@ function renderPackDetail() {
         <div>
           <span class="section-label">${escapeHtml(workLabelTitle())} path</span>
           <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}</h2>
-          <p class="demo-pack-subtitle"${copySurfaceAttributes("Work path summary", detailSubtitle)}>${escapeHtml(detailSubtitle.visible)}</p>
           ${pack.purpose ? `<p class="demo-pack-purpose">${escapeHtml(pack.purpose)}</p>` : ""}
           ${packGuidanceLine(pack, packCommand, workflow)}
         </div>
         <span class="demo-status">${escapeHtml(persistenceEditStatus("Edits stay in this browser"))}</span>
       </div>
-      <div class="demo-forward-panel" data-forward-motion="pack-detail">
-        <div class="demo-forward-head">
-          <span class="section-label">What to do ${helpTip("The button that advances this work. When blocked, the button helps clear the blocker first.")}</span>
-          <strong>${escapeHtml(commandActionDisplayLabel(packCommand.next))}</strong>
-        </div>
-        ${workPathStrip(pack, packCommand)}
-        ${selectedWorkTriad(pack, packCommand)}
-        <div class="demo-form-grid demo-forward-fields">
-          ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
-          ${blockerStateField(pack)}
-          ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : ""}
-          ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
-          ${inputField("edit-done-when", `Proof target ${helpTip("The evidence that proves this work is truly done. Describe what 'finished' looks like.")}`, pack.doneWhen, "Describe the evidence needed before this work is done.")}
-        </div>
+
+      <div class="demo-form-grid demo-forward-fields">
+        ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
+        ${blockerStateField(pack)}
+        ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
+        ${dateField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
+        ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
+        ${inputField("edit-done-when", `Proof target ${helpTip("The evidence that proves this work is truly done. Describe what 'finished' looks like.")}`, pack.doneWhen, "Describe the evidence needed before this work is done.")}
+        ${textField("edit-purpose", "Why it matters", pack.purpose, "Context for why this work exists.")}
       </div>
-      <details class="demo-support-details" data-support-details="pack-detail">
-        <summary>
-          <span>More fields</span>
-          <strong>${escapeHtml(supportDetailsSummary(showOwnerInline, pack))}</strong>
-        </summary>
-        <div class="demo-form-grid">
-          ${showOwnerInline ? "" : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
-          ${dateField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
-          ${textField("edit-purpose", "Purpose", pack.purpose, "Extra context; keep the main work path above focused.")}
-        </div>
-      </details>
+
       ${relevantMemoryStrip(pack)}
       <div class="demo-card-actions demo-forward-actions">
         ${packPrimaryActionButton(routeCommand)}
