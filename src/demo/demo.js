@@ -1998,7 +1998,7 @@ function go(route, id = "", focusKind = "") {
 function parseHashRoute(hash) {
   const rawHash = (hash || "#/home").replace(/^#\/?/, "");
   const [rawRoute, rawPackId = "", ...extraSegments] = rawHash.split("/");
-  const route = isKnownRoute(rawRoute) ? rawRoute : "home";
+  const route = isKnownRoute(rawRoute.split("?")[0]) ? rawRoute.split("?")[0] : "home";
   const routeContract = ROUTE_CONTRACT[route] || ROUTE_CONTRACT.home;
   const decodedPackId = routeContract.acceptsPackId && rawPackId
     ? decodeRoutePackId(rawPackId)
