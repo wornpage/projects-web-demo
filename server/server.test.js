@@ -476,3 +476,34 @@ describe("unblockedReceiptSentence", () => {
     assert.strictEqual(unblockedReceiptSentence(3), "Unblocked 3 work items.");
   });
 });
+
+
+const DEMO_SOURCE = path.resolve(__dirname, "..", "src", "demo", "demo.js");
+
+const sourceTests = describe("demo source structure");
+
+it(sourceTests, "primary-action data-action is updated in updateCommand", () => {
+  const src = fs.readFileSync(DEMO_SOURCE, "utf8");
+  assert.ok(
+    src.includes("primaryBtn.dataset.action") && src.includes("primaryBtn.dataset.pack"),
+    "updateCommand must set primaryBtn.dataset.action and .dataset.pack"
+  );
+});
+
+it(sourceTests, "done action does not force next to Open", () => {
+  const src = fs.readFileSync(DEMO_SOURCE, "utf8");
+  const fnStart = src.indexOf("} else if (action === \"done\") {");
+  if (fnStart < 0) assert.fail("done handler not found");
+  const fnEnd = src.indexOf("} else if", fnStart + 10);
+  const fnText = fnEnd > fnStart ? src.slice(fnStart, fnEnd) : src.slice(fnStart);
+  assert.ok(!fnText.includes('pack.next = "Open"'), "pack.next must not be Open in done action");
+});
+
+it(sourceTests, "server done action does not force next to Open", () => {
+  const serverSrc = fs.readFileSync(path.resolve(__dirname, "src", "workflow.js"), "utf8");
+  const fnStart = serverSrc.indexOf("} else if (action === \"done\") {");
+  if (fnStart < 0) assert.fail("server done handler not found");
+  const fnEnd = serverSrc.indexOf("} else if", fnStart + 10);
+  const fnText = fnEnd > fnStart ? serverSrc.slice(fnStart, fnEnd) : serverSrc.slice(fnStart);
+  assert.ok(!fnText.includes('pack.next = "Open"'), "server pack.next must not be Open in done action");
+});
