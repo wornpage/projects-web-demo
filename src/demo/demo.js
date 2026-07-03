@@ -2942,9 +2942,12 @@ function focusKindForAction(action, packId = "") {
 function renderHome() {
   const reviewCount = state.packs.filter(isReview).length;
   const resetHelp = resetDemoHelp();
-  const homeEmpty = state.packs.length === 0
-    ? emptyState("No work is loaded.", "Open Settings → choose a scenario (try AI Prompts), or click Create.", emptyStateContextFor("Start", "no work exists in this browser", "open Settings, load a scenario, or create work"))
-    : "";
+
+  if (state.packs.length === 0) {
+    renderMethodPicker();
+    return;
+  }
+
   const doneCount = state.packs.filter((p) => p.status === "done").length;
   const dueCount = state.packs.filter((p) => p.due && new Date(p.due + "T00:00:00") >= new Date()).length;
   const recentActivity = state.packs.flatMap((p) => (p.activity || []).slice(-1).map((e) => ({ pack: p, entry: e }))).slice(-3).reverse();
@@ -2985,6 +2988,51 @@ function renderHome() {
   if (bml) {
     bml.href = `javascript:(function(){var u='${location.origin}/'+'#/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href);location.href=u})()`;
   }
+}
+
+function renderMethodPicker() {
+  const methods = [
+    { id: "ops-day", label: "Daily Operations", desc: "Restock inventory, process payroll, track maintenance, onboard new hires. Everything a small business manages day to day.", icon: "🏪" },
+    { id: "ai-prompts", label: "Prompt Engineering", desc: "Build a prompt library, run evals, compare models, and chain agent workflows. Prove what works.", icon: "🤖" },
+    { id: "default", label: "Project Work", desc: "General-purpose work tracking. Blocker management, next actions, proof targets, and memory notes.", icon: "📋" },
+    { id: "empty", label: "Start from scratch", desc: "Blank canvas. Create your own work items with your own vocabulary and workflow.", icon: "✨" }
+  ];
+
+  el("screen-content").innerHTML = `
+    <section class="demo-panel demo-home-hero">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Choose a method</span>
+          <h2>What do you want to track?</h2>
+        </div>
+      </div>
+      <p class="demo-method-intro">Pick a pre-loaded method below, or start from scratch. Each method comes with sample work items and vocabulary tuned to that workflow. Switch anytime in Settings.</p>
+      <div class="demo-method-grid">
+        ${methods.map((m) => `
+          <button class="demo-method-card" type="button" data-action="load-method" data-method="${escapeAttribute(m.id)}">
+            <span class="demo-method-icon">${m.icon}</span>
+            <strong>${escapeHtml(m.label)}</strong>
+            <p>${escapeHtml(m.desc)}</p>
+          </button>
+        `).join("")}
+      </div>
+      <div class="demo-quick-actions">
+        <button class="btn btn-sm" type="button" id="reset-demo-home">Reset sample</button>
+      </div>
+    </section>
+  `;
+  document.querySelectorAll("[data-action=load-method]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const scenario = DEMO_SCENARIO_BY_ID[btn.dataset.method];
+      if (scenario) {
+        applyScenario(scenario);
+      } else if (btn.dataset.method === "empty") {
+        state.packs = [];
+        state.scenarioId = "empty";
+        render();
+      }
+    });
+  });
 }
 
 function homeSpotlightPanel() {

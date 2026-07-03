@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects — a work tracker that fits any workflow</title>
+  <meta name="description" content="A lightweight work tracker with pre-built methods for daily ops, prompt engineering, and project work. Open source. No accounts, no vendor lock-in.">
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --accent: #1d6f64;
+      --accent-hover: #15564d;
+      --radius: 10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.6; }
+    .hero { max-width: 720px; margin: 80px auto 40px; padding: 0 20px; text-align: center; }
+    .hero h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 800; margin-bottom: 12px; }
+    .hero p { color: var(--muted); font-size: 18px; margin-bottom: 24px; }
+    .btn { display: inline-block; padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; text-decoration: none; transition: background 0.12s; }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-outline { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+    .btn-outline:hover { background: var(--accent); color: #fff; }
+    .methods { max-width: 880px; margin: 0 auto 60px; padding: 0 20px; }
+    .methods h2 { text-align: center; font-size: 24px; margin-bottom: 24px; }
+    .method-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .method-card { background: var(--surface); border: 1px solid #e5e7eb; border-radius: var(--radius); padding: 24px; transition: border-color 0.12s, box-shadow 0.12s; }
+    .method-card:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .method-icon { font-size: 32px; margin-bottom: 8px; }
+    .method-card h3 { font-size: 17px; margin-bottom: 6px; }
+    .method-card p { font-size: 14px; color: var(--muted); line-height: 1.5; }
+    .footer { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; border-top: 1px solid #e5e7eb; }
+    .footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <h1>A work tracker that fits any workflow.</h1>
+    <p>Pre-built methods for daily ops, prompt engineering, and project work. Switch methods anytime. Open source. No accounts, no vendor lock-in.</p>
+    <p>
+      <a class="btn" href="https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app/">Try the demo</a>
+      <a class="btn btn-outline" href="https://github.com/jared-bidlow/projects-web-demo">View source</a>
+    </p>
+  </section>
+
+  <section class="methods">
+    <h2>Methods</h2>
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-icon">🏪</div>
+        <h3>Daily Operations</h3>
+        <p>Restock inventory, process payroll, track maintenance, onboard new hires. Everything a small business manages day to day.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-icon">🤖</div>
+        <h3>Prompt Engineering</h3>
+        <p>Build a prompt library, run evals across models, compare outputs, and chain agent workflows. Prove what works before shipping.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-icon">📋</div>
+        <h3>Project Work</h3>
+        <p>Blocker management, next actions, proof targets, and memory notes. Lightweight enough for one person, structured enough for a team.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-icon">📞</div>
+        <h3>Sales Prospecting</h3>
+        <p>Track leads through your pipeline. Follow-ups, proposals, objections, and closed deals — all in one place.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    Personal portfolio demo — not a commercial product. <a href="https://github.com/jared-bidlow/projects-web-demo">Open source</a> under MIT.
+  </footer>
+</body>
+</html>
