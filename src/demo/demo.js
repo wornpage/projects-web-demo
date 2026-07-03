@@ -3345,9 +3345,23 @@ function nextChoicePreviewPack(pack) {
 }
 
 function nextChoicePreviewHelp(pack, command = resolvePrimaryCommandForPack(pack)) {
-  return hasBlocker(pack) && command.action !== "unblock"
-    ? `Your choice saves, but the main button runs ${command.label} until the blocker clears.`
-    : `After save, the main button runs ${command.label}.`;
+  const what = nextActionWhatText(command);
+  const blockerNote = hasBlocker(pack) && command.action !== "unblock"
+    ? ` Your choice saves, but the main button runs ${command.label} until the blocker clears.`
+    : ` After save, the main button runs ${command.label}: ${what}`;
+  return blockerNote;
+}
+
+function nextActionWhatText(command) {
+  const map = {
+    "review": "opens the blocker review screen.",
+    "review-work": "opens the blocker review screen.",
+    "unblock": "clears the blocker and makes the work ready.",
+    "start": "opens the full work path to edit all fields.",
+    "done": "marks this work finished and saves your proof target.",
+    "open": "opens the full work path for editing."
+  };
+  return map[command.action] || "runs the selected action.";
 }
 
 function resetDemoHelp() {
@@ -4234,6 +4248,14 @@ function supportActionVisibleReason(action) {
     "set-next": "Choose which action the main Do next button runs."
   };
   return reasons[action] || "Other action.";
+}
+
+function syncEditNextWhat() {
+  const what = document.querySelector("[data-next-what]");
+  const select = el("edit-next");
+  if (!what || !select) return;
+  const command = commandActionForLabel(select.value || "Open");
+  what.textContent = `"${command.label}" — ${nextActionWhatText(command)}`;
 }
 
 function bindWorkCards() {
@@ -5648,11 +5670,17 @@ function bindPackDetailValidation(pack) {
       if (id === "edit-owner") {
         syncOwnerBlockerResolutionPreview();
       }
+      if (id === "edit-next") {
+        syncEditNextWhat();
+      }
       syncPackDetailValidation(pack);
     });
     input?.addEventListener("change", () => {
       if (id === "edit-owner") {
         syncOwnerBlockerResolutionPreview();
+      }
+      if (id === "edit-next") {
+        syncEditNextWhat();
       }
       syncPackDetailValidation(pack);
     });
@@ -6807,10 +6835,11 @@ function nextActionSelectField(id, label, value, help = "") {
   const labelHtml = label.includes("<") ? label : escapeHtml(label);
   return `<label class="demo-field demo-action-choice-field" for="${escapeAttribute(id)}">
     <span>${labelHtml}</span>
-    <select id="${escapeAttribute(id)}" class="demo-search-input"${fieldHelpAttributes(describedBy, help)}>
+    <select id="${escapeAttribute(id)}" class="demo-search-input"${fieldHelpAttributes(describedBy, help)} data-action-help="next">
       ${nextActionOptions(value).map((option) => `<option value="${escapeAttribute(option.value)}"${option.selected ? " selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
     </select>
     ${fieldHelp(id, help)}
+    <small class="demo-field-help demo-next-what" aria-live="polite" data-next-what></small>
   </label>`;
 }
 
