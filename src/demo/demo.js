@@ -2765,7 +2765,7 @@ function focusKindForAction(action, packId = "") {
     return "create-next";
   }
 
-  if (action === "set-next" || action === "focus" || action === "start" || action === "done" || action === "unblock" || action === "clear-owner-blocker" || action === "save-work-path") {
+  if (action === "set-next" || action === "focus" || action === "start" || action === "unblock" || action === "clear-owner-blocker" || action === "save-work-path") {
     return "next";
   }
 
