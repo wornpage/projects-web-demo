@@ -832,6 +832,9 @@ async function runBackendPackAction(pack, action) {
   if (action === "open") {
     queueFocus("pack-detail", state.selectedId);
   }
+  if (action === "done") {
+    requestAnimationFrame(() => burstConfetti());
+  }
   go("pack", state.selectedId);
   return true;
 }
