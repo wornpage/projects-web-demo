@@ -34,6 +34,15 @@ try {
   const frontendSource = await fs.readFile(path.join(repoRoot, "src/demo/demo.js"), "utf8");
   check("static preview frontend avoids runtime inline style setters", !/\.style\b|setAttribute\(\s*["']style/iu.test(frontendSource), "inline style setter absent");
 
+  // The bundled telemetry helper must stay console-only. As a stub it is
+  // designed to accept an EMIT URL sink; this pins it to "console" and bans
+  // network primitives so it cannot quietly start exfiltrating from the
+  // public bundle without tripping a gate.
+  const telemetrySource = await fs.readFile(path.join(repoRoot, "src/demo/telemetry.js"), "utf8").catch(() => "");
+  const telemetryConsoleOnly = /const\s+EMIT\s*=\s*"console"/u.test(telemetrySource)
+    && !/\bfetch\s*\(|sendBeacon|XMLHttpRequest|import\s*\(|new\s+WebSocket|EventSource/iu.test(telemetrySource);
+  check("bundled telemetry stays console-only with no network sink", telemetryConsoleOnly, telemetrySource ? 'EMIT="console", no network primitives' : "telemetry.js absent");
+
   for (const pathname of [
     "/",
     "/index.html",

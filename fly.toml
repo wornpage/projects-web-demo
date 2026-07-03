@@ -1,0 +1,40 @@
+# Fly.io deploy blueprint for the backend-backed demo. Turnkey migration:
+#
+#   fly launch --copy-config --no-deploy      # or: fly apps create projects-web-demo
+#   fly postgres create --name projects-web-demo-db
+#   fly postgres attach projects-web-demo-db   # sets DATABASE_URL as a secret
+#   fly deploy
+#
+# The app reads DATABASE_URL (or the PG* vars) and serves on $PORT. No code
+# changes are needed to move here from any other Docker host — this file only
+# supplies host wiring. If your Postgres requires TLS, add:
+#   fly secrets set PROJECTS_POSTGRES_SSL=require
+
+app = "projects-web-demo"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  HOST = "0.0.0.0"
+  PORT = "5179"
+  PROJECTS_STATE_STORAGE = "postgres"
+
+[http_service]
+  internal_port = 5179
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "3s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
