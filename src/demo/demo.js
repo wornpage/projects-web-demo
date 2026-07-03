@@ -3979,6 +3979,7 @@ function workCard(pack) {
     <div class="demo-card-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. ${dueDateLabel(pack.due) || "No due date"}.`)}">
       ${cardFact("Where", workTitle(pack))}
       ${cardFact("Blocker", blockerTextForPack(pack))}
+      ${pack.purpose ? `<span class="demo-card-purpose">${escapeHtml(truncateTitle(pack.purpose, 100))}</span>` : ""}
     </div>
     <div class="demo-command-row">
       <div>

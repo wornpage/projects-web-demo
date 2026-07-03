@@ -2554,6 +2554,20 @@ html[data-theme="dark"] .demo-meta-row {
   border-bottom: 0;
 }
 
+.demo-card-purpose {
+  color: var(--cockpit-text);
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 1.35;
+  padding: 6px 10px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 .demo-card-fact span {
   color: var(--cockpit-text-secondary);
   font-size: 11px;
