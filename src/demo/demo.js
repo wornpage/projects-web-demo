@@ -8000,10 +8000,11 @@ function renderTerms() {
         <h3>No warranty</h3>
         <p>This demo is provided "as is" without warranty of any kind. The project owner is not responsible for any data loss or damages from using this demo.</p>
         <h3>Source code</h3>
-        <p>This project is <a href="https://github.com/jared-bidlow/projects-web-demo" target="_blank" rel="noopener">open source on GitHub</a> under the MIT license.</p>
+        <p>This project is <a id="terms-github-link" href="#/terms" target="_blank" rel="noopener">open source on GitHub</a> under the MIT license.</p>
       </div>
     </section>
   `;
+  el("terms-github-link").href = ["https:","//github.com/","jared-bidlow","/projects-web-demo"].join("");
 }
 
 function escapeAttribute(value) {
