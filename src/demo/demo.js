@@ -2914,7 +2914,7 @@ function renderHome() {
   const reviewCount = state.packs.filter(isReview).length;
   const resetHelp = resetDemoHelp();
   const homeEmpty = state.packs.length === 0
-    ? emptyState("No work is loaded.", "Create work or reset the browser-local sample.", emptyStateContextFor("Start", "no work exists in this browser", "create work or reset the sample"))
+    ? emptyState("No work is loaded.", "Open Settings → choose a scenario (try AI Prompts), or click Create.", emptyStateContextFor("Start", "no work exists in this browser", "open Settings, load a scenario, or create work"))
     : "";
   const doneCount = state.packs.filter((p) => p.status === "done").length;
   const dueCount = state.packs.filter((p) => p.due && new Date(p.due + "T00:00:00") >= new Date()).length;
@@ -2947,7 +2947,7 @@ function renderHome() {
   `;
   bindGoButtons();
   bindListActions();
-  el("reset-demo-home")?.addEventListener("click", resetState);
+  el("reset-demo-home")?.addEventListener("click", () => { if (confirm("Reset all demo data to defaults?")) resetState(); });
 }
 
 function homeSpotlightPanel() {
@@ -3065,7 +3065,7 @@ function importPanel() {
 function bindRecoveryControls() {
   el("copy-recovery-state")?.addEventListener("click", copyRecoverySnapshot);
   el("restore-recovery-state")?.addEventListener("click", restoreRecoverySnapshot);
-  el("erase-backend-state")?.addEventListener("click", eraseBackendState);
+  el("erase-backend-state")?.addEventListener("click", () => { if (confirm("Erase your backend data? This cannot be undone.")) eraseBackendState(); });
   el("import-work-list")?.addEventListener("click", importWorkList);
 }
 
@@ -3437,8 +3437,8 @@ function renderPackDetail() {
   const pack = currentPack();
   if (!pack) {
     el("screen-content").innerHTML = state.packs.length === 0
-      ? emptyState("No work is available.", "Create work or reset demo data.", emptyStateContextFor("Work path", "no work exists in this browser", "create or reset work"))
-      : emptyState("Choose work before opening the work path.", "Open Work or Review and choose a work card.", emptyStateContextFor("Work path", "no work is selected", "open Work or Review and choose a work card"));
+      ? emptyState("No work is available.", "Open Settings → choose a scenario (try AI Prompts), or click Create to add one.", emptyStateContextFor("Work path", "no work exists in this browser", "load a scenario or create work"))
+      : emptyState("Choose work before opening the work path.", "Open Work or Review and click any work card to see its details.", emptyStateContextFor("Work path", "no work is selected", "open Work or Review and choose a work card"));
     return;
   }
   const packCommand = resolvePrimaryCommandForPack(pack);
@@ -3501,7 +3501,11 @@ function renderMemory() {
         </div>
         <span class="demo-status">${escapeHtml(persistenceMemoryStatus("Stored in this browser"))}</span>
       </div>
-      <div class="demo-list">${pack ? (pack.memory.map((note) => `<div class="demo-note">${escapeHtml(note)}</div>`).join("") || emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${workTitle(pack)}`, "no saved memory note yet", "type a note below"))) : emptyState("No memory available.", "Create work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no work exists in this browser", "create or reset work"))}</div>
+      <div class="demo-list">${globalMemoryNotes(pack)}</div>
+      <div class="demo-inline-form">
+        <label class="sr-only" for="memory-search">Search all memory</label>
+        <input id="memory-search" class="demo-search-input" type="search" placeholder="Search all memory notes across all work…" autocomplete="off">
+      </div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
         <input id="memory-note" class="demo-search-input" type="text" placeholder="Capture decision, source, or proof" autocomplete="off" aria-describedby="memory-note-help">
@@ -3512,6 +3516,7 @@ function renderMemory() {
     </section>
   `;
   bindMemoryValidation(pack);
+  bindMemorySearch();
   bindGoButtons();
   el("add-memory").addEventListener("click", async () => {
     const memoryState = memoryNoteSaveState(pack, valueOf("memory-note"));
@@ -7902,6 +7907,40 @@ function renderActivity() {
     </section>
   `;
   bindListActions();
+}
+
+function globalMemoryNotes(selectedPack) {
+  const query = normalizeCopy(valueOf("memory-search") || "");
+  let notes = [];
+  state.packs.forEach((pack) => {
+    (pack.memory || []).forEach((note) => {
+      if (!query || note.toLowerCase().includes(query.toLowerCase())) {
+        notes.push({ pack, note });
+      }
+    });
+  });
+  if (!notes.length) {
+    return query
+      ? `<p class="demo-field-help">No memory notes match "${escapeHtml(query)}".</p>`
+      : (selectedPack
+        ? emptyState("No memory notes for this work.", "Add a note below to keep recall with the selected work.", emptyStateContextFor(`Memory / ${workTitle(selectedPack)}`, "no saved memory note yet", "type a note below"))
+        : emptyState("No memory available.", "Create work or reset demo data before adding memory.", emptyStateContextFor("Memory", "no work exists in this browser", "create or reset work")));
+  }
+  return notes.map(({ pack, note }) => `
+    <div class="demo-note" data-pack-id="${escapeAttribute(pack.id)}">
+      <button class="demo-card-title" type="button" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
+      <p>${escapeHtml(note)}</p>
+    </div>
+  `).join("");
+}
+
+function bindMemorySearch() {
+  el("memory-search")?.addEventListener("input", () => {
+    const pack = currentPack();
+    const list = document.querySelector(".demo-list");
+    if (list) list.innerHTML = globalMemoryNotes(pack);
+    bindListActions();
+  });
 }
 
 function escapeAttribute(value) {
