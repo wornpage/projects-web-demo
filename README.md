@@ -64,16 +64,19 @@ The important public paths are:
 
 | Hash path | Purpose |
 |---|---|
-| `#/home` | Start screen with the portfolio value proposition. |
+| `#/home` | Dashboard — stats, recent activity, bookmarklet, quick actions. |
 | `#/review` | Work that needs review or setup. |
 | `#/work` | Work list and selected-work browsing. |
 | `#/pack/{packId}` | Edit one work item path. |
 | `#/next/{packId}` | Choose the next action for one work item. |
-| `#/memory/{packId}` | Add browser-local memory for one work item. |
-| `#/create` | Add browser-local sample work. |
+| `#/memory/{packId}` | Add memory notes, search all notes across all work. |
+| `#/create` | Add work items. Pre-fills from ?title= and ?url= query params (bookmarklet). |
 | `#/compare/{packId}/{packId}` | Compare two work items side by side. |
-| `#/calendar` | Month view of work by date. |
-| `#/settings` | Demo preferences: copy profile, scenario, theme, reset, and recovery backup. |
+| `#/calendar` | Month + year view of due dates. |
+| `#/insights` | Aggregate stats — completion rate, owner activity, type breakdown. |
+| `#/activity` | Chronological timeline of all actions across all work items. |
+| `#/settings` | Demo preferences: copy profile, scenario, theme, reset, import, and recovery. |
+| `#/terms` | Terms of use and privacy — personal portfolio demo, no data collection. |
 
 Unknown and retired hashes fall back to `#/home`.
 
