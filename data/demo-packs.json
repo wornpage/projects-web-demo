@@ -490,5 +490,198 @@
     "owner": "Jared",
     "purpose": "Prompt that audits a codebase against a design system: checks color tokens, spacing consistency, typography scale, component reuse. Outputs a prioritized fix list.",
     "id": "design-system-audit"
+  },
+  {
+    "id": "lead-bakery",
+    "title": "Artisan Bakery — website redesign",
+    "type": "lead",
+    "status": "active",
+    "blocker": "none",
+    "next": "Call",
+    "due": "2026-07-08",
+    "owner": "Jared",
+    "purpose": "Modernize their ordering system. Current site is 2012-era.",
+    "doneWhen": "Signed contract for .5K redesign.",
+    "sources": [
+      "yelp",
+      "website"
+    ],
+    "memory": [
+      "Owner Lisa seemed interested. Wants to see portfolio first.",
+      "Best time to call: Tuesdays before 11am."
+    ],
+    "activity": [
+      "Researched bakery market.",
+      "First contact call — Lisa interested.",
+      "Sent portfolio link."
+    ]
+  },
+  {
+    "id": "lead-florist",
+    "title": "Blooms & Petals — delivery logistics",
+    "type": "lead",
+    "status": "blocked",
+    "blocker": "waiting on callback",
+    "next": "Follow up",
+    "due": "2026-07-05",
+    "owner": "Jared",
+    "purpose": "They need a delivery scheduling tool integrated with the website.",
+    "doneWhen": "Proposal accepted or rejected.",
+    "sources": [
+      "referral",
+      "google maps"
+    ],
+    "memory": [
+      "Referred by Lisa at the bakery.",
+      "Mark (owner) is the decision maker, hard to reach."
+    ],
+    "activity": [
+      "Got referral from Artisan Bakery.",
+      "Called — left voicemail.",
+      "Second call — no answer."
+    ]
+  },
+  {
+    "id": "lead-cafe",
+    "title": "Corner Cafe — loyalty program app",
+    "type": "lead",
+    "status": "draft",
+    "blocker": "none",
+    "next": "Open",
+    "due": "2026-07-12",
+    "owner": "Jared",
+    "purpose": "Simple punch-card loyalty app for their 3 locations.",
+    "doneWhen": "Discovery call completed and proposed solution documented.",
+    "sources": [
+      "walk-in"
+    ],
+    "memory": [
+      "Regular customer here — good relationship.",
+      "Manager Priya is the POC."
+    ],
+    "activity": [
+      "Added from personal knowledge."
+    ]
+  },
+  {
+    "id": "lead-gym",
+    "title": "Fit Focus Gym — member portal",
+    "type": "lead",
+    "status": "done",
+    "blocker": "none",
+    "next": "Done",
+    "due": "2026-06-30",
+    "owner": "Jared",
+    "purpose": "Member self-service portal for class booking and payments.",
+    "doneWhen": "Signed at .2K.",
+    "sources": [
+      "cold call",
+      "website"
+    ],
+    "memory": [
+      "Decision maker was the regional manager, not the local GM.",
+      "Price negotiation — started at , settled at .2K."
+    ],
+    "activity": [
+      "Cold called.",
+      "Scheduled discovery meeting.",
+      "Sent proposal — .",
+      "Negotiated to .2K.",
+      "Signed contract."
+    ]
+  },
+  {
+    "id": "lead-lawfirm",
+    "title": "Dawson Legal — document intake",
+    "type": "lead",
+    "status": "blocked",
+    "blocker": "needs decision maker",
+    "next": "Review",
+    "due": "2026-07-10",
+    "owner": "Jared",
+    "purpose": "Secure client document intake portal with e-signature.",
+    "doneWhen": "Meeting with managing partner scheduled.",
+    "sources": [
+      "linkedin",
+      "cold call"
+    ],
+    "memory": [
+      "Receptionist was helpful but can't make buying decisions.",
+      "Need to reach James Dawson directly."
+    ],
+    "activity": [
+      "Researched firm on LinkedIn.",
+      "Cold called — got receptionist.",
+      "Left message for James Dawson."
+    ]
+  },
+  {
+    "id": "lead-dentist",
+    "title": "Smith Dental — online booking",
+    "type": "lead",
+    "status": "active",
+    "blocker": "none",
+    "next": "Send quote",
+    "due": "2026-07-15",
+    "owner": "Jared",
+    "purpose": "Replace their phone-only booking with a website scheduler.",
+    "doneWhen": "Quote sent and follow-up scheduled.",
+    "sources": [
+      "google maps",
+      "website"
+    ],
+    "memory": [
+      "Dr. Smith wants something simple — no patient portal, just booking.",
+      "Budget-conscious — keep proposal under ."
+    ],
+    "activity": [
+      "Called and reached Dr. Smith.",
+      "Discussed requirements.",
+      "Quote in progress."
+    ]
+  },
+  {
+    "id": "lead-roofing",
+    "title": "Apex Roofing — estimate calculator",
+    "type": "lead",
+    "status": "draft",
+    "blocker": "none",
+    "next": "Open",
+    "purpose": "Customer-facing roof estimate calculator based on square footage.",
+    "doneWhen": "Research completed and initial outreach done.",
+    "sources": [
+      "competitor analysis"
+    ],
+    "memory": [
+      "Competitors have terrible calculators — opportunity to stand out."
+    ],
+    "activity": [
+      "Added from competitor research."
+    ],
+    "owner": "Jared"
+  },
+  {
+    "id": "lead-plumber",
+    "title": "Speedy Plumbing — emergency dispatch",
+    "type": "lead",
+    "status": "active",
+    "blocker": "none",
+    "next": "Call",
+    "due": "2026-07-07",
+    "owner": "Jared",
+    "purpose": "Real-time dispatch board for their 8 technicians.",
+    "doneWhen": "Decision maker contacted and interest confirmed.",
+    "sources": [
+      "referral",
+      "yelp"
+    ],
+    "memory": [
+      "Referred by a mutual contact.",
+      "Owner Tony prefers text to calls."
+    ],
+    "activity": [
+      "Got referral from mutual contact.",
+      "Texted Tony — he's interested."
+    ]
   }
 ]
