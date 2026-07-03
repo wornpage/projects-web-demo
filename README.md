@@ -73,6 +73,7 @@ The important public paths are:
 | `#/create` | Add browser-local sample work. |
 | `#/compare/{packId}/{packId}` | Compare two work items side by side. |
 | `#/calendar` | Month view of work by date. |
+| `#/settings` | Demo preferences: copy profile, scenario, theme, reset, and recovery backup. |
 
 Unknown and retired hashes fall back to `#/home`.
 
@@ -263,7 +264,7 @@ copy uses the named backend sync endpoint, and sync links use `?sync=` only as a
 launch parameter and remove it from the address bar after the shared state
 loads.
 
-The Start screen also has a collapsed Recovery section. **Copy backup** copies a
+The Settings screen also has a collapsed Recovery section. **Copy backup** copies a
 bounded JSON snapshot for the current browser or active sync row, and
 **Restore backup** validates pasted Projects demo recovery JSON before loading
 and saving it through the local static path or the hosted restore endpoint. This
@@ -389,6 +390,7 @@ For UI-only work, also smoke the main routes locally in light and dark mode:
 - `#/next/source-folder-audit`
 - `#/memory/source-folder-audit`
 - `#/create`
+- `#/settings`
 
 ## Work Dependencies
 

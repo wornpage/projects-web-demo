@@ -6449,3 +6449,14 @@ html[data-theme="dark"] .demo-app-shell {
   .demo-cal-day { font-size:14px; }
   .demo-calendar-grid { padding:8px; gap:2px; }
 }
+
+/* Settings screen */
+.demo-settings-section { margin-top: 20px; }
+.demo-settings-section h3 { margin: 0 0 4px; }
+.demo-settings-section > .demo-field-help { margin: 0 0 4px; }
+.demo-settings .demo-recovery-panel { margin-top: 20px; }
+.demo-settings .demo-profile-card span { color: var(--cockpit-text-muted); }
+.demo-settings .demo-profile-card[aria-pressed="true"] span { color: inherit; }
+@media (max-width: 560px) {
+  .demo-settings .demo-profile-grid { grid-template-columns: 1fr; }
+}

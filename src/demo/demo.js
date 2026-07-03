@@ -94,14 +94,15 @@ const ROUTE_CONTRACT = Object.freeze({
   create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true },
   compare: { pattern: "#/compare/{packId}/{packId}", title: "Compare", commandSource: "route", acceptsPackId: true },
-  calendar: { pattern: "#/calendar", title: "Calendar", commandSource: "route", navKey: "📅", navLabel: "Calendar" }
+  calendar: { pattern: "#/calendar", title: "Calendar", commandSource: "route", navKey: "📅", navLabel: "Calendar" },
+  settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "⚙", navLabel: "Settings" }
 });
 
 const NAV_ROUTE_GROUPS = Object.freeze([
   Object.freeze({
     id: "public",
     label: "Demo",
-    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar"])
+    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar", "settings"])
   })
 ]);
 
@@ -130,6 +131,8 @@ const copyProfiles = {
   climate: { work: "site check", workOne: "site check", workMany: "site checks", newWork: "New check", result: "Finding", sources: "Datasets and notes" },
   ai: { work: "prompt", workOne: "prompt", workMany: "prompts", newWork: "New prompt", result: "Output", sources: "Model and docs" }
 };
+
+const PROFILE_LABELS = { general: "General", dj: "DJ", developer: "Developer", climate: "Climate", ai: "AI" };
 
 const DEMO_SCENARIOS = [
   {
@@ -1971,6 +1974,9 @@ function render() {
     case "calendar":
       renderCalendar();
       break;
+    case "settings":
+      renderSettings();
+      break;
     case "work":
     default:
       renderWork();
@@ -2820,16 +2826,15 @@ function renderHome() {
       <div class="demo-quick-actions demo-secondary-paths" aria-label="Small demo actions">
         ${navButton("memory", "Add memory")}
         ${navButton("create", profile().newWork)}
+        ${navButton("settings", "Settings")}
         <span id="reset-demo-home-help" class="sr-only">${escapeHtml(resetHelp)}</span>
         <button class="btn" type="button" id="reset-demo-home"${controlHelpAttributes(false, resetHelp, "reset-demo-home-help")}>Reset sample</button>
       </div>
-      ${recoveryPanel()}
     </section>
   `;
   bindGoButtons();
   bindListActions();
   el("reset-demo-home")?.addEventListener("click", resetState);
-  bindRecoveryControls();
 }
 
 function homeSpotlightPanel() {
@@ -3566,7 +3571,7 @@ function selectedWorkStatus(surface, pack, next = resolvePrimaryCommandForPack(p
 
 function profileCardHelp(key, value, active) {
   const prefix = active ? "Current copy profile" : "Apply copy profile";
-  return `${prefix}: ${capitalize(key)}. Labels use ${value.newWork}, ${value.work}, and ${value.sources}.`;
+  return `${prefix}: ${PROFILE_LABELS[key] || capitalize(key)}. Labels use ${value.newWork}, ${value.work}, and ${value.sources}.`;
 }
 
 function scenarioCardHelp(scenario, active) {
@@ -6368,7 +6373,8 @@ function routeButtonReason(route, label) {
     review: `Open review ${profile().work} and resolve the next blocker.`,
     next: "Open Next action setup for review work.",
     create: `Create ${profile().work} with title, owner, and Next action.`,
-    memory: `Open Memory to add recall notes to selected ${profile().work}.`
+    memory: `Open Memory to add recall notes to selected ${profile().work}.`,
+    settings: "Open Settings for profile, scenario, theme, reset, and backups."
   };
   return reasons[route] || `Open ${label}.`;
 }
@@ -7477,6 +7483,121 @@ function bindCalendarNav() {
     monthSel.addEventListener("change", jump);
     yearSel.addEventListener("change", jump);
   }
+}
+
+function renderSettings() {
+  const resetHelp = resetDemoHelp();
+  const profileChoices = Object.entries(copyProfiles).map(([key, value]) => {
+    const active = key === state.copyProfile;
+    const help = profileCardHelp(key, value, active);
+    return `<button class="demo-profile-card" type="button" data-profile="${escapeAttribute(key)}" aria-pressed="${String(active)}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
+      <strong>${escapeHtml(PROFILE_LABELS[key] || capitalize(key))}</strong>
+      <span>${escapeHtml(`${value.newWork} / ${value.workMany}`)}</span>
+    </button>`;
+  }).join("");
+  const scenarioChoices = DEMO_SCENARIOS.map((scenario) => {
+    const active = scenario.id === state.scenarioId;
+    const help = scenarioCardHelp(scenario, active);
+    return `<button class="demo-profile-card" type="button" data-scenario="${escapeAttribute(scenario.id)}" aria-pressed="${String(active)}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
+      <strong>${escapeHtml(scenario.label)}</strong>
+      <span>${escapeHtml(scenario.description)}</span>
+    </button>`;
+  }).join("");
+  const currentTheme = document.documentElement.dataset.theme || "light";
+  const themeChoices = THEMES.map((theme) => {
+    const active = theme === currentTheme;
+    return `<button class="demo-profile-card" type="button" data-theme-choice="${escapeAttribute(theme)}" aria-pressed="${String(active)}" title="${escapeAttribute(themeChoiceHelp(theme, active))}" aria-label="${escapeAttribute(themeChoiceHelp(theme, active))}">
+      <strong>${escapeHtml(THEME_LABELS[theme])}</strong>
+    </button>`;
+  }).join("");
+
+  el("screen-content").innerHTML = `
+    <section class="demo-panel demo-settings">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Demo preferences</span>
+          <h2>Profile, scenario, theme, and backups in one place.</h2>
+        </div>
+      </div>
+      <div class="demo-settings-section" role="group" aria-label="Copy profile">
+        <h3>Copy profile</h3>
+        <p class="demo-field-help">Changes the vocabulary the demo uses for ${escapeHtml(workNoun(2))}.</p>
+        <div class="demo-chip-row demo-profile-grid">${profileChoices}</div>
+      </div>
+      <div class="demo-settings-section" role="group" aria-label="Scenario">
+        <h3>Scenario</h3>
+        <p class="demo-field-help">Loads a sample work set and opens its starting screen.</p>
+        <div class="demo-chip-row demo-profile-grid">${scenarioChoices}</div>
+      </div>
+      <div class="demo-settings-section" role="group" aria-label="Theme">
+        <h3>Theme</h3>
+        <p class="demo-field-help">Saved in this browser only.</p>
+        <div class="demo-chip-row">${themeChoices}</div>
+      </div>
+      <div class="demo-settings-section" role="group" aria-label="Reset demo data">
+        <h3>Reset</h3>
+        <p class="demo-field-help">${escapeHtml(resetHelp)}</p>
+        <button class="btn" type="button" id="reset-demo-settings"${controlLabelAttributes(resetHelp)}>Reset sample</button>
+      </div>
+      ${recoveryPanel()}
+    </section>
+  `;
+  bindProfileChoices();
+  bindScenarioCards();
+  bindThemeChoices();
+  el("reset-demo-settings")?.addEventListener("click", resetState);
+  bindRecoveryControls();
+}
+
+function themeChoiceHelp(theme, active) {
+  return active ? `Current theme: ${THEME_LABELS[theme]}.` : `Switch to ${THEME_LABELS[theme]} theme.`;
+}
+
+function bindProfileChoices() {
+  document.querySelectorAll("[data-profile]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const key = button.dataset.profile;
+      if (!copyProfiles[key] || key === state.copyProfile) {
+        return;
+      }
+      if (DEMO_API_BASE_URL) {
+        try {
+          await clearPendingBackendStateSave();
+          await saveBackendProfile(key, "Settings");
+        } catch (error) {
+          state.status = routeStatus("Settings", error.message || "profile change failed", "retry or refresh");
+          state.suppressNextSave = true;
+        }
+        syncSearchParam("profile", state.copyProfile === "general" ? null : state.copyProfile);
+        render();
+        return;
+      }
+      state.copyProfile = key;
+      state.status = profileStatus(key, "Settings");
+      syncSearchParam("profile", key === "general" ? null : key);
+      render();
+    });
+  });
+}
+
+function bindThemeChoices() {
+  document.querySelectorAll("[data-theme-choice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      applyTheme(button.dataset.themeChoice);
+      syncThemeChoices();
+    });
+  });
+}
+
+function syncThemeChoices() {
+  const currentTheme = document.documentElement.dataset.theme || "light";
+  document.querySelectorAll("[data-theme-choice]").forEach((button) => {
+    const active = button.dataset.themeChoice === currentTheme;
+    const help = themeChoiceHelp(button.dataset.themeChoice, active);
+    button.setAttribute("aria-pressed", String(active));
+    button.setAttribute("title", help);
+    button.setAttribute("aria-label", help);
+  });
 }
 
 function truncateTitle(text, max) {
