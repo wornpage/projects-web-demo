@@ -7713,7 +7713,7 @@ function renderCalendar() {
         <select class="demo-cal-select" data-action="calendar-month">${monthOptions}</select>
         <select class="demo-cal-select" data-action="calendar-year">${yearOptions}</select>
         <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${nextYear}/${nextMonth}">→</button>
-        <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${now.getFullYear()}/${now.getMonth()}" style="margin-left:auto">Today</button>
+        <button class="btn btn-sm demo-cal-today" type="button" data-action="calendar-nav" data-date="${now.getFullYear()}/${now.getMonth()}">Today</button>
       </div>
       <div class="demo-calendar-grid">
         ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => `<div class="demo-cal-header">${d}</div>`).join("")}
@@ -7914,7 +7914,7 @@ function renderInsights() {
           ${Object.entries(owners).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => `
             <div class="demo-insight-bar">
               <span class="demo-insight-bar-label">${escapeHtml(name)}</span>
-              <span class="demo-insight-bar-track"><span class="demo-insight-bar-fill" style="width:${Math.round((count / total) * 100)}%"></span></span>
+              <span class="demo-insight-bar-track"><span class="demo-insight-bar-fill demo-bar-fill-${Math.round(Math.round((count / total) * 100) / 5) * 5}"></span></span>
               <span class="demo-insight-bar-value">${count}</span>
             </div>
           `).join("")}

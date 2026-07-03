@@ -49,7 +49,14 @@ try {
     consoleErrors.push(`${page.url().split("#")[1] || "/"}: ${error.message}`);
   });
 
-  const routes = ["home", "review", "work", "next", "memory", "create", "settings"];
+  // Derive the route list from the app's own navigation so every destination
+  // a concurrent agent adds is smoke-tested automatically, plus "terms" which
+  // is a reachable route outside the nav. This closes the gap where the newest,
+  // least-exercised routes went untested.
+  await gotoRoute(page, "home");
+  const navRoutes = await page.evaluate(() => [...document.querySelectorAll("#demo-nav .demo-nav-item")].map((item) => item.dataset.route).filter(Boolean));
+  const routes = [...new Set([...navRoutes, "terms"])];
+  check("navigation exposes the expected core routes", ["home", "review", "work", "create"].every((route) => navRoutes.includes(route)), navRoutes.join(", ") || "empty nav");
   for (const route of routes) {
     await gotoRoute(page, route);
     const contentFilled = await page.evaluate(() => {

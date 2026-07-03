@@ -6519,6 +6519,17 @@ html[data-theme="dark"] .demo-app-shell {
 /* ---- Calendar ---- */
 /* ---- Calendar ---- */
 .demo-cal-nav { display:flex; gap:8px; margin-bottom:16px; align-items:center; }
+.demo-cal-today { margin-left:auto; }
+
+.demo-insights-bars { display:flex; flex-direction:column; gap:8px; width:100%; }
+.demo-insight-bar { align-items:center; display:grid; gap:10px; grid-template-columns:minmax(80px,140px) 1fr auto; width:100%; }
+.demo-insight-bar-label { color:var(--cockpit-text-secondary); font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.demo-insight-bar-track { background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:var(--cockpit-radius-sm); display:block; height:14px; overflow:hidden; }
+.demo-insight-bar-fill { background:var(--cockpit-accent); border-radius:inherit; display:block; height:100%; min-width:2px; }
+.demo-insight-bar-value { color:var(--cockpit-text); font-size:13px; font-weight:650; }
+.demo-bar-fill-0{width:0}.demo-bar-fill-5{width:5%}.demo-bar-fill-10{width:10%}.demo-bar-fill-15{width:15%}.demo-bar-fill-20{width:20%}.demo-bar-fill-25{width:25%}.demo-bar-fill-30{width:30%}
+.demo-bar-fill-35{width:35%}.demo-bar-fill-40{width:40%}.demo-bar-fill-45{width:45%}.demo-bar-fill-50{width:50%}.demo-bar-fill-55{width:55%}.demo-bar-fill-60{width:60%}.demo-bar-fill-65{width:65%}
+.demo-bar-fill-70{width:70%}.demo-bar-fill-75{width:75%}.demo-bar-fill-80{width:80%}.demo-bar-fill-85{width:85%}.demo-bar-fill-90{width:90%}.demo-bar-fill-95{width:95%}.demo-bar-fill-100{width:100%}
 .demo-cal-select { padding:4px 8px; font:inherit; font-size:13px; font-weight:650; background:var(--cockpit-surface); color:var(--cockpit-text); border:1px solid var(--cockpit-border); border-radius:var(--cockpit-radius); cursor:pointer; }
 .demo-calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; background:var(--cockpit-bg); border-radius:var(--cockpit-radius); padding:12px; }
 .demo-cal-header { padding:8px 4px; font-size:12px; font-weight:760; text-transform:uppercase; text-align:center; color:var(--cockpit-text-muted); letter-spacing:0.05em; }
