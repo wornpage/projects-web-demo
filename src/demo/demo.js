@@ -2979,9 +2979,16 @@ function renderHome() {
         <small>Bookmarklet — drag to your bookmarks bar, then click on any page to save it:</small>
         <a id="demo-bookmarklet-link" class="btn btn-sm" href="#">+ Save to demo</a>
       </div>
+      <div class="demo-home-methods">
+        <h3>Try a method</h3>
+        <div class="demo-method-grid">
+          ${renderMethodCards()}
+        </div>
+      </div>
     </section>
   `;
   bindGoButtons();
+  bindMethodCards();
   bindListActions();
   el("reset-demo-home")?.addEventListener("click", () => { if (confirm("Reset all demo data to defaults?")) resetState(); });
   const bml = el("demo-bookmarklet-link");
@@ -4981,7 +4988,7 @@ async function handlePackAction(id, action) {
 
   if (action === "select") {
     state.status = selectedWorkStatus("Work list", pack);
-    go("work", pack.id);
+    go("pack", pack.id);
     return;
   } else if (action === "run-next") {
     runResolvedPackAction(pack);
@@ -8064,6 +8071,36 @@ function renderTerms() {
     </section>
   `;
   el("terms-github-link").href = ["https:","//github.com/","jared-bidlow","/projects-web-demo"].join("");
+}
+
+function renderMethodCards() {
+  const methods = [
+    { id: "ops-day", label: "Daily Operations", desc: "Restock, payroll, maintenance, onboarding.", icon: "🏪" },
+    { id: "ai-prompts", label: "Prompt Engineering", desc: "Prompt library, evals, model comparison.", icon: "🤖" },
+    { id: "default", label: "Project Work", desc: "General-purpose blocker and next-action tracking.", icon: "📋" }
+  ];
+  return methods.map((m) => `
+    <button class="demo-method-card" type="button" data-action="load-method" data-method="${escapeAttribute(m.id)}">
+      <span class="demo-method-icon">${m.icon}</span>
+      <strong>${escapeHtml(m.label)}</strong>
+      <p>${escapeHtml(m.desc)}</p>
+    </button>
+  `).join("");
+}
+
+function bindMethodCards() {
+  document.querySelectorAll("[data-action=load-method]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const scenario = DEMO_SCENARIO_BY_ID[btn.dataset.method];
+      if (scenario) {
+        applyScenario(scenario);
+      } else if (btn.dataset.method === "empty") {
+        state.packs = [];
+        state.scenarioId = "empty";
+        render();
+      }
+    });
+  });
 }
 
 function escapeAttribute(value) {

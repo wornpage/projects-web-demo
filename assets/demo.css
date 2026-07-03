@@ -6582,3 +6582,6 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-prose h3{font-size:15px;margin:16px 0 6px}
 .demo-prose p{margin:0 0 10px;color:var(--cockpit-text)}
 .demo-prose a{color:var(--cockpit-accent)}
+
+.demo-home-methods{margin-top:16px;padding-top:16px;border-top:1px solid var(--cockpit-border)}
+.demo-home-methods h3{font-size:14px;margin-bottom:10px}
