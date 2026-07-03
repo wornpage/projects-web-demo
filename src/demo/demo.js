@@ -4224,15 +4224,16 @@ function supportActionDisabledVisibleReason(action, pack) {
 
 function supportActionVisibleReason(action) {
   const reasons = {
-    open: "Open fields without running next.",
-    focus: "Inspect without changing status.",
-    block: "Add a blocker for review.",
-    unblock: "Stores Blocker: None.",
-    done: "Finish with proof visible.",
-    edit: "Edit work path fields.",
-    "set-next": "Choose the exact Next action value."
+    open: "Open the full work path to see and edit all fields.",
+    focus: "Select and scroll to this work. Does not change anything or open the path.",
+    compare: "Pick two work items to compare side by side.",
+    block: "Mark this work as blocked so it shows up in the Review queue.",
+    unblock: "Clear the blocker — work is ready to move forward.",
+    done: "Mark this work finished and save your proof target.",
+    edit: "Open the work path to edit fields.",
+    "set-next": "Choose which action the main Do next button runs."
   };
-  return reasons[action] || "Other button.";
+  return reasons[action] || "Other action.";
 }
 
 function bindWorkCards() {
