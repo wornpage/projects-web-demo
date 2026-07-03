@@ -3484,6 +3484,7 @@ function renderPackDetail() {
     runPrimaryAction(event.currentTarget);
   });
   bindPackDetailValidation(pack);
+  syncEditNextWhat();
   bindListActions();
 }
 
