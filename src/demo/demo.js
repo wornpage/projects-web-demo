@@ -2968,7 +2968,7 @@ function renderHome() {
   el("reset-demo-home")?.addEventListener("click", () => { if (confirm("Reset all demo data to defaults?")) resetState(); });
   const bml = el("demo-bookmarklet-link");
   if (bml) {
-    bml.href = `javascript:(function(){location.href='${location.origin}/%23/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href)})()`;
+    bml.href = `javascript:(function(){var u='${location.origin}/'+'#/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href);location.href=u})()`;
   }
 }
 
