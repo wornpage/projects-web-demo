@@ -4070,8 +4070,7 @@ function cardFact(label, value) {
 function primaryCommandButton(pack, className = "btn btn-primary") {
   const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);
   const actionLabel = command ? (commandActionDisplayLabel(command.label) || command.label) : "Do next";
-  const hint = command ? nextActionWhatText(command) : "";
-  const label = hint ? `${actionLabel} (${hint.slice(0, 40)})` : actionLabel;
+  const label = actionLabel;
   const reason = command
     ? primaryCommandReason(pack, command)
     : `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: server preview before running.`;
