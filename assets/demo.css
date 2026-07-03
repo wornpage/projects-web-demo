@@ -6515,3 +6515,14 @@ html[data-theme="dark"] .demo-app-shell {
 @media (max-width: 560px) {
   .demo-settings .demo-profile-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ---- Year grid ---- */
+.demo-cal-year { margin-top:16px; padding-top:16px; border-top:1px solid var(--cockpit-border); }
+.demo-cal-year h3 { font-size:14px; margin-bottom:8px; }
+.demo-cal-year-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+.demo-cal-year-cell { display:flex; align-items:center; justify-content:space-between; padding:6px 10px; background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:4px; cursor:pointer; font:inherit; font-size:13px; font-weight:650; color:var(--cockpit-text); transition:background 0.1s; }
+.demo-cal-year-cell:hover,.demo-cal-year-cell:focus-visible { background:var(--cockpit-hover-bg); }
+.demo-cal-year-active { border-color:var(--cockpit-accent); background:var(--cockpit-accent-50); }
+.demo-cal-year-has span { font-size:10px; font-weight:800; background:var(--cockpit-accent); color:var(--cockpit-accent-text); border-radius:99px; padding:1px 7px; }
+@media (max-width:500px) { .demo-cal-year-grid { grid-template-columns:repeat(3,1fr); } }

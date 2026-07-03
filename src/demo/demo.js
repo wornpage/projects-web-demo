@@ -4069,7 +4069,9 @@ function cardFact(label, value) {
 
 function primaryCommandButton(pack, className = "btn btn-primary") {
   const command = DEMO_API_BASE_URL ? null : resolvePrimaryCommandForPack(pack);
-  const label = command ? (commandActionDisplayLabel(command.label) || command.label) : "Do next";
+  const actionLabel = command ? (commandActionDisplayLabel(command.label) || command.label) : "Do next";
+  const hint = command ? nextActionWhatText(command) : "";
+  const label = hint ? `${actionLabel} (${hint.slice(0, 40)})` : actionLabel;
   const reason = command
     ? primaryCommandReason(pack, command)
     : `Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: server preview before running.`;
@@ -7645,6 +7647,16 @@ function renderCalendar() {
           }).join("") : `<p class="demo-field-help">No items due this day.</p>`}
         </div>
       ` : `<p class="demo-field-help">Click a day to see what is due.</p>`}
+      <div class="demo-cal-year">
+        <h3>${year}</h3>
+        <div class="demo-cal-year-grid">
+          ${Array.from({ length: 12 }, (_, m) => {
+            const monthItems = state.packs.filter((p) => p.due && p.due.startsWith(`${year}-${String(m + 1).padStart(2, "0")}`)).length;
+            const isCurrent = m === month;
+            return `<button class="demo-cal-year-cell${isCurrent ? " demo-cal-year-active" : ""}${monthItems ? " demo-cal-year-has" : ""}" type="button" data-action="calendar-nav" data-date="${year}/${m}">${new Date(2000, m, 1).toLocaleString("default", { month: "short" })}${monthItems ? ` <span>${monthItems}</span>` : ""}</button>`;
+          }).join("")}
+        </div>
+      </div>
     </section>
   `;
   bindCalendarNav();
