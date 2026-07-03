@@ -97,7 +97,8 @@ const ROUTE_CONTRACT = Object.freeze({
   calendar: { pattern: "#/calendar", title: "Calendar", commandSource: "route", navKey: "📅", navLabel: "Calendar" },
   settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "⚙", navLabel: "Settings" },
   insights: { pattern: "#/insights", title: "Insights", commandSource: "route", navKey: "📊", navLabel: "Insights" },
-  activity: { pattern: "#/activity", title: "Activity", commandSource: "route", navKey: "📋", navLabel: "Activity" }
+  activity: { pattern: "#/activity", title: "Activity", commandSource: "route", navKey: "📋", navLabel: "Activity" },
+  terms: { pattern: "#/terms", title: "Terms & Privacy", commandSource: "route" }
 });
 
 const NAV_ROUTE_GROUPS = Object.freeze([
@@ -2110,6 +2111,9 @@ function render() {
       break;
     case "activity":
       renderActivity();
+      break;
+    case "terms":
+      renderTerms();
       break;
     case "work":
     default:
@@ -7979,6 +7983,27 @@ function bindMemorySearch() {
     if (list) list.innerHTML = globalMemoryNotes(pack);
     bindListActions();
   });
+}
+
+function renderTerms() {
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <h2>Terms &amp; Privacy</h2>
+      </div>
+      <div class="demo-prose">
+        <p><strong>This is a personal portfolio demonstration project.</strong> It is not a commercial product, not a service, and not intended for production use.</p>
+        <h3>Data</h3>
+        <p>This demo does not collect, store, or process personal data. There are no user accounts, no passwords, and no authentication. Any work items, memory notes, or settings you enter stay in your browser's local storage or in the demo backend row assigned to your anonymous client key. The project owner has no access to that data.</p>
+        <h3>Sample data</h3>
+        <p>The pre-loaded work items are fictional examples. Any resemblance to real projects, companies, or people is coincidental. You can replace them with your own data via the Settings → Import feature or by creating new work items.</p>
+        <h3>No warranty</h3>
+        <p>This demo is provided "as is" without warranty of any kind. The project owner is not responsible for any data loss or damages from using this demo.</p>
+        <h3>Source code</h3>
+        <p>This project is <a href="https://github.com/jared-bidlow/projects-web-demo" target="_blank" rel="noopener">open source on GitHub</a> under the MIT license.</p>
+      </div>
+    </section>
+  `;
 }
 
 function escapeAttribute(value) {
