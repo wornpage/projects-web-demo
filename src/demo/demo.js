@@ -96,14 +96,15 @@ const ROUTE_CONTRACT = Object.freeze({
   compare: { pattern: "#/compare/{packId}/{packId}", title: "Compare", commandSource: "route", acceptsPackId: true },
   calendar: { pattern: "#/calendar", title: "Calendar", commandSource: "route", navKey: "📅", navLabel: "Calendar" },
   settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "⚙", navLabel: "Settings" },
-  insights: { pattern: "#/insights", title: "Insights", commandSource: "route", navKey: "📊", navLabel: "Insights" }
+  insights: { pattern: "#/insights", title: "Insights", commandSource: "route", navKey: "📊", navLabel: "Insights" },
+  activity: { pattern: "#/activity", title: "Activity", commandSource: "route", navKey: "📋", navLabel: "Activity" }
 });
 
 const NAV_ROUTE_GROUPS = Object.freeze([
   Object.freeze({
     id: "public",
     label: "Demo",
-    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar", "settings", "insights"])
+    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar", "settings", "insights", "activity"])
   })
 ]);
 
@@ -2098,6 +2099,9 @@ function render() {
     case "insights":
       renderInsights();
       break;
+    case "activity":
+      renderActivity();
+      break;
     case "work":
     default:
       renderWork();
@@ -3476,6 +3480,7 @@ function renderPackDetail() {
         ${workPathStrip(pack, packCommand)}
         ${selectedWorkTriad(pack, packCommand)}
         <div class="demo-form-grid demo-forward-fields">
+          ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
           ${blockerStateField(pack)}
           ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : ""}
           ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
@@ -3488,7 +3493,6 @@ function renderPackDetail() {
           <strong>${escapeHtml(supportDetailsSummary(showOwnerInline, pack))}</strong>
         </summary>
         <div class="demo-form-grid">
-          ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
           ${showOwnerInline ? "" : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
           ${dateField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
           ${textField("edit-purpose", "Purpose", pack.purpose, "Extra context; keep the main work path above focused.")}
@@ -7891,6 +7895,39 @@ function syncThemeChoices() {
 function truncateTitle(text, max) {
   if (!text || text.length <= max) return text;
   return text.slice(0, max - 1) + "…";
+}
+
+function renderActivity() {
+  const feed = [];
+  state.packs.forEach((pack) => {
+    (pack.activity || []).forEach((entry, i) => {
+      feed.push({ pack, entry });
+    });
+  });
+  const recent = feed.slice(-50).reverse();
+
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Activity</span>
+          <h2>${feed.length} actions across ${state.packs.length} ${workNoun(state.packs.length)}</h2>
+        </div>
+      </div>
+      <div class="demo-activity-feed">
+        ${recent.length ? recent.map((item) => `
+          <div class="demo-activity-entry">
+            <span class="demo-activity-dot"></span>
+            <div class="demo-activity-body">
+              <button class="demo-card-title" type="button" data-action="select" data-pack="${escapeAttribute(item.pack.id)}">${escapeHtml(workTitle(item.pack))}</button>
+              <p>${escapeHtml(item.entry)}</p>
+            </div>
+          </div>
+        `).join("") : `<p class="demo-field-help">No activity yet. Actions appear here as you work through the demo.</p>`}
+      </div>
+    </section>
+  `;
+  bindListActions();
 }
 
 function escapeAttribute(value) {
