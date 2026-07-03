@@ -16,10 +16,10 @@ const ast = acorn.parse(source, {
   sourceType: "script"
 });
 const checks = [];
-const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create", "calendar", "settings"];
-const expectedContractRoutes = ["home", "review", "work", "next", "memory", "create", "pack", "compare", "calendar", "settings"];
-const expectedNavLabels = ["Start", "Review", "Work", "Choose action", "Memory", "Create", "Calendar", "Settings"];
-const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Choose action", memory: "Memory", create: "Create", pack: "Work path", calendar: "Calendar", settings: "Settings" };
+const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create", "calendar", "settings", "insights"];
+const expectedContractRoutes = ["home", "review", "work", "next", "memory", "create", "pack", "compare", "calendar", "settings", "insights"];
+const expectedNavLabels = ["Start", "Review", "Work", "Choose action", "Memory", "Create", "Calendar", "Settings", "Insights"];
+const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Choose action", memory: "Memory", create: "Create", pack: "Work path", calendar: "Calendar", settings: "Settings", insights: "Insights" };
 const blockedPublicRoutes = [
   "board",
   "check",

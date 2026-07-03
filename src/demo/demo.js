@@ -95,14 +95,15 @@ const ROUTE_CONTRACT = Object.freeze({
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true },
   compare: { pattern: "#/compare/{packId}/{packId}", title: "Compare", commandSource: "route", acceptsPackId: true },
   calendar: { pattern: "#/calendar", title: "Calendar", commandSource: "route", navKey: "📅", navLabel: "Calendar" },
-  settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "⚙", navLabel: "Settings" }
+  settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "⚙", navLabel: "Settings" },
+  insights: { pattern: "#/insights", title: "Insights", commandSource: "route", navKey: "📊", navLabel: "Insights" }
 });
 
 const NAV_ROUTE_GROUPS = Object.freeze([
   Object.freeze({
     id: "public",
     label: "Demo",
-    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar", "settings"])
+    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar", "settings", "insights"])
   })
 ]);
 
@@ -1976,6 +1977,9 @@ function render() {
       break;
     case "settings":
       renderSettings();
+      break;
+    case "insights":
+      renderInsights();
       break;
     case "work":
     default:
@@ -7578,6 +7582,86 @@ function bindProfileChoices() {
       render();
     });
   });
+}
+
+function renderInsights() {
+  const total = state.packs.length;
+  const done = state.packs.filter((p) => p.status === "done").length;
+  const active = state.packs.filter((p) => p.status === "active").length;
+  const blocked = state.packs.filter((p) => p.status === "blocked").length;
+  const draft = state.packs.filter((p) => p.status === "draft").length;
+  const rate = total ? Math.round((done / total) * 100) : 0;
+
+  const owners = {};
+  state.packs.forEach((p) => { const o = p.owner || "unassigned"; owners[o] = (owners[o] || 0) + 1; });
+  const topOwner = Object.entries(owners).sort((a, b) => b[1] - a[1])[0] || ["none", 0];
+
+  const types = {};
+  state.packs.forEach((p) => { const t = p.type || "other"; types[t] = (types[t] || 0) + 1; });
+
+  const memoryCount = state.packs.reduce((sum, p) => sum + (p.memory?.length || 0), 0);
+  const withDue = state.packs.filter((p) => p.due).length;
+  const dueSoon = state.packs.filter((p) => {
+    if (!p.due) return false;
+    const days = (new Date(p.due + "T00:00:00") - new Date()) / 86400000;
+    return days >= 0 && days <= 7;
+  }).length;
+
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Insights</span>
+          <h2>${total} ${workNoun(total)} across the demo</h2>
+        </div>
+        <span class="demo-status">${done} complete</span>
+      </div>
+
+      <div class="demo-insights-grid">
+        ${insightCard("Completion", `${rate}%`, `${done} of ${total} ${workNoun(total)} done`, rate >= 80 ? "good" : rate >= 40 ? "warn" : "low")}
+        ${insightCard("Active", String(active), `${active} in progress`, "neutral")}
+        ${insightCard("Blocked", String(blocked), `${blocked} need attention`, blocked > 0 ? "warn" : "good")}
+        ${insightCard("Draft", String(draft), `${draft} not started`, "neutral")}
+      </div>
+
+      <div class="demo-insights-section">
+        <h3>Owner activity</h3>
+        <div class="demo-insights-bars">
+          ${Object.entries(owners).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => `
+            <div class="demo-insight-bar">
+              <span class="demo-insight-bar-label">${escapeHtml(name)}</span>
+              <span class="demo-insight-bar-track"><span class="demo-insight-bar-fill" style="width:${Math.round((count / total) * 100)}%"></span></span>
+              <span class="demo-insight-bar-value">${count}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="demo-insights-grid demo-insights-grid-3">
+        ${insightCard("With due date", String(withDue), `${total ? Math.round((withDue / total) * 100) : 0}% of total`, "neutral")}
+        ${insightCard("Due within 7 days", String(dueSoon), `${dueSoon} upcoming`, dueSoon > 0 ? "warn" : "good")}
+        ${insightCard("Memory notes", String(memoryCount), `${total ? Math.round(memoryCount / total) : 0} per item avg`, memoryCount > 10 ? "good" : "neutral")}
+      </div>
+
+      <div class="demo-insights-section">
+        <h3>Type breakdown</h3>
+        <div class="demo-chip-row">
+          ${Object.entries(types).sort((a, b) => b[1] - a[1]).map(([type, count]) => `
+            <span class="demo-chip" aria-pressed="true">${escapeHtml(type)}: ${count}</span>
+          `).join("")}
+        </div>
+      </div>
+    </section>
+  `;
+  bindListActions();
+}
+
+function insightCard(label, value, detail, tone) {
+  return `<div class="demo-insight-card demo-insight-${tone}">
+    <span class="demo-insight-value">${escapeHtml(value)}</span>
+    <strong>${escapeHtml(label)}</strong>
+    <small>${escapeHtml(detail)}</small>
+  </div>`;
 }
 
 function bindThemeChoices() {
