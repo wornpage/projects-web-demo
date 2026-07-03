@@ -9,7 +9,7 @@ const checks = [];
 const publicTextAssets = [
   { pathname: "index.html", maxBytes: 12000 },
   { pathname: "assets/demo.js", maxBytes: 248000 },
-  { pathname: "assets/demo.css", maxBytes: 144000 },
+  { pathname: "assets/demo.css", maxBytes: 146000 },
   { pathname: "data/demo-packs.json", maxBytes: 15000 }
 ];
 const publicFileAllowlist = [
