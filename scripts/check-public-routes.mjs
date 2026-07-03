@@ -16,10 +16,10 @@ const ast = acorn.parse(source, {
   sourceType: "script"
 });
 const checks = [];
-const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create", "calendar"];
-const expectedContractRoutes = ["home", "review", "work", "next", "memory", "create", "pack", "compare", "calendar"];
-const expectedNavLabels = ["Start", "Review", "Work", "Choose action", "Memory", "Create", "Calendar"];
-const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Choose action", memory: "Memory", create: "Create", pack: "Work path", calendar: "Calendar" };
+const expectedNavRoutes = ["home", "review", "work", "next", "memory", "create", "calendar", "settings"];
+const expectedContractRoutes = ["home", "review", "work", "next", "memory", "create", "pack", "compare", "calendar", "settings"];
+const expectedNavLabels = ["Start", "Review", "Work", "Choose action", "Memory", "Create", "Calendar", "Settings"];
+const expectedRouteTitles = { home: "Start", review: "Review", work: "Work", next: "Choose action", memory: "Memory", create: "Create", pack: "Work path", calendar: "Calendar", settings: "Settings" };
 const blockedPublicRoutes = [
   "board",
   "check",
@@ -31,7 +31,6 @@ const blockedPublicRoutes = [
   "meta",
   "notes",
   "search",
-  "settings",
   "stats",
   "timeline",
   "today"
@@ -66,7 +65,6 @@ const blockedRenderFunctions = [
   "renderMeta",
   "renderNotes",
   "renderSearch",
-  "renderSettings",
   "renderStats",
   "renderTimeline",
   "renderToday"
@@ -121,7 +119,7 @@ check("memory note input exposes live save guidance", memoryNoteInputContractOk(
 check("create field help names only current public surfaces", source.includes("Optional date kept on the work path and searchable in the work list.") && !source.includes("Today and Calendar views"), "due help avoids retired screens");
 check("due fields use native date pickers", dueDatePickerContractOk(), "new-due and edit-due render through dateField with type=date");
 check("due dates stay visible and readable after save", dueDateDisplayContractOk(), "cards render semantic dates and Work path summary names saved due date");
-check("runtime status copy avoids retired settings and check screens", !source.includes("Where: Settings") && !source.includes("Where: Check"), "status copy stays on public surfaces");
+check("runtime status copy avoids retired check screens", !source.includes("Where: Check"), "status copy stays on public surfaces");
 check("spotlight facts keep the command triad visible", spotlightFactsContractOk(), "Where / Blocker / Next action");
 check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop grid plus mobile single column");
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
