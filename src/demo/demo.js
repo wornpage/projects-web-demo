@@ -562,7 +562,8 @@ async function restoreRecoverySnapshot() {
       await clearPendingBackendStateSave();
       loadBackendOwnedState(await restoreBackendStateSnapshot(snapshot));
     } else {
-      loadState(snapshot);
+      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(snapshot));
+      loadState();
       saveState();
     }
 

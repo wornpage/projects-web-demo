@@ -1329,13 +1329,14 @@ function frontendRecoveryRestoreUsesBackendEndpoint(source) {
     "if (DEMO_API_BASE_URL)",
     "clearPendingBackendStateSave();",
     "loadBackendOwnedState(await restoreBackendStateSnapshot(snapshot));",
-    "loadState(snapshot);",
+    "localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(snapshot));",
+    "loadState();",
     "saveState();"
   ];
   const missing = required.filter((needle) => !body.includes(needle));
   const backendIndex = body.indexOf("if (DEMO_API_BASE_URL)");
   const restoreIndex = body.indexOf("restoreBackendStateSnapshot(snapshot)");
-  const staticLoadIndex = body.indexOf("loadState(snapshot)");
+  const staticLoadIndex = body.indexOf("localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(snapshot));");
   const staticSaveIndex = body.indexOf("saveState();");
   const orderOk = backendIndex >= 0
     && restoreIndex > backendIndex
