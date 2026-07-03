@@ -5543,7 +5543,7 @@ function setBlockerMode(hasBlocker) {
   clearLabel?.classList.toggle("active", !hasBlocker);
   setLabel?.classList.toggle("active", hasBlocker);
   if (!hasBlocker && next && isBlockerReviewAction(next.value)) {
-    next.value = "Open";
+    // Keep the current next action — don't force "Open" after done/unblock
   }
   if (input) {
     input.disabled = !hasBlocker;
