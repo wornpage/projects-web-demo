@@ -264,7 +264,6 @@ function runPackAction(state, packId, rawAction) {
     pack.status = "done";
     pack.blocker = constants.DEMO_BLOCKER_NONE;
     pack.blockedBy = "";
-    pack.next = "Open";
     changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, proofSavedActivity(pack));
