@@ -4256,12 +4256,12 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
     border-bottom: 1px solid var(--cockpit-border);
     border-right: 0;
     flex-direction: row;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 8px 12px;
     max-width: 100%;
     min-width: 0;
     min-height: 0;
-    overflow: hidden;
+    overflow: visible;
     padding: 10px 24px;
     position: static;
     width: 100%;
@@ -4298,12 +4298,11 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   .demo-nav {
     display: flex;
     gap: 8px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     max-width: 100%;
     min-width: 0;
-    overflow-x: auto;
     padding-bottom: 4px;
-    scrollbar-width: none;
+    width: 100%;
   }
 
   .demo-nav-group {
@@ -6287,13 +6286,14 @@ html[data-theme="dark"] .demo-app-shell {
     box-shadow: none !important;
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: wrap !important;
     gap: 8px 12px !important;
     height: auto !important;
     left: auto !important;
     max-height: none !important;
     max-width: 100% !important;
     min-height: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     padding: 10px 24px !important;
     position: static !important;
     right: auto !important;
@@ -6318,16 +6318,15 @@ html[data-theme="dark"] .demo-app-shell {
 
   body .demo-sidebar.nav-rail .demo-nav {
     display: flex !important;
-    flex: 1 1 auto !important;
+    flex: 1 1 100% !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     gap: 8px !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
+    overflow: visible !important;
     padding-bottom: 4px !important;
-    scrollbar-width: none !important;
+    width: 100% !important;
   }
 
   body .demo-sidebar.nav-rail .demo-nav::-webkit-scrollbar {
