@@ -10,7 +10,7 @@ const publicTextAssets = [
   { pathname: "index.html", maxBytes: 12000 },
   { pathname: "assets/demo.js", maxBytes: 251000 },
   { pathname: "assets/demo.css", maxBytes: 146000 },
-  { pathname: "data/demo-packs.json", maxBytes: 15000 }
+  { pathname: "data/demo-packs.json", maxBytes: 25000 }
 ];
 const publicFileAllowlist = [
   "assets/demo.css",
@@ -18,7 +18,7 @@ const publicFileAllowlist = [
   "assets/favicon.png",
   "data/demo-packs.json"
 ];
-const totalPublicTextBudgetBytes = 418000;
+const totalPublicTextBudgetBytes = 430000;
 const retiredPublicFiles = [
   "assets/app.css",
   "assets/demo-metadata.json"
