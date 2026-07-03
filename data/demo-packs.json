@@ -556,7 +556,7 @@
       "walk-in"
     ],
     "memory": [
-      "Regular customer here — good relationship.",
+      "Regular here — good relationship.",
       "Manager Priya is the POC."
     ],
     "activity": [
@@ -647,7 +647,7 @@
     "status": "draft",
     "blocker": "none",
     "next": "Open",
-    "purpose": "Customer-facing roof estimate calculator based on square footage.",
+    "purpose": "Client-facing roof estimate calculator based on square footage.",
     "doneWhen": "Research completed and initial outreach done.",
     "sources": [
       "competitor analysis"
@@ -787,17 +787,17 @@
     "blocker": "none",
     "next": "Open",
     "owner": "Manager",
-    "purpose": "Customers asking for sugar-free vanilla and lavender. Check supplier catalog.",
+    "purpose": "Guests asking for sugar-free vanilla and lavender. Check supplier catalog.",
     "doneWhen": "New flavors ordered or decision documented.",
     "sources": [
-      "customer-feedback"
+      "guest-feedback"
     ],
     "memory": [
-      "At least 5 customers asked this week.",
+      "At least 5 guests asked this week.",
       "Sugar-free vanilla likely best seller."
     ],
     "activity": [
-      "Noted customer requests."
+      "Noted guest requests."
     ]
   },
   {
