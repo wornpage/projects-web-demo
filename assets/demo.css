@@ -6567,3 +6567,5 @@ html[data-theme="dark"] .demo-app-shell {
 @media (max-width:500px) { .demo-cal-year-grid { grid-template-columns:repeat(3,1fr); } }
 .demo-url-link{display:inline-block;color:var(--cockpit-accent);font-size:18px;text-decoration:none;margin-left:6px;transition:transform 0.12s}
 .demo-url-link:hover{transform:scale(1.2)}
+
+.demo-sidebar-footer{padding:8px 12px;border-top:1px solid var(--cockpit-border);font-size:10px;color:var(--cockpit-text-muted);line-height:1.4;text-align:center}
