@@ -683,5 +683,192 @@
       "Got referral from mutual contact.",
       "Texted Tony — he's interested."
     ]
+  },
+  {
+    "id": "task-inventory",
+    "title": "Restock inventory — coffee and cups",
+    "type": "task",
+    "status": "active",
+    "blocker": "none",
+    "next": "Order",
+    "due": "2026-07-05",
+    "owner": "Manager",
+    "purpose": "Running low on 12oz cups and dark roast. Need by Friday.",
+    "doneWhen": "Order placed and delivery confirmed.",
+    "sources": [
+      "inventory-sheet"
+    ],
+    "memory": [
+      "Supplier: ABC Restaurant Supply.",
+      "Min order  for free delivery."
+    ],
+    "activity": [
+      "Checked inventory levels.",
+      "Compared supplier prices."
+    ]
+  },
+  {
+    "id": "task-health",
+    "title": "Health inspection prep",
+    "type": "task",
+    "status": "blocked",
+    "blocker": "waiting on checklist",
+    "next": "Review",
+    "due": "2026-07-20",
+    "owner": "Manager",
+    "purpose": "Annual health inspection coming up. Need to fix 3 items from last report.",
+    "doneWhen": "All items cleared and checklist signed.",
+    "sources": [
+      "health-dept-letter"
+    ],
+    "memory": [
+      "Last inspection flagged: hand sink temp, grease trap, labeling.",
+      "Inspector: Maria Gonzalez, call to confirm date."
+    ],
+    "activity": [
+      "Received inspection notice.",
+      "Reviewed last report."
+    ]
+  },
+  {
+    "id": "task-hire",
+    "title": "New hire onboarding — Sarah (barista)",
+    "type": "task",
+    "status": "done",
+    "blocker": "none",
+    "next": "Done",
+    "due": "2026-07-01",
+    "owner": "Owner",
+    "purpose": "Sarah starts Monday. Need paperwork, uniform, training schedule.",
+    "doneWhen": "First shift completed successfully.",
+    "sources": [
+      "hiring-doc"
+    ],
+    "memory": [
+      "Sarah has 2 years experience.",
+      "Uniform size: medium.",
+      "Payroll setup done."
+    ],
+    "activity": [
+      "Sent offer letter.",
+      "Prepared onboarding packet.",
+      "Trained on register.",
+      "First shift complete."
+    ]
+  },
+  {
+    "id": "task-ads",
+    "title": "Review monthly ad spend",
+    "type": "task",
+    "status": "active",
+    "blocker": "none",
+    "next": "Review",
+    "due": "2026-07-10",
+    "owner": "Owner",
+    "purpose": "Facebook and Google ad performance for June. Decide July budget.",
+    "doneWhen": "July ad budget approved and campaigns updated.",
+    "sources": [
+      "ads-dashboard"
+    ],
+    "memory": [
+      "Google outperforming Facebook 3:1 on conversions.",
+      "Consider increasing Google budget by 20%."
+    ],
+    "activity": [
+      "Downloaded June reports.",
+      "Preliminary analysis — Google ROI 4.2x."
+    ]
+  },
+  {
+    "id": "task-supplier",
+    "title": "Call supplier — new syrup flavors",
+    "type": "task",
+    "status": "draft",
+    "blocker": "none",
+    "next": "Open",
+    "owner": "Manager",
+    "purpose": "Customers asking for sugar-free vanilla and lavender. Check supplier catalog.",
+    "doneWhen": "New flavors ordered or decision documented.",
+    "sources": [
+      "customer-feedback"
+    ],
+    "memory": [
+      "At least 5 customers asked this week.",
+      "Sugar-free vanilla likely best seller."
+    ],
+    "activity": [
+      "Noted customer requests."
+    ]
+  },
+  {
+    "id": "task-payroll",
+    "title": "Run biweekly payroll",
+    "type": "task",
+    "status": "active",
+    "blocker": "none",
+    "next": "Run",
+    "due": "2026-07-07",
+    "owner": "Owner",
+    "purpose": "12 employees. Overtime for 3 this period.",
+    "doneWhen": "Payroll submitted and confirmed.",
+    "sources": [
+      "timesheets",
+      "payroll-system"
+    ],
+    "memory": [
+      "Overtime: James (4hrs), Maria (2hrs), Tony (3hrs).",
+      "Bank file due by noon Friday."
+    ],
+    "activity": [
+      "Collected timesheets.",
+      "Entered hours into payroll system."
+    ]
+  },
+  {
+    "id": "task-social",
+    "title": "Post weekend specials on Instagram",
+    "type": "task",
+    "status": "draft",
+    "blocker": "none",
+    "next": "Open",
+    "owner": "Manager",
+    "purpose": "Promote the new summer menu. Take photos of the iced lavender latte.",
+    "doneWhen": "Post scheduled for Friday 9am.",
+    "sources": [
+      "content-calendar"
+    ],
+    "memory": [
+      "Use hashtags: #LocalCoffee #SummerMenu #ShopLocal.",
+      "Best engagement times: 8-10am, 5-7pm."
+    ],
+    "activity": [
+      "Drafted post copy.",
+      "Took product photos."
+    ]
+  },
+  {
+    "id": "task-maintenance",
+    "title": "Fix espresso machine pressure gauge",
+    "type": "task",
+    "status": "blocked",
+    "blocker": "waiting on parts",
+    "next": "Follow up",
+    "due": "2026-07-06",
+    "owner": "Manager",
+    "purpose": "Gauge reads 2 bar low. Shots pulling weak. Part ordered, waiting for delivery.",
+    "doneWhen": "Machine repaired and calibrated.",
+    "sources": [
+      "maintenance-log"
+    ],
+    "memory": [
+      "Part #: ECM-2024-PG from Espresso Parts Co.",
+      "Ordered June 28, expected July 5.",
+      "Tech: Mike at Coffee Repair Services."
+    ],
+    "activity": [
+      "Diagnosed pressure issue.",
+      "Ordered replacement gauge.",
+      "Scheduled tech visit tentatively for July 7."
+    ]
   }
 ]

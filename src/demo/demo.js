@@ -132,7 +132,9 @@ const copyProfiles = {
   dj: { work: "gig", workOne: "gig", workMany: "gigs", newWork: "Book gig", result: "Set recording", sources: "Source refs" },
   developer: { work: "task", workOne: "task", workMany: "tasks", newWork: "New task", result: "PR or commit", sources: "Repos and docs" },
   climate: { work: "site check", workOne: "site check", workMany: "site checks", newWork: "New check", result: "Finding", sources: "Datasets and notes" },
-  ai: { work: "prompt", workOne: "prompt", workMany: "prompts", newWork: "New prompt", result: "Output", sources: "Model and docs" }
+  ai: { work: "prompt", workOne: "prompt", workMany: "prompts", newWork: "New prompt", result: "Output", sources: "Model and docs" },
+  sales: { work: "lead", workOne: "lead", workMany: "leads", newWork: "New lead", result: "Outcome", sources: "Source and contact" },
+  ops: { work: "task", workOne: "task", workMany: "tasks", newWork: "New task", result: "Done", sources: "Reference" }
 };
 
 const PROFILE_LABELS = { general: "General", dj: "DJ", developer: "Developer", climate: "Climate", ai: "AI" };
@@ -229,6 +231,15 @@ const DEMO_SCENARIOS = [
     route: "review",
     filter: "all",
     transform: (packs) => packs.filter((p) => p.type === "eval" || !p.type)
+  },
+  {
+    id: "ops-day",
+    label: "Daily operations",
+    description: "Restock, payroll, health inspection, ads, hiring — a day in a small business.",
+    profile: "ops",
+    route: "review",
+    filter: "all",
+    transform: (packs) => packs.filter((p) => p.type === "task" || !p.type)
   }
 ];
 
