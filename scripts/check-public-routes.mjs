@@ -111,7 +111,7 @@ check("retired route render functions are absent", blockedRenderFunctions.length
 check("retired route helper functions are absent", blockedRetiredHelpers.length === 0, blockedRetiredHelpers.join(", ") || "absent");
 check("public routes use hash patterns", publicRoutedPatterns.every((pattern) => pattern.startsWith("#/")), publicRoutedPatterns.join(", "));
 check("pack route requires a work id", routeContract.pack?.acceptsPackId === true && routeContract.pack?.pattern === "#/pack/{packId}", routeContract.pack?.pattern || "missing");
-check("home route surfaces a live sample spotlight", homeSpotlightContractOk(), "homeSpotlightPanel with facts and primary action");
+check("home route surfaces a live sample spotlight", homeDashboardContractOk(), "Dashboard with review count, completion rate, recent activity");
 check("review route surfaces an up-next queue spotlight", reviewSpotlightContractOk(), "reviewQueuePanel with queue stats and actions");
 check("create route surfaces readiness before the form", createReadinessContractOk(), "createReadinessPanel with required field checklist");
 check("memory route exposes selected work chooser", memoryChooserContractOk(), "memoryWorkChooser with chip targets and create fallback");
@@ -182,15 +182,12 @@ function routeTitlesContractOk() {
   return Object.entries(expectedRouteTitles).every(([route, title]) => routeContract[route]?.title === title);
 }
 
-function homeSpotlightContractOk() {
+function homeDashboardContractOk() {
   return includesAll(source, [
-    "${homeSpotlightPanel()}",
-    "function homeSpotlightPanel()",
-    "Live sample",
-    "homeSpotlightFacts(pack, command)",
-    "primaryCommandButton(pack)",
-    "supportActionButton(\"open\", \"Open work path\", pack, \"btn\")",
-    "function homeSpotlightPack()"
+    "insightCard(\"Need review\"",
+    "insightCard(\"Complete\"",
+    "insightCard(\"Due soon\"",
+    "Recent activity"
   ]);
 }
 
