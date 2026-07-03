@@ -2959,13 +2959,17 @@ function renderHome() {
       </div>
       <div class="demo-home-bookmarklet">
         <small>Bookmarklet — drag to your bookmarks bar, then click on any page to save it:</small>
-        <a class="btn btn-sm" href="javascript:(function(){location.href='https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app/%23/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href)})()">+ Save to demo</a>
+        <a id="demo-bookmarklet-link" class="btn btn-sm" href="#">+ Save to demo</a>
       </div>
     </section>
   `;
   bindGoButtons();
   bindListActions();
   el("reset-demo-home")?.addEventListener("click", () => { if (confirm("Reset all demo data to defaults?")) resetState(); });
+  const bml = el("demo-bookmarklet-link");
+  if (bml) {
+    bml.href = `javascript:(function(){location.href='${location.origin}/%23/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href)})()`;
+  }
 }
 
 function homeSpotlightPanel() {
