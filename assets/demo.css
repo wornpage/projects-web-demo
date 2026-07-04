@@ -1931,6 +1931,14 @@ html[data-theme="dark"] .demo-header-metadata {
   padding: 14px;
 }
 
+.demo-home-hero .demo-home-spotlight {
+  border-color: var(--cockpit-accent);
+  background: var(--cockpit-selected-bg);
+  box-shadow: var(--cockpit-shadow-sm);
+  padding: 16px;
+  margin: 4px 0 18px;
+}
+
 .demo-home-spotlight-head,
 .demo-home-spotlight-actions,
 .demo-review-spotlight-head,

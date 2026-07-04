@@ -128,6 +128,7 @@ check("blocked-by select keeps dependency contract", blockedBySelectContractOk()
 check("unblock cascade highlights freshly unblocked work", cascadeAnimationContractOk(), "finishing with proof flags dependents with a one-shot demo-just-unblocked animation");
 check("first-run welcome door greets new visitors", welcomeDoorContractOk(), "renderWelcome buffet gates the dashboard until the visitor picks a method or skips");
 check("dashboard orients newcomers with a lede and a start link", homeOrientingContractOk(), "home lede explains the work model and links to Review");
+check("dashboard leads with a do-this-next hero", homeHeroContractOk(), "home promotes the spotlight as the hero above the stats");
 check("nav separates the primary loop from secondary views", navGroupingContractOk(), "nav-sep divides the rail before the calendar/settings/insights/activity group");
 check("settings copy-layer viewer stays legible", copyLayerPanelContractOk(), "copy layer table names the six vocabulary fields and the scenario pairing note");
 check("work-list import keeps its parse-and-load contract", importContractOk(), "import parses pasted work into browser-local packs");
@@ -201,6 +202,13 @@ function homeOrientingContractOk() {
     'class="demo-home-lede"',
     "Each card below is one piece of work",
     'class="demo-linkish" data-go="review"'
+  ]);
+}
+
+function homeHeroContractOk() {
+  return includesAll(source, [
+    "${homeSpotlightPanel()}",
+    "Do this next"
   ]);
 }
 

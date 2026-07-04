@@ -3000,6 +3000,7 @@ function renderHome() {
         </div>
       </div>
       <p class="demo-home-lede">Each card below is one piece of work with an owner, a blocker, a next action, and a proof it's done. Start with <button type="button" class="demo-linkish" data-go="review">Review</button> to see what needs a decision.</p>
+      ${homeSpotlightPanel()}
       <div class="demo-insights-grid">
         ${insightCard("Need review", String(reviewCount), `${reviewCount} with blockers`, reviewCount > 0 ? "warn" : "good")}
         ${insightCard("Complete", `${Math.round((doneCount / Math.max(state.packs.length, 1)) * 100)}%`, `${doneCount} finished`, doneCount > 0 ? "good" : "neutral")}
@@ -3111,7 +3112,7 @@ function homeSpotlightPanel() {
   return `<article class="demo-home-spotlight" data-pack-id="${escapeAttribute(pack.id)}" aria-label="${escapeAttribute(`Sample work: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. Next action: ${command.label}.`)}">
     <div class="demo-home-spotlight-head">
       <div>
-        <span class="section-label">Live sample</span>
+        <span class="section-label">Do this next</span>
         <h3>
           <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(pack.id)}"${cardTitleButtonAttributes(pack)}>${escapeHtml(workTitle(pack))}</button>
         </h3>
