@@ -704,7 +704,7 @@ body .demo-sidebar.nav-rail .demo-nav-item.nav-rail-btn.active .nav-rail-icon {
 }
 
 .demo-header-inner {
-  max-width: 960px;
+  max-width: 1240px;
   min-width: 0;
   gap: 12px;
 }
@@ -780,7 +780,7 @@ html[data-theme="dark"] .demo-header-metadata {
   display: grid;
   gap: 16px;
   margin: 0 auto;
-  max-width: 960px;
+  max-width: 1240px;
   min-width: 0;
   padding: 16px 24px 104px;
 }
@@ -5308,7 +5308,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
 .demo-header-inner,
 .demo-main {
-  max-width: 960px;
+  max-width: 1240px;
 }
 
 .demo-header-inner {
@@ -6642,7 +6642,7 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-sidebar-footer{padding:8px 12px;border-top:1px solid var(--cockpit-border);font-size:10px;color:var(--cockpit-text-muted);line-height:1.4;text-align:center}
 
-.demo-prose{font-size:14px;line-height:1.7}
+.demo-prose{font-size:14px;line-height:1.7;max-width:72ch}
 .demo-prose h3{font-size:15px;margin:16px 0 6px}
 .demo-prose p{margin:0 0 10px;color:var(--cockpit-text)}
 .demo-prose a{color:var(--cockpit-accent)}
