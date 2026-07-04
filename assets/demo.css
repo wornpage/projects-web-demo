@@ -1987,17 +1987,38 @@ html[data-theme="dark"] .demo-header-metadata {
   display: grid;
   gap: 5px;
   min-width: 0;
-  padding: 10px 12px;
+  padding: 11px 14px;
+  position: relative;
 }
 
 .demo-home-spotlight-fact:first-child {
   border-left: 0;
 }
 
+/* Flow chevrons make the Where -> Blocker -> Next action logic legible. */
+.demo-home-spotlight-fact:not(:last-child)::after {
+  content: "›";
+  color: var(--cockpit-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+/* The Next action is the point of the triad, so its column carries the
+   accent tint. The value stays the normal ink color to keep contrast. */
+.demo-home-spotlight-fact:last-child {
+  background: var(--cockpit-accent-50);
+}
+
 .demo-home-spotlight-fact span {
   color: var(--cockpit-text-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 610;
+  letter-spacing: 0.07em;
   line-height: 1.15;
   text-transform: uppercase;
 }
