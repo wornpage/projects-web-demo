@@ -65,7 +65,7 @@ The important public paths are:
 
 | Hash path | Purpose |
 |---|---|
-| `#/home` | Dashboard — stats, recent activity, bookmarklet, quick actions. |
+| `#/home` | Dashboard — a "Do this next" spotlight for the top item, then stats, recent activity, bookmarklet, quick actions. First-time visitors see a welcome screen with method starting points instead; picking one (or skipping) sets a browser-local flag and returning visits go straight to the dashboard. |
 | `#/review` | Work that needs review or setup. |
 | `#/work` | Work list and selected-work browsing. |
 | `#/pack/{packId}` | Edit one work item path. |
@@ -80,6 +80,14 @@ The important public paths are:
 | `#/terms` | Terms of use and privacy — personal portfolio demo, no data collection. |
 
 Unknown and retired hashes fall back to `#/home`.
+
+`Cmd/Ctrl+K` (or the "Search ⌘K" header button on wide screens) opens a
+command palette: a native-dialog list that filters over every work item,
+screen, and scenario; Enter jumps to the item's work path, the screen, or
+loads the scenario. When finishing work with proof unblocks dependents, the
+freshly unblocked cards play a one-shot highlight on the Work and Review
+lists so the cascade is visible; `prefers-reduced-motion` gets a static ring
+instead.
 
 ## Local Preview
 

@@ -334,7 +334,7 @@ h3,
   --demo-work-card-shadow: var(--cockpit-shadow-sm);
   --demo-work-card-hover-shadow: var(--cockpit-shadow-md, 0 4px 12px rgba(0,0,0,0.1));
   --demo-work-card-selected-shadow: 0 0 0 2px var(--cockpit-accent);
-  --demo-work-card-alert-border: var(--cockpit-accent);
+  --demo-work-card-alert-border: var(--cockpit-warning-border);
   --demo-card-inner-bg: var(--cockpit-nav-bg);
   --demo-card-inner-border: var(--cockpit-border);
   --demo-card-divider: var(--cockpit-border);
@@ -398,7 +398,7 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-work-card-shadow: var(--cockpit-shadow-sm);
   --demo-work-card-hover-shadow: var(--cockpit-shadow-md, var(--cockpit-shadow-sm));
   --demo-work-card-selected-shadow: 0 0 0 2px var(--cockpit-accent);
-  --demo-work-card-alert-border: var(--cockpit-accent);
+  --demo-work-card-alert-border: var(--cockpit-warning-border);
   --demo-card-inner-bg: var(--cockpit-nav-bg);
   --demo-card-inner-border: var(--cockpit-border);
   --demo-card-divider: var(--cockpit-border);
@@ -6061,9 +6061,16 @@ html[data-theme="dark"] .demo-app-shell {
   border-color: var(--demo-work-card-setup-border);
 }
 
-.demo-work-card.has-blocker::before,
-.demo-review-card.has-blocker::before {
-  background: var(--demo-work-card-alert-border);
+/* Finished work recedes so open work carries the list. */
+.demo-work-card.is-done,
+.demo-review-card.is-done {
+  opacity: 0.72;
+}
+
+.demo-work-card.is-done:hover,
+.demo-work-card.is-done:focus-within,
+.demo-review-card.is-done:hover,
+.demo-review-card.is-done:focus-within {
   opacity: 1;
 }
 
