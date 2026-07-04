@@ -126,6 +126,8 @@ check("home path reads as connected steps", homePathFlowStylesContractOk(), "des
 check("work cards expose where and blocker before the next button", workCardTriadContractOk(), "structured work-card facts precede Next action");
 check("blocked-by select keeps dependency contract", blockedBySelectContractOk(), "edit-blocked-by select offers safe targets and derives the reason");
 check("first-run welcome door greets new visitors", welcomeDoorContractOk(), "renderWelcome buffet gates the dashboard until the visitor picks a method or skips");
+check("dashboard orients newcomers with a lede and a start link", homeOrientingContractOk(), "home lede explains the work model and links to Review");
+check("nav separates the primary loop from secondary views", navGroupingContractOk(), "nav-sep divides the rail before the calendar/settings/insights/activity group");
 check("settings copy-layer viewer stays legible", copyLayerPanelContractOk(), "copy layer table names the six vocabulary fields and the scenario pairing note");
 check("work-list import keeps its parse-and-load contract", importContractOk(), "import parses pasted work into browser-local packs");
 check("review standup export stays local-only", standupExportContractOk(), "copy standup builds review text through the local clipboard path");
@@ -190,6 +192,22 @@ function homeDashboardContractOk() {
     "insightCard(\"Complete\"",
     "insightCard(\"Due soon\"",
     "Recent activity"
+  ]);
+}
+
+function homeOrientingContractOk() {
+  return includesAll(source, [
+    'class="demo-home-lede"',
+    "Each card below is one piece of work",
+    'class="demo-linkish" data-go="review"'
+  ]);
+}
+
+function navGroupingContractOk() {
+  return includesAll(source, [
+    'const NAV_SECONDARY_START = "calendar"',
+    'class="demo-nav-sep"',
+    "item.route === NAV_SECONDARY_START"
   ]);
 }
 

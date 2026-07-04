@@ -1935,8 +1935,15 @@ function routeStatus(where, blocker, next) {
   return `Where: ${where}. Blocker: ${visibleBlocker}. Next action: ${next}.`;
 }
 
+// The secondary group (views + config) starts here; a separator sets it
+// apart from the primary do-the-work loop without reordering any route.
+const NAV_SECONDARY_START = "calendar";
+
 function renderNav() {
-  el("demo-nav").innerHTML = navItems.map((item) => navItemMarkup(item.route)).join("");
+  el("demo-nav").innerHTML = navItems.map((item) => {
+    const separator = item.route === NAV_SECONDARY_START ? '<span class="demo-nav-sep" role="separator" aria-hidden="true"></span>' : "";
+    return separator + navItemMarkup(item.route);
+  }).join("");
 }
 
 function syncNavGroupExpandedState(group) {
@@ -2989,6 +2996,7 @@ function renderHome() {
           <h2>${state.packs.length} ${escapeHtml(workNoun(state.packs.length))} loaded</h2>
         </div>
       </div>
+      <p class="demo-home-lede">Each card below is one piece of work with an owner, a blocker, a next action, and a proof it's done. Start with <button type="button" class="demo-linkish" data-go="review">Review</button> to see what needs a decision.</p>
       <div class="demo-insights-grid">
         ${insightCard("Need review", String(reviewCount), `${reviewCount} with blockers`, reviewCount > 0 ? "warn" : "good")}
         ${insightCard("Complete", `${Math.round((doneCount / Math.max(state.packs.length, 1)) * 100)}%`, `${doneCount} finished`, doneCount > 0 ? "good" : "neutral")}
