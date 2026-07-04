@@ -268,7 +268,7 @@ function memoryNoteInputContractOk() {
 
 function dueDatePickerContractOk() {
   return includesAll(source, [
-    'dateField("new-due", "Due", defaults.due',
+    'dateField("new-due", "Due (optional)", defaults.due',
     'dateField("edit-due", "Due", pack.due',
     'function dateField(id, label, value, help = "")',
     'type="date"',
