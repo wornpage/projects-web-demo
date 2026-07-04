@@ -6617,6 +6617,12 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-method-card strong{font-size:15px}
 .demo-method-card p{font-size:13px;color:var(--cockpit-text-muted);line-height:1.4}
 
+.demo-welcome{max-width:760px}
+.demo-welcome-head{margin-bottom:22px}
+.demo-welcome-head h2{font-size:clamp(24px,3vw,32px);margin:6px 0 10px;text-wrap:balance}
+.demo-welcome-lede{font-size:15px;line-height:1.6;color:var(--cockpit-text-secondary);max-width:60ch;margin:0;text-wrap:pretty}
+.demo-welcome-skip{margin-top:18px}
+
 .demo-sidebar-footer{padding:8px 12px;border-top:1px solid var(--cockpit-border);font-size:10px;color:var(--cockpit-text-muted);line-height:1.4;text-align:center}
 
 .demo-prose{font-size:14px;line-height:1.7}

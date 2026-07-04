@@ -125,6 +125,7 @@ check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop g
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
 check("work cards expose where and blocker before the next button", workCardTriadContractOk(), "structured work-card facts precede Next action");
 check("blocked-by select keeps dependency contract", blockedBySelectContractOk(), "edit-blocked-by select offers safe targets and derives the reason");
+check("first-run welcome door greets new visitors", welcomeDoorContractOk(), "renderWelcome buffet gates the dashboard until the visitor picks a method or skips");
 check("settings copy-layer viewer stays legible", copyLayerPanelContractOk(), "copy layer table names the six vocabulary fields and the scenario pairing note");
 check("work-list import keeps its parse-and-load contract", importContractOk(), "import parses pasted work into browser-local packs");
 check("review standup export stays local-only", standupExportContractOk(), "copy standup builds review text through the local clipboard path");
@@ -334,6 +335,17 @@ function blockedBySelectContractOk() {
     "!createsBlockedByCycle(state.packs, pack.id, candidate.id)",
     "blockedByBlockerText(",
     "Choosing work fills the reason and clears it automatically when that work finishes with proof."
+  ]);
+}
+
+function welcomeDoorContractOk() {
+  return includesAll(source, [
+    "function renderWelcome(",
+    "Help yourself.",
+    'id="demo-welcome-skip"',
+    "if (!hasWelcomed()) {",
+    "markWelcomed()",
+    "const WELCOME_METHODS ="
   ]);
 }
 

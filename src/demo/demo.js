@@ -4,6 +4,7 @@ const LEGACY_DEMO_STORAGE_KEYS = [
   "projects-static-demo-state-v4",
   "projects-static-demo-state-v5"
 ];
+const DEMO_WELCOMED_KEY = "projects-demo-welcomed-v1";
 const THEME_STORAGE_KEY = "projects-demo-theme-v3";
 const THEMES = ["light", "dark", "forest", "ocean", "sepia"];
 const THEME_LABELS = { light: "Light", dark: "Dark", forest: "Forest", ocean: "Ocean", sepia: "Sepia" };
@@ -430,6 +431,16 @@ function loadState(backendState = null) {
 
 function loadBackendOwnedState(backendState){loadState(backendState);state.suppressNextSave=true}
 
+// First-run welcome: a browser-local flag (both engines) so a first-time
+// visitor lands on the friendly method buffet instead of the dense dashboard.
+// Defaults to "welcomed" if storage is unavailable so no one is ever trapped.
+function hasWelcomed() {
+  try { return localStorage.getItem(DEMO_WELCOMED_KEY) === "1"; } catch { return true; }
+}
+function markWelcomed() {
+  try { localStorage.setItem(DEMO_WELCOMED_KEY, "1"); } catch {}
+}
+
 function purgeLegacyDemoState() {
   for (const key of LEGACY_DEMO_STORAGE_KEYS) {
     try {
@@ -445,6 +456,10 @@ async function applyLaunchConfiguration() {
   const hasProfileParam = Boolean(profileParam && copyProfiles[profileParam]);
 
   const scenarioParam = launchParams.get("scenario");
+  if ((scenarioParam && DEMO_SCENARIO_BY_ID[scenarioParam]) || hasProfileParam) {
+    // A shared/deep link already aimed the visitor; don't gate them behind the buffet.
+    markWelcomed();
+  }
   if (scenarioParam && DEMO_SCENARIO_BY_ID[scenarioParam]) {
     state.route = DEMO_SCENARIO_BY_ID[scenarioParam].route || state.route;
     await applyScenario(DEMO_SCENARIO_BY_ID[scenarioParam], { force: true, preserveProfile: hasProfileParam });
@@ -2949,6 +2964,11 @@ function focusKindForAction(action, packId = "") {
 }
 
 function renderHome() {
+  if (!hasWelcomed()) {
+    renderWelcome();
+    return;
+  }
+
   const reviewCount = state.packs.filter(isReview).length;
   const resetHelp = resetDemoHelp();
 
@@ -3006,15 +3026,47 @@ function renderHome() {
   }
 }
 
-function renderMethodPicker() {
-  const methods = [
-    { id: "ops-day", label: "Daily Operations", desc: "Restock inventory, process payroll, track maintenance, onboard new hires. Everything a small business manages day to day.", icon: "🏪" },
-    { id: "ai-prompts", label: "Prompt Engineering", desc: "Build a prompt library, run evals, compare models, and chain agent workflows. Prove what works.", icon: "🤖" },
-    { id: "sales", label: "Sales Pipeline", desc: "Prospect, qualify, and close leads. Track owners, blockers, and the next action for each deal.", icon: "💰" },
-    { id: "default", label: "Project Work", desc: "General-purpose work tracking. Blocker management, next actions, proof targets, and memory notes.", icon: "📋" },
-    { id: "empty", label: "Start from scratch", desc: "Blank canvas. Create your own work items with your own vocabulary and workflow.", icon: "✨" }
-  ];
+const WELCOME_METHODS = [
+  { id: "ops-day", label: "Daily Operations", desc: "Restock inventory, process payroll, track maintenance, onboard new hires. Everything a small business manages day to day.", icon: "🏪" },
+  { id: "ai-prompts", label: "Prompt Engineering", desc: "Build a prompt library, run evals, compare models, and chain agent workflows. Prove what works.", icon: "🤖" },
+  { id: "sales", label: "Sales Pipeline", desc: "Prospect, qualify, and close leads. Track owners, blockers, and the next action for each deal.", icon: "💰" },
+  { id: "default", label: "Project Work", desc: "General-purpose work tracking. Blocker management, next actions, proof targets, and memory notes.", icon: "📋" },
+  { id: "empty", label: "Start from scratch", desc: "Blank canvas. Create your own work items with your own vocabulary and workflow.", icon: "✨" }
+];
 
+function welcomeMethodGrid() {
+  return WELCOME_METHODS.map((m) => `
+          <button class="demo-method-card" type="button" data-action="load-method" data-method="${escapeAttribute(m.id)}">
+            <span class="demo-method-icon">${m.icon}</span>
+            <strong>${escapeHtml(m.label)}</strong>
+            <p>${escapeHtml(m.desc)}</p>
+          </button>
+        `).join("");
+}
+
+// First-run front door: what the app is, then a self-serve buffet of
+// starting points. Shown until the visitor picks a plate or skips.
+function renderWelcome() {
+  el("screen-content").innerHTML = `
+    <section class="demo-panel demo-welcome">
+      <div class="demo-welcome-head">
+        <span class="section-label">Welcome</span>
+        <h2>Help yourself.</h2>
+        <p class="demo-welcome-lede">A small demo of a work tracker where every item names its owner, what's blocking it, the next action, and how you'll know it's done. Pick a starting spread below — nothing to set up, and you can switch anytime in Settings.</p>
+      </div>
+      <div class="demo-method-grid">
+        ${welcomeMethodGrid()}
+      </div>
+      <div class="demo-welcome-skip">
+        <button class="btn btn-sm" type="button" id="demo-welcome-skip">Just show me the sample</button>
+      </div>
+    </section>
+  `;
+  bindMethodCards();
+  el("demo-welcome-skip")?.addEventListener("click", () => { markWelcomed(); go("home"); });
+}
+
+function renderMethodPicker() {
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-home-hero">
       <div class="demo-panel-head">
@@ -3025,13 +3077,7 @@ function renderMethodPicker() {
       </div>
       <p class="demo-method-intro">Pick a pre-loaded method below, or start from scratch. Each method comes with sample work items and vocabulary tuned to that workflow. Switch anytime in Settings.</p>
       <div class="demo-method-grid">
-        ${methods.map((m) => `
-          <button class="demo-method-card" type="button" data-action="load-method" data-method="${escapeAttribute(m.id)}">
-            <span class="demo-method-icon">${m.icon}</span>
-            <strong>${escapeHtml(m.label)}</strong>
-            <p>${escapeHtml(m.desc)}</p>
-          </button>
-        `).join("")}
+        ${welcomeMethodGrid()}
       </div>
       <div class="demo-quick-actions">
         <button class="btn btn-sm" type="button" id="reset-demo-home">Reset sample</button>
@@ -8127,6 +8173,7 @@ function bindMethodCards() {
       if (!scenario) {
         return;
       }
+      markWelcomed();
       applyScenario(scenario, { force: true });
       if (scenario.route) {
         go(scenario.route);
