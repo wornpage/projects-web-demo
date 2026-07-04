@@ -44,7 +44,10 @@ async function readGeneratedSource() {
   const combined = telemetry + source.replace(/\r\n?/gu, "\n");
   const result = await terser.minify(combined, {
     compress: true,
-    mangle: false,
+    // Mangle function-scoped locals only. toplevel stays false so global
+    // function names (e.g. buildStandupText, render) survive — the behavior
+    // smoke gate and telemetry hook reference them by name in the browser.
+    mangle: true,
     output: { comments: false }
   });
   if (result.error) {
