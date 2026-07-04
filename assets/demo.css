@@ -6507,6 +6507,21 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-bar-fill-35{width:35%}.demo-bar-fill-40{width:40%}.demo-bar-fill-45{width:45%}.demo-bar-fill-50{width:50%}.demo-bar-fill-55{width:55%}.demo-bar-fill-60{width:60%}.demo-bar-fill-65{width:65%}
 .demo-bar-fill-70{width:70%}.demo-bar-fill-75{width:75%}.demo-bar-fill-80{width:80%}.demo-bar-fill-85{width:85%}.demo-bar-fill-90{width:90%}.demo-bar-fill-95{width:95%}.demo-bar-fill-100{width:100%}
 
+/* ---- Unblock cascade animation ---- */
+@keyframes demo-unblock-flash {
+  0%   { box-shadow: 0 0 0 2px var(--cockpit-accent); transform: translateY(-3px); }
+  65%  { box-shadow: 0 0 0 2px var(--cockpit-accent); transform: translateY(0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); transform: translateY(0); }
+}
+.demo-just-unblocked {
+  animation: demo-unblock-flash 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-just-unblocked { animation: none; box-shadow: 0 0 0 2px var(--cockpit-accent); }
+}
+
 /* ---- Insights cards + sections ---- */
 .demo-insights-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
 .demo-insights-grid-3 { grid-template-columns:repeat(3,1fr); }

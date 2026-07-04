@@ -125,6 +125,7 @@ check("spotlight styles are responsive", spotlightStylesContractOk(), "desktop g
 check("home path reads as connected steps", homePathFlowStylesContractOk(), "desktop connector plus compact mobile step grid");
 check("work cards expose where and blocker before the next button", workCardTriadContractOk(), "structured work-card facts precede Next action");
 check("blocked-by select keeps dependency contract", blockedBySelectContractOk(), "edit-blocked-by select offers safe targets and derives the reason");
+check("unblock cascade highlights freshly unblocked work", cascadeAnimationContractOk(), "finishing with proof flags dependents with a one-shot demo-just-unblocked animation");
 check("first-run welcome door greets new visitors", welcomeDoorContractOk(), "renderWelcome buffet gates the dashboard until the visitor picks a method or skips");
 check("dashboard orients newcomers with a lede and a start link", homeOrientingContractOk(), "home lede explains the work model and links to Review");
 check("nav separates the primary loop from secondary views", navGroupingContractOk(), "nav-sep divides the rail before the calendar/settings/insights/activity group");
@@ -353,6 +354,14 @@ function blockedBySelectContractOk() {
     "!createsBlockedByCycle(state.packs, pack.id, candidate.id)",
     "blockedByBlockerText(",
     "Choosing work fills the reason and clears it automatically when that work finishes with proof."
+  ]);
+}
+
+function cascadeAnimationContractOk() {
+  return includesAll(source, [
+    "function markRecentlyUnblocked(",
+    "state.recentlyUnblockedIds",
+    "demo-just-unblocked"
   ]);
 }
 

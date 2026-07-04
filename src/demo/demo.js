@@ -81,7 +81,10 @@ const state = {
   workListView: "card",
   suppressNextSave: false,
   density: "card",
+  recentlyUnblockedIds: [],
 };
+
+let unblockAnimationTimer = null;
 
 const backendPackCommandCache = new Map();
 const pendingBackendPackCommandRequests = new Set();
@@ -4205,6 +4208,7 @@ function workflowCardClass(baseClass, pack, workflow, selected = false) {
   if (selected) classes.push("selected");
   if (hasBlocker(pack)) classes.push("has-blocker");
   if (isMissingNextAction(pack)) classes.push("needs-next");
+  if (state.recentlyUnblockedIds.includes(pack.id)) classes.push("demo-just-unblocked");
   return classes.join(" ");
 }
 
@@ -5119,6 +5123,7 @@ async function handlePackAction(id, action) {
       addPackActivity(pack, proofSavedActivity(pack));
     }
     const unblocked = wasDone ? [] : unblockPacksBlockedBy(pack);
+    markRecentlyUnblocked(unblocked);
     setPackActionConfirmation(pack, "done", changed, unblocked.length);
     go("pack", pack.id);
     return;
@@ -6504,6 +6509,25 @@ function unblockPacksBlockedBy(finishedPack) {
     }
   }
   return unblocked;
+}
+
+// Flag freshly cascaded items so their cards play a one-shot highlight the
+// next time they render (Work/Review). Cleared on a timer so the animation
+// only fires once. CSP-safe: only toggles a class, never inline styles.
+function markRecentlyUnblocked(unblocked) {
+  if (unblockAnimationTimer) {
+    clearTimeout(unblockAnimationTimer);
+    unblockAnimationTimer = null;
+  }
+  state.recentlyUnblockedIds = unblocked.map((pack) => pack.id);
+  if (state.recentlyUnblockedIds.length === 0) {
+    return;
+  }
+  unblockAnimationTimer = setTimeout(() => {
+    state.recentlyUnblockedIds = [];
+    unblockAnimationTimer = null;
+    render();
+  }, 2600);
 }
 
 function unblockedReceiptSentence(count) {
