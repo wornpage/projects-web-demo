@@ -78,6 +78,13 @@ for (const asset of publicTextAssets) {
 const totalBytes = assetRows.reduce((sum, asset) => sum + asset.bytes, 0);
 check("public text assets stay under total budget", totalBytes <= totalPublicTextBudgetBytes, `${totalBytes}/${totalPublicTextBudgetBytes} bytes`);
 
+// The side-stripe card treatment (thick colored left borders) was removed
+// deliberately; cards use full 1px borders with color carrying the state.
+// Keep it from creeping back in via demo.css.
+const demoCssRow = assetRows.find((asset) => asset.pathname === "assets/demo.css");
+const sideStripeMatch = demoCssRow?.text.match(/border-left(?:-width)?:\s*(?:[2-9]|\d{2,})px/u);
+check("demo.css avoids side-stripe left borders", !sideStripeMatch, sideStripeMatch ? `matched ${JSON.stringify(sideStripeMatch[0])}` : "full borders only");
+
 const publicMapFiles = await findPublicMapFiles();
 check("public asset tree contains no source map files", publicMapFiles.length === 0, publicMapFiles.join(", ") || "absent");
 const publicAssetFiles = await findPublicAssetFiles();

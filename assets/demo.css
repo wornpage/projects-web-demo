@@ -913,7 +913,8 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-sync {
   align-items: center;
   background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);  border-radius: var(--demo-panel-radius);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--demo-panel-radius);
   color: var(--cockpit-text-secondary);
   display: flex;
   flex-wrap: wrap;
@@ -1227,7 +1228,8 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-command-memory {
   background: var(--cockpit-selected-bg);
-  border: 1px solid var(--cockpit-border);  border-radius: var(--cockpit-radius);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 4px;
   padding: 10px 12px;
@@ -1256,7 +1258,8 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-command-receipt {
   animation: demo-clipboard-pop 180ms ease-out;
   background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);  border-radius: var(--cockpit-radius);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 10px;
   padding: 12px 14px;
@@ -1680,7 +1683,8 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-memory-strip {
   align-items: start;
   background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);  border-radius: var(--cockpit-radius);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-text-secondary);
   display: grid;
   gap: 5px;
@@ -1922,7 +1926,8 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-review-spotlight,
 .demo-create-spotlight {
   background: var(--demo-card-bg);
-  border: 1px solid var(--demo-card-border);  border-radius: var(--demo-panel-radius);
+  border: 1px solid var(--demo-card-border);
+  border-radius: var(--demo-panel-radius);
   box-shadow: var(--demo-card-shadow);
   display: grid;
   gap: 12px;
@@ -3371,7 +3376,8 @@ html[data-theme="dark"] .demo-state-pill {
 
 .demo-forward-triad .selected-work-where {
   background: var(--cockpit-selected-bg);
-  border-color: var(--cockpit-accent);  padding-left: 10px;
+  border-color: var(--cockpit-accent);
+  padding-left: 10px;
 }
 
 .demo-forward-triad .selected-work-where span {
@@ -3444,7 +3450,8 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-blocker-resolution {
   align-items: center;
   background: var(--cockpit-selected-bg);
-  border: 1px solid var(--cockpit-border);  border-radius: var(--cockpit-radius);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
   color: var(--cockpit-text);
   display: grid;
   font-size: 12px;
@@ -3543,7 +3550,8 @@ html[data-theme="dark"] .demo-state-pill {
 
 .demo-owner-blocker-guide {
   background: var(--cockpit-selected-bg);
-  border: 1px solid var(--cockpit-border);  border-radius: var(--cockpit-radius);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
   display: grid;
   gap: 8px;
   padding: 10px;
@@ -4535,6 +4543,20 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
     grid-template-columns: 1fr;
   }
 
+  /* Stacked vertically, the sideways flow chevrons stop making sense. */
+  .demo-home-spotlight-fact:not(:last-child)::after {
+    content: none;
+  }
+
+  .demo-home-spotlight-fact {
+    border-left: 0;
+    border-top: 1px solid var(--demo-card-divider);
+  }
+
+  .demo-home-spotlight-fact:first-child {
+    border-top: 0;
+  }
+
   .demo-review-queue-stats {
     grid-template-columns: 1fr;
   }
@@ -5345,7 +5367,8 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
 .demo-command-brief.sidecar {
   background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);  border-radius: var(--cockpit-radius);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
   box-shadow: none;
   gap: 10px;
   margin-bottom: 14px;
@@ -5578,7 +5601,8 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
 .demo-scenario-card[aria-pressed="true"] {
   background: var(--cockpit-selected-bg);
-  border-color: var(--cockpit-border);  box-shadow: none;
+  border-color: var(--cockpit-border);
+  box-shadow: none;
   padding-left: 9px;
 }
 
@@ -5648,7 +5672,8 @@ html[data-theme="dark"] .demo-command-work-path {
 .demo-clipboard-notice {
   animation: none;
   background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);  box-shadow: none;
+  border: 1px solid var(--cockpit-border);
+  box-shadow: none;
   padding: 9px 10px;
 }
 
@@ -6078,14 +6103,6 @@ html[data-theme="dark"] .demo-app-shell {
   .demo-work-card,
   .demo-review-card {
     padding: 14px 14px 14px 22px;
-  }
-
-  .demo-work-card::before,
-  .demo-review-card::before {
-    bottom: 10px;
-    left: 9px;
-    top: 10px;
-    width: 4px;
   }
 
   .demo-bottom-brief {
