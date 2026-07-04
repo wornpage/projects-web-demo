@@ -7782,6 +7782,36 @@ function bindCalendarNav() {
   }
 }
 
+function copyLayerPanel() {
+  const profileKey = copyProfiles[state.copyProfile] ? state.copyProfile : "general";
+  const vocab = copyProfiles[profileKey];
+  const profileLabel = PROFILE_LABELS[profileKey] || capitalize(profileKey);
+  const rows = [
+    ["New-work label", vocab.newWork],
+    ["Single item", vocab.workOne],
+    ["Many items", vocab.workMany],
+    ["Short word", vocab.work],
+    ["Result field", vocab.result],
+    ["Sources field", vocab.sources]
+  ].map(([label, value]) => `<div class="demo-copy-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+
+  const scenario = DEMO_SCENARIO_BY_ID[state.scenarioId] || DEMO_SCENARIO_BY_ID.default;
+  const expected = scenario.profile;
+  const drift = Boolean(expected) && expected !== profileKey;
+  const expectedLabel = PROFILE_LABELS[expected] || capitalize(expected || "general");
+  const note = drift
+    ? `The ${escapeHtml(scenario.label)} scenario pairs with ${escapeHtml(expectedLabel)} vocabulary; you're viewing it with ${escapeHtml(profileLabel)}.`
+    : `Vocabulary matches the ${escapeHtml(scenario.label)} scenario's default.`;
+
+  return `
+      <div class="demo-settings-section" role="group" aria-label="Copy layer">
+        <h3>Copy layer</h3>
+        <p class="demo-field-help">The exact words the ${escapeHtml(profileLabel)} profile applies to every ${escapeHtml(workNoun(2))}.</p>
+        <div class="demo-copy-layer">${rows}</div>
+        <p class="demo-copy-drift${drift ? "" : " is-ok"}">${note}</p>
+      </div>`;
+}
+
 function renderSettings() {
   const resetHelp = resetDemoHelp();
   const profileChoices = Object.entries(copyProfiles).map(([key, value]) => {
@@ -7798,6 +7828,7 @@ function renderSettings() {
     return `<button class="demo-profile-card" type="button" data-scenario="${escapeAttribute(scenario.id)}" aria-pressed="${String(active)}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
       <strong>${escapeHtml(scenario.label)}</strong>
       <span>${escapeHtml(scenario.description)}</span>
+      <span class="demo-scenario-tag">${escapeHtml(PROFILE_LABELS[scenario.profile] || capitalize(scenario.profile))} copy</span>
     </button>`;
   }).join("");
   const currentTheme = document.documentElement.dataset.theme || "light";
@@ -7821,6 +7852,7 @@ function renderSettings() {
         <p class="demo-field-help">Changes the vocabulary the demo uses for ${escapeHtml(workNoun(2))}.</p>
         <div class="demo-chip-row demo-profile-grid">${profileChoices}</div>
       </div>
+      ${copyLayerPanel()}
       <div class="demo-settings-section" role="group" aria-label="Scenario">
         <h3>Scenario</h3>
         <p class="demo-field-help">Loads a sample work set and opens its starting screen.</p>
