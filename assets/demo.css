@@ -28,9 +28,9 @@
   --cockpit-radius-sm: 4px;
   --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --cockpit-focus: var(--cockpit-accent);
-  --font-family: "Trebuchet MS", "Verdana", "Arial", sans-serif;
-  --font-family-display: "Trebuchet MS", "Verdana", "Arial", sans-serif;
-  --font-family-label: "Trebuchet MS", "Verdana", "Arial", sans-serif;
+  --font-family: system-ui, -apple-system, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-display: system-ui, -apple-system, "Segoe UI Variable Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-label: system-ui, -apple-system, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-body-weight: 520;
   --font-display-weight: 760;
   --font-label-weight: 740;
@@ -164,6 +164,10 @@ body {
   overflow-x: hidden;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
 }
 
 html,
@@ -178,6 +182,7 @@ h3,
 .demo-card-title {
   font-family: var(--font-family-display);
   font-weight: var(--font-display-weight);
+  letter-spacing: -0.011em;
 }
 
 ::selection {
