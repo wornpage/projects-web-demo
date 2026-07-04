@@ -302,6 +302,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   purgeLegacyDemoState();
   bindShellControls();
+  setupCommandPalette();
   bindDemoSyncControls();
   bindBottomDockVisibility();
   const launchedSyncCode = applyLaunchSyncCode();
@@ -6529,6 +6530,158 @@ function markRecentlyUnblocked(unblocked) {
     unblockAnimationTimer = null;
     render();
   }, 2600);
+}
+
+// ---- Command palette (Cmd/Ctrl+K) -------------------------------------
+// A keyboard-first jump-to for work items, screens, and scenarios. Uses a
+// native <dialog> for the focus trap + Esc; all DOM built via innerHTML /
+// classList only (CSP-safe, no inline styles).
+const commandPalette = { items: [], filtered: [], selected: 0 };
+
+function setupCommandPalette() {
+  if (document.getElementById("demo-cmdk")) {
+    return;
+  }
+  const dialog = document.createElement("dialog");
+  dialog.id = "demo-cmdk";
+  dialog.className = "demo-cmdk";
+  dialog.setAttribute("aria-label", "Command palette");
+  dialog.innerHTML = `
+    <input id="demo-cmdk-input" class="demo-cmdk-input" type="text" autocomplete="off" spellcheck="false" placeholder="Jump to work, a screen, or a scenario…" aria-label="Command palette search" role="combobox" aria-expanded="true" aria-controls="demo-cmdk-list">
+    <ul id="demo-cmdk-list" class="demo-cmdk-list" role="listbox" aria-label="Results"></ul>
+    <p class="demo-cmdk-hint">Up/Down to move · Enter to run · Esc to close</p>`;
+  document.body.appendChild(dialog);
+
+  const input = dialog.querySelector("#demo-cmdk-input");
+  input.addEventListener("input", () => filterCommandPalette(input.value));
+  input.addEventListener("keydown", onCommandPaletteKeydown);
+  dialog.querySelector("#demo-cmdk-list").addEventListener("click", (event) => {
+    const row = event.target.closest("[data-cmdk-index]");
+    if (row) {
+      runCommandPaletteItem(Number(row.dataset.cmdkIndex));
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && (event.key === "k" || event.key === "K")) {
+      event.preventDefault();
+      openCommandPalette();
+    }
+  });
+
+  const trigger = document.querySelector(".demo-header-actions");
+  if (trigger && !document.getElementById("demo-cmdk-trigger")) {
+    const button = document.createElement("button");
+    button.id = "demo-cmdk-trigger";
+    button.type = "button";
+    button.className = "btn btn-sm demo-cmdk-trigger";
+    button.textContent = "Search ⌘K";
+    button.setAttribute("aria-label", "Open command palette");
+    button.addEventListener("click", openCommandPalette);
+    trigger.insertBefore(button, trigger.firstChild);
+  }
+}
+
+function openCommandPalette() {
+  const dialog = document.getElementById("demo-cmdk");
+  if (!dialog || dialog.open) {
+    return;
+  }
+  commandPalette.items = buildCommandPaletteItems();
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+  }
+  const input = document.getElementById("demo-cmdk-input");
+  input.value = "";
+  filterCommandPalette("");
+  input.focus();
+}
+
+function buildCommandPaletteItems() {
+  const items = [];
+  NAV_ROUTE_IDS.forEach((route) => {
+    items.push({ kind: "route", label: `Go to ${ROUTE_CONTRACT[route].navLabel}`, hint: "Screen", route });
+  });
+  state.packs.forEach((pack) => {
+    const command = resolvePrimaryCommandForPack(pack);
+    const workflow = workflowStateForPack(pack, command);
+    items.push({ kind: "pack", label: workTitle(pack), hint: `${workflow.label} · open`, id: pack.id });
+  });
+  DEMO_SCENARIOS.forEach((scenario) => {
+    items.push({ kind: "scenario", label: `Load scenario: ${scenario.label}`, hint: "Sample set", id: scenario.id });
+  });
+  return items;
+}
+
+function filterCommandPalette(query) {
+  const needle = query.trim().toLowerCase();
+  commandPalette.filtered = needle
+    ? commandPalette.items.filter((item) => item.label.toLowerCase().includes(needle))
+    : commandPalette.items;
+  commandPalette.selected = 0;
+  renderCommandPaletteList();
+}
+
+function renderCommandPaletteList() {
+  const list = document.getElementById("demo-cmdk-list");
+  if (!list) {
+    return;
+  }
+  const rows = commandPalette.filtered.slice(0, 40);
+  list.innerHTML = rows.length
+    ? rows.map((item, index) => `<li class="demo-cmdk-item${index === commandPalette.selected ? " is-active" : ""}" role="option" aria-selected="${index === commandPalette.selected}" data-cmdk-index="${index}"><span>${escapeHtml(item.label)}</span><small>${escapeHtml(item.hint)}</small></li>`).join("")
+    : `<li class="demo-cmdk-empty" role="option" aria-selected="false">No matches.</li>`;
+}
+
+function onCommandPaletteKeydown(event) {
+  const count = commandPalette.filtered.length;
+  if (event.key === "ArrowDown" && count) {
+    event.preventDefault();
+    commandPalette.selected = (commandPalette.selected + 1) % count;
+    renderCommandPaletteList();
+    scrollCommandPaletteActive();
+  } else if (event.key === "ArrowUp" && count) {
+    event.preventDefault();
+    commandPalette.selected = (commandPalette.selected - 1 + count) % count;
+    renderCommandPaletteList();
+    scrollCommandPaletteActive();
+  } else if (event.key === "Enter") {
+    event.preventDefault();
+    runCommandPaletteItem(commandPalette.selected);
+  }
+}
+
+function scrollCommandPaletteActive() {
+  const active = document.querySelector(".demo-cmdk-item.is-active");
+  if (active && typeof active.scrollIntoView === "function") {
+    active.scrollIntoView({ block: "nearest" });
+  }
+}
+
+function runCommandPaletteItem(index) {
+  const item = commandPalette.filtered[index];
+  if (!item) {
+    return;
+  }
+  const dialog = document.getElementById("demo-cmdk");
+  if (dialog && dialog.open) {
+    dialog.close();
+  }
+  if (item.kind === "route") {
+    go(item.route);
+  } else if (item.kind === "pack") {
+    state.selectedId = item.id;
+    go("pack", item.id);
+  } else if (item.kind === "scenario") {
+    const scenario = DEMO_SCENARIO_BY_ID[item.id];
+    if (scenario) {
+      markWelcomed();
+      applyScenario(scenario, { force: true });
+      if (scenario.route) {
+        go(scenario.route);
+      }
+    }
+  }
 }
 
 function unblockedReceiptSentence(count) {

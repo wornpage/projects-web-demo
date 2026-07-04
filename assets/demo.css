@@ -6551,6 +6551,17 @@ html[data-theme="dark"] .demo-app-shell {
   .demo-just-unblocked { animation: none; box-shadow: 0 0 0 2px var(--cockpit-accent); }
 }
 
+/* ---- Command palette (Cmd+K) ---- */
+.demo-cmdk { width: min(560px, 92vw); max-width: 92vw; padding: 0; border: 1px solid var(--cockpit-border-strong); border-radius: var(--cockpit-radius); background: var(--cockpit-surface); color: var(--cockpit-text); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); margin: 12vh auto auto; }
+.demo-cmdk::backdrop { background: rgba(0, 0, 0, 0.45); }
+.demo-cmdk-input { width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid var(--cockpit-border); background: transparent; color: var(--cockpit-text); font: inherit; font-size: 15px; padding: 14px 16px; outline: none; }
+.demo-cmdk-list { list-style: none; margin: 0; padding: 6px; max-height: 46vh; overflow-y: auto; }
+.demo-cmdk-item { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: var(--cockpit-radius-sm); cursor: pointer; }
+.demo-cmdk-item.is-active { background: var(--cockpit-selected-bg); }
+.demo-cmdk-item small { color: var(--cockpit-text-muted); font-size: 11px; white-space: nowrap; }
+.demo-cmdk-empty { padding: 12px 10px; color: var(--cockpit-text-muted); }
+.demo-cmdk-hint { margin: 0; padding: 8px 16px; border-top: 1px solid var(--cockpit-border); color: var(--cockpit-text-muted); font-size: 11px; }
+
 /* ---- Insights cards + sections ---- */
 .demo-insights-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
 .demo-insights-grid-3 { grid-template-columns:repeat(3,1fr); }
