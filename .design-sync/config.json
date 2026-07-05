@@ -1,0 +1,12 @@
+{
+  "projectId": "f2d21e90-eaad-472a-a390-95aa96461af1",
+  "pkg": "projects-cockpit",
+  "globalName": "ProjectsCockpit",
+  "shape": "package",
+  "buildCmd": "npm --prefix design-system run build",
+  "cssEntry": "src/styles.css",
+  "tokensPkg": "projects-cockpit",
+  "tokensGlob": "src/tokens.css",
+  "runtimeFontPrefixes": ["Sitka", "Iowan Old Style", "Palatino"],
+  "readmeHeader": ".design-sync/conventions.md"
+}

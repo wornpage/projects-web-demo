@@ -1,0 +1,65 @@
+/* Projects Cockpit design tokens — extracted from the app's assets/demo.css.
+   Light is the default; dark ships as [data-theme="dark"]. */
+:root {
+  --cockpit-bg: #f6f0e6;
+  --cockpit-surface: #fffcf4;
+  --cockpit-nav-bg: #efe7da;
+  --cockpit-accent: #1d6f64;
+  --cockpit-accent-hover: #15564d;
+  --cockpit-accent-text: #ffffff;
+  --cockpit-accent-50: #eaf4f0;
+  --cockpit-selected-bg: #d7efe7;
+  --cockpit-selected-fg: #082f2b;
+  --cockpit-border: #ddd0bd;
+  --cockpit-border-strong: #c9bca8;
+  --cockpit-text: #21322b;
+  --cockpit-text-secondary: #5b6a60;
+  --cockpit-text-muted: #708277;
+  --cockpit-hover-bg: #eaf4f0;
+  --cockpit-success-bg: #ecfdf5;
+  --cockpit-success-border: #14b8a6;
+  --cockpit-success-text: #134e4a;
+  --cockpit-warning-bg: #fff7ed;
+  --cockpit-warning-border: #fdba74;
+  --cockpit-warning-text: #9a3412;
+  --cockpit-danger-bg: #fef2f2;
+  --cockpit-danger-border: #fca5a5;
+  --cockpit-danger-text: #991b1b;
+  --cockpit-radius: 8px;
+  --cockpit-radius-sm: 4px;
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --cockpit-focus: var(--cockpit-accent);
+  --font-family: "Sitka Text", "Sitka", Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --font-family-display: "Sitka Heading", "Sitka Text", "Sitka", Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --font-body-weight: 420;
+  --font-display-weight: 610;
+  --font-label-weight: 590;
+}
+
+[data-theme="dark"] {
+  --cockpit-bg: #0d1512;
+  --cockpit-surface: #17211d;
+  --cockpit-nav-bg: #101a16;
+  --cockpit-accent: #4ca48f;
+  --cockpit-accent-hover: #7ddac3;
+  --cockpit-accent-text: #d1f5e8;
+  --cockpit-accent-50: #16372f;
+  --cockpit-selected-bg: #16453b;
+  --cockpit-selected-fg: #f7fffc;
+  --cockpit-border: #34473f;
+  --cockpit-border-strong: #5b6a60;
+  --cockpit-text: #f7fffc;
+  --cockpit-text-secondary: #d9e8e2;
+  --cockpit-text-muted: #9aa99f;
+  --cockpit-hover-bg: #16372f;
+  --cockpit-success-bg: #022c22;
+  --cockpit-success-border: #14b8a6;
+  --cockpit-success-text: #a7f3d0;
+  --cockpit-warning-bg: #431407;
+  --cockpit-warning-border: #fdba74;
+  --cockpit-warning-text: #fed7aa;
+  --cockpit-danger-bg: #450a0a;
+  --cockpit-danger-border: #fca5a5;
+  --cockpit-danger-text: #fecaca;
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+}

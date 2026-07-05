@@ -1,0 +1,23 @@
+{
+  "name": "projects-cockpit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hand-authored React approximations of the Projects demo's cockpit design language (tokens + patterns), created for the claude.ai/design sync. The vanilla-JS app in ../src/demo is the visual source of truth.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "esbuild src/index.tsx --bundle --format=esm --external:react --external:react-dom --outfile=dist/index.js && tsc --emitDeclarationOnly"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "esbuild": "^0.24.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.0"
+  }
+}
