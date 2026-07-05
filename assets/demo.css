@@ -2354,6 +2354,11 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-search-input,
+/* A date only ever holds ten characters — don't stretch it across the row. */
+.demo-field input[type="date"] {
+  max-width: 200px;
+}
+
 .demo-field input,
 .demo-field textarea,
 .demo-field select {

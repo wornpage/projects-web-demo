@@ -2758,6 +2758,13 @@ function commandRunLabel(command) {
 }
 
 function queueFocus(kind, packId = "") {
+  // The receipt announce ("card-result") must not steal the slot from a
+  // navigational focus queued by the same action — otherwise opening a work
+  // path scrolls to the receipt strip and the user lands below the title.
+  // The receipt is aria-live, so it is announced without needing focus.
+  if (kind === "card-result" && state.pendingFocus && state.pendingFocus.kind !== "card-result") {
+    return;
+  }
   state.pendingFocus = {
     kind,
     packId: packId || state.selectedId || ""
@@ -2913,9 +2920,10 @@ function focusAndPulse(target, options = {}) {
   const behavior = options.behavior || "auto";
   const block = options.block || "center";
   target.scrollIntoView({ behavior, block, inline: "nearest" });
-  if (options.ensureTopVisible) {
-    ensureFocusTopVisible(target);
-  }
+  // Always pull the target's top back into view: centering a target taller
+  // than the viewport pushes its title above the fold, landing the user
+  // "below the title" they asked for.
+  ensureFocusTopVisible(target);
 
   if (!isFocusable(target)) {
     target.setAttribute("tabindex", "-1");
