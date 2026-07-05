@@ -82,6 +82,7 @@ const state = {
   suppressNextSave: false,
   density: "card",
   recentlyUnblockedIds: [],
+  routeParam: "",
 };
 
 let unblockAnimationTimer = null;
@@ -98,7 +99,7 @@ const ROUTE_CONTRACT = Object.freeze({
   create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true },
   compare: { pattern: "#/compare/{packId}/{packId}", title: "Compare", commandSource: "route", acceptsPackId: true },
-  calendar: { pattern: "#/calendar", title: "Calendar", commandSource: "route", navKey: "📅", navLabel: "Calendar" },
+  calendar: { pattern: "#/calendar/{packId}", title: "Calendar", commandSource: "route", acceptsPackId: true, navKey: "📅", navLabel: "Calendar" },
   settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "⚙", navLabel: "Settings" },
   insights: { pattern: "#/insights", title: "Insights", commandSource: "route", navKey: "📊", navLabel: "Insights" },
   activity: { pattern: "#/activity", title: "Activity", commandSource: "route", navKey: "📋", navLabel: "Activity" },
@@ -1993,7 +1994,11 @@ function routeFromHash() {
     history.replaceState({}, "", `${location.pathname}${location.search}${formatRouteHash("home")}`);
   }
 
-  if (parsedRoute.packId && findPack(parsedRoute.packId)) {
+  if (state.route === "calendar") {
+    // The calendar's "packId" is a year/month[/date] view param, not a work
+    // id — store it for renderCalendar and leave the selection alone.
+    state.routeParam = parsedRoute.packId;
+  } else if (parsedRoute.packId && findPack(parsedRoute.packId)) {
     state.selectedId = parsedRoute.packId;
   } else if (parsedRoute.packId) {
     state.selectedId = state.packs[0]?.id || "";

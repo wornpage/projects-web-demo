@@ -129,6 +129,62 @@ try {
     `${memoryChip.before} -> ${memoryChip.after}`
   );
 
+  // Phantom-button sweep: every enabled visible button on every route must
+  // produce an observable effect when clicked — a hash change, any DOM
+  // change (screen content OR the command sidecar, where receipts land), an
+  // open dialog, or a confirm() call. Buttons are deduped by action family
+  // (one representative per data-action/data-go + label shape) so the sweep
+  // stays fast, and already-pressed toggles (aria-pressed="true") are
+  // legitimate no-ops. The Memory screen shipped ~100 dead buttons once;
+  // this closes that class for good.
+  await page.evaluate(() => { window.confirm = () => { window.__confirmed = true; return false; }; });
+  const phantoms = [];
+  const sweptFamilies = new Set();
+  for (const route of routes) {
+    if (route === "terms") continue;
+    await gotoRoute(page, route);
+    const families = await page.evaluate(() => {
+      const seen = new Set();
+      return [...document.querySelectorAll("#screen-content button:not([disabled]), #screen-content a.btn")]
+        .filter((el) => el.offsetParent !== null && el.getAttribute("aria-pressed") !== "true" && el.getAttribute("aria-disabled") !== "true")
+        .map((el) => `${el.id || ""}|${el.dataset.action || el.dataset.go || ""}|${(el.textContent || "").trim().replace(/\d+/g, "#").slice(0, 24)}`)
+        .filter((key) => !seen.has(key) && seen.add(key));
+    });
+    for (const family of families) {
+      if (sweptFamilies.has(family)) continue;
+      sweptFamilies.add(family);
+      await gotoRoute(page, route);
+      const result = await page.evaluate((key) => {
+        const seen = new Set();
+        const target = [...document.querySelectorAll("#screen-content button:not([disabled]), #screen-content a.btn")]
+          .filter((el) => el.offsetParent !== null && el.getAttribute("aria-pressed") !== "true" && el.getAttribute("aria-disabled") !== "true")
+          .find((el) => `${el.id || ""}|${el.dataset.action || el.dataset.go || ""}|${(el.textContent || "").trim().replace(/\d+/g, "#").slice(0, 24)}` === key);
+        if (!target) return { skipped: true };
+        window.__confirmed = false;
+        const beforeHash = location.hash;
+        const beforeBody = document.body.innerHTML;
+        target.click();
+        return new Promise((resolve) => setTimeout(() => {
+          const changed = location.hash !== beforeHash
+            || document.body.innerHTML !== beforeBody
+            || window.__confirmed
+            || Boolean(document.querySelector("dialog[open]"));
+          const dialog = document.querySelector("dialog[open]");
+          if (dialog) dialog.close();
+          resolve({ changed });
+        }, 180));
+      }, family);
+      if (!result.skipped && !result.changed) {
+        phantoms.push(`${route}: ${family}`);
+      }
+    }
+  }
+  check(
+    "every enabled button produces an observable effect",
+    phantoms.length === 0,
+    phantoms.length ? phantoms.slice(0, 6).join(" ; ") : `${sweptFamilies.size} button families swept, none dead`
+  );
+
   // Mobile nav: every destination (including Create) must be reachable
   // without a hidden horizontal scroll.
   await page.setViewportSize({ width: 375, height: 812 });
