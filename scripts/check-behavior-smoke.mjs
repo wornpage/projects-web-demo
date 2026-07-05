@@ -109,6 +109,26 @@ try {
   }));
   check("review standup control is present and builds text", standup.button && standup.text.length > 0, standup.text ? standup.text.split("\n")[0] : "missing");
 
+  // Memory screen: the work-chooser chips must actually be bound. The whole
+  // screen once rendered with dead [data-action] buttons because renderMemory
+  // skipped bindListActions — a class of bug only a real click can catch.
+  await gotoRoute(page, "memory");
+  const memoryChip = await page.evaluate(() => {
+    const chips = [...document.querySelectorAll('#screen-content [data-action="memory"]')];
+    const target = chips.find((chip) => chip.getAttribute("aria-pressed") !== "true");
+    if (!target) {
+      return { clicked: false, before: location.hash, after: location.hash };
+    }
+    const before = location.hash;
+    target.click();
+    return { clicked: true, before, after: location.hash, pack: target.dataset.pack };
+  });
+  check(
+    "memory chooser chips are bound and switch the target",
+    memoryChip.clicked && memoryChip.after !== memoryChip.before && memoryChip.after.includes(memoryChip.pack),
+    `${memoryChip.before} -> ${memoryChip.after}`
+  );
+
   // Mobile nav: every destination (including Create) must be reachable
   // without a hidden horizontal scroll.
   await page.setViewportSize({ width: 375, height: 812 });

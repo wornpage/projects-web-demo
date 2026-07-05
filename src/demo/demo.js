@@ -3036,6 +3036,13 @@ function renderHome() {
   const bml = el("demo-bookmarklet-link");
   if (bml) {
     bml.href = `javascript:(function(){var u='${location.origin}/'+'#/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href);location.href=u})()`;
+    // Clicking a javascript: link in-page is blocked by the CSP, so a plain
+    // click would silently do nothing. Explain the drag affordance instead.
+    bml.addEventListener("click", (event) => {
+      event.preventDefault();
+      state.status = "Where: Dashboard. Blocker: the bookmarklet only works from your bookmarks bar. Next action: drag the button up to the bar, then click it on any page.";
+      render();
+    });
   }
 }
 
@@ -3671,6 +3678,7 @@ function renderMemory() {
   bindMemoryValidation(pack);
   bindMemorySearch();
   bindGoButtons();
+  bindListActions();
   el("add-memory").addEventListener("click", async () => {
     const memoryState = memoryNoteSaveState(pack, valueOf("memory-note"));
     if (!memoryState.canSave) {
