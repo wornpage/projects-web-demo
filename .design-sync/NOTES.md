@@ -26,6 +26,15 @@
 - Fonts: Sitka / Iowan Old Style / Palatino are OS-provided system fonts — nothing to
   ship; suppressed via `runtimeFontPrefixes`. Georgia is the shippable-free fallback.
 
+- Drift-check recipe (used by the 2026-07-05 re-sync, works well): diff the `--cockpit-*`
+  declarations between the app's light+dark theme blocks (assets/demo.css, first ~68
+  lines) and design-system/src/tokens.css, and compare the app's `.btn` rules against
+  `.cockpit-btn` in src/styles.css. That re-sync folded in the WCAG dark accent-text fix
+  (#d1f5e8 -> #04241d) and the app's press-state layer (hover shadow, :active sink) —
+  both landed in the app after the first sync, exactly the hand-mirror drift the risk
+  section warns about. The app's forest/ocean/sepia themes are deliberately NOT mirrored
+  (package ships light + dark only).
+
 ## Re-sync risks
 
 - **The source of truth is the app, not this package.** design-system/src mirrors

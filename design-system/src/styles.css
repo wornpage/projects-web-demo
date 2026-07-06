@@ -28,12 +28,15 @@
   gap: 6px;
   padding: 6px 14px;
   text-decoration: none;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
 }
-.cockpit-btn:hover { background: var(--cockpit-hover-bg); border-color: var(--cockpit-accent); }
+.cockpit-btn:hover { background: var(--cockpit-accent-50); border-color: var(--cockpit-accent); box-shadow: var(--cockpit-shadow-sm); }
+/* Pressed: the button visibly sinks and darkens so every click reads. */
+.cockpit-btn:active:not(:disabled) { background: var(--cockpit-selected-bg); border-color: var(--cockpit-accent); box-shadow: none; transform: translateY(1px); }
 .cockpit-btn:focus-visible { outline: 2px solid var(--cockpit-focus); outline-offset: 1px; }
 .cockpit-btn--primary { background: var(--cockpit-accent); border-color: var(--cockpit-accent); color: var(--cockpit-accent-text); }
 .cockpit-btn--primary:hover { background: var(--cockpit-accent-hover); border-color: var(--cockpit-accent-hover); }
+.cockpit-btn--primary:active:not(:disabled) { background: var(--cockpit-accent-hover); border-color: var(--cockpit-accent-hover); box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.22); transform: translateY(1px); }
 .cockpit-btn--sm { font-size: 12px; padding: 4px 10px; border-radius: var(--cockpit-radius-sm); }
 .cockpit-btn:disabled { background: var(--cockpit-border-strong); border-color: var(--cockpit-border-strong); color: var(--cockpit-surface); cursor: default; }
 
