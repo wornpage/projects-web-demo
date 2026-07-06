@@ -994,9 +994,8 @@ async function runBackendPackAction(pack, action) {
   if (action === "open") {
     queueFocus("pack-detail", state.selectedId);
   }
-  if (action === "done") {
-    requestAnimationFrame(() => burstConfetti());
-  }
+  // "done" confetti is fired by setBackendActionReceipt -> packActionSummary,
+  // the same path static mode uses — firing it here too would double it.
   go("pack", state.selectedId);
   return true;
 }
@@ -4969,14 +4968,26 @@ function actionUndoSnapshot(pack, action) {
   return { packId: pack.id, action, fields: packForwardPathSnapshot(pack), dependents };
 }
 
-function attachReceiptUndo(undo) {
-  if (!undo || !state.actionReceipt || state.actionReceipt.packId !== undo.packId) {
+function setBackendActionReceipt(action, undo) {
+  // App mode: the backend applied the action and reloaded state, but produced
+  // no receipt. Synthesize the same receipt (and Undo) the static engine shows
+  // so both modes read identically. undo is non-null only for the four
+  // receipt-bearing actions; "open" and friends get no receipt, matching static.
+  if (!undo) {
     return;
   }
   const pack = findPack(undo.packId);
-  if (pack && JSON.stringify(undo.fields) !== JSON.stringify(packForwardPathSnapshot(pack))) {
-    state.actionReceipt.undo = undo;
+  if (!pack) {
+    return;
   }
+  const changed = JSON.stringify(undo.fields) !== JSON.stringify(packForwardPathSnapshot(pack));
+  const unblockedCount = action === "done"
+    ? (undo.dependents || []).filter((dep) => {
+      const target = findPack(dep.packId);
+      return target && isUnblockedBlockerValue(target.blocker);
+    }).length
+    : 0;
+  setPackActionConfirmation(pack, action, changed, unblockedCount, changed ? undo : null);
 }
 
 async function undoActionReceipt() {
@@ -5238,7 +5249,8 @@ async function handlePackAction(id, action) {
   if (SERVER_PACK_ACTIONS.has(action)) {
     try {
       if (await runBackendPackAction(pack, action)) {
-        attachReceiptUndo(undoSnapshot);
+        setBackendActionReceipt(action, undoSnapshot);
+        render();
         return;
       }
     } catch (error) {
