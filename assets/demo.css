@@ -44,7 +44,7 @@ html[data-theme="dark"] {
   --cockpit-nav-bg: #101a16;
   --cockpit-accent: #4ca48f;
   --cockpit-accent-hover: #7ddac3;
-  --cockpit-accent-text: #d1f5e8;
+  --cockpit-accent-text: #04241d;
   --cockpit-accent-50: #16372f;
   --cockpit-selected-bg: #16453b;
   --cockpit-selected-fg: #f7fffc;
@@ -72,7 +72,7 @@ html[data-theme="forest"] {
   --cockpit-nav-bg: #1c261b;
   --cockpit-accent: #5b9a4b;
   --cockpit-accent-hover: #7fbf6b;
-  --cockpit-accent-text: #ecffe8;
+  --cockpit-accent-text: #0b1f07;
   --cockpit-accent-50: #1e3819;
   --cockpit-selected-bg: #1e3d1a;
   --cockpit-selected-fg: #f2ffee;
@@ -100,7 +100,7 @@ html[data-theme="ocean"] {
   --cockpit-nav-bg: #101f30;
   --cockpit-accent: #3b82c4;
   --cockpit-accent-hover: #60a5d6;
-  --cockpit-accent-text: #e8f4fd;
+  --cockpit-accent-text: #04121f;
   --cockpit-accent-50: #152a42;
   --cockpit-selected-bg: #1a3d5c;
   --cockpit-selected-fg: #f0f8ff;

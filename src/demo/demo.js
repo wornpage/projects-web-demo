@@ -412,9 +412,9 @@ function bindShellControls() {
 
   el("dock-review-item")?.addEventListener("click", (event) => {
     event.preventDefault();
-    const pack = currentPack() && isReview(currentPack())
-      ? currentPack()
-      : preferredReviewPack();
+    // The cell shows the CURRENT work's blocker — reviewing must stay on
+    // that work, never jump the selection to another review item.
+    const pack = currentPack() || preferredReviewPack();
     go("review", pack?.id || "", "blocker");
   });
 }
@@ -2715,6 +2715,7 @@ function commandWorkPathPack(command) {
 function commandIsRouteIntentAction(action) {
   return [
     "route-review",
+    "review-work",
     "open-work-list",
     "open-create",
     "create-sample",
@@ -5369,6 +5370,20 @@ function runRouteAction(action, targetPackId) {
 
   if (action === "route-review") {
     const pack = findPack(targetPackId) || preferredReviewPack();
+    if (pack) {
+      state.selectedId = pack.id;
+      go("review", pack.id);
+    } else {
+      go("review");
+    }
+    return true;
+  }
+
+  if (action === "review-work") {
+    // Review the work the user is looking at — never jump their selection
+    // to a different item. (This action rendered on pack-context sidecars
+    // but had no dispatch case, so the button was a silent no-op.)
+    const pack = findPack(targetPackId) || currentPack();
     if (pack) {
       state.selectedId = pack.id;
       go("review", pack.id);

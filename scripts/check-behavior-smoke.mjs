@@ -145,7 +145,7 @@ try {
     await gotoRoute(page, route);
     const families = await page.evaluate(() => {
       const seen = new Set();
-      return [...document.querySelectorAll("#screen-content button:not([disabled]), #screen-content a.btn")]
+      return [...document.querySelectorAll("#screen-content button:not([disabled]), #screen-content a.btn, .demo-command-brief button:not([disabled]), .demo-bottom-brief button:not([disabled]), .demo-bottom-brief a")]
         .filter((el) => el.offsetParent !== null && el.getAttribute("aria-pressed") !== "true" && el.getAttribute("aria-disabled") !== "true")
         .map((el) => `${el.id || ""}|${el.dataset.action || el.dataset.go || ""}|${(el.textContent || "").trim().replace(/\d+/g, "#").slice(0, 24)}`)
         .filter((key) => !seen.has(key) && seen.add(key));
