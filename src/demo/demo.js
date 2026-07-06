@@ -4552,7 +4552,7 @@ function setActionConfirmation(pack, action) {
   );
 }
 
-function setPackActionConfirmation(pack, action, changed, unblockedCount = 0) {
+function setPackActionConfirmation(pack, action, changed, unblockedCount = 0, undo = null) {
   if (!pack) return;
 
   const actionLabel = actionLabelFromKey(action);
@@ -4562,6 +4562,9 @@ function setPackActionConfirmation(pack, action, changed, unblockedCount = 0) {
     summary,
     resolvePrimaryCommandForPack(pack)
   );
+  if (changed && undo) {
+    state.actionReceipt.undo = undo;
+  }
 }
 
 function burstConfetti() {
@@ -4786,8 +4789,20 @@ function updateActionReceipt() {
       ${receiptLine("Next action", receipt.next)}
       ${receiptLine("Proof target", receipt.proof)}
     </div>
+    ${receiptUndoAction(receipt)}
     ${commandReceiptFollowUpAction(receipt)}`;
   bindCommandReceiptActions(receiptElement);
+}
+
+function receiptUndoAction(receipt) {
+  if (!receipt?.undo) {
+    return "";
+  }
+  const help = "Puts this work back exactly as it was before the last action.";
+  return `<div class="demo-command-receipt-actions">
+    <button class="btn btn-sm" type="button" data-receipt-undo title="${escapeAttribute(help)}" aria-label="${escapeAttribute(`Undo. ${help}`)}">Undo</button>
+    <small>Restores the previous state of this work.</small>
+  </div>`;
 }
 
 function commandActionReceipt() {
@@ -4895,6 +4910,9 @@ function commandReceiptFollowUpAction(receipt) {
 
 function bindCommandReceiptActions(receiptElement) {
   receiptElement.querySelectorAll("[data-go]").forEach(bindGoButton);
+  receiptElement.querySelector("[data-receipt-undo]")?.addEventListener("click", () => {
+    undoActionReceipt();
+  });
 }
 
 function receiptAccessibleSummary(receipt) {
@@ -4932,8 +4950,72 @@ function normalizeActionReceipt(receipt) {
     where,
     blocker,
     next,
-    proof
+    proof,
+    undo: receipt.undo && typeof receipt.undo === "object" ? receipt.undo : null
   };
+}
+
+function actionUndoSnapshot(pack, action) {
+  if (!pack || !["start", "unblock", "block", "done"].includes(action)) {
+    return null;
+  }
+  // Finishing work cascades unblocks into dependents — capture them too so
+  // Undo restores the whole effect, not just this pack.
+  const dependents = action === "done"
+    ? state.packs
+      .filter((p) => p.id !== pack.id && normalizeCopy(p.blockedBy) === pack.id)
+      .map((p) => ({ packId: p.id, fields: packForwardPathSnapshot(p) }))
+    : [];
+  return { packId: pack.id, action, fields: packForwardPathSnapshot(pack), dependents };
+}
+
+function attachReceiptUndo(undo) {
+  if (!undo || !state.actionReceipt || state.actionReceipt.packId !== undo.packId) {
+    return;
+  }
+  const pack = findPack(undo.packId);
+  if (pack && JSON.stringify(undo.fields) !== JSON.stringify(packForwardPathSnapshot(pack))) {
+    state.actionReceipt.undo = undo;
+  }
+}
+
+async function undoActionReceipt() {
+  const undo = state.actionReceipt?.undo;
+  if (!undo) {
+    return;
+  }
+  const targets = [{ packId: undo.packId, fields: undo.fields }, ...(undo.dependents || [])];
+  if (DEMO_API_BASE_URL) {
+    try {
+      // The existing work-path save endpoint restores every captured field,
+      // so app mode needs no dedicated undo action on the server.
+      for (const target of targets) {
+        const pack = findPack(target.packId);
+        if (pack) {
+          await saveBackendPackPath(pack, target.fields);
+        }
+      }
+    } catch (error) {
+      console.error("Projects demo backend undo failed.", error);
+      state.status = `Where: Backend undo. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
+      render();
+      return;
+    }
+  } else {
+    for (const target of targets) {
+      const pack = findPack(target.packId);
+      if (pack) {
+        Object.assign(pack, target.fields);
+        addPackActivity(pack, "Undid the last action.");
+      }
+    }
+  }
+  const pack = findPack(undo.packId);
+  state.selectedId = undo.packId;
+  if (pack) {
+    setActionReceipt(pack, `Undo complete. ${workTitle(pack)} is back to its previous state.`);
+  }
+  render();
 }
 
 function proofTargetForPack(pack) {
@@ -5152,9 +5234,11 @@ async function handlePackAction(id, action) {
     return;
   }
 
+  const undoSnapshot = actionUndoSnapshot(pack, action);
   if (SERVER_PACK_ACTIONS.has(action)) {
     try {
       if (await runBackendPackAction(pack, action)) {
+        attachReceiptUndo(undoSnapshot);
         return;
       }
     } catch (error) {
@@ -5174,7 +5258,7 @@ async function handlePackAction(id, action) {
     if (changed) {
       addPackActivity(pack, "Started.");
     }
-    setPackActionConfirmation(pack, "start", changed);
+    setPackActionConfirmation(pack, "start", changed, 0, undoSnapshot);
     go("pack", pack.id);
     return;
   } else if (action === "unblock") {
@@ -5186,7 +5270,7 @@ async function handlePackAction(id, action) {
     if (changed) {
       addPackActivity(pack, "Blocker set to None.");
     }
-    setPackActionConfirmation(pack, "unblock", changed);
+    setPackActionConfirmation(pack, "unblock", changed, 0, undoSnapshot);
     go("pack", pack.id);
     return;
   } else if (action === "block") {
@@ -5198,7 +5282,7 @@ async function handlePackAction(id, action) {
     if (changed) {
       addPackActivity(pack, "Blocked.");
     }
-    setPackActionConfirmation(pack, "block", changed);
+    setPackActionConfirmation(pack, "block", changed, 0, undoSnapshot);
     go("pack", pack.id);
     return;
   } else if (action === "compare") {
@@ -5216,7 +5300,7 @@ async function handlePackAction(id, action) {
     }
     const unblocked = wasDone ? [] : unblockPacksBlockedBy(pack);
     markRecentlyUnblocked(unblocked);
-    setPackActionConfirmation(pack, "done", changed, unblocked.length);
+    setPackActionConfirmation(pack, "done", changed, unblocked.length, undoSnapshot);
     go("pack", pack.id);
     return;
   } else if (action === "focus") {
