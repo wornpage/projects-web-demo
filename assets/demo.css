@@ -6726,3 +6726,9 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-home-methods{margin-top:16px;padding-top:16px;border-top:1px solid var(--cockpit-border)}
 .demo-home-methods h3{font-size:14px;margin-bottom:10px}
+
+/* Boot veil: until the first real render, the command brief, dock, and title
+   are placeholders — mute them so they read as loading, then fade in. */
+.demo-command-brief,.demo-bottom-brief,.demo-screen-title{transition:opacity 0.25s ease}
+.is-booting .demo-command-brief,.is-booting .demo-bottom-brief,.is-booting .demo-screen-title{opacity:0.45}
+.is-booting .demo-command-actions .btn,.is-booting .demo-bottom-item{pointer-events:none}

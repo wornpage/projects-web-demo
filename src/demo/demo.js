@@ -322,8 +322,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     state.ready = true;
     routeFromHash();
     render();
+    liftBootVeil();
     renderDemoSyncControls(launchedSyncCode ? "Sync link active. This device opens shared demo state." : "");
   } catch (error) {
+    liftBootVeil();
     const blocker = DEMO_API_BASE_URL ? "backend API could not load" : "static JSON could not load";
     state.status = routeStatus("Demo", blocker, "refresh");
     updateCommand({
@@ -337,6 +339,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     el("screen-content").innerHTML = `<div class="demo-empty">${escapeHtml(error.message)}</div>`;
   }
 });
+
+function liftBootVeil() {
+  document.querySelector(".demo-app-shell")?.classList.remove("is-booting");
+}
 
 async function loadInitialDemoState() {
   if (DEMO_API_BASE_URL) {
