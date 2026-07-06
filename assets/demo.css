@@ -6732,3 +6732,12 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-command-brief,.demo-bottom-brief,.demo-screen-title{transition:opacity 0.25s ease}
 .is-booting .demo-command-brief,.is-booting .demo-bottom-brief,.is-booting .demo-screen-title{opacity:0.45}
 .is-booting .demo-command-actions .btn,.is-booting .demo-bottom-item{pointer-events:none}
+
+.demo-home-receipts{margin-top:16px;padding-top:16px;border-top:1px solid var(--cockpit-border)}
+.demo-home-receipts h3{font-size:14px;margin-bottom:10px}
+.demo-receipt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.demo-receipt-card{border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);background:var(--cockpit-surface);padding:8px 10px}
+.demo-receipt-card strong{display:block;font-size:13px;margin-bottom:3px}
+.demo-receipt-card p{margin:0;font-size:12px;line-height:1.4;color:var(--cockpit-text-muted)}
+.demo-receipts-honesty{margin:10px 0 0;font-size:12px;color:var(--cockpit-text-muted)}
+.demo-receipts-honesty a{color:var(--cockpit-accent)}

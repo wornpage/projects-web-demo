@@ -2994,6 +2994,27 @@ function focusKindForAction(action, packId = "") {
   return "where";
 }
 
+function homeReceiptsPanel() {
+  return `<div class="demo-home-receipts" aria-label="How this demo is verified">
+    <h3>Built to be checked</h3>
+    <div class="demo-receipt-grid">
+      <div class="demo-receipt-card">
+        <strong>Every button click-tested</strong>
+        <p>CI clicks every enabled button on every screen in a real browser and fails the build if one does nothing.</p>
+      </div>
+      <div class="demo-receipt-card">
+        <strong>Two engines, one contract</strong>
+        <p>The static demo and the optional backend run the same workflow rules, pinned by gate scripts on every push.</p>
+      </div>
+      <div class="demo-receipt-card">
+        <strong>Byte-budgeted</strong>
+        <p>Every public file ships under a size budget; the build fails if the app bloats or leaks internals.</p>
+      </div>
+    </div>
+    <p class="demo-receipts-honesty"><strong>What this demo doesn't prove:</strong> real integrations, auth, or scale. Sample data, no login — by design. <a href="#/terms">Terms</a></p>
+  </div>`;
+}
+
 function renderHome() {
   if (!hasWelcomed()) {
     renderWelcome();
@@ -3047,6 +3068,7 @@ function renderHome() {
           ${renderMethodCards()}
         </div>
       </div>
+      ${homeReceiptsPanel()}
     </section>
   `;
   bindGoButtons();
