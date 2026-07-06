@@ -3032,7 +3032,11 @@ function renderHome() {
   const doneCount = state.packs.filter((p) => p.status === "done").length;
   const overdueCount = state.packs.filter((p) => p.status !== "done" && dueUrgency(p.due) === "overdue").length;
   const dueCount = state.packs.filter((p) => p.status !== "done" && ["today", "soon"].includes(dueUrgency(p.due))).length;
-  const recentActivity = state.packs.flatMap((p) => (p.activity || []).slice(-1).map((e) => ({ pack: p, entry: e }))).slice(-3).reverse();
+  const recentActivity = state.packs
+    .map((p) => ({ pack: p, entry: packActivityDisplay(p)[0] }))
+    .filter((item) => item.entry)
+    .sort((a, b) => (b.entry.at || "").localeCompare(a.entry.at || ""))
+    .slice(0, 3);
 
   el("screen-content").innerHTML = `
     <section class="demo-panel demo-home-hero">
@@ -3051,7 +3055,7 @@ function renderHome() {
       </div>
       ${recentActivity.length ? `<div class="demo-home-activity">
         <h3>Recent activity</h3>
-        ${recentActivity.map((a) => `<p><button type="button" data-action="select" data-pack="${escapeAttribute(a.pack.id)}">${escapeHtml(workTitle(a.pack))}</button> — ${escapeHtml(a.entry)}</p>`).join("")}
+        ${recentActivity.map((a) => `<p><button type="button" data-action="select" data-pack="${escapeAttribute(a.pack.id)}">${escapeHtml(workTitle(a.pack))}</button> — ${escapeHtml(a.entry.text)} <time class="demo-activity-time">${escapeHtml(relativeActivityTime(a.entry.at))}</time></p>`).join("")}
       </div>` : ""}
       <div class="demo-quick-actions demo-secondary-paths" aria-label="Demo actions">
         ${navButton("review", "Review work", "btn btn-primary")}
@@ -4955,12 +4959,47 @@ function addPackActivity(pack, message) {
   }
 
   pack.activity = Array.isArray(pack.activity) ? pack.activity : [];
-  if (pack.activity[0] === copy) {
+  if (activityParts(pack.activity[0]).text === copy) {
     return false;
   }
 
-  pack.activity.unshift(copy);
+  // Same bracketed-UTC-stamp format the server engine writes, so both modes
+  // render relative times from one parser.
+  pack.activity.unshift(`[${new Date().toISOString().replace("T", " ").slice(0, 19)}] ${copy}`);
   return true;
+}
+
+const ACTIVITY_STAMP_RE = /^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] /u;
+
+function activityParts(entry) {
+  const value = typeof entry === "string" ? entry : "";
+  const match = ACTIVITY_STAMP_RE.exec(value);
+  return match ? { text: value.slice(match[0].length), at: match[1] } : { text: value, at: "" };
+}
+
+function relativeActivityTime(at) {
+  const then = at ? new Date(`${at.replace(" ", "T")}Z`) : null;
+  if (!then || Number.isNaN(then.getTime())) {
+    return "earlier";
+  }
+  const mins = Math.round((Date.now() - then.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${MONTHS[then.getMonth()]} ${then.getDate()}`;
+}
+
+function packActivityDisplay(pack) {
+  // Newest first regardless of engine: the client unshifts, the server
+  // appends — the stamp is the shared truth; unstamped legacy entries keep
+  // their relative order at the end.
+  return (pack?.activity || [])
+    .map((entry, index) => ({ ...activityParts(entry), index }))
+    .filter((entry) => entry.text)
+    .sort((a, b) => (b.at || "").localeCompare(a.at || "") || a.index - b.index);
 }
 
 function addPackMemoryNote(pack, note) {
@@ -7370,7 +7409,7 @@ function activityPanel(pack) {
         <h2>Activity record</h2>
       </div>
     </div>
-    <div class="demo-list">${pack.activity.map((item) => `<div class="demo-note">${escapeHtml(item)}</div>`).join("")}</div>
+    <div class="demo-list">${packActivityDisplay(pack).map((item) => `<div class="demo-note"><span>${escapeHtml(item.text)}</span><time class="demo-activity-time">${escapeHtml(relativeActivityTime(item.at))}</time></div>`).join("")}</div>
   </section>`;
 }
 
@@ -8356,11 +8395,13 @@ function truncateTitle(text, max) {
 function renderActivity() {
   const feed = [];
   state.packs.forEach((pack) => {
-    (pack.activity || []).forEach((entry, i) => {
+    packActivityDisplay(pack).forEach((entry) => {
       feed.push({ pack, entry });
     });
   });
-  const recent = feed.slice(-50).reverse();
+  const recent = feed
+    .sort((a, b) => (b.entry.at || "").localeCompare(a.entry.at || ""))
+    .slice(0, 50);
 
   el("screen-content").innerHTML = `
     <section class="demo-panel">
@@ -8376,7 +8417,7 @@ function renderActivity() {
             <span class="demo-activity-dot"></span>
             <div class="demo-activity-body">
               <button class="demo-card-title" type="button" data-action="select" data-pack="${escapeAttribute(item.pack.id)}">${escapeHtml(workTitle(item.pack))}</button>
-              <p>${escapeHtml(item.entry)}</p>
+              <p>${escapeHtml(item.entry.text)} <time class="demo-activity-time">${escapeHtml(relativeActivityTime(item.entry.at))}</time></p>
             </div>
           </div>
         `).join("") : `<p class="demo-field-help">No activity yet. Actions appear here as you work through the demo.</p>`}

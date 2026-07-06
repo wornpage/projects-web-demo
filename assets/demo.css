@@ -6746,3 +6746,6 @@ html[data-theme="dark"] .demo-app-shell {
 time.demo-due-overdue{color:var(--cockpit-danger-text);font-weight:610}
 time.demo-due-today{color:var(--cockpit-warning-text);font-weight:610}
 time.demo-due-soon{color:var(--cockpit-warning-text)}
+
+.demo-activity-time{color:var(--cockpit-text-muted);font-size:11px;white-space:nowrap;margin-left:6px}
+.demo-note{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
