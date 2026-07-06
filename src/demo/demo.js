@@ -4929,6 +4929,34 @@ function normalizeActionReceipt(receipt) {
     return null;
   }
 
+  // Server-engine receipts are shaped {summary, context, pack} with no
+  // structured where/blocker/next fields. Rebuild them from the pack so app
+  // mode renders the same receipt the static engine builds locally — for every
+  // flow (path/next/memory/create). Pack actions overwrite this with a client
+  // receipt that also carries Undo (setBackendActionReceipt), so they're
+  // unaffected.
+  if (receipt.pack && typeof receipt.pack === "object" && !receipt.packId && !receipt.where) {
+    const pack = findPack(receipt.pack.id) || receipt.pack;
+    const outcome = normalizeCopy(receipt.summary);
+    if (!pack?.id || !outcome) {
+      return null;
+    }
+    const command = resolvePrimaryCommandForPack(pack);
+    const workflow = workflowStateForPack(pack, command);
+    return {
+      kind: "action",
+      tone: "success",
+      packId: pack.id,
+      summary: outcome,
+      visibleSummary: visibleCopy(outcome, DEMO_COPY_LIMITS.receiptVisible),
+      where: `${workTitle(pack)} / ${workflow.label}`,
+      blocker: blockerTextForPack(pack),
+      next: command.label,
+      proof: proofTargetForPack(pack),
+      undo: null
+    };
+  }
+
   const summary = normalizeCopy(receipt.summary);
   const visibleSummary = normalizeCopy(receipt.visibleSummary);
   const packId = normalizeCopy(receipt.packId);
