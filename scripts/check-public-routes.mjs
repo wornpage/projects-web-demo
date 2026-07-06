@@ -305,7 +305,8 @@ function dueDateDisplayContractOk() {
     "function dueDateMeta(pack)",
     "function dueDateLabel(value)",
     'const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");',
-    '<time datetime="${date}">${dueDateLabel(date)}</time>',
+    "function dueUrgency(value)",
+    '<time${urgency ? ` class="demo-due-${urgency}"` : ""} datetime="${date}">${label}</time>',
     "${dueDateMeta(pack)}"
   ]) && includesAll(supportSummary, [
     "const due = dueDateLabel(pack?.due);",

@@ -3030,7 +3030,8 @@ function renderHome() {
   }
 
   const doneCount = state.packs.filter((p) => p.status === "done").length;
-  const dueCount = state.packs.filter((p) => p.due && new Date(p.due + "T00:00:00") >= new Date()).length;
+  const overdueCount = state.packs.filter((p) => p.status !== "done" && dueUrgency(p.due) === "overdue").length;
+  const dueCount = state.packs.filter((p) => p.status !== "done" && ["today", "soon"].includes(dueUrgency(p.due))).length;
   const recentActivity = state.packs.flatMap((p) => (p.activity || []).slice(-1).map((e) => ({ pack: p, entry: e }))).slice(-3).reverse();
 
   el("screen-content").innerHTML = `
@@ -3046,7 +3047,7 @@ function renderHome() {
       <div class="demo-insights-grid">
         ${insightCard("Need review", String(reviewCount), `${reviewCount} with blockers`, reviewCount > 0 ? "warn" : "good")}
         ${insightCard("Complete", `${Math.round((doneCount / Math.max(state.packs.length, 1)) * 100)}%`, `${doneCount} finished`, doneCount > 0 ? "good" : "neutral")}
-        ${insightCard("Due soon", String(dueCount), "Upcoming deadlines", dueCount > 0 ? "warn" : "good")}
+        ${insightCard("Due soon", String(overdueCount + dueCount), overdueCount > 0 ? `${overdueCount} overdue` : "Next 7 days", overdueCount + dueCount > 0 ? "warn" : "good")}
       </div>
       ${recentActivity.length ? `<div class="demo-home-activity">
         <h3>Recent activity</h3>
@@ -6906,7 +6907,28 @@ const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
 
 function dueDateMeta(pack) {
   const date = dateFieldValue(pack?.due);
-  return date ? `<time datetime="${date}">${dueDateLabel(date)}</time>` : "<span>No due date</span>";
+  if (!date) {
+    return "<span>No due date</span>";
+  }
+  const urgency = pack?.status === "done" ? "" : dueUrgency(date);
+  const label = urgency === "overdue"
+    ? dueDateLabel(date).replace(/^Due /u, "Overdue — ")
+    : (urgency === "today" ? "Due today" : dueDateLabel(date));
+  return `<time${urgency ? ` class="demo-due-${urgency}"` : ""} datetime="${date}">${label}</time>`;
+}
+
+function dueUrgency(value) {
+  const date = dateFieldValue(value);
+  if (!date) {
+    return "";
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((new Date(`${date}T00:00:00`) - today) / 86400000);
+  if (days < 0) return "overdue";
+  if (days === 0) return "today";
+  if (days <= 7) return "soon";
+  return "";
 }
 
 function dueDateLabel(value) {

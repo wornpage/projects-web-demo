@@ -6741,3 +6741,8 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-receipt-card p{margin:0;font-size:12px;line-height:1.4;color:var(--cockpit-text-muted)}
 .demo-receipts-honesty{margin:10px 0 0;font-size:12px;color:var(--cockpit-text-muted)}
 .demo-receipts-honesty a{color:var(--cockpit-accent)}
+
+/* Due-date urgency: overdue reads as danger, today/this-week as attention. */
+time.demo-due-overdue{color:var(--cockpit-danger-text);font-weight:610}
+time.demo-due-today{color:var(--cockpit-warning-text);font-weight:610}
+time.demo-due-soon{color:var(--cockpit-warning-text)}
