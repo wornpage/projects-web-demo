@@ -3284,7 +3284,7 @@ function workListDisplayPacks(visible) {
     return ordered;
   }
 
-  const ordered = selectedFirstPacks(visible);
+  const ordered = selectedFirstPacks(urgencyFirstPacks(visible));
   workListOrderIds = ordered.map((pack) => pack.id);
   return ordered;
 }
@@ -3347,7 +3347,7 @@ function copyStandup() {
 
 function renderReview() {
   const review = state.packs.filter(isReview);
-  const orderedReview = selectedFirstPacks(review);
+  const orderedReview = selectedFirstPacks(urgencyFirstPacks(review));
   const selected = currentPack();
   const firstReview = selected && review.some((pack) => pack.id === selected.id) ? selected : review[0] || null;
   const reviewButtonReason = "Where: Review. Blocker: no work needs review. Next action: create or edit work.";
@@ -6776,6 +6776,22 @@ function filteredPacks() {
     const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${pack.sources.join(" ")}`.toLowerCase();
     return filterMatch && (!query || haystack.includes(query));
   });
+}
+
+function urgencyFirstPacks(packs) {
+  if (!Array.isArray(packs) || packs.length < 2) {
+    return packs;
+  }
+  const rank = (pack) => {
+    if (pack.status === "done") return 3;
+    const urgency = dueUrgency(pack.due);
+    return urgency === "overdue" ? 0 : (urgency === "today" ? 1 : (urgency === "soon" ? 2 : 3));
+  };
+  // Stable: within the same urgency tier, the existing order is preserved.
+  return packs
+    .map((pack, index) => ({ pack, index, rank: rank(pack) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map((entry) => entry.pack);
 }
 
 function selectedFirstPacks(packs) {
