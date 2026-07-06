@@ -25,7 +25,11 @@ function workTitle(pack) {
 }
 
 function blockerTextForPack(pack) {
-  return validation.normalizeStoredBlocker(pack?.blocker);
+  // Display text, not storage: the stored sentinel is lowercase "none", but
+  // every visible surface (and the client engine) shows "None". This string
+  // ships to the client verbatim in packCommandPreview.
+  const blocker = validation.normalizeStoredBlocker(pack?.blocker);
+  return blocker === constants.DEMO_BLOCKER_NONE ? constants.DEMO_BLOCKER_NONE_LABEL : blocker;
 }
 
 function hasBlocker(pack) {
