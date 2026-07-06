@@ -186,7 +186,10 @@ function ownerBlockerFlowHint(pack) {
 }
 
 function isMissingOwnerValue(value) {
-  return !validation.normalizeText(value, 120) || validation.normalizeText(value, 120).toLowerCase() === "no owner" || validation.normalizeText(value, 120).toLowerCase() === "unowned";
+  // Keep this list identical to src/demo/demo.js isMissingOwnerValue — the
+  // client owner-blocker guide and these flow hints must agree in app mode.
+  const owner = validation.normalizeText(value, 120).toLowerCase();
+  return !owner || owner === "unassigned" || owner === "no owner" || owner === "unowned";
 }
 
 function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPack(pack)) {

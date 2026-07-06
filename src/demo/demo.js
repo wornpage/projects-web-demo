@@ -6001,8 +6001,11 @@ function ownerBlockerNeedsClear() {
 }
 
 function isMissingOwnerValue(owner) {
+  // Keep this list identical to server/src/workflow.js isMissingOwnerValue —
+  // in app mode the backend flow hints and the client owner-blocker guide
+  // must agree on what counts as "no owner".
   const normalizedOwner = normalizeCopy(owner).toLowerCase();
-  return !normalizedOwner || normalizedOwner === "unassigned" || normalizedOwner === "no owner";
+  return !normalizedOwner || normalizedOwner === "unassigned" || normalizedOwner === "no owner" || normalizedOwner === "unowned";
 }
 
 function syncPackDetailValidation(pack) {

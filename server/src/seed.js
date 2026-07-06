@@ -129,10 +129,6 @@ function createBlockedWorkflow(blocker, next) {
   };
 }
 
-function isMissingOwnerValue(value) {
-  return !validation.normalizeText(value, 120) || validation.normalizeText(value, 120).toLowerCase() === "no owner" || validation.normalizeText(value, 120).toLowerCase() === "unowned";
-}
-
 function slugify(value) {
   return validation.normalizeText(value, 120)
     .toLowerCase()
