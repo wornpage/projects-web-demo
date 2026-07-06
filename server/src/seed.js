@@ -110,9 +110,8 @@ function initialWorkflowForCreatedPack(title, owner, next) {
   if (validation.isPlaceholderNext(next)) {
     return createBlockedWorkflow("missing next action", "Choose next action");
   }
-  if (isMissingOwnerValue(owner)) {
-    return createBlockedWorkflow("missing owner", "Fill owner");
-  }
+  // Owner is optional on the create form; it never gates saving. Parity with
+  // the client engine (src/demo/demo.js initialWorkflowForCreatedPack).
   return {
     status: "active",
     blocker: constants.DEMO_BLOCKER_NONE,

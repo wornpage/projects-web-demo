@@ -3584,9 +3584,9 @@ function createReadinessPanel(values, createState) {
       ${homeSpotlightFact("Blocker", blockerDisplayValue(createState.blocker), "create-readiness-blocker")}
       ${homeSpotlightFact("Next action", action.label, "create-readiness-next")}
     </div>
-    <div class="demo-create-readiness-list" aria-label="Required create fields">
+    <div class="demo-create-readiness-list" aria-label="Create fields">
       ${createReadinessStep("Title", values.title, "create-readiness-title")}
-      ${createReadinessStep("Owner", values.owner, "create-readiness-owner")}
+      ${createReadinessStep("Owner", values.owner, "create-readiness-owner", true)}
       ${createReadinessStep("Button", values.next, "create-readiness-button")}
     </div>
     <div class="demo-home-spotlight-actions demo-create-spotlight-actions">
@@ -3596,11 +3596,11 @@ function createReadinessPanel(values, createState) {
   </article>`;
 }
 
-function createReadinessStep(label, value, id) {
+function createReadinessStep(label, value, id, optional = false) {
   const ready = Boolean(normalizeCopy(value));
-  return `<div id="${escapeAttribute(id)}" class="demo-create-readiness-step" data-ready="${ready ? "true" : "false"}">
+  return `<div id="${escapeAttribute(id)}" class="demo-create-readiness-step" data-ready="${ready || optional ? "true" : "false"}">
     <span>${escapeHtml(label)}</span>
-    <strong>${ready ? "Ready" : "Missing"}</strong>
+    <strong>${ready ? "Ready" : (optional ? "Optional" : "Missing")}</strong>
   </div>`;
 }
 
@@ -5706,11 +5706,11 @@ function syncCreateReadinessPanel(values, createState) {
   }
 
   syncCreateReadinessStep("create-readiness-title", values.title);
-  syncCreateReadinessStep("create-readiness-owner", values.owner);
+  syncCreateReadinessStep("create-readiness-owner", values.owner, true);
   syncCreateReadinessStep("create-readiness-button", values.next);
 }
 
-function syncCreateReadinessStep(id, value) {
+function syncCreateReadinessStep(id, value, optional = false) {
   const step = el(id);
   const label = step?.querySelector("strong");
   const ready = Boolean(normalizeCopy(value));
@@ -5718,8 +5718,8 @@ function syncCreateReadinessStep(id, value) {
     return;
   }
 
-  step.dataset.ready = ready ? "true" : "false";
-  label.textContent = ready ? "Ready" : "Missing";
+  step.dataset.ready = ready || optional ? "true" : "false";
+  label.textContent = ready ? "Ready" : (optional ? "Optional" : "Missing");
 }
 
 function syncCreateRouteCommand() {
@@ -6341,10 +6341,9 @@ function initialWorkflowForCreatedPack(title, owner, next) {
     return { status: "draft", blocker: "missing next action" };
   }
 
-  if (isMissingOwnerValue(owner)) {
-    return { status: "draft", blocker: "missing owner" };
-  }
-
+  // Owner is labelled "(optional)" on the create form — it must never gate
+  // saving. Seeded "missing owner" blockers remain a review-path teaching
+  // device, but created work saves owner-less as active.
   return { status: "active", blocker: DEMO_BLOCKER_NONE };
 }
 
@@ -6436,7 +6435,9 @@ function forwardPathChangeSummary(before, after) {
         return "";
       }
 
-      return `${label} to ${sentenceValue(newValue || "blank")}`;
+      // Blocker stores lowercase "none"; every visible surface shows "None".
+      const shown = field === "blocker" ? blockerDisplayValue(newValue) : newValue;
+      return `${label} to ${sentenceValue(shown || "blank")}`;
     })
     .filter(Boolean);
 

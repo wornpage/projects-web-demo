@@ -240,10 +240,10 @@ function createReadinessContractOk() {
     "function createReadinessPanel(values, createState)",
     "Ready to save",
     "homeSpotlightFact(\"Where\", profile().newWork, \"create-readiness-where\")",
-    "function createReadinessStep(label, value, id)",
+    "function createReadinessStep(label, value, id, optional = false)",
     "function syncCreateReadinessPanel(values, createState)",
     "syncCreateReadinessStep(\"create-readiness-title\", values.title)",
-    "syncCreateReadinessStep(\"create-readiness-owner\", values.owner)",
+    "syncCreateReadinessStep(\"create-readiness-owner\", values.owner, true)",
     "syncCreateReadinessStep(\"create-readiness-button\", values.next)",
     "if (runRouteAction(action, button.dataset.pack || \"\"))",
     "bindListActions();"
