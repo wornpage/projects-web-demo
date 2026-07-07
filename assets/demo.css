@@ -6749,3 +6749,8 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 
 .demo-activity-time{color:var(--cockpit-text-muted);font-size:11px;white-space:nowrap;margin-left:6px}
 .demo-note{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+
+/* First-run dashboard nudge: slim, dismissable, three inline steps. */
+.demo-home-tour{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--cockpit-accent);background:var(--cockpit-accent-50);border-radius:var(--cockpit-radius);padding:8px 12px;margin-bottom:14px}
+.demo-home-tour-steps{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;line-height:1.4}
+.demo-home-tour-step b{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;margin-right:5px;border-radius:50%;background:var(--cockpit-accent);color:var(--cockpit-accent-text);font-size:11px;font-weight:610}

@@ -131,6 +131,7 @@ check("first-run welcome door greets new visitors", welcomeDoorContractOk(), "re
 check("dashboard orients newcomers with a lede and a start link", homeOrientingContractOk(), "home lede explains the work model and links to Review");
 check("dashboard leads with a do-this-next hero", homeHeroContractOk(), "home promotes the spotlight as the hero above the stats");
 check("dashboard closes with receipts and an honesty ledger", homeReceiptsContractOk(), "homeReceiptsPanel names the CI proofs and what the demo doesn't prove");
+check("dashboard offers a dismissable first-run nudge", guidedNudgeContractOk(), "guidedNudgePanel shows three steps until dismissed");
 check("nav separates the primary loop from secondary views", navGroupingContractOk(), "nav-sep divides the rail before the calendar/settings/insights/activity group");
 check("settings copy-layer viewer stays legible", copyLayerPanelContractOk(), "copy layer table names the six vocabulary fields and the scenario pairing note");
 check("work-list import keeps its parse-and-load contract", importContractOk(), "import parses pasted work into browser-local packs");
@@ -222,6 +223,16 @@ function homeReceiptsContractOk() {
     "Two engines, one contract",
     "Byte-budgeted",
     "What this demo doesn't prove:"
+  ]);
+}
+
+function guidedNudgeContractOk() {
+  return includesAll(source, [
+    "${guidedNudgePanel()}",
+    "function guidedNudgePanel()",
+    "function tourDismissed()",
+    'id="dismiss-tour"',
+    "every action leaves a receipt you can undo."
   ]);
 }
 

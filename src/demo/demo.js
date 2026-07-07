@@ -5,6 +5,7 @@ const LEGACY_DEMO_STORAGE_KEYS = [
   "projects-static-demo-state-v5"
 ];
 const DEMO_WELCOMED_KEY = "projects-demo-welcomed-v1";
+const DEMO_TOUR_KEY = "projects-demo-tour-done-v1";
 const THEME_STORAGE_KEY = "projects-demo-theme-v3";
 const THEMES = ["light", "dark", "forest", "ocean", "sepia"];
 const THEME_LABELS = { light: "Light", dark: "Dark", forest: "Forest", ocean: "Ocean", sepia: "Sepia" };
@@ -459,6 +460,14 @@ function hasWelcomed() {
 }
 function markWelcomed() {
   try { localStorage.setItem(DEMO_WELCOMED_KEY, "1"); } catch {}
+}
+// First-run dashboard nudge: a slim three-step hint shown until the visitor
+// dismisses it (or acts). Defaults to dismissed if storage is unavailable.
+function tourDismissed() {
+  try { return localStorage.getItem(DEMO_TOUR_KEY) === "1"; } catch { return true; }
+}
+function dismissTour() {
+  try { localStorage.setItem(DEMO_TOUR_KEY, "1"); } catch {}
 }
 
 function purgeLegacyDemoState() {
@@ -3002,6 +3011,20 @@ function focusKindForAction(action, packId = "") {
   return "where";
 }
 
+function guidedNudgePanel() {
+  if (tourDismissed()) {
+    return "";
+  }
+  return `<div class="demo-home-tour" role="note" aria-label="Getting started">
+    <div class="demo-home-tour-steps">
+      <span class="demo-home-tour-step"><b>1</b> Open <button type="button" class="demo-linkish" data-go="review">Review</button> to see what needs a decision.</span>
+      <span class="demo-home-tour-step"><b>2</b> Pick a ${escapeHtml(workNoun(1))} to see its blocker.</span>
+      <span class="demo-home-tour-step"><b>3</b> Run its next action — every action leaves a receipt you can undo.</span>
+    </div>
+    <button type="button" class="btn btn-sm" id="dismiss-tour" title="Hide this getting-started hint." aria-label="Hide getting-started hint">Got it</button>
+  </div>`;
+}
+
 function homeReceiptsPanel() {
   return `<div class="demo-home-receipts" aria-label="How this demo is verified">
     <h3>Built to be checked</h3>
@@ -3054,6 +3077,7 @@ function renderHome() {
           <h2>${state.packs.length} ${escapeHtml(workNoun(state.packs.length))} loaded</h2>
         </div>
       </div>
+      ${guidedNudgePanel()}
       <p class="demo-home-lede">Each card below is one piece of work with an owner, a blocker, a next action, and a proof it's done. Start with <button type="button" class="demo-linkish" data-go="review">Review</button> to see what needs a decision.</p>
       ${homeSpotlightPanel()}
       <div class="demo-insights-grid">
@@ -3088,6 +3112,7 @@ function renderHome() {
   bindMethodCards();
   bindListActions();
   el("reset-demo-home")?.addEventListener("click", () => { if (confirm("Reset all demo data to defaults?")) resetState(); });
+  el("dismiss-tour")?.addEventListener("click", () => { dismissTour(); render(); });
   const bml = el("demo-bookmarklet-link");
   if (bml) {
     bml.href = `javascript:(function(){var u='${location.origin}/'+'#/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href);location.href=u})()`;
@@ -4802,6 +4827,15 @@ function updateActionReceipt() {
   bindCommandReceiptActions(receiptElement);
 }
 
+function isTextEntryTarget(node) {
+  const el = node instanceof Element ? node : null;
+  if (!el) {
+    return false;
+  }
+  const tag = el.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
+}
+
 function receiptUndoAction(receipt, surface = "command") {
   if (!receipt?.undo) {
     return "";
@@ -5029,11 +5063,54 @@ function setBackendActionReceipt(action, undo) {
   setPackActionConfirmation(pack, action, changed, unblockedCount, changed ? undo : null);
 }
 
+// Attach an undo descriptor to whatever receipt is currently showing for the
+// same pack — used by the memory and create flows, whose receipt in app mode
+// comes from the server (via loadState) and in static from set*Confirmation.
+function attachUndoToReceipt(undo) {
+  if (undo && state.actionReceipt && state.actionReceipt.packId === undo.packId) {
+    state.actionReceipt.undo = undo;
+  }
+}
+
+// Persist the current client state and, in app mode, flush it to the server
+// immediately (the whole pack list round-trips through PUT /api/state/browser).
+// Used by undo types that add or remove packs/notes rather than restore fields.
+function persistClientStateNow() {
+  saveState();
+  if (DEMO_API_BASE_URL) {
+    flushBackendStateSave();
+  }
+}
+
 async function undoActionReceipt() {
   const undo = state.actionReceipt?.undo;
   if (!undo) {
     return;
   }
+
+  if (undo.type === "create") {
+    // Remove the just-created work and sync the whole list.
+    state.packs = state.packs.filter((pack) => pack.id !== undo.packId);
+    state.selectedId = state.packs[0]?.id || "";
+    state.actionReceipt = null;
+    state.status = "Undid create. The new work was removed.";
+    persistClientStateNow();
+    go("work");
+    return;
+  }
+
+  if (undo.type === "memory") {
+    const pack = findPack(undo.packId);
+    if (pack) {
+      pack.memory = Array.isArray(undo.memory) ? [...undo.memory] : [];
+      persistClientStateNow();
+      state.selectedId = pack.id;
+      setActionReceipt(pack, `Undo complete. Removed the note from ${workTitle(pack)}.`);
+    }
+    render();
+    return;
+  }
+
   const targets = [{ packId: undo.packId, fields: undo.fields }, ...(undo.dependents || [])];
   if (DEMO_API_BASE_URL) {
     try {
@@ -5152,14 +5229,20 @@ function addPackMemoryNote(pack, note) {
 }
 
 async function savePackMemoryNote(pack, note) {
+  const priorMemory = [...(pack.memory || [])];
+  const memoryUndo = { type: "memory", packId: pack.id, memory: priorMemory };
   try {
     const backendResult = await addBackendPackMemoryNote(pack, note);
     if (backendResult) {
+      attachUndoToReceipt(memoryUndo);
       return backendResult;
     }
 
     const result = addPackMemoryNote(pack, note);
     setMemoryConfirmation(pack, result);
+    if (result.added) {
+      attachUndoToReceipt(memoryUndo);
+    }
     return result;
   } catch (error) {
     console.error("Projects demo backend memory action failed.", error);
@@ -6496,6 +6579,9 @@ async function createSamplePack() {
   try {
     const backendResult = await createBackendPack(values);
     if (backendResult?.pack?.id) {
+      // loadState (inside createBackendPack) surfaced the server's receipt;
+      // attach Undo so the new work can be removed in one click.
+      attachUndoToReceipt({ type: "create", packId: backendResult.pack.id });
       go("pack", backendResult.pack.id);
       return;
     }
@@ -6529,6 +6615,7 @@ async function createSamplePack() {
   state.packs.unshift(pack);
   state.selectedId = pack.id;
   setCreateConfirmation(pack);
+  attachUndoToReceipt({ type: "create", packId: pack.id });
   go("pack", pack.id);
 }
 
@@ -6809,6 +6896,15 @@ function setupCommandPalette() {
     if ((event.metaKey || event.ctrlKey) && (event.key === "k" || event.key === "K")) {
       event.preventDefault();
       openCommandPalette();
+    }
+    // Cmd/Ctrl+Z undoes the last action when a receipt offers it — but never
+    // while the user is editing a field (that's the browser's text undo).
+    if ((event.metaKey || event.ctrlKey) && !event.shiftKey && (event.key === "z" || event.key === "Z")) {
+      if (isTextEntryTarget(event.target) || !state.actionReceipt?.undo) {
+        return;
+      }
+      event.preventDefault();
+      undoActionReceipt();
     }
   });
 
