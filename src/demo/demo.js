@@ -4870,7 +4870,7 @@ function actionReceiptCard(pack) {
 
   const fullSummary = receiptAccessibleSummary(receipt);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
-  return `<div class="demo-card-receipt" data-receipt-surface="card" data-card-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
+  return `<div class="demo-card-receipt" data-receipt-surface="card" data-card-receipt="${escapeAttribute(pack.id)}" role="group" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
     ${receiptCardLines(receipt)}
@@ -4897,7 +4897,7 @@ function routeActionReceiptPanel(visiblePacks, routeLabel) {
   };
   const fullSummary = receiptAccessibleSummary(routeReceipt);
   const visibleSummary = visibleCopy(receipt.visibleSummary || receipt.summary, DEMO_COPY_LIMITS.receiptVisible);
-  return `<div class="demo-card-receipt demo-route-receipt" data-receipt-surface="route" data-route-receipt="${escapeAttribute(pack.id)}" role="status" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
+  return `<div class="demo-card-receipt demo-route-receipt" data-receipt-surface="route" data-route-receipt="${escapeAttribute(pack.id)}" role="group" tabindex="-1" title="${escapeAttribute(fullSummary)}" aria-label="${escapeAttribute(fullSummary)}">
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
     ${receiptCardLines(routeReceipt)}
