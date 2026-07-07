@@ -39,8 +39,10 @@ const FORWARD_PATH_CHANGE_FIELDS = Object.freeze([
 
 const publicStaticFiles = new Set([
   "/index.html",
+  "/landing.html",
   "/assets/demo.css",
   "/assets/demo.js",
+  "/assets/landing.css",
   "/assets/favicon.png",
   "/data/demo-packs.json"
 ]);

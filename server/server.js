@@ -347,6 +347,18 @@ async function serveStaticRequest(request, response, url) {
   const extension = path.extname(file).toLowerCase();
   const contentType = constants.contentTypes[extension] || "application/octet-stream";
 
+  if (isLandingFile(file)) {
+    // The landing page is script-free, so it needs the CSP but not the
+    // runtime-config injection index.html gets.
+    response.writeHead(200, {
+      ...constants.securityHeaders,
+      "content-security-policy": security.contentSecurityPolicy(),
+      "content-type": contentType
+    });
+    response.end(request.method === "HEAD" ? "" : await fs.readFile(file, "utf8"));
+    return;
+  }
+
   if (isIndexFile(file)) {
     const html = injectAppApiBase(await fs.readFile(file, "utf8"));
     response.writeHead(200, {
@@ -425,6 +437,10 @@ function isPublicStaticPathname(pathname) {
 
 function isIndexFile(file) {
   return path.resolve(file) === path.join(ROOT_DIR, "index.html");
+}
+
+function isLandingFile(file) {
+  return path.resolve(file) === path.join(ROOT_DIR, "landing.html");
 }
 
 function injectAppApiBase(html) {
