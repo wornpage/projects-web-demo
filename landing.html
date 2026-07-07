@@ -6,10 +6,10 @@
   <meta name="description" content="Projects: a portfolio demo of a work tracker that reduces any task to where it is, what's blocking it, and what's next. Sample data only, no login.">
   <title>Projects: where it is, what's blocking it, what's next</title>
   <link rel="icon" href="assets/favicon.png" type="image/png">
-  <link rel="stylesheet" href="assets/landing.css?v=recovery-snapshot">
+  <link rel="stylesheet" href="assets/landing.css?v=cockpit-layout">
 </head>
-<body>
-  <a class="lp-skip" href="#idea">Skip to explanation</a>
+<body class="lp">
+  <a class="lp-skip" href="#how">Skip to explanation</a>
 
   <header class="lp-nav" role="banner">
     <a class="lp-brand" href="landing.html" aria-label="Projects home">
@@ -19,111 +19,158 @@
         <small>Portfolio demo</small>
       </span>
     </a>
-    <a class="lp-btn lp-btn-primary" href="index.html">Open the demo <span class="lp-arrow" aria-hidden="true">→</span></a>
+    <nav class="lp-nav-links" aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#checked">What's checked</a>
+    </nav>
+    <a class="lp-btn lp-btn-primary lp-btn-sm" href="index.html">Open the demo <span class="lp-arrow" aria-hidden="true">→</span></a>
   </header>
 
   <main>
+    <!-- HERO -->
     <section class="lp-hero" aria-labelledby="hero-title">
-      <div class="lp-hero-inner">
-        <div class="lp-hero-copy">
-          <span class="lp-kicker">Portfolio demo · sample data</span>
-          <h1 id="hero-title">Where it is.<br>What's blocking it.<br><span class="lp-dim">What's next.</span></h1>
-          <p class="lp-lede">A work tracker that reduces any task to three honest facts, and leaves a receipt for every change, so nothing happens that you can't see or undo.</p>
-          <div class="lp-cta-row">
-            <a class="lp-btn lp-btn-primary" href="index.html">Open the live demo <span class="lp-arrow" aria-hidden="true">→</span></a>
-            <a class="lp-btn" href="#built">How it's built</a>
-          </div>
-          <p class="lp-note"><b>No login. Nothing to install.</b> Everything is sample data in your browser.</p>
+      <div class="lp-hero-copy">
+        <span class="lp-kicker">Portfolio demo · sample data</span>
+        <h1 id="hero-title">Every blocked project, on one screen.</h1>
+        <p class="lp-lede">A work tracker that gathers whatever is waiting on a decision, shows you what's in the way, and names the one next action. No status meetings, no digging — just sample data you can poke at.</p>
+        <div class="lp-cta-row">
+          <a class="lp-btn lp-btn-primary" href="index.html">Open the live demo <span class="lp-arrow" aria-hidden="true">→</span></a>
+          <a class="lp-btn" href="#how">See how it works</a>
         </div>
+        <p class="lp-fine">
+          <span>Sample data only</span>
+          <span class="lp-dot" aria-hidden="true"></span>
+          <span>No login</span>
+          <span class="lp-dot" aria-hidden="true"></span>
+          <span>Runs in your browser</span>
+        </p>
+      </div>
 
-        <div class="lp-specimen" role="img" aria-label="Example work item: Release flyer assets, blocked, waiting on the source folder audit, with its next action and an undoable receipt.">
-          <div class="lp-spec-card">
-            <div class="lp-spec-head">
-              <span class="lp-spec-title">Release flyer assets</span>
-              <span class="lp-pill">Blocked</span>
+      <!-- PRODUCT PREVIEW -->
+      <div class="lp-preview" role="img" aria-label="Review screen: three work items need a decision. Release flyer assets is blocked, waiting on a source folder audit, next action review blocker. Q3 onboarding rewrite is ready, unassigned, next action assign owner. Vendor contract review is done.">
+        <div class="lp-panel">
+          <div class="lp-panel-head">
+            <div>
+              <span class="lp-eyebrow">Review</span>
+              <h2>3 work items need a decision</h2>
             </div>
-            <div class="lp-triad">
-              <div><span>Where</span><strong>Release flyer assets</strong></div>
-              <div class="lp-warn"><span>Blocker</span><strong>Waiting on source audit</strong></div>
-              <div class="lp-next"><span>Next action</span><strong>Review blocker</strong></div>
-            </div>
+            <span class="lp-panel-status">1 owner gap</span>
           </div>
-          <div class="lp-receipt">
-            <div class="lp-receipt-copy">
-              <span>Last result</span>
-              <strong>Blocker cleared for Release flyer assets.</strong>
-            </div>
-            <span class="lp-undo" aria-hidden="true">Undo</span>
+          <div class="lp-cards">
+            <article class="lp-card is-attention">
+              <div class="lp-card-head">
+                <span class="lp-card-title">Release flyer assets</span>
+                <span class="lp-pill lp-pill-warn">Blocked</span>
+              </div>
+              <div class="lp-card-meta"><span>Print shop</span><span>Due Jun 18</span></div>
+              <div class="lp-command">
+                <span>Next action</span>
+                <strong>Review blocker</strong>
+              </div>
+            </article>
+            <article class="lp-card">
+              <div class="lp-card-head">
+                <span class="lp-card-title">Q3 onboarding rewrite</span>
+                <span class="lp-pill lp-pill-accent">Ready</span>
+              </div>
+              <div class="lp-card-meta"><span>Unassigned</span><span>Due Jun 24</span></div>
+              <div class="lp-command">
+                <span>Next action</span>
+                <strong>Assign owner</strong>
+              </div>
+            </article>
+            <article class="lp-card is-done">
+              <div class="lp-card-head">
+                <span class="lp-card-title">Vendor contract review</span>
+                <span class="lp-pill lp-pill-muted">Done</span>
+              </div>
+              <div class="lp-card-meta"><span>Legal</span><span>Closed Jun 12</span></div>
+            </article>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="lp-section" id="idea" aria-labelledby="idea-title">
+    <!-- INSIGHTS: honest facts about the demo, not adoption metrics -->
+    <section class="lp-insights" aria-label="What the demo is">
+      <div class="lp-wrap lp-insight-grid">
+        <div class="lp-insight is-good">
+          <span class="lp-insight-value">1</span>
+          <strong>Next action per item</strong>
+          <small>never a to-do pile</small>
+        </div>
+        <div class="lp-insight">
+          <span class="lp-insight-value">2</span>
+          <strong>Engines, one contract</strong>
+          <small>static demo and backend, identical</small>
+        </div>
+        <div class="lp-insight is-good">
+          <span class="lp-insight-value">107</span>
+          <strong>Button families click-tested</strong>
+          <small>every build, in a real browser</small>
+        </div>
+        <div class="lp-insight is-low">
+          <span class="lp-insight-value">0</span>
+          <strong>Logins or installs</strong>
+          <small>sample data, in your browser</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="lp-how" id="how" aria-labelledby="how-title">
       <div class="lp-wrap">
         <div class="lp-section-head">
-          <h2 id="idea-title">One row, three facts</h2>
-          <p>Most trackers bury the one thing you actually need to decide. Every piece of work here answers the same three questions in the same place, so a glance tells you what to do, not just what exists.</p>
+          <span class="lp-eyebrow">The signature move</span>
+          <h2 id="how-title">Where it is. What's blocking it. What to do next.</h2>
+          <p>Every item reduces to three columns. If the next action is clear, the work moves — that's the whole discipline.</p>
         </div>
-        <div class="lp-idea-grid">
-          <div class="lp-idea-cell">
-            <span class="lp-idea-key">Where</span>
-            <h3>The work itself</h3>
-            <p>The item and the stage it's in, without hunting through columns to find what you're looking at.</p>
-          </div>
-          <div class="lp-idea-cell is-warn">
-            <span class="lp-idea-key">Blocker</span>
-            <h3>What's in the way</h3>
-            <p>Named in plain words and carried in the warning color, so a blocked item never hides as "in progress."</p>
-          </div>
-          <div class="lp-idea-cell is-next">
-            <span class="lp-idea-key">Next action</span>
-            <h3>The one move</h3>
-            <p>The single next step, always runnable from one button. Finished work recedes; the live decision stays loud.</p>
+        <div class="lp-triad-frame">
+          <div class="lp-triad">
+            <div><span>Where</span><strong>Release flyer assets</strong></div>
+            <div class="lp-warn"><span>Blocker</span><strong>Waiting on the source folder audit</strong></div>
+            <div class="lp-next"><span>Next action</span><strong>Review blocker, then hand to Print shop</strong></div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- FEATURES -->
     <section class="lp-section" aria-labelledby="feat-title">
       <div class="lp-wrap">
-        <div class="lp-section-head">
-          <h2 id="feat-title">A demo that behaves like the real thing</h2>
-          <p>It isn't a set of screenshots. It runs two ways from the same rules, and every action you take is reversible.</p>
-        </div>
+        <h2 id="feat-title" class="lp-sr-anchor">How it behaves</h2>
         <div class="lp-feature-row">
           <div class="lp-feature">
-            <h3>Two engines, one contract</h3>
-            <p>The same workflow runs as a pure in-browser demo and against an optional backend. Both follow one set of rules, checked on every change.</p>
-            <ul>
-              <li>Static mode needs no server; open it and it works.</li>
-              <li>App mode persists to a backend with the identical behavior.</li>
-              <li>Gate scripts pin the two engines to the same contract.</li>
-            </ul>
+            <span class="lp-feat-num" aria-hidden="true">1</span>
+            <h3>Attention, not activity</h3>
+            <p>Blocked work carries a warning border and rises to the top. Finished work fades out of the way, so the live decision stays loud.</p>
           </div>
           <div class="lp-feature">
-            <h3>Receipts you can undo</h3>
-            <p>Finish work, clear a blocker, add a note: each action shows a receipt of exactly what changed, right where you clicked.</p>
-            <ul>
-              <li>Every change is stated plainly, not silently applied.</li>
-              <li>One click, or ⌘Z, puts the work back as it was.</li>
-              <li>Undo covers actions, edits, notes, and new work alike.</li>
-            </ul>
+            <span class="lp-feat-num" aria-hidden="true">2</span>
+            <h3>One command per card</h3>
+            <p>No checkbox soup. Each item offers the single next action, and taking it is a click — or a keystroke.</p>
+          </div>
+          <div class="lp-feature">
+            <span class="lp-feat-num" aria-hidden="true">3</span>
+            <h3>Every change leaves a receipt</h3>
+            <p>Finish work, clear a blocker, add a note: each action states exactly what changed, right where you clicked. One click, or ⌘Z, puts it back.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="lp-section lp-built" id="built" aria-labelledby="built-title">
+    <!-- BUILT TO BE CHECKED -->
+    <section class="lp-section lp-built" id="checked" aria-labelledby="checked-title">
       <div class="lp-wrap">
         <div class="lp-section-head">
-          <h2 id="built-title">Built to be checked</h2>
-          <p>The interesting part of a portfolio demo isn't that it looks finished. It's whether it holds up, and this one is wired to prove it does.</p>
+          <span class="lp-eyebrow">Built to be checked</span>
+          <h2 id="checked-title">A demo that's wired to prove it holds up.</h2>
+          <p>The interesting part of a portfolio piece isn't that it looks finished. It's whether it behaves, and this one is built to show its work.</p>
         </div>
         <div class="lp-ledger">
           <div class="lp-ledger-item">
             <strong>Every button click-tested</strong>
-            <p>CI drives a real browser that clicks every enabled control on every screen and fails the build if one does nothing.</p>
+            <p>CI drives a real browser that clicks every enabled control on every screen, and fails the build if one does nothing.</p>
           </div>
           <div class="lp-ledger-item">
             <strong>Two engines pinned together</strong>
@@ -134,15 +181,20 @@
             <p>Public files ship under size budgets, and the build fails if anything internal or oversized leaks out.</p>
           </div>
         </div>
-        <p class="lp-honesty"><b>What this demo doesn't claim:</b> real integrations, authentication, or production scale. It's sample data with no login, by design: a portfolio piece, not a product.</p>
+        <p class="lp-honesty"><b>What this demo doesn't claim:</b> real integrations, authentication, or production scale. It's sample data with no login, by design — a portfolio piece, not a product.</p>
       </div>
     </section>
 
-    <section class="lp-section lp-close" aria-labelledby="close-title">
+    <!-- CTA -->
+    <section class="lp-section lp-cta-wrap" aria-labelledby="cta-title">
       <div class="lp-wrap">
-        <h2 id="close-title">See it move</h2>
-        <p>Start on Review, pick a blocked item, and run its next action. The whole model takes about a minute to feel.</p>
-        <a class="lp-btn lp-btn-primary" href="index.html">Open the live demo <span class="lp-arrow" aria-hidden="true">→</span></a>
+        <div class="lp-cta-banner">
+          <div>
+            <h2 id="cta-title">See the whole model in about a minute.</h2>
+            <p>Start on Review, pick a blocked item, and run its next action. That's the entire idea.</p>
+          </div>
+          <a class="lp-btn lp-btn-oncta" href="index.html">Open the live demo <span class="lp-arrow" aria-hidden="true">→</span></a>
+        </div>
       </div>
     </section>
   </main>
