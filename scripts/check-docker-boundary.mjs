@@ -17,8 +17,10 @@ const runtimeCopyLines = runtimeLines.filter((line) => line.startsWith("COPY "))
 const allowedBuildCopyLines = [
   "COPY server/package*.json ./server/",
   "COPY index.html ./",
+  "COPY landing.html ./",
   "COPY assets/demo.css ./assets/demo.css",
   "COPY assets/demo.js ./assets/demo.js",
+  "COPY assets/landing.css ./assets/landing.css",
   "COPY assets/favicon.png ./assets/favicon.png",
   "COPY data/demo-packs.json ./data/demo-packs.json",
   "COPY src/demo/demo.js ./src/demo/demo.js",
@@ -31,8 +33,10 @@ const allowedBuildCopyLines = [
 const allowedRuntimeCopyLines = [
   "COPY --from=build /app/server/node_modules ./server/node_modules",
   "COPY --from=build /app/index.html ./",
+  "COPY --from=build /app/landing.html ./",
   "COPY --from=build /app/assets/demo.css ./assets/demo.css",
   "COPY --from=build /app/assets/demo.js ./assets/demo.js",
+  "COPY --from=build /app/assets/landing.css ./assets/landing.css",
   "COPY --from=build /app/assets/favicon.png ./assets/favicon.png",
   "COPY --from=build /app/data/demo-packs.json ./data/demo-packs.json",
   "COPY --from=build /app/server/server.js ./server/server.js",
