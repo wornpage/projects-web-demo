@@ -10,9 +10,11 @@ const distRoot = path.join(repoRoot, "dist");
 export const DEFAULT_STATIC_PUBLISH_DIR = path.join(distRoot, "static-publish");
 export const STATIC_PUBLISH_FILES = Object.freeze([
   "index.html",
+  "landing.html",
   ".nojekyll",
   "assets/demo.css",
   "assets/demo.js",
+  "assets/landing.css",
   "assets/favicon.png",
   "data/demo-packs.json"
 ]);

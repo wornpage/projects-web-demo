@@ -1,79 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projects — a work tracker that fits any workflow</title>
-  <meta name="description" content="A lightweight work tracker with pre-built methods for daily ops, prompt engineering, and project work. Open source. No accounts, no vendor lock-in.">
-  <style>
-    :root {
-      --bg: #f8f9fa;
-      --surface: #ffffff;
-      --text: #1a1a2e;
-      --muted: #6b7280;
-      --accent: #1d6f64;
-      --accent-hover: #15564d;
-      --radius: 10px;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.6; }
-    .hero { max-width: 720px; margin: 80px auto 40px; padding: 0 20px; text-align: center; }
-    .hero h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 800; margin-bottom: 12px; }
-    .hero p { color: var(--muted); font-size: 18px; margin-bottom: 24px; }
-    .btn { display: inline-block; padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; text-decoration: none; transition: background 0.12s; }
-    .btn:hover { background: var(--accent-hover); }
-    .btn-outline { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
-    .btn-outline:hover { background: var(--accent); color: #fff; }
-    .methods { max-width: 880px; margin: 0 auto 60px; padding: 0 20px; }
-    .methods h2 { text-align: center; font-size: 24px; margin-bottom: 24px; }
-    .method-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-    .method-card { background: var(--surface); border: 1px solid #e5e7eb; border-radius: var(--radius); padding: 24px; transition: border-color 0.12s, box-shadow 0.12s; }
-    .method-card:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-    .method-icon { font-size: 32px; margin-bottom: 8px; }
-    .method-card h3 { font-size: 17px; margin-bottom: 6px; }
-    .method-card p { font-size: 14px; color: var(--muted); line-height: 1.5; }
-    .footer { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; border-top: 1px solid #e5e7eb; }
-    .footer a { color: var(--accent); text-decoration: none; }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Projects: a portfolio demo of a work tracker that reduces any task to where it is, what's blocking it, and what's next. Sample data only, no login.">
+  <title>Projects: where it is, what's blocking it, what's next</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="assets/landing.css?v=recovery-snapshot">
 </head>
 <body>
-  <section class="hero">
-    <h1>A work tracker that fits any workflow.</h1>
-    <p>Pre-built methods for daily ops, prompt engineering, and project work. Switch methods anytime. Open source. No accounts, no vendor lock-in.</p>
-    <p>
-      <a class="btn" href="https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app/">Try the demo</a>
-      <a class="btn btn-outline" href="https://github.com/jared-bidlow/projects-web-demo">View source</a>
-    </p>
-  </section>
+  <a class="lp-skip" href="#idea">Skip to explanation</a>
 
-  <section class="methods">
-    <h2>Methods</h2>
-    <div class="method-grid">
-      <div class="method-card">
-        <div class="method-icon">🏪</div>
-        <h3>Daily Operations</h3>
-        <p>Restock inventory, process payroll, track maintenance, onboard new hires. Everything a small business manages day to day.</p>
+  <header class="lp-nav" role="banner">
+    <a class="lp-brand" href="landing.html" aria-label="Projects home">
+      <span class="lp-brand-mark" aria-hidden="true">P</span>
+      <span>
+        <strong>Projects</strong>
+        <small>Portfolio demo</small>
+      </span>
+    </a>
+    <a class="lp-btn lp-btn-primary" href="index.html">Open the demo <span class="lp-arrow" aria-hidden="true">→</span></a>
+  </header>
+
+  <main>
+    <section class="lp-hero" aria-labelledby="hero-title">
+      <div class="lp-hero-inner">
+        <div class="lp-hero-copy">
+          <span class="lp-kicker">Portfolio demo · sample data</span>
+          <h1 id="hero-title">Where it is.<br>What's blocking it.<br><span class="lp-dim">What's next.</span></h1>
+          <p class="lp-lede">A work tracker that reduces any task to three honest facts, and leaves a receipt for every change, so nothing happens that you can't see or undo.</p>
+          <div class="lp-cta-row">
+            <a class="lp-btn lp-btn-primary" href="index.html">Open the live demo <span class="lp-arrow" aria-hidden="true">→</span></a>
+            <a class="lp-btn" href="#built">How it's built</a>
+          </div>
+          <p class="lp-note"><b>No login. Nothing to install.</b> Everything is sample data in your browser.</p>
+        </div>
+
+        <div class="lp-specimen" role="img" aria-label="Example work item: Release flyer assets, blocked, waiting on the source folder audit, with its next action and an undoable receipt.">
+          <div class="lp-spec-card">
+            <div class="lp-spec-head">
+              <span class="lp-spec-title">Release flyer assets</span>
+              <span class="lp-pill">Blocked</span>
+            </div>
+            <div class="lp-triad">
+              <div><span>Where</span><strong>Release flyer assets</strong></div>
+              <div class="lp-warn"><span>Blocker</span><strong>Waiting on source audit</strong></div>
+              <div class="lp-next"><span>Next action</span><strong>Review blocker</strong></div>
+            </div>
+          </div>
+          <div class="lp-receipt">
+            <div class="lp-receipt-copy">
+              <span>Last result</span>
+              <strong>Blocker cleared for Release flyer assets.</strong>
+            </div>
+            <span class="lp-undo" aria-hidden="true">Undo</span>
+          </div>
+        </div>
       </div>
-      <div class="method-card">
-        <div class="method-icon">🤖</div>
-        <h3>Prompt Engineering</h3>
-        <p>Build a prompt library, run evals across models, compare outputs, and chain agent workflows. Prove what works before shipping.</p>
+    </section>
+
+    <section class="lp-section" id="idea" aria-labelledby="idea-title">
+      <div class="lp-wrap">
+        <div class="lp-section-head">
+          <h2 id="idea-title">One row, three facts</h2>
+          <p>Most trackers bury the one thing you actually need to decide. Every piece of work here answers the same three questions in the same place, so a glance tells you what to do, not just what exists.</p>
+        </div>
+        <div class="lp-idea-grid">
+          <div class="lp-idea-cell">
+            <span class="lp-idea-key">Where</span>
+            <h3>The work itself</h3>
+            <p>The item and the stage it's in, without hunting through columns to find what you're looking at.</p>
+          </div>
+          <div class="lp-idea-cell is-warn">
+            <span class="lp-idea-key">Blocker</span>
+            <h3>What's in the way</h3>
+            <p>Named in plain words and carried in the warning color, so a blocked item never hides as "in progress."</p>
+          </div>
+          <div class="lp-idea-cell is-next">
+            <span class="lp-idea-key">Next action</span>
+            <h3>The one move</h3>
+            <p>The single next step, always runnable from one button. Finished work recedes; the live decision stays loud.</p>
+          </div>
+        </div>
       </div>
-      <div class="method-card">
-        <div class="method-icon">📋</div>
-        <h3>Project Work</h3>
-        <p>Blocker management, next actions, proof targets, and memory notes. Lightweight enough for one person, structured enough for a team.</p>
+    </section>
+
+    <section class="lp-section" aria-labelledby="feat-title">
+      <div class="lp-wrap">
+        <div class="lp-section-head">
+          <h2 id="feat-title">A demo that behaves like the real thing</h2>
+          <p>It isn't a set of screenshots. It runs two ways from the same rules, and every action you take is reversible.</p>
+        </div>
+        <div class="lp-feature-row">
+          <div class="lp-feature">
+            <h3>Two engines, one contract</h3>
+            <p>The same workflow runs as a pure in-browser demo and against an optional backend. Both follow one set of rules, checked on every change.</p>
+            <ul>
+              <li>Static mode needs no server; open it and it works.</li>
+              <li>App mode persists to a backend with the identical behavior.</li>
+              <li>Gate scripts pin the two engines to the same contract.</li>
+            </ul>
+          </div>
+          <div class="lp-feature">
+            <h3>Receipts you can undo</h3>
+            <p>Finish work, clear a blocker, add a note: each action shows a receipt of exactly what changed, right where you clicked.</p>
+            <ul>
+              <li>Every change is stated plainly, not silently applied.</li>
+              <li>One click, or ⌘Z, puts the work back as it was.</li>
+              <li>Undo covers actions, edits, notes, and new work alike.</li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <div class="method-card">
-        <div class="method-icon">📞</div>
-        <h3>Sales Prospecting</h3>
-        <p>Track leads through your pipeline. Follow-ups, proposals, objections, and closed deals — all in one place.</p>
+    </section>
+
+    <section class="lp-section lp-built" id="built" aria-labelledby="built-title">
+      <div class="lp-wrap">
+        <div class="lp-section-head">
+          <h2 id="built-title">Built to be checked</h2>
+          <p>The interesting part of a portfolio demo isn't that it looks finished. It's whether it holds up, and this one is wired to prove it does.</p>
+        </div>
+        <div class="lp-ledger">
+          <div class="lp-ledger-item">
+            <strong>Every button click-tested</strong>
+            <p>CI drives a real browser that clicks every enabled control on every screen and fails the build if one does nothing.</p>
+          </div>
+          <div class="lp-ledger-item">
+            <strong>Two engines pinned together</strong>
+            <p>Gate scripts assert the static demo and the backend produce the same workflow, on every push.</p>
+          </div>
+          <div class="lp-ledger-item">
+            <strong>Byte-budgeted &amp; sealed</strong>
+            <p>Public files ship under size budgets, and the build fails if anything internal or oversized leaks out.</p>
+          </div>
+        </div>
+        <p class="lp-honesty"><b>What this demo doesn't claim:</b> real integrations, authentication, or production scale. It's sample data with no login, by design: a portfolio piece, not a product.</p>
       </div>
+    </section>
+
+    <section class="lp-section lp-close" aria-labelledby="close-title">
+      <div class="lp-wrap">
+        <h2 id="close-title">See it move</h2>
+        <p>Start on Review, pick a blocked item, and run its next action. The whole model takes about a minute to feel.</p>
+        <a class="lp-btn lp-btn-primary" href="index.html">Open the live demo <span class="lp-arrow" aria-hidden="true">→</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="lp-footer" role="contentinfo">
+    <div class="lp-wrap">
+      <small>Personal portfolio demo — not a commercial product. Sample data only. No login, no private project data, no warranty.</small>
+      <a href="index.html">Open the demo →</a>
     </div>
-  </section>
-
-  <footer class="footer">
-    Personal portfolio demo — not a commercial product. <a href="https://github.com/jared-bidlow/projects-web-demo">Open source</a> under MIT.
   </footer>
 </body>
 </html>

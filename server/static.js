@@ -10,10 +10,18 @@ const PORT = Number(process.env.PREVIEW_PORT || 5181);
 const ROOT_DIR = path.resolve(__dirname, "..");
 const publicStaticFiles = new Set([
   "/index.html",
+  "/landing.html",
   "/assets/demo.css",
   "/assets/demo.js",
+  "/assets/landing.css",
   "/assets/favicon.png",
   "/data/demo-packs.json"
+]);
+// Pages that carry the strict content-security-policy header. The landing page
+// is script-free but gets the same policy so it's held to the app's bar.
+const cspPages = new Set([
+  path.join(ROOT_DIR, "index.html"),
+  path.join(ROOT_DIR, "landing.html")
 ]);
 
 const contentTypes = {
@@ -50,10 +58,10 @@ const server = http.createServer(async (request, response) => {
 
   try {
     const file = await resolveFile(request.url || "/");
-    const isIndex = path.resolve(file) === path.join(ROOT_DIR, "index.html");
+    const sendsCsp = cspPages.has(path.resolve(file));
     response.writeHead(200, {
       ...securityHeaders,
-      ...(isIndex ? { "content-security-policy": contentSecurityPolicy() } : {}),
+      ...(sendsCsp ? { "content-security-policy": contentSecurityPolicy() } : {}),
       "content-type": contentTypes[path.extname(file).toLowerCase()] || "application/octet-stream"
     });
     if (request.method === "HEAD") {
