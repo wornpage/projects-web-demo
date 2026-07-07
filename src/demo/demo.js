@@ -399,6 +399,15 @@ function applyTheme(theme) {
 }
 
 function bindShellControls() {
+  // One delegated handler for every Undo button — the sidecar receipt and the
+  // card receipt that renders right where the action was clicked. Bound once so
+  // a re-render never stacks listeners (which would double-undo).
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("[data-receipt-undo]")) {
+      event.preventDefault();
+      undoActionReceipt();
+    }
+  });
   el("primary-action").addEventListener("click", (event) => {
     const targetPackId = event.currentTarget.dataset.pack || state.selectedId;
     queueFocus(focusKindForAction(event.currentTarget.dataset.action, targetPackId), targetPackId);
@@ -4793,12 +4802,13 @@ function updateActionReceipt() {
   bindCommandReceiptActions(receiptElement);
 }
 
-function receiptUndoAction(receipt) {
+function receiptUndoAction(receipt, surface = "command") {
   if (!receipt?.undo) {
     return "";
   }
+  const cls = surface === "card" ? "demo-card-receipt-actions" : "demo-command-receipt-actions";
   const help = "Puts this work back exactly as it was before the last action.";
-  return `<div class="demo-command-receipt-actions">
+  return `<div class="${cls}">
     <button class="btn btn-sm" type="button" data-receipt-undo title="${escapeAttribute(help)}" aria-label="${escapeAttribute(`Undo. ${help}`)}">Undo</button>
     <small>Restores the previous state of this work.</small>
   </div>`;
@@ -4830,6 +4840,7 @@ function actionReceiptCard(pack) {
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
     ${receiptCardLines(receipt)}
+    ${receiptUndoAction(receipt, "card")}
     ${receiptFollowUpAction(pack, receipt)}
   </div>`;
 }
@@ -4856,6 +4867,7 @@ function routeActionReceiptPanel(visiblePacks, routeLabel) {
     <span>Last result</span>
     <strong>${escapeHtml(visibleSummary)}</strong>
     ${receiptCardLines(routeReceipt)}
+    ${receiptUndoAction(routeReceipt, "card")}
   </div>`;
 }
 
@@ -4909,9 +4921,8 @@ function commandReceiptFollowUpAction(receipt) {
 
 function bindCommandReceiptActions(receiptElement) {
   receiptElement.querySelectorAll("[data-go]").forEach(bindGoButton);
-  receiptElement.querySelector("[data-receipt-undo]")?.addEventListener("click", () => {
-    undoActionReceipt();
-  });
+  // Undo is handled by the delegated document listener in bindShellControls,
+  // shared with the card-level receipt — don't bind it again here.
 }
 
 function receiptAccessibleSummary(receipt) {
