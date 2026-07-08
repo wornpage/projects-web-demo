@@ -923,11 +923,11 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-main {
   display: grid;
-  gap: 16px;
+  gap: 20px;
   margin: 0 auto;
   max-width: 1240px;
   min-width: 0;
-  padding: 16px 24px 104px;
+  padding: 24px 32px 104px;
 }
 
 @media (min-width: 981px) {
