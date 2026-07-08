@@ -3932,11 +3932,14 @@ function renderPackDetail() {
         ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
         ${blockerStateField(pack)}
         ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
-        ${dateField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
-        ${inputField("edit-url", "URL", pack.url, "A link to open from this work item.")}
         ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
-        ${inputField("edit-done-when", `Proof target ${helpTip("The evidence that proves this work is truly done. Describe what 'finished' looks like.")}`, pack.doneWhen, "Describe the evidence needed before this work is done.")}
-        ${textField("edit-purpose", "Why it matters", pack.purpose, "Context for why this work exists.")}
+        <details class="demo-optional-fields"${pack.due || pack.url || pack.doneWhen || pack.purpose ? " open" : ""}>
+          <summary>More options</summary>
+          ${dateField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
+          ${inputField("edit-url", "URL", pack.url, "A link to open from this work item.")}
+          ${inputField("edit-done-when", `Proof target ${helpTip("The evidence that proves this work is truly done. Describe what 'finished' looks like.")}`, pack.doneWhen, "Describe the evidence needed before this work is done.")}
+          ${textField("edit-purpose", "Why it matters", pack.purpose, "Context for why this work exists.")}
+        </details>
       </div>
 
       ${relevantMemoryStrip(pack)}
