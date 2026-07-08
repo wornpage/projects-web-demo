@@ -3157,6 +3157,7 @@ function renderHome() {
       </div>
       <button class="btn btn-sm" type="button" id="export-csv-home" style="margin-top:12px">Export CSV</button>
       <button class="btn btn-sm" type="button" id="copy-standup-home" style="margin-top:4px">Copy standup</button>
+      <button class="btn btn-sm" type="button" id="copy-link-home" style="margin-top:4px">Copy share link</button>
       <button class="btn btn-sm" type="button" id="export-csv-home">Export CSV</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
@@ -3185,6 +3186,10 @@ function renderHome() {
   }
   el("export-csv-home")?.addEventListener("click", exportWorkListCSV);
   el("copy-standup-home")?.addEventListener("click", copyStandup);
+  el("copy-link-home")?.addEventListener("click", () => {
+    const url = `${location.origin}${location.pathname}#/pack/${state.packs[0]?.id || ""}`;
+    navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard.", "success"));
+  });
 }
 
 const WELCOME_METHODS = [
