@@ -4755,7 +4755,7 @@ function handleImagePaste(event) {
   event.preventDefault();
   const reader = new FileReader();
   reader.onload = () => {
-    const img = `<img src="${reader.result}" alt="Pasted" style="max-width:100%">`;
+    const img = `<img src="${reader.result}" alt="Pasted" class="demo-paste-img">`;
     const ta = event.target;
     const start = ta.selectionStart;
     ta.value = ta.value.slice(0, start) + img + ta.value.slice(ta.selectionEnd);

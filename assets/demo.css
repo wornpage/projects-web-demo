@@ -3014,6 +3014,8 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   display: none;
 }
 
+.demo-paste-img { max-width: 100%; }
+
 .demo-card-support {
   border-top: 1px solid var(--cockpit-border);
   margin-top: 10px;
