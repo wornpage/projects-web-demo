@@ -26,9 +26,7 @@
   "use strict";
 
   const DEMO_BLOCKER_NONE = "none";
-  const DEMO_BLOCKER_NONE_LABEL = "None";
   const VALID_PACK_STATUSES = ["active", "blocked", "draft", "done"];
-  const SERVER_PACK_ACTIONS = ["start", "unblock", "block", "done", "open"];
 
   // Collapse whitespace, trim, and cap length. Matches the server's
   // validation.normalizeText so both engines normalize identically.
@@ -99,17 +97,65 @@
     return false;
   }
 
+  // The pure field mutation for each work action, returned as a patch to
+  // Object.assign onto the pack. Call BEFORE mutating — start reads the pack's
+  // current blocker/next. Each engine keeps its own activity copy, change
+  // detection, and receipt/DOM aftermath around this.
+  function packActionEffect(pack, action) {
+    if (action === "start") {
+      return {
+        status: "active",
+        blocker: pack.blocker === "missing setup" ? DEMO_BLOCKER_NONE : pack.blocker,
+        next: isPlaceholderNext(pack.next) ? "Open" : pack.next
+      };
+    }
+    if (action === "unblock") {
+      return { status: "active", blocker: DEMO_BLOCKER_NONE, next: "Open" };
+    }
+    if (action === "block") {
+      return { status: "blocked", blocker: "blocked in this demo", next: "Set Blocker: None" };
+    }
+    if (action === "done") {
+      return { status: "done", blocker: DEMO_BLOCKER_NONE, blockedBy: "" };
+    }
+    return {};
+  }
+
+  // The blocker text a pack carries while waiting on another. `workTitle` is
+  // injected because titles depend on each engine's copy defaults.
+  function blockedByBlockerText(targetPack, workTitle) {
+    return normalizeText(`waiting on ${workTitle(targetPack)}`, 200);
+  }
+
+  // Cascade: clear the blocked-by link on every pack waiting for finishedPack,
+  // recompute its status, and log an activity line. `onActivity(pack, text)` and
+  // `workTitle(pack)` are injected (copy/log seams differ per engine).
+  function unblockPacksBlockedBy(packs, finishedPack, { onActivity, workTitle }) {
+    const unblocked = [];
+    for (const pack of packs) {
+      if (pack.id !== finishedPack.id && pack.blockedBy === finishedPack.id) {
+        pack.blockedBy = "";
+        pack.blocker = DEMO_BLOCKER_NONE;
+        pack.status = forwardPathStatusForBlocker(pack.status, DEMO_BLOCKER_NONE, pack.next);
+        onActivity(pack, `Unblocked: ${workTitle(finishedPack)} finished with proof.`);
+        unblocked.push(pack);
+      }
+    }
+    return unblocked;
+  }
+
   return {
     DEMO_BLOCKER_NONE,
-    DEMO_BLOCKER_NONE_LABEL,
     VALID_PACK_STATUSES,
-    SERVER_PACK_ACTIONS,
     normalizeText,
     normalizeLegacyBlockerCopy,
     normalizeStoredBlocker,
     isUnblockedBlockerValue,
     isPlaceholderNext,
     forwardPathStatusForBlocker,
-    createsBlockedByCycle
+    createsBlockedByCycle,
+    packActionEffect,
+    blockedByBlockerText,
+    unblockPacksBlockedBy
   };
 });

@@ -5394,9 +5394,7 @@ async function handlePackAction(id, action) {
 
   if (action === "start") {
     const before = packActionSignature(pack);
-    pack.status = "active";
-    pack.blocker = pack.blocker === "missing setup" ? DEMO_BLOCKER_NONE : pack.blocker;
-    pack.next = isPlaceholderNext(pack.next) ? "Open" : pack.next;
+    Object.assign(pack, WR.packActionEffect(pack, "start"));
     const changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, "Started.");
@@ -5406,9 +5404,7 @@ async function handlePackAction(id, action) {
     return;
   } else if (action === "unblock") {
     const before = packActionSignature(pack);
-    pack.status = "active";
-    pack.blocker = DEMO_BLOCKER_NONE;
-    pack.next = "Open";
+    Object.assign(pack, WR.packActionEffect(pack, "unblock"));
     const changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, "Blocker set to None.");
@@ -5418,9 +5414,7 @@ async function handlePackAction(id, action) {
     return;
   } else if (action === "block") {
     const before = packActionSignature(pack);
-    pack.status = "blocked";
-    pack.blocker = "blocked in this demo";
-    pack.next = "Set Blocker: None";
+    Object.assign(pack, WR.packActionEffect(pack, "block"));
     const changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, "Blocked.");
@@ -5434,9 +5428,7 @@ async function handlePackAction(id, action) {
   } else if (action === "done") {
     const before = packActionSignature(pack);
     const wasDone = pack.status === "done";
-    pack.status = "done";
-    pack.blocker = DEMO_BLOCKER_NONE;
-    pack.blockedBy = "";
+    Object.assign(pack, WR.packActionEffect(pack, "done"));
     const changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, proofSavedActivity(pack));
@@ -6797,7 +6789,7 @@ function packForwardPathFormValues(pack) {
 }
 
 function blockedByBlockerText(targetPack) {
-  return normalizeCopy(`waiting on ${workTitle(targetPack)}`).slice(0, 200);
+  return WR.blockedByBlockerText(targetPack, workTitle);
 }
 
 function clearDanglingBlockedBy(packs) {
@@ -6813,18 +6805,10 @@ function clearDanglingBlockedBy(packs) {
   return packs;
 }
 
+// Shared cascade (server/src/workflow-rules.js) with this engine's state,
+// activity logger, and workTitle injected.
 function unblockPacksBlockedBy(finishedPack) {
-  const unblocked = [];
-  for (const pack of state.packs) {
-    if (pack.id !== finishedPack.id && pack.blockedBy === finishedPack.id) {
-      pack.blockedBy = "";
-      pack.blocker = DEMO_BLOCKER_NONE;
-      pack.status = forwardPathStatusForBlocker(pack.status, DEMO_BLOCKER_NONE, pack.next);
-      addPackActivity(pack, `Unblocked: ${workTitle(finishedPack)} finished with proof.`);
-      unblocked.push(pack);
-    }
-  }
-  return unblocked;
+  return WR.unblockPacksBlockedBy(state.packs, finishedPack, { onActivity: addPackActivity, workTitle });
 }
 
 // Flag freshly cascaded items so their cards play a one-shot highlight the

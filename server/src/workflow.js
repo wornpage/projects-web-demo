@@ -235,35 +235,30 @@ function runPackAction(state, packId, rawAction) {
   let changed = false;
   let unblockedCount = 0;
 
+  // The field mutations for start/unblock/block/done are shared with the client
+  // via rules.packActionEffect (see server/src/workflow-rules.js). This engine
+  // keeps its own activity copy, change detection, and cascade below.
+  const wasDone = action === "done" && pack.status === "done";
   if (action === "start") {
-    pack.status = "active";
-    pack.blocker = pack.blocker === "missing setup" ? constants.DEMO_BLOCKER_NONE : pack.blocker;
-    pack.next = validation.isPlaceholderNext(pack.next) ? "Open" : pack.next;
+    Object.assign(pack, rules.packActionEffect(pack, "start"));
     changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, "Started.");
     }
   } else if (action === "unblock") {
-    pack.status = "active";
-    pack.blocker = constants.DEMO_BLOCKER_NONE;
-    pack.next = "Open";
+    Object.assign(pack, rules.packActionEffect(pack, "unblock"));
     changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, "Blocker set to None.");
     }
   } else if (action === "block") {
-    pack.status = "blocked";
-    pack.blocker = "blocked in this demo";
-    pack.next = "Set Blocker: None";
+    Object.assign(pack, rules.packActionEffect(pack, "block"));
     changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, "Blocked.");
     }
   } else if (action === "done") {
-    const wasDone = pack.status === "done";
-    pack.status = "done";
-    pack.blocker = constants.DEMO_BLOCKER_NONE;
-    pack.blockedBy = "";
+    Object.assign(pack, rules.packActionEffect(pack, "done"));
     changed = packActionSignature(pack) !== before;
     if (changed) {
       addPackActivity(pack, proofSavedActivity(pack));
@@ -342,8 +337,10 @@ function proofSavedActivity(pack) {
 
 // --- Blocked-by dependencies ---
 
+// Shared blocked-by writers (server/src/workflow-rules.js), with this engine's
+// workTitle and activity logger injected.
 function blockedByBlockerText(targetPack) {
-  return validation.normalizeText(`waiting on ${workTitle(targetPack)}`, 200);
+  return rules.blockedByBlockerText(targetPack, workTitle);
 }
 
 function changePackBlockedByField(state, pack, source, field, label) {
@@ -370,17 +367,7 @@ function changePackBlockedByField(state, pack, source, field, label) {
 }
 
 function unblockPacksBlockedBy(state, finishedPack) {
-  const unblocked = [];
-  for (const pack of state.packs) {
-    if (pack.id !== finishedPack.id && pack.blockedBy === finishedPack.id) {
-      pack.blockedBy = "";
-      pack.blocker = constants.DEMO_BLOCKER_NONE;
-      pack.status = forwardPathStatusForBlocker(pack.status, constants.DEMO_BLOCKER_NONE, pack.next);
-      addPackActivity(pack, `Unblocked: ${workTitle(finishedPack)} finished with proof.`);
-      unblocked.push(pack);
-    }
-  }
-  return unblocked;
+  return rules.unblockPacksBlockedBy(state.packs, finishedPack, { onActivity: addPackActivity, workTitle });
 }
 
 function unblockedReceiptSentence(count) {
