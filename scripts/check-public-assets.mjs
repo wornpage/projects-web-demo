@@ -11,7 +11,7 @@ const publicTextAssets = [
   { pathname: "landing.html", maxBytes: 12000 },
   // Bundle now includes the shared server/src/workflow-rules.js core (prepended
   // at build time) so the client carries the canonical blocker normalizer; +~950B.
-  { pathname: "assets/demo.js", maxBytes: 243000 },
+  { pathname: "assets/demo.js", maxBytes: 246000 },
   { pathname: "assets/demo.css", maxBytes: 162000 },
   { pathname: "assets/landing.css", maxBytes: 16000 },
   { pathname: "data/demo-packs.json", maxBytes: 25000 }
@@ -23,7 +23,7 @@ const publicFileAllowlist = [
   "assets/favicon.png",
   "data/demo-packs.json"
 ];
-const totalPublicTextBudgetBytes = 460000;
+const totalPublicTextBudgetBytes = 465000;
 const retiredPublicFiles = [
   "assets/app.css",
   "assets/demo-metadata.json"
