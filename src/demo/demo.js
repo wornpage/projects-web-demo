@@ -7873,15 +7873,10 @@ function disabledReasonNotice(disabled, reason) {
 }
 
 function activityPanel(pack) {
-  return `<section class="demo-panel">
-    <div class="demo-panel-head">
-      <div>
-        <span class="section-label">Activity</span>
-        <h2>Activity record</h2>
-      </div>
-    </div>
+  return `<details class="demo-activity-panel"${pack.activity?.length ? " open" : ""}>
+    <summary><span class="section-label">Activity</span> <strong>Activity record</strong></summary>
     <div class="demo-list">${packActivityDisplay(pack).map((item) => `<div class="demo-note"><span>${escapeHtml(item.text)}</span><time class="demo-activity-time">${escapeHtml(relativeActivityTime(item.at))}</time></div>`).join("")}</div>
-  </section>`;
+  </details>`;
 }
 
 function bindScenarioCards() {

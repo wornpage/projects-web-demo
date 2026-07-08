@@ -7214,7 +7214,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-toast-hiding{opacity:0;transition:opacity .3s}
 @media print{.demo-sidebar,.demo-bottom-brief,.demo-command-bar,.demo-quick-actions,.demo-secondary-paths,.demo-home-bookmarklet,.demo-home-methods,.demo-sidebar-footer,.demo-toast-container,button,.btn,details summary,header,footer,nav{display:none!important}.demo-screen,.demo-panel{padding:0!important;max-width:100%!important}.demo-work-card,.demo-review-card{break-inside:avoid;border:1px solid #ccc!important;box-shadow:none!important}.demo-card-support[open]{display:block!important}}
 .demo-field-error input,.demo-field-error textarea,.demo-field-error select{border-color:#c0392b!important}
-.demo-optional-fields{margin-top:4px;border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);padding:8px 12px}.demo-optional-fields summary{cursor:pointer;font-size:12px;font-weight:560;color:var(--cockpit-text-muted);padding:2px 0}.demo-optional-fields[open] summary{margin-bottom:8px}
+.demo-optional-fields,.demo-activity-panel{margin-top:4px;border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);padding:8px 12px}.demo-optional-fields summary,.demo-activity-panel summary{cursor:pointer;font-size:12px;font-weight:560;color:var(--cockpit-text-muted);padding:2px 0}.demo-optional-fields[open] summary,.demo-activity-panel[open] summary{margin-bottom:8px}.demo-activity-panel{margin-top:12px}.demo-activity-panel .demo-list{margin-top:0}
 .demo-nav-badge {
   display: inline-flex;
   align-items: center;
