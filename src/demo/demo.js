@@ -3147,6 +3147,7 @@ function renderHome() {
         <a id="demo-bookmarklet-link" class="btn btn-sm" href="#">+ Save to demo</a>
       </div>
       <button class="btn btn-sm" type="button" id="export-csv-home" style="margin-top:12px">Export CSV</button>
+      <button class="btn btn-sm" type="button" id="copy-standup-home" style="margin-top:4px">Copy standup</button>
       <button class="btn btn-sm" type="button" id="export-csv-home">Export CSV</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
@@ -3174,6 +3175,7 @@ function renderHome() {
     });
   }
   el("export-csv-home")?.addEventListener("click", exportWorkListCSV);
+  el("copy-standup-home")?.addEventListener("click", copyStandup);
 }
 
 const WELCOME_METHODS = [
