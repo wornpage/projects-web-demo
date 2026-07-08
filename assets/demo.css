@@ -309,7 +309,7 @@ h3,
   align-items: center;
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
-  border-radius: var(--cockpit-radius);
+  border-radius: 999px;
   color: var(--cockpit-text-secondary);
   cursor: pointer;
   display: inline-flex;
