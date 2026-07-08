@@ -477,7 +477,7 @@ html[data-theme="dark"] .demo-app-shell {
   overflow-y: auto;
   overscroll-behavior: contain;
   position: sticky;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   width: var(--demo-sidebar-width);
 }
 
@@ -841,7 +841,7 @@ html[data-theme="dark"] .demo-header-metadata {
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: auto;
   }
 
   .demo-shell {
@@ -850,7 +850,7 @@ html[data-theme="dark"] .demo-header-metadata {
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: auto;
   }
 
   .demo-main {
