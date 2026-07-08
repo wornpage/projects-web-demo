@@ -1829,20 +1829,27 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-memory-strip {
   align-items: start;
   background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);
+  border: 1px solid transparent;
   border-radius: var(--cockpit-radius);
+  box-shadow: var(--cockpit-shadow-sm);
   color: var(--cockpit-text-secondary);
   display: grid;
-  gap: 5px;
+  gap: 6px;
   grid-template-columns: minmax(0, 1fr) auto;
-  margin: 12px 0;
-  padding: 10px 12px;
+  margin: 8px 0;
+  padding: 12px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .demo-memory-strip.has-memory {
   background: var(--cockpit-selected-bg);
-  border-color: var(--cockpit-accent);
+  border-color: var(--cockpit-border);
   box-shadow: var(--cockpit-shadow-sm);
+}
+
+.demo-memory-strip:hover {
+  border-color: var(--cockpit-border);
+  box-shadow: var(--cockpit-shadow-md);
 }
 
 .demo-memory-strip.is-empty {
@@ -1859,16 +1866,16 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-memory-strip span {
   color: var(--cockpit-text-muted);
   font-size: 11px;
-  font-weight: 610;
-  letter-spacing: 0;
+  font-weight: 550;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
 .demo-memory-strip strong {
   color: var(--cockpit-text);
-  font-size: 14px;
-  font-weight: 580;
-  line-height: 1.25;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
@@ -1896,7 +1903,11 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-memory-action {
   align-self: center;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 550;
   justify-self: end;
+  padding: 4px 12px;
   white-space: nowrap;
 }
 
