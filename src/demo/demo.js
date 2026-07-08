@@ -3224,6 +3224,7 @@ function renderHome() {
       <button class="btn btn-sm" type="button" id="copy-standup-home" style="margin-top:4px">Copy standup</button>
       <button class="btn btn-sm" type="button" id="copy-link-home" style="margin-top:4px">Copy share link</button>
       <button class="btn btn-sm" type="button" id="email-standup-home" style="margin-top:4px">Email standup</button>
+      <button class="btn btn-sm" type="button" id="export-ics-home" style="margin-top:4px">Export .ics</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
         <div class="demo-method-grid">
@@ -3261,6 +3262,7 @@ function renderHome() {
     location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     showToast("Opening email client with standup summary.", "success");
   });
+  el("export-ics-home")?.addEventListener("click", exportICS);
 }
 
 const WELCOME_METHODS = [
@@ -4685,6 +4687,23 @@ function syncEditNextWhat() {
   if (!what || !select) return;
   const command = commandActionForLabel(select.value || "Open");
   what.textContent = `"${command.label}" — ${nextActionWhatText(command)}`;
+}
+
+function exportICS() {
+  const items = state.packs.filter((p) => p.due);
+  if (!items.length) { showToast("No items with due dates.", "error"); return; }
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Projects Demo//EN"];
+  items.forEach((p) => {
+    const date = p.due.replace(/-/g, "");
+    ics.push("BEGIN:VEVENT", `DTSTART;VALUE=DATE:${date}`, `DTEND;VALUE=DATE:${date}`, `SUMMARY:Due: ${p.title}`, `DESCRIPTION:Status: ${p.status}. Owner: ${p.owner}. Next: ${p.next}.`, "END:VEVENT");
+  });
+  ics.push("END:VCALENDAR");
+  const blob = new Blob([ics.join("\r\n")], { type: "text/calendar" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "work-calendar.ics";
+  a.click();
+  showToast(`${items.length} due items exported as .ics.`, "success");
 }
 
 function handleImagePaste(event) {
