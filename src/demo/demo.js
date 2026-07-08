@@ -323,7 +323,7 @@ function showToast(message, type = "info") {
   toast.textContent = message;
   toast.addEventListener("click", () => toast.remove());
   container.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = "0"; toast.style.transition = "opacity 0.3s"; setTimeout(() => toast.remove(), 300); }, 5000);
+  setTimeout(() => { toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); }, 5000);
 }
 
 window.addEventListener("offline", () => showToast("You are offline. Changes save locally.", "error"));

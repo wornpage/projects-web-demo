@@ -6760,3 +6760,4 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-toast-error{background:#c0392b;color:#fff}
 .demo-toast-success{background:var(--cockpit-accent);color:var(--cockpit-accent-text)}
 @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.demo-toast-hiding{opacity:0;transition:opacity .3s}
