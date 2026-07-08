@@ -4291,7 +4291,7 @@ function bindToolbar() {
   if (densityToggle) {
     densityToggle.addEventListener("click", () => {
       state.workListView = state.workListView === "card" ? "landing" : state.workListView === "landing" ? "table" : "card";
-      densityToggle.textContent = state.workListView === "card" ? "▦ Cards" : state.workListView === "landing" ? "▤ Simple" : "☰ List";
+      densityToggle.textContent = state.workListView === "card" ? "▦ Cards" : state.workListView === "landing" ? "▤ Table" : "☰ List";
       densityToggle.setAttribute("aria-pressed", String(state.workListView !== "card"));
       updateWorkListAfterFilter();
     });
