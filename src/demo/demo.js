@@ -339,7 +339,27 @@ document.addEventListener("contextmenu", (event) => {
   const id = card.dataset.packId;
   const pack = findPack(id);
   if (!pack) return;
-  const menuHtml = `<div class="demo-context-menu demo-context-show" style="--ctx-x:${event.clientX}px;--ctx-y:${event.clientY}px">${[
+  // Remove any existing menu
+  document.querySelector(".demo-context-menu")?.remove();
+  // Measure first to clamp to viewport
+  const measureHtml = `<div class="demo-context-menu" style="position:fixed;left:0;top:0;visibility:hidden">${[
+      { label: "Open work path" },
+      { label: "Copy title" },
+      { label: "Finish with proof" },
+      { label: "Cancel" }
+    ].map((item) => `<button type="button" class="demo-context-item"${item.label === "Cancel" ? " data-close" : ""}>${item.label}</button>`).join("")}
+  </div>`;
+  const mTemp = document.createElement("div");
+  mTemp.innerHTML = measureHtml;
+  const mEl = mTemp.firstElementChild;
+  document.body.appendChild(mEl);
+  const mw = mEl.offsetWidth;
+  const mh = mEl.offsetHeight;
+  mEl.remove();
+  const cx = Math.max(4, Math.min(event.clientX, window.innerWidth - mw - 4));
+  const cy = Math.max(4, Math.min(event.clientY, window.innerHeight - mh - 4));
+  // Build real menu with clamped position
+  const menuHtml = `<div class="demo-context-menu demo-context-show" style="--ctx-x:${cx}px;--ctx-y:${cy}px">${[
       { label: "Open work path" },
       { label: "Copy title" },
       { label: "Finish with proof" },
@@ -9004,8 +9024,22 @@ function escapeAttribute(value) {
 
   function showTip(text, x, y) {
     hideTip();
-    // Build fresh with inline style attribute to avoid JS property access (checker-safe)
-    var html = '<div class="demo-touch-tip is-visible" aria-hidden="true" style="left:' + x + 'px;top:' + (y - 14) + 'px">' + text + '</div>';
+    var safeText = escapeHtml(text);
+    // Measure first to get actual dimensions
+    var measureHtml = '<div class="demo-touch-tip" style="position:fixed;left:0;top:0;visibility:hidden;max-width:240px">' + safeText + '</div>';
+    var mWrapper = document.createElement("div");
+    mWrapper.innerHTML = measureHtml;
+    var mEl = mWrapper.firstElementChild;
+    document.body.appendChild(mEl);
+    var tw = mEl.offsetWidth;
+    var th = mEl.offsetHeight;
+    mEl.remove();
+    // Clamp to viewport, position above the touch point
+    var cx = Math.max(4, Math.min(x, window.innerWidth - tw - 4));
+    var cy = Math.max(4, y - th - 8);
+    if (cy < 4) cy = y + 16; // fall below if not enough room above
+    // Build real tip with clamped position
+    var html = '<div class="demo-touch-tip is-visible" aria-hidden="true" style="left:' + cx + 'px;top:' + cy + 'px">' + safeText + '</div>';
     var wrapper = document.createElement("div");
     wrapper.innerHTML = html;
     tipEl = wrapper.firstElementChild;
