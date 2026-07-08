@@ -314,7 +314,6 @@ h3,
   padding: 3px 10px;
 }
 
-.demo-source-list,
 .demo-calendar-grid,
 .demo-row-actions {
   overflow: visible;
@@ -1871,69 +1870,6 @@ html[data-theme="dark"] .demo-header-metadata {
   min-width: min(100%, 220px);
 }
 
-.demo-start-path {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 12px;
-}
-
-.demo-start-step {
-  align-content: start;
-  background: var(--cockpit-bg);
-  border: 1px solid var(--cockpit-border);
-  border-radius: var(--cockpit-radius);
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-  overflow: visible;
-  padding: 12px;
-  position: relative;
-}
-
-.demo-start-step:not(:last-child)::after {
-  background: var(--cockpit-border-strong);
-  content: "";
-  height: 2px;
-  position: absolute;
-  right: -11px;
-  top: 23px;
-  width: 10px;
-}
-
-.demo-start-step > span {
-  align-items: center;
-  background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);
-  border-radius: var(--cockpit-radius-sm);
-  color: var(--cockpit-text-secondary);
-  display: inline-flex;
-  font-size: 12px;
-  font-weight: 680;
-  height: 24px;
-  justify-content: center;
-  width: 24px;
-}
-
-.demo-start-step > strong {
-  color: var(--cockpit-text);
-  font-size: 18px;
-  font-weight: 680;
-  line-height: 1.1;
-}
-
-.demo-start-step > small {
-  color: var(--cockpit-text-secondary);
-  font-size: 13px;
-  font-weight: 520;
-  line-height: 1.35;
-}
-
-.demo-start-step .btn {
-  justify-content: center;
-  margin-top: 2px;
-  width: 100%;
-}
 
 .demo-home-hero {
   display: grid;
@@ -2907,16 +2843,12 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   opacity: 0.78;
 }
 
-.demo-row-actions .demo-support-action,
-.demo-source-list .demo-support-action,
-.demo-calendar-card .demo-support-action {
+.demo-row-actions .demo-support-action {
   align-items: center;
   text-align: center;
 }
 
-.demo-row-actions .demo-support-reason,
-.demo-source-list .demo-support-reason,
-.demo-calendar-card .demo-support-reason {
+.demo-row-actions .demo-support-reason {
   display: none;
 }
 
@@ -3204,11 +3136,7 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-focus-grid,
 .demo-form-grid,
 .demo-profile-grid,
-.demo-board-grid,
-.demo-calendar-grid,
-.demo-source-list,
-.demo-stat-list,
-.demo-check-list {
+.demo-calendar-grid {
   display: grid;
   gap: 12px;
 }
@@ -4561,12 +4489,10 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 
   .demo-grid,
-  .demo-start-path,
   .demo-focus-grid,
   .demo-form-grid,
   .demo-profile-grid,
   .demo-scenario-grid,
-  .demo-board-grid,
   .demo-calendar-grid,
   .demo-stat-row {
     grid-template-columns: 1fr;
@@ -4633,29 +4559,6 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
     min-width: 0;
   }
 
-  .demo-start-step {
-    align-items: center;
-    grid-template-columns: auto minmax(0, 1fr);
-    padding: 10px;
-  }
-
-  .demo-start-step:not(:last-child)::after {
-    bottom: -11px;
-    height: 10px;
-    left: 21px;
-    right: auto;
-    top: auto;
-    width: 2px;
-  }
-
-  .demo-start-step > span {
-    grid-row: 1 / span 3;
-  }
-
-  .demo-start-step > small,
-  .demo-start-step .btn {
-    grid-column: 2;
-  }
 
   .demo-command-line,
   .demo-command-row {
