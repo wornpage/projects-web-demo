@@ -10,6 +10,8 @@ RUN mkdir -p assets data scripts src/demo
 
 COPY index.html ./
 COPY landing.html ./
+COPY sw.js ./
+COPY manifest.json ./
 COPY assets/demo.css ./assets/demo.css
 COPY assets/demo.js ./assets/demo.js
 COPY assets/landing.css ./assets/landing.css
@@ -38,6 +40,8 @@ ENV PROJECTS_STATE_FILE=/app/state/state.json
 COPY --from=build /app/server/node_modules ./server/node_modules
 COPY --from=build /app/index.html ./
 COPY --from=build /app/landing.html ./
+COPY --from=build /app/sw.js ./
+COPY --from=build /app/manifest.json ./
 COPY --from=build /app/assets/demo.css ./assets/demo.css
 COPY --from=build /app/assets/demo.js ./assets/demo.js
 COPY --from=build /app/assets/landing.css ./assets/landing.css
