@@ -35,7 +35,7 @@
   --font-body-weight: 400;
   --font-display-weight: 600;
   --font-label-weight: 550;
-  --demo-sidebar-width: 180px;
+  --demo-sidebar-width: 200px;
 }
 
 html.dark,
@@ -156,7 +156,7 @@ html[data-theme="sepia"] {
 }
 
 body {
-  background: var(--cockpit-bg);
+  background: radial-gradient(ellipse at 50% 0%, var(--cockpit-surface) 0%, var(--cockpit-bg) 70%);
   color: var(--cockpit-text);
   font-family: var(--font-family);
   font-weight: var(--font-body-weight);
