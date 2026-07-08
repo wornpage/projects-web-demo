@@ -330,7 +330,9 @@ function showToast(message, type = "info") {
   toast.textContent = message;
   toast.addEventListener("click", () => toast.remove());
   container.appendChild(toast);
-  setTimeout(() => { toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); }, 5000);
+  const removeToast = () => { toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); };
+  setTimeout(removeToast, 5000);
+  toast._removeToast = removeToast;
 }
 
 window.addEventListener("offline", () => showToast("You are offline. Changes save locally.", "error"));
@@ -394,6 +396,7 @@ document.addEventListener("keydown", (event) => {
   const route = map[event.key.toLowerCase()];
   if (route) { go(route); event.preventDefault(); return; }
   if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work n=Next c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar g=Gantt", "info"); event.preventDefault(); }
+  if (event.key === "Escape") { const toasts = document.querySelectorAll(".demo-toast:not(.demo-toast-hiding)"); if (toasts.length) { toasts[toasts.length - 1]._removeToast?.(); event.preventDefault(); } }
   if (event.key === "Enter" && event.target.closest("#pack-edit-form, .demo-inline-form")) {
     const btn = el("pack-primary-action") || event.target.closest("form")?.querySelector("[type=submit], .btn-primary");
     if (btn) { btn.click(); event.preventDefault(); }
