@@ -3146,6 +3146,8 @@ function renderHome() {
         <small>Bookmarklet — drag to your bookmarks bar, then click on any page to save it:</small>
         <a id="demo-bookmarklet-link" class="btn btn-sm" href="#">+ Save to demo</a>
       </div>
+      <button class="btn btn-sm" type="button" id="export-csv-home" style="margin-top:12px">Export CSV</button>
+      <button class="btn btn-sm" type="button" id="export-csv-home">Export CSV</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
         <div class="demo-method-grid">
@@ -3171,6 +3173,7 @@ function renderHome() {
       render();
     });
   }
+  el("export-csv-home")?.addEventListener("click", exportWorkListCSV);
 }
 
 const WELCOME_METHODS = [
@@ -8727,6 +8730,26 @@ function bindMethodCards() {
       }
     });
   });
+}
+
+function exportWorkListCSV() {
+  const header = "Title,Owner,Status,Blocker,Next action,Due,URL";
+  const rows = state.packs.map((p) => [
+    `"${(p.title || "").replace(/"/g, '""')}"`,
+    p.owner || "",
+    p.status || "",
+    p.blocker || "",
+    p.next || "",
+    p.due || "",
+    p.url || ""
+  ].join(","));
+  const csv = [header, ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "work-list.csv";
+  a.click();
+  showToast("Work list exported as CSV.", "success");
 }
 
 function escapeAttribute(value) {
