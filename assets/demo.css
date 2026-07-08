@@ -2717,6 +2717,7 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-scenario-card:hover {
   border-color: var(--cockpit-border-strong);
   box-shadow: var(--demo-card-hover-shadow);
+  transform: translateY(-1px);
 }
 
 .demo-row:hover {
