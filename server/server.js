@@ -345,7 +345,7 @@ async function serveStaticRequest(request, response, url) {
 
   const file = await resolveStaticFile(pathname);
   const extension = path.extname(file).toLowerCase();
-  const contentType = constants.contentTypes[extension] || "application/octet-stream";
+  const contentType = file.endsWith(path.sep + "manifest.json") ? "application/manifest+json" : (constants.contentTypes[extension] || "application/octet-stream");
 
   if (isLandingFile(file)) {
     // The landing page is script-free, so it needs the CSP but not the
