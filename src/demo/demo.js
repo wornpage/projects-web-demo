@@ -3192,7 +3192,7 @@ function renderHome() {
   el("export-csv-home")?.addEventListener("click", exportWorkListCSV);
   el("copy-standup-home")?.addEventListener("click", copyStandup);
   el("copy-link-home")?.addEventListener("click", () => {
-    const url = `${location.origin}${location.pathname}#/pack/${state.packs[0]?.id || ""}`;
+    const url = `${location.origin}${location.pathname}${location.hash}`;
     navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard.", "success"));
   });
 }
