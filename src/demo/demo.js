@@ -347,8 +347,6 @@ document.addEventListener("contextmenu", (event) => {
     { label: "Cancel", action: null }
   ].map((item) => `<button type="button" class="demo-context-item"${item.action ? "" : " data-close"}>${item.label}</button>`).join("");
   menu.classList.add("demo-context-show");
-  menu.style.setProperty("--ctx-x", event.clientX + "px");
-  menu.style.setProperty("--ctx-y", event.clientY + "px");
   document.body.appendChild(menu);
   menu.querySelectorAll("button").forEach((btn, i) => {
     btn.addEventListener("click", () => {
