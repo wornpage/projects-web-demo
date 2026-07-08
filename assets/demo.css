@@ -205,8 +205,6 @@ html {
 
 ::-webkit-scrollbar-button {
   display: block;
-  width: 12px;
-  height: 12px;
   background: var(--cockpit-nav-bg);
 }
 
