@@ -4266,16 +4266,7 @@ function bindToolbar() {
           const orderedVisible = workListDisplayPacks(visible);
           const emptyHtml = workListEmptyState();
           const itemsHtml = orderedVisible.length ? orderedVisible.map(renderWorkItemHtml).join("") : emptyHtml;
-          if (state.workListView === "table") {
-            listContainer.className = "demo-work-table";
-            listContainer.innerHTML = `<div class="demo-table-header"><span>Title</span><span>Owner</span><span>Status</span><span>Blocker</span><span>Next action</span><span></span></div>${itemsHtml}`;
-          } else if (state.workListView === "landing") {
-            listContainer.className = "demo-work-list demo-work-landing";
-            listContainer.innerHTML = itemsHtml;
-          } else {
-            listContainer.className = "demo-work-list";
-            listContainer.innerHTML = itemsHtml;
-          }
+          renderWorkListContainer(listContainer, itemsHtml);
           bindWorkCards();
           bindTableRows();
         }
@@ -4329,6 +4320,19 @@ function bindToolbar() {
   }
 }
 
+function renderWorkListContainer(listContainer, itemsHtml) {
+  if (state.workListView === "table") {
+    listContainer.className = "demo-work-table";
+    listContainer.innerHTML = "<div class='demo-table-header'><span>Title</span><span>Owner</span><span>Status</span><span>Blocker</span><span>Next action</span><span></span></div>" + itemsHtml;
+  } else if (state.workListView === "landing") {
+    listContainer.className = "demo-work-list demo-work-landing";
+    listContainer.innerHTML = itemsHtml;
+  } else {
+    listContainer.className = "demo-work-list";
+    listContainer.innerHTML = itemsHtml;
+  }
+}
+
 function updateWorkListAfterFilter() {
   const listContainer = document.querySelector(".demo-work-list, .demo-work-table");
   if (listContainer) {
@@ -4336,23 +4340,7 @@ function updateWorkListAfterFilter() {
     const orderedVisible = workListDisplayPacks(visible);
     const emptyHtml = workListEmptyState();
     const itemsHtml = orderedVisible.length ? orderedVisible.map(renderWorkItemHtml).join("") : emptyHtml;
-    if (state.workListView === "table") {
-      listContainer.className = "demo-work-table";
-      listContainer.innerHTML = `<div class="demo-table-header">
-        <span>Title</span>
-        <span>Owner</span>
-        <span>Status</span>
-        <span>Blocker</span>
-        <span>Next action</span>
-        <span></span>
-      </div>${itemsHtml}`;
-    } else if (state.workListView === "landing") {
-      listContainer.className = "demo-work-list demo-work-landing";
-      listContainer.innerHTML = itemsHtml;
-    } else {
-      listContainer.className = "demo-work-list";
-      listContainer.innerHTML = itemsHtml;
-    }
+    renderWorkListContainer(listContainer, itemsHtml);
     bindWorkCards();
     bindTableRows();
     bindListActions();
