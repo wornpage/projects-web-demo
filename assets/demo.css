@@ -6939,9 +6939,25 @@ html[data-theme="dark"] .demo-app-shell {
 }
 
 /* Settings screen */
-.demo-settings-section { margin-top: 14px; }
-.demo-settings-section h3 { margin: 0 0 4px; }
-.demo-settings-section > .demo-field-help { margin: 0 0 4px; }
+.demo-settings-section {
+  margin-top: 0;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--cockpit-border);
+}
+
+.demo-settings-section:last-child {
+  border-bottom: none;
+}
+.demo-settings-section h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.demo-settings-section > .demo-field-help {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--cockpit-text-muted);
+}
 .demo-settings .demo-recovery-panel { margin-top: 14px; }
 .demo-settings .demo-profile-card span { color: var(--cockpit-text-muted); }
 .demo-settings .demo-profile-card[aria-pressed="true"] span { color: inherit; }
