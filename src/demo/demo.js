@@ -8985,7 +8985,7 @@ function renderGantt() {
       <div class="demo-gantt-row">
         <span class="demo-gantt-label">${escapeHtml(workTitle(pack))}</span>
         <div class="demo-gantt-track">
-          <div class="demo-gantt-bar" style="left:${offset * dayWidth}px;width:${width * dayWidth}px;background:${color};opacity:${pack.status === "done" ? "0.4" : "0.85"}"></div>
+          <div class="demo-gantt-bar" style="--bar-left:${offset * dayWidth}px;--bar-width:${width * dayWidth}px;background:${color};opacity:${pack.status === "done" ? "0.4" : "0.85"}"></div>
         </div>
       </div>`;
   }).join("");
@@ -8996,7 +8996,7 @@ function renderGantt() {
       <div class="demo-panel-head"><div><span class="section-label">Timeline</span><h2>Gantt — ${items.length} items with due dates</h2></div></div>
       <div class="demo-gantt-chart" style="overflow-x:auto;max-width:100%">
         <div style="position:relative;width:${(totalDays * dayWidth) + 200}px">
-        <div class="demo-gantt-today" style="left:${todayOffset * dayWidth}px">Today</div>
+        <div class="demo-gantt-today" style="--bar-left:${todayOffset * dayWidth}px">Today</div>
         ${rows}
         </div>
       </div>
