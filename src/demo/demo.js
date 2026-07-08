@@ -6322,6 +6322,15 @@ function syncPackDetailValidation(pack) {
   const saveNote = packDetailSaveNote(stateForSave);
   help.textContent = saveNote;
   help.hidden = !saveNote;
+  // Field-level error highlights
+  ["edit-title","edit-owner","edit-next","edit-due"].forEach((id) => {
+    const field = el(id);
+    if (!field) return;
+    const issue = stateForSave.issues?.find((i) => i.field === id.replace("edit-",""));
+    field.classList.toggle("demo-field-error", Boolean(issue));
+    const helpEl = field.closest("label")?.querySelector(".demo-field-help");
+    if (helpEl) helpEl.textContent = issue?.help || "";
+  });
 }
 
 function blockerModeIssue() {
