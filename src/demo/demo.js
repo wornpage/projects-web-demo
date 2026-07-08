@@ -737,6 +737,21 @@ async function eraseBackendState() {
   }
 }
 
+function parseNaturalLanguage(raw) {
+  const text = (raw || "").trim();
+  if (!text) return {};
+  const result = {};
+  const dueMatch = text.match(/\b(?:due|by)\s+((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2}|\d{4}-\d{2}-\d{2}|tomorrow|today|next\s+\w+)/i);
+  if (dueMatch) { result.due = dueMatch[1]; }
+  const blockerMatch = text.match(/\b(?:blocked\s+by|waiting\s+(?:on|for))\s+(.+?)(?:\s*$|\s+(?:due|by|for)\b)/i);
+  if (blockerMatch) { result.blocker = blockerMatch[1].trim(); }
+  const ownerMatch = text.match(/\b(?:for|by|@)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+  if (ownerMatch) { result.owner = ownerMatch[1].trim(); }
+  const clean = text.replace(dueMatch?.[0] || "", "").replace(blockerMatch?.[0] || "", "").replace(ownerMatch?.[0] || "", "");
+  result.title = clean.replace(/\s+/g, " ").trim() || text;
+  return result;
+}
+
 function parseWorkList(text) {
   const packs = [];
   for (const rawLine of String(text || "").split(/\r?\n/u)) {
@@ -3692,6 +3707,13 @@ function renderCreate() {
         <span class="demo-status">${escapeHtml(persistenceStatusText())}</span>
       </div>
       ${createReadinessPanel(defaults, createState)}
+      <div class="demo-form-grid demo-nl-create">
+        <label class="demo-field demo-nl-field">
+          <span>Quick add ${helpTip("Type naturally: 'Fix espresso machine due July 6 blocked by waiting on parts'")}</span>
+          <input id="nl-create" class="demo-search-input" type="text" placeholder="e.g. 'Restock coffee due Friday blocked by supplier'" autocomplete="off">
+          <small class="demo-field-help" id="nl-create-help">Describe a work item in one sentence — title, due date, and blocker are auto-filled.</small>
+        </label>
+      </div>
       <div class="demo-form-grid">
         ${inputField("new-title", `Title ${helpTip("A short, descriptive name for this work. Keep it specific so you know what it is at a glance.")}`, defaults.title, `Name the ${profile().work} before Save can run.`)}
         ${inputField("new-owner", `Owner (optional) ${helpTip("Who is responsible for moving this forward. Leave blank or write 'unassigned' if unknown.")}`, defaults.owner, "Name the person, team, or role responsible for the next step.")}
@@ -3707,6 +3729,16 @@ function renderCreate() {
   el("create-sample").addEventListener("click", createSamplePack);
   bindCreateValidation();
   el("new-title")?.focus();
+  // Natural language quick-add
+  el("nl-create")?.addEventListener("input", () => {
+    const raw = el("nl-create")?.value || "";
+    const parsed = parseNaturalLanguage(raw);
+    if (parsed.title) el("new-title").value = parsed.title;
+    if (parsed.due) el("new-due").value = parsed.due;
+    if (parsed.blocker) { el("create-blocker-set").click(); el("edit-blocker").value = parsed.blocker; }
+    if (parsed.owner) el("new-owner").value = parsed.owner;
+    bindCreateValidation();
+  });
   bindListActions();
 }
 
