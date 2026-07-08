@@ -78,7 +78,7 @@ try {
     cardLabels.length ? `${cardLabels.length} buttons, blanks: ${cardLabels.filter((l) => !l).length}` : "no run-next buttons found"
   );
 
-  await page.evaluate(() => document.getElementById("density-toggle")?.click());
+  await page.evaluate(() => { document.getElementById("density-toggle")?.click(); document.getElementById("density-toggle")?.click(); });
   await page.waitForTimeout(150);
   const tableLabels = await runNextLabels(page, ".demo-table-row");
   check(
