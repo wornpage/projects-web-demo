@@ -417,8 +417,13 @@ window.addEventListener("hashchange", () => {
 
 function initTheme() {
   const saved = localStorage.getItem(THEME_STORAGE_KEY);
-  const theme = THEMES.includes(saved) ? saved : "light";
+  const theme = THEMES.includes(saved) ? saved
+    : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark"
+    : "light";
   applyTheme(theme);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
+    if (!localStorage.getItem(THEME_STORAGE_KEY)) applyTheme(event.matches ? "dark" : "light");
+  });
   el("theme-toggle").addEventListener("click", () => {
     const current = document.documentElement.dataset.theme || "light";
     const idx = (THEMES.indexOf(current) + 1) % THEMES.length;
