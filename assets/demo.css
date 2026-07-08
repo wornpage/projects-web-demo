@@ -979,7 +979,7 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-toolbar,
 .demo-panel {
   background: var(--demo-panel-bg);
-  border: 1px solid var(--cockpit-border);
+  border: 1px solid transparent;
   border-radius: var(--demo-panel-radius);
   box-shadow: var(--demo-panel-shadow);
   min-width: 0;
@@ -988,7 +988,7 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-toolbar:hover,
 .demo-panel:hover {
-  border-color: var(--cockpit-border-strong);
+  border-color: var(--cockpit-border);
   box-shadow: var(--demo-panel-hover-shadow);
 }
 
