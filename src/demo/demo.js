@@ -345,6 +345,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initTheme();
   purgeLegacyDemoState();
+
+  // Sync state across tabs
+  window.addEventListener("storage", (event) => {
+    if (event.key === DEMO_STORAGE_KEY && event.newValue) {
+      try { const saved = JSON.parse(event.newValue); loadState(saved); render(); showToast("State synced from another tab.", "info"); } catch {}
+    }
+  });
+
   bindShellControls();
   setupCommandPalette();
   bindDemoSyncControls();
