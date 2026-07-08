@@ -559,17 +559,19 @@ html[data-theme="dark"] .demo-app-shell {
   background: var(--cockpit-bg);
 }
 
-.demo-sidebar.nav-rail::-webkit-scrollbar-thumb {
-  background: var(--cockpit-border-strong);
+.demo-sidebar.nav-rail::-webkit-scrollbar-thumb,
+.demo-sidebar.nav-rail::-webkit-scrollbar-thumb:hover {
   border-radius: 4px;
   border: 1px solid transparent;
   background-clip: padding-box;
 }
 
+.demo-sidebar.nav-rail::-webkit-scrollbar-thumb {
+  background: var(--cockpit-border-strong);
+}
+
 .demo-sidebar.nav-rail::-webkit-scrollbar-thumb:hover {
   background: var(--cockpit-text-muted);
-  border: 1px solid transparent;
-  background-clip: padding-box;
 }
 
 .demo-sidebar:focus-visible {
@@ -6706,17 +6708,19 @@ html[data-theme="dark"] .demo-app-shell {
   background: var(--cockpit-bg);
 }
 
-.demo-cmdk-list::-webkit-scrollbar-thumb {
-  background: var(--cockpit-border-strong);
+.demo-cmdk-list::-webkit-scrollbar-thumb,
+.demo-cmdk-list::-webkit-scrollbar-thumb:hover {
   border-radius: 4px;
   border: 1px solid transparent;
   background-clip: padding-box;
 }
 
+.demo-cmdk-list::-webkit-scrollbar-thumb {
+  background: var(--cockpit-border-strong);
+}
+
 .demo-cmdk-list::-webkit-scrollbar-thumb:hover {
   background: var(--cockpit-text-muted);
-  border: 1px solid transparent;
-  background-clip: padding-box;
 }
 .demo-cmdk-item {
   display: flex;
