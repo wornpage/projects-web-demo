@@ -26,8 +26,8 @@
   --cockpit-danger-text: #991b1b;
   --cockpit-radius: 10px;
   --cockpit-radius-sm: 6px;
-  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --cockpit-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.06);
+  --cockpit-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.08);
   --cockpit-focus: var(--cockpit-accent);
   --font-family: "Sitka Text", "Sitka", Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
   --font-family-display: "Sitka Heading", "Sitka Text", "Sitka", Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
@@ -64,7 +64,7 @@ html[data-theme="dark"] {
   --cockpit-danger-bg: #450a0a;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #fecaca;
-  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 html[data-theme="forest"] {
@@ -92,7 +92,7 @@ html[data-theme="forest"] {
   --cockpit-danger-bg: #450a0a;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #fecaca;
-  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 html[data-theme="ocean"] {
@@ -120,7 +120,7 @@ html[data-theme="ocean"] {
   --cockpit-danger-bg: #450a0a;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #fecaca;
-  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 html[data-theme="sepia"] {
@@ -148,7 +148,7 @@ html[data-theme="sepia"] {
   --cockpit-danger-bg: #450a0a;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #fecaca;
-  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 * {
@@ -530,7 +530,7 @@ html[data-theme="dark"] .demo-app-shell {
 }
 
 .demo-sidebar {
-  background: var(--cockpit-nav-bg);
+  background: linear-gradient(180deg, var(--cockpit-nav-bg), color-mix(in srgb, var(--cockpit-nav-bg) 96%, var(--cockpit-bg)));
   border-bottom: 0;
   border-right: 1px solid var(--cockpit-border);
   display: flex;
