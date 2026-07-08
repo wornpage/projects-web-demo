@@ -159,7 +159,7 @@ function checkRecoverySurfaceSource() {
   check("recovery import caps work count", source.includes("const DEMO_STATE_MAX_PACKS = 50") && source.includes("packs.length > DEMO_STATE_MAX_PACKS"), "50 pack cap");
   check("recovery import rejects invalid work items", source.includes("backup work items need an id and title"), "id/title required");
   check("recovery import rejects duplicate work ids", source.includes("backup work item ids must be unique"), "unique ids required");
-  check("recovery import keeps blockedBy references", source.includes("blockedBy: normalizeRecoveryText(source.blockedBy, 120)") && source.includes("clearDanglingBlockedBy(normalizedPacks)"), "blockedBy field with dangling clear");
+  check("recovery import keeps blockedBy references", source.includes("blockedBy: normalizeRecoveryText(source.blockedBy, RECOVERY_ID_MAX_LENGTH)") && source.includes("clearDanglingBlockedBy(normalizedPacks)"), "blockedBy field with dangling clear");
 }
 
 function recoveryPanelStylesOk() {
