@@ -325,6 +325,7 @@ h3,
   background: var(--cockpit-accent-50);
   border-color: var(--cockpit-accent);
   box-shadow: var(--cockpit-shadow-sm);
+  transform: translateY(-1px);
 }
 
 /* Pressed: the button visibly sinks and darkens so every click reads. */

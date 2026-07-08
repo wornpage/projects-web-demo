@@ -115,6 +115,7 @@ p { text-wrap: pretty; }
 
 /* ---- Buttons ---- */
 .lp-btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   display: inline-flex; align-items: center; gap: 8px;
   padding: 11px 20px;
   border: 1px solid var(--border-strong); border-radius: var(--radius);
@@ -123,7 +124,8 @@ p { text-wrap: pretty; }
   text-decoration: none; cursor: pointer;
   transition: background 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease);
 }
-.lp-btn:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+.lp-btn:hover {
+  transform: translateY(-1px); border-color: var(--accent); box-shadow: var(--shadow); }
 .lp-btn:active { transform: translateY(1px); }
 .lp-btn-sm { padding: 8px 15px; font-size: 14px; }
 .lp-btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
