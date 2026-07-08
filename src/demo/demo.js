@@ -3498,12 +3498,16 @@ function workListDisplayPacks(visible) {
   return ordered;
 }
 
+function workListEmptyState() {
+  return state.packs.length === 0
+    ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
+    : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
+}
+
 function renderWork() {
   const visible = filteredPacks();
   const orderedVisible = workListDisplayPacks(visible);
-  const emptyWork = state.packs.length === 0
-    ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
-    : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
+  const emptyWork = workListEmptyState();
   el("screen-content").innerHTML = `
     ${workToolbar(`${workLabelTitle()} filters`)}
     <section class="demo-panel demo-list-panel">
@@ -4256,9 +4260,7 @@ function bindToolbar() {
         if (listContainer) {
           const visible = filteredPacks();
           const orderedVisible = workListDisplayPacks(visible);
-          const emptyHtml = state.packs.length === 0
-            ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
-            : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
+          const emptyHtml = workListEmptyState();
           const itemsHtml = orderedVisible.length ? orderedVisible.map(renderWorkItemHtml).join("") : emptyHtml;
           if (state.workListView === "table") {
             listContainer.className = "demo-work-table";
@@ -4328,9 +4330,7 @@ function updateWorkListAfterFilter() {
   if (listContainer) {
     const visible = filteredPacks();
     const orderedVisible = workListDisplayPacks(visible);
-    const emptyHtml = state.packs.length === 0
-      ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
-      : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
+    const emptyHtml = workListEmptyState();
     const itemsHtml = orderedVisible.length ? orderedVisible.map(renderWorkItemHtml).join("") : emptyHtml;
     if (state.workListView === "table") {
       listContainer.className = "demo-work-table";
