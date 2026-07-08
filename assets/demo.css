@@ -4024,22 +4024,24 @@ html[data-theme="dark"] .demo-command-work-path {
 
 .demo-bottom-item {
   background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);
-  border-radius: var(--cockpit-radius-sm);
+  border: 1px solid transparent;
+  border-radius: var(--cockpit-radius);
+  box-shadow: var(--cockpit-shadow-sm);
   color: var(--cockpit-text);
   display: grid;
   gap: 3px;
   min-width: 0;
-  padding: 9px 10px;
+  padding: 10px 12px;
   text-align: left;
   text-decoration: none;
   touch-action: manipulation;
-  transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 .demo-bottom-item:hover {
-  border-color: var(--cockpit-border-strong);
-  background: var(--cockpit-hover-bg);
+  border-color: var(--cockpit-border);
+  box-shadow: var(--cockpit-shadow-md);
+  transform: translateY(-1px);
 }
 
 .demo-bottom-item:focus-visible {
