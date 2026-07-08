@@ -64,7 +64,7 @@ const server = http.createServer(async (request, response) => {
     response.writeHead(200, {
       ...securityHeaders,
       ...(sendsCsp ? { "content-security-policy": contentSecurityPolicy() } : {}),
-      "content-type": contentTypes[path.extname(file).toLowerCase()] || "application/octet-stream"
+      "content-type": file.endsWith(path.sep + "manifest.json") ? "application/manifest+json" : (contentTypes[path.extname(file).toLowerCase()] || "application/octet-stream")
     });
     if (request.method === "HEAD") {
       response.end();
