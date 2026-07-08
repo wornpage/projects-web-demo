@@ -3989,11 +3989,13 @@ html[data-theme="dark"] .demo-command-work-path {
 }
 
 .demo-bottom-brief {
-  background: var(--cockpit-bg);
-  border: 1px solid var(--cockpit-border);
+  background: color-mix(in srgb, var(--cockpit-surface) 90%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid transparent;
   border-radius: var(--cockpit-radius);
   bottom: 16px;
-  box-shadow: none;
+  box-shadow: var(--cockpit-shadow-md);
   display: grid;
   gap: 6px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
