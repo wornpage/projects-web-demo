@@ -2034,6 +2034,7 @@ function navItemMarkup(route) {
     <a class="demo-nav-item nav-rail-btn" href="${escapeAttribute(formatRouteHash(route))}" data-route="${route}">
       <span class="nav-rail-icon" aria-hidden="true">${escapeHtml(contract.navKey)}</span>
       <strong>${escapeHtml(contract.navLabel)}</strong>
+      ${navBadge(contract.route)}
     </a>
   `;
 }
@@ -7242,6 +7243,16 @@ function metricCard(label, value, note) {
     <strong class="demo-summary-value">${escapeHtml(value)}</strong>
     <p>${escapeHtml(note)}</p>
   </section>`;
+}
+
+function navBadge(route) {
+  const now = new Date();
+  const counts = {
+    review: state.packs.filter(isReview).length,
+    calendar: state.packs.filter((p) => p.due && new Date(p.due + "T00:00:00") >= now && new Date(p.due + "T00:00:00") - now < 7 * 86400000).length
+  };
+  const count = counts[route] || 0;
+  return count > 0 ? `<span class="demo-nav-badge" aria-label="${count} ${route === "review" ? "need review" : "due this week"}">${count}</span>` : "";
 }
 
 function navButton(route, label, className = "btn") {
