@@ -390,10 +390,10 @@ document.addEventListener("contextmenu", (event) => {
 // Keyboard shortcuts
 document.addEventListener("keydown", (event) => {
   if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA" || event.target.tagName === "SELECT" || event.metaKey || event.ctrlKey) return;
-  const map = { "h": "home", "r": "review", "w": "work", "c": "create", "m": "memory", "s": "settings", "i": "insights", "a": "activity", "t": "calendar", "?": null };
+  const map = { "h": "home", "r": "review", "w": "work", "n": "next", "c": "create", "m": "memory", "s": "settings", "i": "insights", "a": "activity", "t": "calendar", "g": "gantt", "?": null };
   const route = map[event.key.toLowerCase()];
   if (route) { go(route); event.preventDefault(); return; }
-  if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar", "info"); event.preventDefault(); }
+  if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work n=Next c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar g=Gantt", "info"); event.preventDefault(); }
   if (event.key === "Enter" && event.target.closest("#pack-edit-form, .demo-inline-form")) {
     const btn = el("pack-primary-action") || event.target.closest("form")?.querySelector("[type=submit], .btn-primary");
     if (btn) { btn.click(); event.preventDefault(); }
@@ -518,7 +518,7 @@ function applyTheme(theme) {
   const nextIdx = (THEMES.indexOf(theme) + 1) % THEMES.length;
   const nextTheme = THEMES[nextIdx];
   const help = `Switch to ${THEME_LABELS[nextTheme]} theme.`;
-  toggle.textContent = THEME_LABELS[theme];
+  toggle.textContent = "Theme";
   toggle.setAttribute("aria-pressed", String(theme !== "light"));
   toggle.setAttribute("title", help);
   toggle.setAttribute("aria-label", `Theme: ${THEME_LABELS[theme]}. ${help}`);
