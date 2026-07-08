@@ -114,6 +114,7 @@ const ROUTE_CONTRACT = Object.freeze({
   settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "⚙", navLabel: "Settings" },
   insights: { pattern: "#/insights", title: "Insights", commandSource: "route", navKey: "📊", navLabel: "Insights" },
   activity: { pattern: "#/activity", title: "Activity", commandSource: "route", navKey: "📋", navLabel: "Activity" },
+  gantt: { pattern: "#/gantt", title: "Timeline", commandSource: "route", navKey: "📊", navLabel: "Gantt" },
   terms: { pattern: "#/terms", title: "Terms & Privacy", commandSource: "route" }
 });
 
@@ -2298,6 +2299,9 @@ function render() {
       break;
     case "activity":
       renderActivity();
+      break;
+    case "gantt":
+      renderGantt();
       break;
     case "terms":
       renderTerms();
@@ -8899,6 +8903,43 @@ function exportWorkListCSV() {
   a.download = "work-list.csv";
   a.click();
   showToast("Work list exported as CSV.", "success");
+}
+
+function renderGantt() {
+  const now = new Date();
+  const items = state.packs.filter((p) => p.due).sort((a, b) => new Date(a.due + "T00:00:00") - new Date(b.due + "T00:00:00"));
+  const today = now.toISOString().slice(0, 10);
+  // Find date range
+  const dates = items.map((p) => new Date(p.due + "T00:00:00"));
+  const minDate = new Date(Math.min(now.getTime(), ...dates.map((d) => d.getTime())));
+  const maxDate = new Date(Math.max(now.getTime(), ...dates.map((d) => d.getTime())));
+  const totalDays = Math.max(1, Math.ceil((maxDate - minDate) / 86400000)) + 3;
+  const dayWidth = Math.max(20, Math.floor(680 / totalDays));
+
+  const rows = items.map((pack) => {
+    const due = new Date(pack.due + "T00:00:00");
+    const offset = Math.max(0, Math.ceil((due - minDate) / 86400000));
+    const width = Math.max(1, Math.ceil((due - now) / 86400000) + 1);
+    const color = pack.status === "done" ? "var(--cockpit-accent)" : pack.status === "blocked" ? "#c18642" : "var(--cockpit-accent)";
+    return `
+      <div class="demo-gantt-row">
+        <span class="demo-gantt-label">${escapeHtml(workTitle(pack))}</span>
+        <div class="demo-gantt-track">
+          <div class="demo-gantt-bar" style="left:${offset * dayWidth}px;width:${width * dayWidth}px;background:${color};opacity:${pack.status === "done" ? "0.4" : "0.85"}"></div>
+        </div>
+      </div>`;
+  }).join("");
+
+  const todayOffset = Math.max(0, Math.ceil((now - minDate) / 86400000));
+  el("screen-content").innerHTML = `
+    <section class="demo-panel">
+      <div class="demo-panel-head"><div><span class="section-label">Timeline</span><h2>Gantt — ${items.length} items with due dates</h2></div></div>
+      <div class="demo-gantt-chart">
+        <div class="demo-gantt-today" style="left:${todayOffset * dayWidth}px">Today</div>
+        ${rows}
+      </div>
+    </section>
+  `;
 }
 
 function escapeAttribute(value) {
