@@ -2084,7 +2084,7 @@ html[data-theme="dark"] .demo-header-metadata {
 .demo-review-spotlight,
 .demo-create-spotlight {
   background: var(--demo-card-bg);
-  border: 1px solid var(--demo-card-border);
+  border: 1px solid transparent;
   border-radius: var(--demo-panel-radius);
   box-shadow: var(--demo-card-shadow);
   display: grid;
@@ -2096,6 +2096,7 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-home-hero .demo-home-spotlight {
   border-color: var(--cockpit-accent);
+  box-shadow: var(--cockpit-shadow-md);
   background: var(--cockpit-selected-bg);
   box-shadow: var(--cockpit-shadow-sm);
   padding: 16px;
