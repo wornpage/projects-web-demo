@@ -7303,3 +7303,5 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
   opacity: 1;
   transform: translateY(0);
 }
+.demo-home-action { margin-top: 4px; }
+.demo-home-action-first { margin-top: 12px; }

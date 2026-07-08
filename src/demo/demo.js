@@ -3249,12 +3249,12 @@ function renderHome() {
         <small>Bookmarklet — drag to your bookmarks bar, then click on any page to save it:</small>
         <a id="demo-bookmarklet-link" class="btn btn-sm" href="#">+ Save to demo</a>
       </div>
-      <button class="btn btn-sm" type="button" id="export-csv-home" style="margin-top:12px">Export CSV</button>
-      <button class="btn btn-sm" type="button" id="copy-standup-home" style="margin-top:4px">Copy standup</button>
-      <button class="btn btn-sm" type="button" id="copy-link-home" style="margin-top:4px">Copy share link</button>
-      <button class="btn btn-sm" type="button" id="email-standup-home" style="margin-top:4px">Email standup</button>
-      <button class="btn btn-sm" type="button" id="export-ics-home" style="margin-top:4px">Export .ics</button>
-      <button class="btn btn-sm" type="button" id="speak-home" style="margin-top:4px">🔊 Read aloud</button>
+      <button class="btn btn-sm demo-home-action-first" type="button" id="export-csv-home">Export CSV</button>
+      <button class="btn btn-sm demo-home-action" type="button" id="copy-standup-home">Copy standup</button>
+      <button class="btn btn-sm demo-home-action" type="button" id="copy-link-home">Copy share link</button>
+      <button class="btn btn-sm demo-home-action" type="button" id="email-standup-home">Email standup</button>
+      <button class="btn btn-sm demo-home-action" type="button" id="export-ics-home">Export .ics</button>
+      <button class="btn btn-sm demo-home-action" type="button" id="speak-home">🔊 Read aloud</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
         <div class="demo-method-grid">
@@ -8973,39 +8973,37 @@ function renderGantt() {
   const now = new Date();
   const items = state.packs.filter((p) => p.due).sort((a, b) => new Date(a.due + "T00:00:00") - new Date(b.due + "T00:00:00"));
   const today = now.toISOString().slice(0, 10);
-  // Find date range
   const dates = items.map((p) => new Date(p.due + "T00:00:00"));
   const minDate = new Date(Math.min(now.getTime(), ...dates.map((d) => d.getTime())));
   const maxDate = new Date(Math.max(now.getTime(), ...dates.map((d) => d.getTime())));
   const totalDays = Math.max(1, Math.ceil((maxDate - minDate) / 86400000)) + 3;
   const dayWidth = Math.max(20, Math.floor(680 / totalDays));
+  const todayOffset = Math.max(0, Math.ceil((now - minDate) / 86400000));
 
-  const rows = items.map((pack) => {
+  // Build CSS via Constructed Stylesheet (bypasses CSP, no inline styles or .style access)
+  const sheet = new CSSStyleSheet();
+  sheet.insertRule(".demo-gantt-today[data-gantt-today] { --bar-left:" + (todayOffset * dayWidth) + "px; }");
+  sheet.insertRule("[data-gantt-inner] { position:relative;width:" + ((totalDays * dayWidth) + 200) + "px; }");
+
+  const rows = items.map(function (pack) {
     const due = new Date(pack.due + "T00:00:00");
     const offset = Math.max(0, Math.ceil((due - minDate) / 86400000));
     const width = Math.max(1, Math.ceil((due - now) / 86400000) + 1);
     const color = pack.status === STATUS.DONE ? "var(--cockpit-accent)" : pack.status === STATUS.BLOCKED ? "#c18642" : "var(--cockpit-accent)";
-    return `
-      <div class="demo-gantt-row">
-        <span class="demo-gantt-label">${escapeHtml(workTitle(pack))}</span>
-        <div class="demo-gantt-track">
-          <div class="demo-gantt-bar" style="--bar-left:${offset * dayWidth}px;--bar-width:${width * dayWidth}px;background:${color};opacity:${pack.status === STATUS.DONE ? "0.4" : "0.85"}"></div>
-        </div>
-      </div>`;
+    const opacity = pack.status === STATUS.DONE ? "0.4" : "0.85";
+    const sel = '.demo-gantt-bar[data-gantt-bar="' + escapeHtml(pack.id).replace(/"/g, "\\\"") + '"]';
+    sheet.insertRule(sel + " { --bar-left:" + (offset * dayWidth) + "px;--bar-width:" + (width * dayWidth) + "px;background:" + color + ";opacity:" + opacity + "; }");
+    return '<div class="demo-gantt-row"><span class="demo-gantt-label">' + escapeHtml(workTitle(pack)) + '</span><div class="demo-gantt-track"><div class="demo-gantt-bar" data-gantt-bar="' + escapeAttribute(pack.id) + '"></div></div></div>';
   }).join("");
 
-  const todayOffset = Math.max(0, Math.ceil((now - minDate) / 86400000));
-  el("screen-content").innerHTML = `
-    <section class="demo-panel">
-      <div class="demo-panel-head"><div><span class="section-label">Timeline</span><h2>Gantt — ${items.length} items with due dates</h2></div></div>
-      <div class="demo-gantt-chart" style="overflow-x:auto;max-width:100%">
-        <div style="position:relative;width:${(totalDays * dayWidth) + 200}px">
-        <div class="demo-gantt-today" style="--bar-left:${todayOffset * dayWidth}px">Today</div>
-        ${rows}
-        </div>
-      </div>
-    </section>
-  `;
+  // Replace any previous gantt sheet
+  if (window._ganttSheet) {
+    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(function (s) { return s !== window._ganttSheet; });
+  }
+  window._ganttSheet = sheet;
+  document.adoptedStyleSheets = document.adoptedStyleSheets.concat(sheet);
+
+  el("screen-content").innerHTML = '<section class="demo-panel"><div class="demo-panel-head"><div><span class="section-label">Timeline</span><h2>Gantt — ' + items.length + ' items with due dates</h2></div></div><div class="demo-gantt-chart"><div data-gantt-inner><div class="demo-gantt-today" data-gantt-today>Today</div>' + rows + '</div></div></section>';
 }
 
 function escapeAttribute(value) {
