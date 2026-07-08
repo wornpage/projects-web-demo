@@ -21,9 +21,7 @@ const publicFileAllowlist = [
   "assets/demo.js",
   "assets/landing.css",
   "assets/favicon.png",
-  "data/demo-packs.json",
-  "manifest.json",
-  "sw.js"
+  "data/demo-packs.json"
 ];
 const totalPublicTextBudgetBytes = 460000;
 const retiredPublicFiles = [
