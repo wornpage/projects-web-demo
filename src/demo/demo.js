@@ -329,6 +329,15 @@ function showToast(message, type = "info") {
 window.addEventListener("offline", () => showToast("You are offline. Changes save locally.", "error"));
 window.addEventListener("online", () => showToast("Back online.", "success"));
 
+// Keyboard shortcuts
+document.addEventListener("keydown", (event) => {
+  if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA" || event.target.tagName === "SELECT" || event.metaKey || event.ctrlKey) return;
+  const map = { "h": "home", "r": "review", "w": "work", "c": "create", "m": "memory", "s": "settings", "i": "insights", "a": "activity", "t": "calendar", "?": null };
+  const route = map[event.key.toLowerCase()];
+  if (route) { go(route); event.preventDefault(); return; }
+  if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar", "info"); event.preventDefault(); }
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
   if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
