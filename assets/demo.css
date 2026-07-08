@@ -24,9 +24,10 @@
   --cockpit-danger-bg: #fef2f2;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #991b1b;
-  --cockpit-radius: 8px;
-  --cockpit-radius-sm: 4px;
-  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --cockpit-radius: 10px;
+  --cockpit-radius-sm: 6px;
+  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --cockpit-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
   --cockpit-focus: var(--cockpit-accent);
   --font-family: "Sitka Text", "Sitka", Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
   --font-family-display: "Sitka Heading", "Sitka Text", "Sitka", Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
@@ -63,7 +64,7 @@ html[data-theme="dark"] {
   --cockpit-danger-bg: #450a0a;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #fecaca;
-  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 html[data-theme="forest"] {
@@ -91,7 +92,7 @@ html[data-theme="forest"] {
   --cockpit-danger-bg: #450a0a;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #fecaca;
-  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 html[data-theme="ocean"] {
@@ -119,7 +120,7 @@ html[data-theme="ocean"] {
   --cockpit-danger-bg: #450a0a;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #fecaca;
-  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 html[data-theme="sepia"] {
@@ -147,7 +148,7 @@ html[data-theme="sepia"] {
   --cockpit-danger-bg: #450a0a;
   --cockpit-danger-border: #fca5a5;
   --cockpit-danger-text: #fecaca;
-  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --cockpit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 * {
