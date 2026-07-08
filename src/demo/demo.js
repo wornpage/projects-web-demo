@@ -303,6 +303,7 @@ if (!DEMO_API_BASE_URL && BACKEND_MODE) {
 let apiSaveTimer = null;
 let apiPendingSnapshot = null;
 let apiSaveInFlight = false;
+let apiSaveJustCompleted = false;
 let apiSavePromise = null;
 let apiSessionClientId = "";
 
@@ -986,6 +987,7 @@ function flushBackendStateSave() {
     })
     .finally(() => {
       apiSaveInFlight = false;
+      apiSaveJustCompleted = true;
       apiSavePromise = null;
       if (apiPendingSnapshot) {
         scheduleBackendStateSave(apiPendingSnapshot);
@@ -2623,7 +2625,11 @@ function updateCommand(command) {
   setCopySurface(el("command-where"), command.where, "Where", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   setCopySurface(el("command-blocker"), command.blocker, "Blocker", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
   setCopySurface(el("command-next"), command.next, "Next action", DEMO_COPY_LIMITS.commandFieldVisible, DEMO_COPY_LIMITS.commandFlowHelp);
-  el("command-state").textContent = command.stateText;
+  const saveHint = DEMO_API_BASE_URL
+    ? (apiSaveInFlight ? " · Saving…" : apiSaveJustCompleted ? " · Saved" : "")
+    : "";
+  if (apiSaveJustCompleted) apiSaveJustCompleted = false;
+  el("command-state").textContent = command.stateText + saveHint;
   el("command-state").title = command.stateHelp || `State: ${command.stateText}`;
   el("command-state").setAttribute("aria-label", command.stateHelp || `State: ${command.stateText}`);
   el("command-scope").textContent = command.scope;
