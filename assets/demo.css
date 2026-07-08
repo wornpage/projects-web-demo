@@ -6767,8 +6767,9 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-field-error input,.demo-field-error textarea,.demo-field-error select{border-color:#c0392b!important}
 .demo-nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-left:auto;font-size:10px;font-weight:800;color:#fff;background:var(--cockpit-accent);border-radius:99px;padding:0 5px}
 
-.demo-landing-card { background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:var(--cockpit-radius); padding:16px 18px; display:flex; flex-direction:column; gap:10px; transition:border-color 0.12s }
-.demo-landing-card.is-attention { box-shadow:inset 3px 0 0 #c18642; border-color:var(--cockpit-border) }
+.demo-landing-card { background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:var(--cockpit-radius); padding:16px 18px; display:flex; flex-direction:column; gap:10px; transition:border-color 0.12s,box-shadow 0.12s }
+.demo-landing-card:hover,.demo-landing-card:focus-within { border-color:var(--cockpit-accent); box-shadow:var(--cockpit-shadow-sm) }
+.demo-landing-card.is-attention { box-shadow:inset 3px 0 0 var(--cockpit-warning-text,#c18642); border-color:var(--cockpit-border) }
 .demo-landing-card.is-done { opacity:0.6 }
 .demo-landing-card .lp-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px }
 .demo-landing-card .lp-card-title { font-size:15px; font-weight:700; color:var(--cockpit-text); background:transparent; border:none; padding:0; cursor:pointer; font:inherit; text-align:left }
@@ -6777,7 +6778,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-landing-card .lp-command span { font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--cockpit-text-muted) }
 .demo-landing-card .lp-command strong { font-size:14px; font-weight:700; color:var(--cockpit-text) }
 .lp-pill { display:inline-block; font-size:10px; font-weight:730; letter-spacing:0.03em; padding:2px 8px; border-radius:99px; text-transform:uppercase }
-.lp-pill-warn { background:#fef3e0; color:#c18642 }
+.lp-pill-warn { background:var(--cockpit-warning-bg,#fef3e0); color:var(--cockpit-warning-text,#c18642) }
 .lp-pill-accent { background:var(--cockpit-accent-50); color:var(--cockpit-accent) }
 .lp-pill-muted { background:var(--cockpit-border); color:var(--cockpit-text-muted) }
 .demo-work-landing{display:flex;flex-direction:column;gap:10px}
