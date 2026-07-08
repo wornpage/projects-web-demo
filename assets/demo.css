@@ -534,7 +534,7 @@ html[data-theme="dark"] .demo-app-shell {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 0;
-  border-right: 1px solid var(--cockpit-border);
+  border-right: 1px solid transparent;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -581,6 +581,13 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-sidebar.nav-rail::-webkit-scrollbar-thumb:hover {
   background: var(--cockpit-text-muted);
+}
+
+.demo-sidebar:hover,
+.demo-sidebar:focus-within,
+.demo-sidebar:hover,
+.demo-sidebar:focus-within {
+  border-right-color: var(--cockpit-border);
 }
 
 .demo-sidebar:focus-visible {
