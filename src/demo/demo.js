@@ -3925,20 +3925,7 @@ function renderMemory() {
     </section>
   `;
   bindMemoryValidation(pack);
-  // Paste images into memory
-  el("memory-note")?.addEventListener("paste", (event) => {
-    const file = event.clipboardData?.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      event.preventDefault();
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = `<img src="${reader.result}" alt="Pasted image" style="max-width:100%;border-radius:4px;margin-top:4px">`;
-        el("memory-note").value += img;
-        showToast("Image pasted.", "success");
-      };
-      reader.readAsDataURL(file);
-    }
-  });
+  el("memory-note")?.addEventListener("paste", handleImagePaste);
   bindMemorySearch();
   bindGoButtons();
   bindListActions();
