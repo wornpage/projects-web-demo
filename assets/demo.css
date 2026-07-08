@@ -176,26 +176,66 @@ body {
 }
 
 html {
-  scrollbar-width: thin;
-  scrollbar-color: var(--cockpit-border) transparent;
+  scrollbar-width: auto;
+  scrollbar-color: var(--cockpit-border-strong) var(--cockpit-bg);
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--cockpit-bg);
+  border-left: 1px solid var(--cockpit-border);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--cockpit-border);
-  border-radius: 999px;
+  background: var(--cockpit-border-strong);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cockpit-border-strong);
+  background: var(--cockpit-text-muted);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-button {
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: var(--cockpit-nav-bg);
+}
+
+::-webkit-scrollbar-button:vertical:decrement {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path d='M4 2L1 6h6z' fill='%23708277'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+::-webkit-scrollbar-button:vertical:increment {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path d='M1 2l3 4 3-4z' fill='%23708277'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+::-webkit-scrollbar-button:horizontal:decrement {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path d='M6 1L2 4l4 3z' fill='%23708277'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+::-webkit-scrollbar-button:horizontal:increment {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path d='M2 1l4 3-4 3z' fill='%23708277'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--cockpit-bg);
 }
 
 h1,
@@ -501,30 +541,30 @@ html[data-theme="dark"] .demo-app-shell {
   overscroll-behavior: contain;
   position: sticky;
   scrollbar-gutter: auto;
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
+  scrollbar-width: auto;
+  scrollbar-color: var(--cockpit-border-strong) var(--cockpit-bg);
   width: var(--demo-sidebar-width);
 }
 
-.demo-sidebar.nav-rail:hover {
-  scrollbar-color: var(--cockpit-border) transparent;
-}
-
 .demo-sidebar.nav-rail::-webkit-scrollbar {
-  width: 5px;
+  width: 8px;
 }
 
 .demo-sidebar.nav-rail::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--cockpit-bg);
 }
 
 .demo-sidebar.nav-rail::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 999px;
+  background: var(--cockpit-border-strong);
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
-.demo-sidebar.nav-rail:hover::-webkit-scrollbar-thumb {
-  background: var(--cockpit-border);
+.demo-sidebar.nav-rail::-webkit-scrollbar-thumb:hover {
+  background: var(--cockpit-text-muted);
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
 .demo-sidebar:focus-visible {
@@ -6647,29 +6687,29 @@ html[data-theme="dark"] .demo-app-shell {
   padding: 6px;
   max-height: 46vh;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-
-.demo-cmdk-list:hover {
-  scrollbar-color: var(--cockpit-border) transparent;
+  scrollbar-width: auto;
+  scrollbar-color: var(--cockpit-border-strong) var(--cockpit-bg);
 }
 
 .demo-cmdk-list::-webkit-scrollbar {
-  width: 5px;
+  width: 8px;
 }
 
 .demo-cmdk-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--cockpit-bg);
 }
 
 .demo-cmdk-list::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 999px;
+  background: var(--cockpit-border-strong);
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
-.demo-cmdk-list:hover::-webkit-scrollbar-thumb {
-  background: var(--cockpit-border);
+.demo-cmdk-list::-webkit-scrollbar-thumb:hover {
+  background: var(--cockpit-text-muted);
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 .demo-cmdk-item {
   display: flex;
