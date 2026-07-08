@@ -322,7 +322,7 @@ window.addEventListener("unhandledrejection", (event) => {
   event.preventDefault();
 });
 
-function showToast(message, type = "info") {
+function showToast(message, type = "info", durationMs = 5000) {
   const container = document.getElementById("demo-toast-container");
   if (!container) return;
   const toast = document.createElement("div");
@@ -331,7 +331,7 @@ function showToast(message, type = "info") {
   toast.addEventListener("click", () => toast.remove());
   container.appendChild(toast);
   const removeToast = () => { toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); };
-  setTimeout(removeToast, 5000);
+  setTimeout(removeToast, durationMs);
   toast._removeToast = removeToast;
 }
 
@@ -395,7 +395,7 @@ document.addEventListener("keydown", (event) => {
   const map = { "h": "home", "r": "review", "w": "work", "n": "next", "c": "create", "m": "memory", "s": "settings", "i": "insights", "a": "activity", "t": "calendar", "g": "gantt", "?": null };
   const route = map[event.key.toLowerCase()];
   if (route) { go(route); event.preventDefault(); return; }
-  if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work n=Next c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar g=Gantt", "info"); event.preventDefault(); }
+  if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work n=Next c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar g=Gantt", "info", 8000); event.preventDefault(); }
   if (event.key === "Escape") { const toasts = document.querySelectorAll(".demo-toast:not(.demo-toast-hiding)"); if (toasts.length) { toasts[toasts.length - 1]._removeToast?.(); event.preventDefault(); } }
   if (event.key === "Enter" && event.target.closest("#pack-edit-form, .demo-inline-form")) {
     const btn = el("pack-primary-action") || event.target.closest("form")?.querySelector("[type=submit], .btn-primary");
