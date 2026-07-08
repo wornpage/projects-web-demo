@@ -4259,8 +4259,8 @@ function reviewCard(pack) {
   const workflow = workflowStateForPack(pack, command);
   const cardClass = workflowCardClass("demo-review-card", pack, workflow, pack.id === state.selectedId);
   const blockerAction = hasBlocker(pack)
-    ? supportActionButton("unblock", "Clear blocker", pack)
-    : supportActionButton("block", "Mark blocked", pack);
+    ? supportActionButton("unblock", "Clear blocker", pack, "btn btn-sm")
+    : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
   const nextHelpId = `next-${pack.id}-help`;
   const nextHelp = `Set the exact Next action value for ${workTitle(pack)}.`;
 
@@ -4291,13 +4291,13 @@ function reviewCard(pack) {
         <strong>Extra tools for focusing, editing, clearing blockers, or setting Next action.</strong>
       </summary>
       <div class="demo-card-actions">
-        ${supportActionButton("focus", "Focus", pack)}
-        ${supportActionButton("edit", "Edit", pack)}
+        ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
+        ${supportActionButton("edit", "Edit", pack, "btn btn-sm")}
         ${blockerAction}
       </div>
       <div class="demo-inline-form">
         ${nextActionSelectField(`next-${pack.id}`, "Next action", editableNextActionValue(pack.next), nextHelp)}
-        ${supportActionButton("set-next", "Save next action", pack)}
+        ${supportActionButton("set-next", "Save next action", pack, "btn btn-sm")}
       </div>
     </details>
   </article>`;
