@@ -604,8 +604,8 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-brand-mark {
   align-items: center;
-  background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);
+  background: var(--cockpit-accent-50);
+  border: 1px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius-sm);
   box-shadow: none;
   color: var(--cockpit-accent);
