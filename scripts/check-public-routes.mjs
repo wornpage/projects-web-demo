@@ -383,7 +383,7 @@ function blockedBySelectContractOk() {
     "Blocked by work item (optional)",
     "function blockedByChoices(",
     "candidate.id !== pack.id",
-    'candidate.status !== "done"',
+    'candidate.status !== STATUS.DONE',
     "!createsBlockedByCycle(state.packs, pack.id, candidate.id)",
     "blockedByBlockerText(",
     "Choosing work fills the reason and clears it automatically when that work finishes with proof."
