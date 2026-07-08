@@ -3328,6 +3328,7 @@ function renderHome() {
   });
   el("export-ics-home")?.addEventListener("click", exportICS);
   el("speak-home")?.addEventListener("click", () => {
+    speechSynthesis.cancel();
     const text = buildStandupText().split("\n").filter((l) => l.trim()).join(". ");
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.9;
