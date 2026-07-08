@@ -28,6 +28,7 @@ const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
+const STATUS = Object.freeze({ ACTIVE: "active", BLOCKED: "blocked", DRAFT: "draft", DONE: "done" });
 const RECOVERY_ID_MAX_LENGTH = 120;
 const PACK_FIELD_MEDIUM_MAX = 200;
 const FIELD_SHORT_MAX = 40;
@@ -186,14 +187,14 @@ const DEMO_SCENARIOS = [
     profile: "general",
     route: "work",
     filter: "active",
-    transform: (packs) => packs.map((pack) => pack.status === "done"
+    transform: (packs) => packs.map((pack) => pack.status === STATUS.DONE
       ? pack
       : {
           ...pack,
           blocker: DEMO_BLOCKER_NONE,
           blockedBy: "",
           next: isPlaceholderNext(pack.next) ? "Open" : pack.next,
-          status: pack.status === "draft" ? "active" : pack.status
+          status: pack.status === STATUS.DRAFT ? STATUS.ACTIVE : pack.status
         })
   },
   {
@@ -219,7 +220,7 @@ const DEMO_SCENARIOS = [
     profile: "general",
     route: "work",
     filter: "active",
-    transform: (packs) => packs.map((pack) => pack.status === "done"
+    transform: (packs) => packs.map((pack) => pack.status === STATUS.DONE
       ? pack
       : {
           ...pack,
@@ -276,7 +277,7 @@ const DEMO_SCENARIOS = [
 const DEMO_SCENARIO_BY_ID = Object.fromEntries(DEMO_SCENARIOS.map((scenario) => [scenario.id, scenario]));
 
 function reviewScenarioPack(pack) {
-  if (pack.status === "done") {
+  if (pack.status === STATUS.DONE) {
     return pack;
   }
 
@@ -868,7 +869,7 @@ function importedPackFromEntry(entry, usedIds) {
   usedIds.add(id);
   const blocker = entry.blocker ? normalizeCopy(entry.blocker) : DEMO_BLOCKER_NONE;
   const isBlocked = !isUnblockedBlockerValue(blocker);
-  const status = entry.done ? "done" : (isBlocked ? "blocked" : "active");
+  const status = entry.done ? STATUS.DONE : (isBlocked ? STATUS.BLOCKED : "active");
   return {
     id,
     title: entry.title,
@@ -2654,7 +2655,7 @@ function workflowStateForPack(pack, command = null) {
 
   const resolved = command || resolvePrimaryCommandForPack(pack);
 
-  if (pack.status === "done") {
+  if (pack.status === STATUS.DONE) {
     return {
       id: "done",
       label: "Done",
@@ -2681,7 +2682,7 @@ function workflowStateForPack(pack, command = null) {
     };
   }
 
-  if (resolved.action === "done") {
+  if (resolved.action === STATUS.DONE) {
     return {
       id: "proof-ready",
       label: "Proof ready",
@@ -2690,7 +2691,7 @@ function workflowStateForPack(pack, command = null) {
     };
   }
 
-  if (pack.status === "draft") {
+  if (pack.status === STATUS.DRAFT) {
     return {
       id: "draft",
       label: "Draft",
@@ -2915,7 +2916,7 @@ function commandActionDisplayLabel(next = "") {
   if (value === "start") return "Start work";
   if (value === "set blocker: none" || value === "unblock") return "Clear blocker";
   if (value === "review" || value === "review blocker") return "Review blocker";
-  if (value === "done" || value === "finish with proof") return "Mark done";
+  if (value === STATUS.DONE || value === "finish with proof") return "Mark done";
   if (value === "set next action") return "Pick what to do next";
   if (value === "loading backend command") return "Loading…";
   return next;
@@ -3209,9 +3210,9 @@ function renderHome() {
     return;
   }
 
-  const doneCount = state.packs.filter((p) => p.status === "done").length;
-  const overdueCount = state.packs.filter((p) => p.status !== "done" && dueUrgency(p.due) === "overdue").length;
-  const dueCount = state.packs.filter((p) => p.status !== "done" && ["today", "soon"].includes(dueUrgency(p.due))).length;
+  const doneCount = state.packs.filter((p) => p.status === STATUS.DONE).length;
+  const overdueCount = state.packs.filter((p) => p.status !== STATUS.DONE && dueUrgency(p.due) === "overdue").length;
+  const dueCount = state.packs.filter((p) => p.status !== STATUS.DONE && ["today", "soon"].includes(dueUrgency(p.due))).length;
   const recentActivity = state.packs
     .map((p) => ({ pack: p, entry: packActivityDisplay(p)[0] }))
     .filter((item) => item.entry)
@@ -4042,8 +4043,8 @@ function ownerBlockerGuide(pack) {
     <span class="section-label">Owner blocker path</span>
     <strong data-owner-blocker-summary>${escapeHtml(summary)}</strong>
     <ol>
-      ${ownerBlockerGuideStep("owner", "1", "Fill Owner", ownerFilled ? "Owner filled." : "Owner is unassigned.", ownerFilled ? "done" : "active")}
-      ${ownerBlockerGuideStep("clear", "2", "Set Blocker: None", blockerClear ? "Blocker is None. Save work path is next." : "Saves this blocker fix after Owner is filled.", ownerFilled ? (blockerClear ? "done" : "active") : "waiting")}
+      ${ownerBlockerGuideStep("owner", "1", "Fill Owner", ownerFilled ? "Owner filled." : "Owner is unassigned.", ownerFilled ? STATUS.DONE : "active")}
+      ${ownerBlockerGuideStep("clear", "2", "Set Blocker: None", blockerClear ? "Blocker is None. Save work path is next." : "Saves this blocker fix after Owner is filled.", ownerFilled ? (blockerClear ? STATUS.DONE : "active") : "waiting")}
     </ol>
   </div>`;
 }
@@ -4452,8 +4453,8 @@ function workRow(pack) {
 
 function landingCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
-  const statusClass = pack.status === "blocked" ? "is-attention" : pack.status === "done" ? "is-done" : "";
-  const pillClass = pack.status === "blocked" ? "lp-pill-warn" : pack.status === "done" ? "lp-pill-muted" : "lp-pill-accent";
+  const statusClass = pack.status === STATUS.BLOCKED ? "is-attention" : pack.status === STATUS.DONE ? "is-done" : "";
+  const pillClass = pack.status === STATUS.BLOCKED ? "lp-pill-warn" : pack.status === STATUS.DONE ? "lp-pill-muted" : "lp-pill-accent";
   return `<article class="demo-landing-card ${statusClass}" data-pack-id="${escapeAttribute(pack.id)}">
     <div class="lp-card-head">
       <button class="lp-card-title" type="button" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
@@ -4570,7 +4571,7 @@ function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPac
     return `Why: ${blockerTextForPack(pack)} blocks it.`;
   }
 
-  if (command.action === "done") {
+  if (command.action === STATUS.DONE) {
     return "Why: proof is ready.";
   }
 
@@ -4629,23 +4630,23 @@ function supportActionReason(action, pack) {
     start: `Start ${where} from the current state.`
   };
   const base = reasons[action] || `Run ${actionLabelFromKey(action)} for ${where}.`;
-  return commandForSupportAction?.action === "done" && action !== "done"
+  return commandForSupportAction?.action === STATUS.DONE && action !== STATUS.DONE
     ? `${base} Next action for ${where} is ${normalizeCopy(commandForSupportAction?.next) || "open"} before proof is closed.`
     : base;
 }
 
 function supportActionDisabledReason(action, pack) {
   const where = pack?.title || "selected work";
-  if (action !== "done") {
+  if (action !== STATUS.DONE) {
     return "";
   }
 
-  if (pack?.status === "done") {
+  if (pack?.status === STATUS.DONE) {
     return `Where: ${where} / done. Blocker: proof is already saved. Next action: Open to inspect this work.`;
   }
 
   const command = resolvePrimaryCommandForPack(pack);
-  if (command.action === "done") {
+  if (command.action === STATUS.DONE) {
     if (!normalizeCopy(pack?.doneWhen)) {
       return `Where: ${where}. Blocker: proof target is missing. Next action: add proof target before finishing with proof.`;
     }
@@ -4666,11 +4667,11 @@ function supportActionDisabledReason(action, pack) {
 
 function supportActionDisabledVisibleReason(action, pack) {
   const where = pack?.title || "selected work";
-  if (action !== "done") {
+  if (action !== STATUS.DONE) {
     return "No disabled reason; this button should stay enabled.";
   }
 
-  if (pack?.status === "done") {
+  if (pack?.status === STATUS.DONE) {
     return `Already done for ${where}; use Open to inspect it.`;
   }
 
@@ -4683,7 +4684,7 @@ function supportActionDisabledVisibleReason(action, pack) {
   }
 
   const command = resolvePrimaryCommandForPack(pack);
-  if (command.action === "done" && !normalizeCopy(pack?.doneWhen)) {
+  if (command.action === STATUS.DONE && !normalizeCopy(pack?.doneWhen)) {
     return "Add proof target first before finishing with proof.";
   }
 
@@ -4883,7 +4884,7 @@ function burstConfetti() {
 
 function packActionSummary(pack, action, actionLabel, changed, unblockedCount = 0) {
   const title = workTitle(pack);
-  if (action === "done") {
+  if (action === STATUS.DONE) {
     const proof = proofTargetSentence(pack);
     const base = changed
       ? `Done saved for ${title}.`
@@ -5068,7 +5069,7 @@ function updateActionReceipt() {
   receiptElement.setAttribute("aria-label", fullSummary);
   receiptElement.setAttribute("title", fullSummary);
   const eyebrow = receipt.kind === "clipboard"
-    ? receipt.tone === "blocked" ? "Clipboard blocked" : "Clipboard ready"
+    ? receipt.tone === STATUS.BLOCKED ? "Clipboard blocked" : "Clipboard ready"
     : "Last result";
   receiptElement.innerHTML = `
     <div class="demo-command-receipt-head">
@@ -5292,7 +5293,7 @@ function actionUndoSnapshot(pack, action) {
   }
   // Finishing work cascades unblocks into dependents — capture them too so
   // Undo restores the whole effect, not just this pack.
-  const dependents = action === "done"
+  const dependents = action === STATUS.DONE
     ? state.packs
       .filter((p) => p.id !== pack.id && normalizeCopy(p.blockedBy) === pack.id)
       .map((p) => ({ packId: p.id, fields: packForwardPathSnapshot(p) }))
@@ -5313,7 +5314,7 @@ function setBackendActionReceipt(action, undo) {
     return;
   }
   const changed = JSON.stringify(undo.fields) !== JSON.stringify(packForwardPathSnapshot(pack));
-  const unblockedCount = action === "done"
+  const unblockedCount = action === STATUS.DONE
     ? (undo.dependents || []).filter((dep) => {
       const target = findPack(dep.packId);
       return target && isUnblockedBlockerValue(target.blocker);
@@ -5675,9 +5676,9 @@ async function handlePackAction(id, action) {
   } else if (action === "compare") {
     go("compare", pack.id);
     return;
-  } else if (action === "done") {
+  } else if (action === STATUS.DONE) {
     const before = packActionSignature(pack);
-    const wasDone = pack.status === "done";
+    const wasDone = pack.status === STATUS.DONE;
     Object.assign(pack, WR.packActionEffect(pack, "done"));
     const changed = packActionSignature(pack) !== before;
     if (changed) {
@@ -6117,7 +6118,7 @@ function commandActionForLabel(label) {
     return { label, action: "start" };
   }
 
-  if (normalized === "done" || normalized === "complete" || normalized === "finish with proof") {
+  if (normalized === STATUS.DONE || normalized === "complete" || normalized === "finish with proof") {
     return { label: "Finish with proof", action: "done" };
   }
 
@@ -6645,10 +6646,10 @@ function syncOwnerBlockerGuide() {
     summaryElement.textContent = summary;
   }
 
-  syncOwnerBlockerGuideStep("owner", ownerFilled ? "done" : "active", ownerFilled ? "Owner filled." : "Owner is unassigned.");
+  syncOwnerBlockerGuideStep("owner", ownerFilled ? STATUS.DONE : "active", ownerFilled ? "Owner filled." : "Owner is unassigned.");
   syncOwnerBlockerGuideStep(
     "clear",
-    ownerFilled ? (blockerClear ? "done" : "active") : "waiting",
+    ownerFilled ? (blockerClear ? STATUS.DONE : "active") : "waiting",
     blockerClear ? "Blocker is None. Save work path is next." : (ownerFilled ? "Next: Set Blocker: None." : "Wait until Owner is filled.")
   );
 }
@@ -6660,8 +6661,8 @@ function syncOwnerBlockerGuideStep(id, stateName, copy) {
     return;
   }
 
-  step.classList.toggle("active", stateName === "active");
-  step.classList.toggle("done", stateName === "done");
+  step.classList.toggle("active", stateName === STATUS.ACTIVE);
+  step.classList.toggle("done", stateName === STATUS.DONE);
   step.classList.toggle("waiting", stateName === "waiting");
   if (copyElement) {
     copyElement.textContent = copy;
@@ -6942,14 +6943,14 @@ function applyPackForwardPathFormValues(pack) {
   pack.next = values.next || pack.next;
   pack.doneWhen = values.doneWhen || pack.doneWhen;
   pack.purpose = values.purpose || pack.purpose;
-  pack.blocker = pack.status === "done" ? DEMO_BLOCKER_NONE : pack.blocker;
-  if (pack.status === "done") {
+  pack.blocker = pack.status === STATUS.DONE ? DEMO_BLOCKER_NONE : pack.blocker;
+  if (pack.status === STATUS.DONE) {
     pack.blockedBy = "";
   }
-  if (pack.status === "blocked" && isUnblockedBlockerValue(pack.blocker)) {
-    pack.status = "active";
+  if (pack.status === STATUS.BLOCKED && isUnblockedBlockerValue(pack.blocker)) {
+    pack.status = STATUS.ACTIVE;
   }
-  if (statusBefore !== "done" && pack.status === "done") {
+  if (statusBefore !== STATUS.DONE && pack.status === STATUS.DONE) {
     unblockPacksBlockedBy(pack);
   }
   const changed = packForwardPathSignature(pack) !== before;
@@ -7022,7 +7023,7 @@ function packForwardPathFormValues(pack) {
     : (isUnblockedBlockerValue(pack.blocker) ? "clear" : "set");
   const blockedBySelect = el("edit-blocked-by");
   const requestedBlockedBy = blockedBySelect ? normalizeCopy(valueOf("edit-blocked-by")) : normalizeCopy(pack.blockedBy);
-  const blockedByTarget = blockerMode === "set" && currentStatus !== "done" && requestedBlockedBy
+  const blockedByTarget = blockerMode === "set" && currentStatus !== STATUS.DONE && requestedBlockedBy
     ? findPack(requestedBlockedBy)
     : null;
   const blockedBy = blockedByTarget ? blockedByTarget.id : "";
@@ -7031,7 +7032,7 @@ function packForwardPathFormValues(pack) {
       ? blockedByBlockerText(blockedByTarget)
       : normalizeCopy(blockerInput ? blockerInput.value : pack.blocker) || "needs review")
     : DEMO_BLOCKER_NONE;
-  const blocker = currentStatus === "done" ? DEMO_BLOCKER_NONE : rawBlocker;
+  const blocker = currentStatus === STATUS.DONE ? DEMO_BLOCKER_NONE : rawBlocker;
   const status = forwardPathStatusForBlocker(currentStatus, blocker, requestedNext);
 
   return {
@@ -7252,7 +7253,7 @@ function runCommandPaletteItem(index) {
 
 function blockedByChoices(pack) {
   return state.packs.filter((candidate) => candidate.id !== pack.id
-    && candidate.status !== "done"
+    && candidate.status !== STATUS.DONE
     && !createsBlockedByCycle(state.packs, pack.id, candidate.id));
 }
 
@@ -7273,7 +7274,7 @@ function urgencyFirstPacks(packs) {
     return packs;
   }
   const rank = (pack) => {
-    if (pack.status === "done") return 3;
+    if (pack.status === STATUS.DONE) return 3;
     const urgency = dueUrgency(pack.due);
     return urgency === "overdue" ? 0 : (urgency === "today" ? 1 : (urgency === "soon" ? 2 : 3));
   };
@@ -7351,9 +7352,9 @@ function blockerStateForPack(pack) {
   }
 
   const storage = normalizeStoredBlocker(pack.blocker);
-  const statusBlocked = normalizeCopy(pack.status).toLowerCase() === "blocked";
+  const statusBlocked = normalizeCopy(pack.status).toLowerCase() === STATUS.BLOCKED;
   const hasStoredBlocker = storage !== DEMO_BLOCKER_NONE;
-  const reason = hasStoredBlocker ? storage : (statusBlocked ? "blocked" : "");
+  const reason = hasStoredBlocker ? storage : (statusBlocked ? STATUS.BLOCKED : "");
 
   return {
     hasBlocker: Boolean(reason),
@@ -7400,7 +7401,7 @@ function dueDateMeta(pack) {
   if (!date) {
     return "<span>No due date</span>";
   }
-  const urgency = pack?.status === "done" ? "" : dueUrgency(date);
+  const urgency = pack?.status === STATUS.DONE ? "" : dueUrgency(date);
   const label = urgency === "overdue"
     ? dueDateLabel(date).replace(/^Due /u, "Overdue — ")
     : (urgency === "today" ? "Due today" : dueDateLabel(date));
@@ -7538,7 +7539,7 @@ function syncSelectedWorkTriad(panel, pack, command = resolvePrimaryCommandForPa
 function packGuidanceLine(pack, command, workflow) {
   if (!pack) return "";
   const title = workTitle(pack);
-  if (pack.status === "done") {
+  if (pack.status === STATUS.DONE) {
     return `<p class="demo-pack-guidance">${escapeHtml(title)} is marked done — proof saved.</p>`;
   }
   if (isMissingNextAction(pack)) {
@@ -7763,7 +7764,7 @@ function nextActionOptions(value) {
 
 function normalizedNextActionChoice(value) {
   const current = normalizeCopy(value);
-  return current.toLowerCase() === "done" ? "Finish with proof" : current;
+  return current.toLowerCase() === STATUS.DONE ? "Finish with proof" : current;
 }
 
 function textField(id, label, value, help = "") {
@@ -8734,10 +8735,10 @@ function bindProfileChoices() {
 
 function renderInsights() {
   const total = state.packs.length;
-  const done = state.packs.filter((p) => p.status === "done").length;
-  const active = state.packs.filter((p) => p.status === "active").length;
-  const blocked = state.packs.filter((p) => p.status === "blocked").length;
-  const draft = state.packs.filter((p) => p.status === "draft").length;
+  const done = state.packs.filter((p) => p.status === STATUS.DONE).length;
+  const active = state.packs.filter((p) => p.status === STATUS.ACTIVE).length;
+  const blocked = state.packs.filter((p) => p.status === STATUS.BLOCKED).length;
+  const draft = state.packs.filter((p) => p.status === STATUS.DRAFT).length;
   const rate = total ? Math.round((done / total) * 100) : 0;
 
   const owners = {};
@@ -8995,12 +8996,12 @@ function renderGantt() {
     const due = new Date(pack.due + "T00:00:00");
     const offset = Math.max(0, Math.ceil((due - minDate) / 86400000));
     const width = Math.max(1, Math.ceil((due - now) / 86400000) + 1);
-    const color = pack.status === "done" ? "var(--cockpit-accent)" : pack.status === "blocked" ? "#c18642" : "var(--cockpit-accent)";
+    const color = pack.status === STATUS.DONE ? "var(--cockpit-accent)" : pack.status === STATUS.BLOCKED ? "#c18642" : "var(--cockpit-accent)";
     return `
       <div class="demo-gantt-row">
         <span class="demo-gantt-label">${escapeHtml(workTitle(pack))}</span>
         <div class="demo-gantt-track">
-          <div class="demo-gantt-bar" style="--bar-left:${offset * dayWidth}px;--bar-width:${width * dayWidth}px;background:${color};opacity:${pack.status === "done" ? "0.4" : "0.85"}"></div>
+          <div class="demo-gantt-bar" style="--bar-left:${offset * dayWidth}px;--bar-width:${width * dayWidth}px;background:${color};opacity:${pack.status === STATUS.DONE ? "0.4" : "0.85"}"></div>
         </div>
       </div>`;
   }).join("");
