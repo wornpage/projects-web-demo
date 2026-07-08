@@ -175,6 +175,29 @@ body {
   max-width: 100%;
 }
 
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cockpit-border) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cockpit-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cockpit-border-strong);
+}
+
 h1,
 h2,
 h3,
