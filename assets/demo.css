@@ -6624,6 +6624,29 @@ html[data-theme="dark"] .demo-app-shell {
   padding: 6px;
   max-height: 46vh;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.demo-cmdk-list:hover {
+  scrollbar-color: var(--cockpit-border) transparent;
+}
+
+.demo-cmdk-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.demo-cmdk-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.demo-cmdk-list::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.demo-cmdk-list:hover::-webkit-scrollbar-thumb {
+  background: var(--cockpit-border);
 }
 .demo-cmdk-item {
   display: flex;
