@@ -3189,6 +3189,7 @@ function renderHome() {
       <button class="btn btn-sm" type="button" id="export-csv-home" style="margin-top:12px">Export CSV</button>
       <button class="btn btn-sm" type="button" id="copy-standup-home" style="margin-top:4px">Copy standup</button>
       <button class="btn btn-sm" type="button" id="copy-link-home" style="margin-top:4px">Copy share link</button>
+      <button class="btn btn-sm" type="button" id="email-standup-home" style="margin-top:4px">Email standup</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
         <div class="demo-method-grid">
@@ -3219,6 +3220,12 @@ function renderHome() {
   el("copy-link-home")?.addEventListener("click", () => {
     const url = `${location.origin}${location.pathname}${location.hash}`;
     navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard.", "success"));
+  });
+  el("email-standup-home")?.addEventListener("click", () => {
+    const subject = "Work status update";
+    const body = buildStandupText().split("\n").map((l) => l.trim()).filter(Boolean).join("\n");
+    location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    showToast("Opening email client with standup summary.", "success");
   });
 }
 
