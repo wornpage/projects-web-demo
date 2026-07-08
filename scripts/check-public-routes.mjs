@@ -535,7 +535,7 @@ function cardSupportActionStylesContractOk() {
     ".demo-support-action",
     "min-height: 46px;",
     ".demo-card-support > .demo-card-actions",
-    "grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));",
+    "grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));",
     ".demo-card-support > .demo-card-actions .demo-support-action",
     "width: 100%;",
     ".demo-card-support summary:focus-visible",

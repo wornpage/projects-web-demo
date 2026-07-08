@@ -3158,7 +3158,6 @@ function renderHome() {
       <button class="btn btn-sm" type="button" id="export-csv-home" style="margin-top:12px">Export CSV</button>
       <button class="btn btn-sm" type="button" id="copy-standup-home" style="margin-top:4px">Copy standup</button>
       <button class="btn btn-sm" type="button" id="copy-link-home" style="margin-top:4px">Copy share link</button>
-      <button class="btn btn-sm" type="button" id="export-csv-home">Export CSV</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
         <div class="demo-method-grid">

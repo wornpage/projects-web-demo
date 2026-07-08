@@ -3019,7 +3019,7 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
 .demo-card-support > .demo-card-actions {
   border-top: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
   margin-top: 8px;
   padding-top: 0;
 }
