@@ -3,6 +3,7 @@ server/node_modules/
 dist/
 .claude/
 .reasonix/
+reasonix.toml
 
 .ds-sync/
 ds-bundle/
