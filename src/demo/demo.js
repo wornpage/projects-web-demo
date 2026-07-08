@@ -308,11 +308,26 @@ let apiSessionClientId = "";
 
 window.addEventListener("unhandledrejection", (event) => {
   const msg = event.reason?.message || event.reason || "Unknown error";
+  showToast(msg, "error");
   state.status = routeStatus("Error", msg, "retry or refresh");
   if (DEMO_API_BASE_URL) state.suppressNextSave = true;
   render();
   event.preventDefault();
 });
+
+function showToast(message, type = "info") {
+  const container = document.getElementById("demo-toast-container");
+  if (!container) return;
+  const toast = document.createElement("div");
+  toast.className = `demo-toast demo-toast-${type}`;
+  toast.textContent = message;
+  toast.addEventListener("click", () => toast.remove());
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = "0"; toast.style.transition = "opacity 0.3s"; setTimeout(() => toast.remove(), 300); }, 5000);
+}
+
+window.addEventListener("offline", () => showToast("You are offline. Changes save locally.", "error"));
+window.addEventListener("online", () => showToast("Back online.", "success"));
 
 document.addEventListener("DOMContentLoaded", async () => {
   if ("scrollRestoration" in history) {
