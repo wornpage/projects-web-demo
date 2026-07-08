@@ -3830,7 +3830,7 @@ function blockerStateField(pack) {
         <input id="edit-blocker" type="text" value="${escapeAttribute(blocker)}" placeholder="missing owner, source, approval..." aria-describedby="edit-blocker-help"${hasBlocker ? "" : disabledReasonAttributes(true, blockerInputDisabledReason())}>
       </div>
       <p id="edit-blocker-help" class="demo-field-help" data-blocker-help>${hasBlocker ? "Blocked pauses Next action until this reason clears." : "None stores Blocker: None automatically; no typing required."}</p>
-      <div class="demo-blocker-resolution" data-blocker-resolution hidden aria-live="polite">
+      <div class="demo-blocker-resolution" data-blocker-resolution hidden>
         <span data-blocker-resolution-copy></span>
         <button class="btn btn-sm" type="button" data-clear-owner-blocker>Set Blocker: None</button>
       </div>
@@ -7477,7 +7477,7 @@ function nextActionSelectField(id, label, value, help = "") {
       ${nextActionOptions(value).map((option) => `<option value="${escapeAttribute(option.value)}"${option.selected ? " selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
     </select>
     ${fieldHelp(id, help)}
-    <small class="demo-field-help demo-next-what" aria-live="polite" data-next-what></small>
+    <small class="demo-field-help demo-next-what" data-next-what></small>
   </label>`;
 }
 
