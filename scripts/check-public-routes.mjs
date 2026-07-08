@@ -619,7 +619,7 @@ function workSearchContractOk() {
     'id="demo-search-summary" class="demo-status-line" role="status" aria-live="polite"',
     "function workToolbarSummary()",
     "placeholder=\"Search ${escapeAttribute(currentWork)} title, blocker, Next action, owner, or due date\"",
-    "const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${pack.sources.join(\" \")}`.toLowerCase();"
+    "const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${(pack.sources||[]).join(\" \")} ${pack.purpose||\"\"} ${(pack.memory||[]).join(\" \")}`.toLowerCase();"
   ]);
 }
 
