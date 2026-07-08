@@ -55,7 +55,7 @@ function contentSecurityPolicy() {
     "object-src 'none'",
     "frame-ancestors 'none'",
     "frame-src 'none'",
-    "worker-src 'none'",
+    "worker-src 'self'",
     "script-src 'self'",
     "style-src 'self'",
     "font-src 'self'",

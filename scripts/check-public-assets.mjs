@@ -14,16 +14,18 @@ const publicTextAssets = [
   { pathname: "assets/demo.js", maxBytes: 258000 },
   { pathname: "assets/demo.css", maxBytes: 168000 },
   { pathname: "assets/landing.css", maxBytes: 16000 },
-  { pathname: "data/demo-packs.json", maxBytes: 25000 }
+  { pathname: "data/demo-packs.json", maxBytes: 25000 },
+  { pathname: "sw.js", maxBytes: 3000 }
 ];
 const publicFileAllowlist = [
+  "sw.js",
   "assets/demo.css",
   "assets/demo.js",
   "assets/landing.css",
   "assets/favicon.png",
   "data/demo-packs.json"
 ];
-const totalPublicTextBudgetBytes = 480000;
+const totalPublicTextBudgetBytes = 484000;
 const retiredPublicFiles = [
   "assets/app.css",
   "assets/demo-metadata.json"
@@ -128,6 +130,12 @@ async function findPublicAssetFiles() {
   const matches = [];
   for (const root of roots) {
     await walk(path.join(repoRoot, root), matches);
+  }
+  // Also include root-level allowlisted files (e.g. sw.js)
+  for (const file of publicFileAllowlist) {
+    if (!file.includes("/") && await fileExists(path.join(repoRoot, file))) {
+      matches.push(path.join(repoRoot, file));
+    }
   }
   return matches.map((file) => path.relative(repoRoot, file).replace(/\\/gu, "/"));
 }

@@ -11,6 +11,7 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const publicStaticFiles = new Set([
   "/index.html",
   "/landing.html",
+  "/sw.js",
   "/assets/demo.css",
   "/assets/demo.js",
   "/assets/landing.css",
@@ -156,7 +157,7 @@ function contentSecurityPolicy() {
     "object-src 'none'",
     "frame-ancestors 'none'",
     "frame-src 'none'",
-    "worker-src 'none'",
+    "worker-src 'self'",
     "script-src 'self'",
     "style-src 'self'",
     "font-src 'self'",

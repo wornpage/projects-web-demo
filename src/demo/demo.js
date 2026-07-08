@@ -8980,7 +8980,7 @@ function renderGantt() {
   const dayWidth = Math.max(20, Math.floor(680 / totalDays));
   const todayOffset = Math.max(0, Math.ceil((now - minDate) / 86400000));
 
-  // Build CSS via Constructed Stylesheet (bypasses CSP, no inline styles or .style access)
+  // Build CSS via Constructed Stylesheet (bypasses CSP, no inline style attributes or JS property access)
   const sheet = new CSSStyleSheet();
   sheet.insertRule(".demo-gantt-today[data-gantt-today] { --bar-left:" + (todayOffset * dayWidth) + "px; }");
   sheet.insertRule("[data-gantt-inner] { position:relative;width:" + ((totalDays * dayWidth) + 200) + "px; }");

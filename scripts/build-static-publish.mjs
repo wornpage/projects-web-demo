@@ -12,6 +12,7 @@ export const STATIC_PUBLISH_FILES = Object.freeze([
   "index.html",
   "landing.html",
   ".nojekyll",
+  "sw.js",
   "assets/demo.css",
   "assets/demo.js",
   "assets/landing.css",
