@@ -325,6 +325,12 @@ h3,
   background: var(--cockpit-accent-50);
   border-color: var(--cockpit-accent);
   box-shadow: var(--cockpit-shadow-sm);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 56px;
+}
   transform: translateY(-1px);
 }
 
