@@ -3833,9 +3833,12 @@ function renderCreate() {
         ${inputField("new-title", `Title ${helpTip("A short, descriptive name for this work. Keep it specific so you know what it is at a glance.")}`, defaults.title, `Name the ${profile().work} before Save can run.`)}
         ${inputField("new-owner", `Owner (optional) ${helpTip("Who is responsible for moving this forward. Leave blank or write 'unassigned' if unknown.")}`, defaults.owner, "Name the person, team, or role responsible for the next step.")}
         ${nextActionSelectField("new-next", `Next action ${helpTip("The first thing the main button will do. 'Choose action' means the button is paused.")}`, defaults.next, "Choose the first action. Choose action means Save work stays paused.")}
-        ${dateField("new-due", "Due (optional)", defaults.due, "Optional date kept on the work path and searchable in the work list.")}
-        ${inputField("new-url", "URL (optional)", defaults.url, "A link to open from this work item. Paste a URL to save it.")}
-        ${textField("new-purpose", "Why it matters (optional)", defaults.purpose, `Optional context for why this ${profile().work} exists.`)}
+        <details class="demo-optional-fields"${defaults.due || defaults.url || defaults.purpose ? " open" : ""}>
+          <summary>More options</summary>
+          ${dateField("new-due", "Due (optional)", defaults.due, "Optional date kept on the work path and searchable in the work list.")}
+          ${inputField("new-url", "URL (optional)", defaults.url, "A link to open from this work item. Paste a URL to save it.")}
+          ${textField("new-purpose", "Why it matters (optional)", defaults.purpose, `Optional context for why this ${profile().work} exists.`)}
+        </details>
       </div>
       <p id="create-save-help" class="demo-field-help" aria-live="polite">${escapeHtml(createState.help)}</p>
       <button id="create-sample" class="btn btn-primary" type="button" aria-describedby="create-save-help"${disabledReasonAttributes(!createState.canSave, createState.help)}>${escapeHtml(persistenceVerb())}</button>
