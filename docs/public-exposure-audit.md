@@ -101,8 +101,9 @@ stay under explicit size budgets without source-map hints or private path
 strings, confirms retired route code stays absent,
 and confirms the backend-served app shell uses a same-origin runtime config
 script instead of inline JavaScript and blocks unsafe inline styles. It also
-confirms the app shell blocks unused frame, worker, manifest, and media
-loaders, and sends legacy frame denial, HSTS, same-origin
+confirms the app shell blocks unused frame and media loaders while allowing the
+service worker and web manifest needed for offline PWA support via same-origin
+`worker-src 'self'` and `manifest-src 'self'`. It
 resource/opener/embedder isolation, origin-agent clustering, and restrictive
 Permissions-Policy headers. API CORS uses the exact same-origin app origin
 instead of a wildcard, rejects third-party preflights, rejects retired methods
@@ -165,8 +166,8 @@ the hosted app shell sends HSTS, frame-deny, same-origin
 resource/opener isolation, embedder
 isolation, origin-agent clustering, restrictive Permissions-Policy headers,
 cookie clearing, a noindex/noarchive robots header, a style policy without
-unsafe inline styles, and explicit denials for unused frame, worker, manifest,
-and media loaders, and that
+unsafe inline styles, explicit denials for unused frame and media loaders,
+same-origin access for the PWA service worker and manifest, and that
 hosted public assets have no source-map
 references, private path strings, served source-map files, retired metadata
 asset, unlisted public asset/data paths, and non-public repo/docs/server/source
@@ -248,7 +249,7 @@ This table is part of the ship gate. A risk row must be a final state:
 | Guessable generated sync or browser row keys | Fixed | Generated sync codes and anonymous browser row keys require Web Crypto with no weak random fallback, sync codes must be hashed before becoming row keys, and local/live gates reject weak manual or readable sync-code API client keys. Anyone with a valid sync code or sync link can still open that shared demo row |
 | Sync invite code remains in the URL after launch | Fixed | Sync links use `?sync=` only as a launch parameter; after shared state loads the frontend removes it from the address bar |
 | Backend app shell allows arbitrary inline script/style | Fixed | The Node app serves the API-base setting through same-origin `assets/runtime-config.js`, uses `script-src 'self'`, and blocks unsafe inline styles |
-| App shell CSP leaves unused loaders to fallback behavior | Fixed | CSP now explicitly denies frames, workers, manifests, and media loaders the demo does not use |
+| App shell CSP leaves unused loaders to fallback behavior | Fixed | CSP now explicitly denies frames and media loaders the demo does not use, while allowing same-origin service workers and web manifests for offline PWA support |
 | App shell lacks defensive browser headers | Fixed | The Node app sends frame-deny, same-origin resource/opener/embedder isolation, cookie clearing, no-referrer, nosniff, and restrictive Permissions-Policy headers |
 | Public dev deploys can be indexed or archived by search engines | Fixed | App and API responses send `X-Robots-Tag: noindex, nofollow, noarchive`, and local/static/live gates assert it |
 | Shared security headers can drift unverified | Fixed | Local, static-preview, and live gates now assert cookie clearing, embedder policy, origin-agent clustering, cross-domain policy denial, and robots indexing controls |
