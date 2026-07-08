@@ -980,6 +980,7 @@ html[data-theme="dark"] .demo-header-metadata {
   border: 1px solid var(--cockpit-border);
   border-radius: var(--demo-panel-radius);
   box-shadow: var(--demo-panel-shadow);
+  min-width: 0;
   transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
 }
 
@@ -7355,6 +7356,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
   overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
+  min-width: 0;
   padding-bottom: 20px;
 }
 .demo-gantt-today {
