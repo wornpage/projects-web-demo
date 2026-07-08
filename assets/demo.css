@@ -2903,7 +2903,7 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
 
 .demo-card-actions .demo-support-reason,
 .demo-card-support[open] .demo-support-reason {
-  max-height: 2em;
+  max-height: 3em;
   opacity: 0.78;
 }
 
