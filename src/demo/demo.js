@@ -3879,6 +3879,10 @@ function renderPackDetail() {
     runPrimaryAction(event.currentTarget);
   });
   bindPackDetailValidation(pack);
+  // Paste images into pack detail textareas
+  document.querySelectorAll("#pack-edit-form textarea").forEach((ta) => {
+    ta.addEventListener("paste", handleImagePaste);
+  });
   syncEditNextWhat();
   bindListActions();
 }
@@ -3911,6 +3915,20 @@ function renderMemory() {
     </section>
   `;
   bindMemoryValidation(pack);
+  // Paste images into memory
+  el("memory-note")?.addEventListener("paste", (event) => {
+    const file = event.clipboardData?.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      event.preventDefault();
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = `<img src="${reader.result}" alt="Pasted image" style="max-width:100%;border-radius:4px;margin-top:4px">`;
+        el("memory-note").value += img;
+        showToast("Image pasted.", "success");
+      };
+      reader.readAsDataURL(file);
+    }
+  });
   bindMemorySearch();
   bindGoButtons();
   bindListActions();
@@ -4667,6 +4685,21 @@ function syncEditNextWhat() {
   if (!what || !select) return;
   const command = commandActionForLabel(select.value || "Open");
   what.textContent = `"${command.label}" — ${nextActionWhatText(command)}`;
+}
+
+function handleImagePaste(event) {
+  const file = event.clipboardData?.files?.[0];
+  if (!file || !file.type.startsWith("image/")) return;
+  event.preventDefault();
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = `<img src="${reader.result}" alt="Pasted" style="max-width:100%">`;
+    const ta = event.target;
+    const start = ta.selectionStart;
+    ta.value = ta.value.slice(0, start) + img + ta.value.slice(ta.selectionEnd);
+    showToast("Image pasted.", "success");
+  };
+  reader.readAsDataURL(file);
 }
 
 function bindWorkCards() {
