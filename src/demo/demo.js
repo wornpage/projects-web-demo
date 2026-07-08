@@ -28,6 +28,15 @@ const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
+// Pure workflow rules are shared with the backend via server/src/workflow-rules.js,
+// prepended into this bundle at build time (exposes window.__workflowRules). Alias
+// them here so parity with the server engine is structural, not copy-pasted.
+const WR = window.__workflowRules;
+const forwardPathStatusForBlocker = WR.forwardPathStatusForBlocker;
+const isPlaceholderNext = WR.isPlaceholderNext;
+const isUnblockedBlockerValue = WR.isUnblockedBlockerValue;
+const normalizeStoredBlocker = WR.normalizeStoredBlocker;
+const createsBlockedByCycle = WR.createsBlockedByCycle;
 const BLOCKER_REASON_PRESETS = Object.freeze([
   "missing owner",
   "missing source",
@@ -862,7 +871,7 @@ function normalizeRecoveryPack(source) {
 
 function normalizeRecoveryStatus(value) {
   const status = normalizeRecoveryText(value, 40).toLowerCase();
-  return ["active", "blocked", "draft", "done"].includes(status) ? status : "draft";
+  return WR.VALID_PACK_STATUSES.includes(status) ? status : "draft";
 }
 
 function normalizeRecoveryTextArray(value, maxItems, maxLength) {return Array.isArray(value)?value.map((entry) => normalizeRecoveryText(entry, maxLength)).filter(Boolean).slice(0, maxItems):[]}
@@ -6787,33 +6796,8 @@ function packForwardPathFormValues(pack) {
   };
 }
 
-function forwardPathStatusForBlocker(status, blocker, next = "") {
-  const normalizedStatus = normalizeCopy(status) || "active";
-  if (normalizedStatus === "done") {
-    return "done";
-  }
-  if (isPlaceholderNext(next)) {
-    return "draft";
-  }
-  if (!isUnblockedBlockerValue(blocker)) {
-    return "blocked";
-  }
-  return "active";
-}
-
 function blockedByBlockerText(targetPack) {
   return normalizeCopy(`waiting on ${workTitle(targetPack)}`).slice(0, 200);
-}
-
-function createsBlockedByCycle(packs, packId, targetId) {
-  let currentId = targetId;
-  for (let hops = 0; hops < packs.length && currentId; hops++) {
-    if (currentId === packId) {
-      return true;
-    }
-    currentId = packs.find((pack) => pack.id === currentId)?.blockedBy || "";
-  }
-  return false;
 }
 
 function clearDanglingBlockedBy(packs) {
@@ -7106,28 +7090,12 @@ function isMissingNextAction(pack) {
   return isPlaceholderNext(label);
 }
 
-function isPlaceholderNext(label) {
-  const value = String(label || "").trim().toLowerCase();
-  return !value || value === "choose action" || value === "choose next action" || value === "set next action" || value === "set button runs next" || value === "set next";
-}
-
 function editableNextActionValue(value) {
   return isPlaceholderNext(value) ? "" : normalizeCopy(value);
 }
 
 function hasBlocker(pack) {
   return blockerStateForPack(pack).hasBlocker;
-}
-
-function isUnblockedBlockerValue(value) {
-  return normalizeStoredBlocker(value) === DEMO_BLOCKER_NONE;
-}
-
-function normalizeStoredBlocker(value) {
-  const blocker = normalizeCopy(value);
-  return blocker && blocker.toLowerCase() !== DEMO_BLOCKER_NONE
-    ? blocker
-    : DEMO_BLOCKER_NONE;
 }
 
 function blockerDisplayValue(value) {

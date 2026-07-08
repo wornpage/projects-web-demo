@@ -11,6 +11,7 @@ const terser = require("../server/node_modules/terser");
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(repoRoot, "src", "demo", "demo.js");
+const rulesPath = path.join(repoRoot, "server", "src", "workflow-rules.js");
 const cssSourcePath = path.join(repoRoot, "assets", "demo.css");
 const assetPath = path.join(repoRoot, "assets", "demo.js");
 const checkOnly = process.argv.includes("--check");
@@ -40,8 +41,13 @@ async function readGeneratedSource() {
   } catch {
     // telemetry.js is optional — skip if not present
   }
+  // The shared workflow rules live in server/src (so the backend can require
+  // them and the Docker runtime, which excludes src/, still ships them). Prepend
+  // them here so the browser bundle exposes window.__workflowRules before demo.js
+  // reads it. UMD-wrapped, so this same file require()s cleanly on the server.
+  const rules = (await fs.readFile(rulesPath, "utf8")).replace(/\r\n?/gu, "\n") + "\n";
   const source = await fs.readFile(sourcePath, "utf8");
-  const combined = telemetry + source.replace(/\r\n?/gu, "\n");
+  const combined = telemetry + rules + source.replace(/\r\n?/gu, "\n");
   const result = await terser.minify(combined, {
     compress: true,
     // Mangle function-scoped locals only. toplevel stays false so global
@@ -57,12 +63,14 @@ async function readGeneratedSource() {
 }
 
 function assertSourceSyntax() {
-  const result = spawnSync(process.execPath, ["--check", sourcePath], {
-    cwd: repoRoot,
-    encoding: "utf8"
-  });
+  for (const file of [rulesPath, sourcePath]) {
+    const result = spawnSync(process.execPath, ["--check", file], {
+      cwd: repoRoot,
+      encoding: "utf8"
+    });
 
-  if (result.status !== 0) {
-    throw new Error(`Demo source syntax check failed.\n${result.stderr || result.stdout}`);
+    if (result.status !== 0) {
+      throw new Error(`Demo source syntax check failed.\n${result.stderr || result.stdout}`);
+    }
   }
 }

@@ -6,10 +6,12 @@
 // ---------------------------------------------------------------------------
 
 const constants = require("./constants.js");
+const rules = require("./workflow-rules.js");
 
-function normalizeText(value, maxLength = 2000) {
-  return String(value ?? "").replace(/\s+/gu, " ").trim().slice(0, maxLength);
-}
+// The pure text/blocker normalizers live in the shared workflow-rules module so
+// the static client and this backend stay byte-identical. Re-export them here
+// under their existing names so the rest of server/src is unchanged.
+const normalizeText = rules.normalizeText;
 
 function normalizeStringArray(value, maxItems, maxLength) {
   return Array.isArray(value)
@@ -68,26 +70,9 @@ function workflowStringArrayField(source, key, maxItems, maxLength) {
   });
 }
 
-function isPlaceholderNext(label) {
-  const value = normalizeText(label, 120).toLowerCase();
-  return !value || value === "choose action" || value === "choose next action" || value === "set next action" || value === "set button runs next" || value === "set next";
-}
-
-function normalizeLegacyBlockerCopy(value) {
-  return value
-    .replace(/Button-runs-next/g, "Button runs next")
-    .replace(/Button Runs Next/g, "Button runs next")
-    .replace(/missing Button runs next/g, "missing next action")
-    .replace(/Button runs next/g, "Next action")
-    .replace(/button runs next/g, "next action");
-}
-
-function normalizeStoredBlocker(value) {
-  const blocker = normalizeLegacyBlockerCopy(normalizeText(value, 200));
-  return blocker && blocker.toLowerCase() !== constants.DEMO_BLOCKER_NONE
-    ? blocker
-    : constants.DEMO_BLOCKER_NONE;
-}
+const isPlaceholderNext = rules.isPlaceholderNext;
+const normalizeLegacyBlockerCopy = rules.normalizeLegacyBlockerCopy;
+const normalizeStoredBlocker = rules.normalizeStoredBlocker;
 
 function sanitizePack(source) {
   return {

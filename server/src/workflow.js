@@ -7,6 +7,13 @@
 
 const constants = require("./constants.js");
 const validation = require("./validation.js");
+const rules = require("./workflow-rules.js");
+
+// The forward-path status derivation and the blocked-by cycle check are shared
+// rules — see server/src/workflow-rules.js — so this backend and the static
+// client cannot drift. Aliased here under their existing names.
+const forwardPathStatusForBlocker = rules.forwardPathStatusForBlocker;
+const createsBlockedByCycle = rules.createsBlockedByCycle;
 
 // --- Finding packs ---
 
@@ -208,20 +215,6 @@ function primaryCommandVisibleReason(pack, command = resolvePrimaryCommandForPac
   return `Why: no blocker; ${command.label} can run.`;
 }
 
-function forwardPathStatusForBlocker(status, blocker, next = "") {
-  const normalizedStatus = validation.normalizeText(status, 40) || "active";
-  if (normalizedStatus === "done") {
-    return "done";
-  }
-  if (validation.isPlaceholderNext(next)) {
-    return "draft";
-  }
-  if (validation.normalizeStoredBlocker(blocker) !== constants.DEMO_BLOCKER_NONE) {
-    return "blocked";
-  }
-  return "active";
-}
-
 // --- Pack actions ---
 
 function packActionSignature(pack) {
@@ -351,17 +344,6 @@ function proofSavedActivity(pack) {
 
 function blockedByBlockerText(targetPack) {
   return validation.normalizeText(`waiting on ${workTitle(targetPack)}`, 200);
-}
-
-function createsBlockedByCycle(packs, packId, targetId) {
-  let currentId = targetId;
-  for (let hops = 0; hops < packs.length && currentId; hops++) {
-    if (currentId === packId) {
-      return true;
-    }
-    currentId = packs.find((pack) => pack.id === currentId)?.blockedBy || "";
-  }
-  return false;
 }
 
 function changePackBlockedByField(state, pack, source, field, label) {
