@@ -8934,9 +8934,11 @@ function renderGantt() {
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head"><div><span class="section-label">Timeline</span><h2>Gantt — ${items.length} items with due dates</h2></div></div>
-      <div class="demo-gantt-chart">
+      <div class="demo-gantt-chart" style="overflow-x:auto;max-width:100%">
+        <div style="position:relative;width:${(totalDays * dayWidth) + 200}px">
         <div class="demo-gantt-today" style="left:${todayOffset * dayWidth}px">Today</div>
         ${rows}
+        </div>
       </div>
     </section>
   `;
