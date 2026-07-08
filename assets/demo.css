@@ -274,6 +274,11 @@ h3,
   .btn-primary, .demo-chip[aria-pressed="true"], .demo-state-pill {
     border: 2px solid ButtonText;
   }
+  ::-webkit-scrollbar-thumb { background: ButtonText; }
+  ::-webkit-scrollbar-track { background: Canvas; }
+  ::-webkit-scrollbar-button { background: ButtonFace; }
+  .demo-sidebar.nav-rail::-webkit-scrollbar-thumb { background: ButtonText; }
+  .demo-cmdk-list::-webkit-scrollbar-thumb { background: ButtonText; }
 }
 
 .skip-link {
