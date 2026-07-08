@@ -37,6 +37,7 @@ const isPlaceholderNext = WR.isPlaceholderNext;
 const isUnblockedBlockerValue = WR.isUnblockedBlockerValue;
 const normalizeStoredBlocker = WR.normalizeStoredBlocker;
 const createsBlockedByCycle = WR.createsBlockedByCycle;
+const unblockedReceiptSentence = WR.unblockedReceiptSentence;
 const BLOCKER_REASON_PRESETS = Object.freeze([
   "missing owner",
   "missing source",
@@ -6989,13 +6990,6 @@ function runCommandPaletteItem(index) {
       }
     }
   }
-}
-
-function unblockedReceiptSentence(count) {
-  if (!count) {
-    return "";
-  }
-  return `Unblocked ${count} work item${count === 1 ? "" : "s"}.`;
 }
 
 function blockedByChoices(pack) {

@@ -121,6 +121,14 @@
     return {};
   }
 
+  // The receipt fragment naming how many dependents a finish unblocked.
+  function unblockedReceiptSentence(count) {
+    if (!count) {
+      return "";
+    }
+    return `Unblocked ${count} work item${count === 1 ? "" : "s"}.`;
+  }
+
   // The blocker text a pack carries while waiting on another. `workTitle` is
   // injected because titles depend on each engine's copy defaults.
   function blockedByBlockerText(targetPack, workTitle) {
@@ -156,6 +164,7 @@
     createsBlockedByCycle,
     packActionEffect,
     blockedByBlockerText,
-    unblockPacksBlockedBy
+    unblockPacksBlockedBy,
+    unblockedReceiptSentence
   };
 });

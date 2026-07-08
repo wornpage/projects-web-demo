@@ -370,12 +370,7 @@ function unblockPacksBlockedBy(state, finishedPack) {
   return rules.unblockPacksBlockedBy(state.packs, finishedPack, { onActivity: addPackActivity, workTitle });
 }
 
-function unblockedReceiptSentence(count) {
-  if (!count) {
-    return "";
-  }
-  return `Unblocked ${count} work item${count === 1 ? "" : "s"}.`;
-}
+const unblockedReceiptSentence = rules.unblockedReceiptSentence;
 
 // --- Path actions ---
 

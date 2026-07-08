@@ -27,7 +27,8 @@ const expectedExports = [
   "createsBlockedByCycle",
   "packActionEffect",
   "blockedByBlockerText",
-  "unblockPacksBlockedBy"
+  "unblockPacksBlockedBy",
+  "unblockedReceiptSentence"
 ];
 
 // Names fully removed from both engines — must never be re-declared as a local
@@ -40,7 +41,8 @@ const noLocalDeclaration = [
   "isPlaceholderNext",
   "isUnblockedBlockerValue",
   "createsBlockedByCycle",
-  "packActionEffect"
+  "packActionEffect",
+  "unblockedReceiptSentence"
 ];
 
 // Names that keep a thin wrapper on each engine — the wrapper must delegate to

@@ -125,6 +125,16 @@ describe("workflow-rules: packActionEffect", () => {
   });
 });
 
+describe("workflow-rules: unblockedReceiptSentence", () => {
+  it("is empty for zero", () => {
+    assert.strictEqual(rules.unblockedReceiptSentence(0), "");
+  });
+  it("uses singular and plural forms", () => {
+    assert.strictEqual(rules.unblockedReceiptSentence(1), "Unblocked 1 work item.");
+    assert.strictEqual(rules.unblockedReceiptSentence(3), "Unblocked 3 work items.");
+  });
+});
+
 describe("workflow-rules: blockedByBlockerText", () => {
   it("formats the waiting-on text with the injected title", () => {
     assert.strictEqual(rules.blockedByBlockerText({ id: "x" }, () => "Widget X"), "waiting on Widget X");
