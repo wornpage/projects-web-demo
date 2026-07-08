@@ -33,6 +33,11 @@ const steps = [
     args: ["--check", "server/static.js"]
   },
   {
+    label: "workflow rules guard",
+    command: process.execPath,
+    args: ["scripts/check-workflow-rules-guard.mjs"]
+  },
+  {
     label: "protected frontend",
     command: process.execPath,
     args: ["scripts/check-protected-frontend.mjs"]
