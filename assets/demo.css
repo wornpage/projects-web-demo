@@ -739,7 +739,7 @@ html[data-theme="dark"] .demo-app-shell {
   padding: 0 12px;
   position: relative;
   text-decoration: none;
-  transition: background-color var(--demo-motion-duration) ease, color var(--demo-motion-duration) ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
   width: calc(100% - 8px);
 }
 
@@ -752,6 +752,7 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-nav-item:hover {
   background: var(--cockpit-accent-50);
   color: var(--cockpit-accent);
+  transform: translateX(2px);
 }
 
 .demo-nav-item:focus-visible {
