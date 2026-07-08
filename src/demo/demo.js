@@ -3834,7 +3834,7 @@ function renderCreate() {
         ${inputField("new-owner", `Owner (optional) ${helpTip("Who is responsible for moving this forward. Leave blank or write 'unassigned' if unknown.")}`, defaults.owner, "Name the person, team, or role responsible for the next step.")}
         ${nextActionSelectField("new-next", `Next action ${helpTip("The first thing the main button will do. 'Choose action' means the button is paused.")}`, defaults.next, "Choose the first action. Choose action means Save work stays paused.")}
         <details class="demo-optional-fields"${defaults.due || defaults.url || defaults.purpose ? " open" : ""}>
-          <summary>More options</summary>
+          <summary>More options${(defaults.due ? 1 : 0) + (defaults.url ? 1 : 0) + (defaults.purpose ? 1 : 0) ? ` (${(defaults.due ? 1 : 0) + (defaults.url ? 1 : 0) + (defaults.purpose ? 1 : 0)})` : ""}</summary>
           ${dateField("new-due", "Due (optional)", defaults.due, "Optional date kept on the work path and searchable in the work list.")}
           ${inputField("new-url", "URL (optional)", defaults.url, "A link to open from this work item. Paste a URL to save it.")}
           ${textField("new-purpose", "Why it matters (optional)", defaults.purpose, `Optional context for why this ${profile().work} exists.`)}
@@ -3937,7 +3937,7 @@ function renderPackDetail() {
         ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
         ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
         <details class="demo-optional-fields"${pack.due || pack.url || pack.doneWhen || pack.purpose ? " open" : ""}>
-          <summary>More options</summary>
+          <summary>More options${(pack.due ? 1 : 0) + (pack.url ? 1 : 0) + (pack.doneWhen ? 1 : 0) + (pack.purpose ? 1 : 0) ? ` (${(pack.due ? 1 : 0) + (pack.url ? 1 : 0) + (pack.doneWhen ? 1 : 0) + (pack.purpose ? 1 : 0)})` : ""}</summary>
           ${dateField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
           ${inputField("edit-url", "URL", pack.url, "A link to open from this work item.")}
           ${inputField("edit-done-when", `Proof target ${helpTip("The evidence that proves this work is truly done. Describe what 'finished' looks like.")}`, pack.doneWhen, "Describe the evidence needed before this work is done.")}
