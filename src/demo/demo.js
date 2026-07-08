@@ -801,8 +801,28 @@ function parseNaturalLanguage(raw) {
   const text = (raw || "").trim();
   if (!text) return {};
   const result = {};
-  const dueMatch = text.match(/\b(?:due|by)\s+((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2}|\d{4}-\d{2}-\d{2}|tomorrow|today|next\s+\w+)/i);
-  if (dueMatch) { result.due = dueMatch[1]; }
+  const dueMatch = text.match(/\b(?:due|by)\s+((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2}|\d{4}-\d{2}-\d{2}|tomorrow|today|next\s+\w+|in\s+\d+\s+(?:day|week|month)s?)/i);
+  if (dueMatch) {
+    const rawDue = dueMatch[1];
+    const relativeMatch = rawDue.match(/^in\s+(\d+)\s+(day|week|month)s?$/i);
+    if (relativeMatch) {
+      const n = parseInt(relativeMatch[1], 10);
+      const unit = relativeMatch[2].toLowerCase();
+      const d = new Date();
+      if (unit === "day") d.setDate(d.getDate() + n);
+      else if (unit === "week") d.setDate(d.getDate() + n * 7);
+      else d.setMonth(d.getMonth() + n);
+      result.due = d.toISOString().slice(0, 10);
+    } else if (rawDue === "tomorrow") {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      result.due = d.toISOString().slice(0, 10);
+    } else if (rawDue === "today") {
+      result.due = new Date().toISOString().slice(0, 10);
+    } else {
+      result.due = rawDue;
+    }
+  }
   const blockerMatch = text.match(/\b(?:blocked\s+by|waiting\s+(?:on|for))\s+(.+?)(?:\s*$|\s+(?:due|by|for)\b)/i);
   if (blockerMatch) { result.blocker = blockerMatch[1].trim(); }
   const ownerMatch = text.match(/\b(?:for|by|@)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
