@@ -122,7 +122,7 @@ const NAV_ROUTE_GROUPS = Object.freeze([
   Object.freeze({
     id: "public",
     label: "Demo",
-    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar", "settings", "insights", "activity"])
+    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar", "gantt", "settings", "insights", "activity"])
   })
 ]);
 
