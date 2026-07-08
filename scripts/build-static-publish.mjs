@@ -13,6 +13,7 @@ export const STATIC_PUBLISH_FILES = Object.freeze([
   "landing.html",
   ".nojekyll",
   "sw.js",
+  "manifest.json",
   "assets/demo.css",
   "assets/demo.js",
   "assets/landing.css",

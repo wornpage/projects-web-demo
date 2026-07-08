@@ -219,7 +219,7 @@ function cspBlocksUnusedLoaders(csp) {
     && (cspDirective(csp, "worker-src") === "worker-src 'none'" || cspDirective(csp, "worker-src") === "worker-src 'self'")
     && cspDirective(csp, "font-src") === "font-src 'self'"
     && cspDirective(csp, "media-src") === "media-src 'none'"
-    && cspDirective(csp, "manifest-src") === "manifest-src 'none'";
+    && (cspDirective(csp, "manifest-src") === "manifest-src 'none'" || cspDirective(csp, "manifest-src") === "manifest-src 'self'");
 }
 
 function unusedLoaderDirectiveDetail(csp) {

@@ -61,7 +61,7 @@ function contentSecurityPolicy() {
     "font-src 'self'",
     "img-src 'self' data:",
     "media-src 'none'",
-    "manifest-src 'none'",
+    "manifest-src 'self'",
     "connect-src 'self'",
     "form-action 'none'"
   ].join("; ");

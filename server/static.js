@@ -12,6 +12,7 @@ const publicStaticFiles = new Set([
   "/index.html",
   "/landing.html",
   "/sw.js",
+  "/manifest.json",
   "/assets/demo.css",
   "/assets/demo.js",
   "/assets/landing.css",
@@ -163,7 +164,7 @@ function contentSecurityPolicy() {
     "font-src 'self'",
     "img-src 'self' data:",
     "media-src 'none'",
-    "manifest-src 'none'",
+    "manifest-src 'self'",
     "connect-src 'self'",
     "form-action 'none'"
   ].join("; ");
