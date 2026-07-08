@@ -2727,14 +2727,14 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-note,
 .demo-scenario-card {
   background: var(--demo-card-bg);
-  border: 1px solid var(--demo-card-border);
+  border: 1px solid transparent;
   border-radius: var(--demo-panel-radius);
   box-shadow: var(--demo-card-shadow);
   min-width: 0;
   overflow: visible;
   padding: 16px;
   position: relative;
-  transition: background-color var(--demo-motion-duration) ease, border-color var(--demo-motion-duration) ease, box-shadow var(--demo-motion-duration) ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 .demo-metric:hover,
