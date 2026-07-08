@@ -344,6 +344,12 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // Register service worker for offline PWA
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.ready.then(() => showToast("App ready for offline use.", "success"));
+  }
+
   if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
   }
