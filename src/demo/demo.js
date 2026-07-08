@@ -2194,10 +2194,9 @@ function routeFromHash() {
     history.replaceState({}, "", `${location.pathname}${location.search}${formatRouteHash("home")}`);
   }
 
-  if (state.route === "calendar") {
-    // The calendar's "packId" is a year/month[/date] view param, not a work
-    // id — store it for renderCalendar and leave the selection alone.
-    state.routeParam = parsedRoute.packId;
+  if (state.route === "calendar" || state.route === "compare") {
+    // Calendar and Compare use extra path segments as view params.
+    state.routeParam = parsedRoute.packId + (parsedRoute.extraSegments.length ? "/" + parsedRoute.extraSegments.join("/") : "");
   } else if (parsedRoute.packId && findPack(parsedRoute.packId)) {
     state.selectedId = parsedRoute.packId;
   } else if (parsedRoute.packId) {
@@ -2273,7 +2272,12 @@ function formatRouteHash(route, id = "") {
   const routeKey = isKnownRoute(route) ? route : "home";
   const routeContract = ROUTE_CONTRACT[routeKey] || ROUTE_CONTRACT.home;
   if (routeContract.acceptsPackId && id) {
-    return routeContract.pattern.replace("{packId}", encodeURIComponent(id));
+    const segments = id.split("/");
+    let result = routeContract.pattern;
+    for (const seg of segments) {
+      result = result.replace("{packId}", encodeURIComponent(seg));
+    }
+    return result.replace("/{packId}", "");
   }
 
   return routeContract.pattern.replace("/{packId}", "");
