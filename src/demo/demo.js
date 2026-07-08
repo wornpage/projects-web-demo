@@ -3225,6 +3225,7 @@ function renderHome() {
       <button class="btn btn-sm" type="button" id="copy-link-home" style="margin-top:4px">Copy share link</button>
       <button class="btn btn-sm" type="button" id="email-standup-home" style="margin-top:4px">Email standup</button>
       <button class="btn btn-sm" type="button" id="export-ics-home" style="margin-top:4px">Export .ics</button>
+      <button class="btn btn-sm" type="button" id="speak-home" style="margin-top:4px">🔊 Read aloud</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
         <div class="demo-method-grid">
@@ -3263,6 +3264,13 @@ function renderHome() {
     showToast("Opening email client with standup summary.", "success");
   });
   el("export-ics-home")?.addEventListener("click", exportICS);
+  el("speak-home")?.addEventListener("click", () => {
+    const text = buildStandupText().split("\n").filter((l) => l.trim()).join(". ");
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    speechSynthesis.speak(utterance);
+    showToast("Reading work status aloud.", "info");
+  });
 }
 
 const WELCOME_METHODS = [
