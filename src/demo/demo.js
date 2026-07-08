@@ -4218,6 +4218,9 @@ function updateWorkListAfterFilter() {
         <span>Next action</span>
         <span></span>
       </div>${itemsHtml}`;
+    } else if (state.workListView === "landing") {
+      listContainer.className = "demo-work-list demo-work-landing";
+      listContainer.innerHTML = itemsHtml;
     } else {
       listContainer.className = "demo-work-list";
       listContainer.innerHTML = itemsHtml;
