@@ -1,15 +1,15 @@
 :root {
-  --cockpit-bg: #f6f0e6;
-  --cockpit-surface: #fffcf4;
-  --cockpit-nav-bg: #efe7da;
+  --cockpit-bg: #f5f3ef;
+  --cockpit-surface: #fdfdfb;
+  --cockpit-nav-bg: #efede7;
   --cockpit-accent: #1d6f64;
   --cockpit-accent-hover: #15564d;
   --cockpit-accent-text: #ffffff;
   --cockpit-accent-50: #eaf4f0;
   --cockpit-selected-bg: #d7efe7;
   --cockpit-selected-fg: #082f2b;
-  --cockpit-border: #e0d4c0;
-  --cockpit-border-strong: #cdc0aa;
+  --cockpit-border: #e2ddd5;
+  --cockpit-border-strong: #d0cac1;
   --cockpit-text: #21322b;
   --cockpit-text-secondary: #5b6a60;
   --cockpit-text-muted: #708277;
@@ -40,9 +40,9 @@
 
 html.dark,
 html[data-theme="dark"] {
-  --cockpit-bg: #0d1512;
-  --cockpit-surface: #17211d;
-  --cockpit-nav-bg: #101a16;
+  --cockpit-bg: #0f1714;
+  --cockpit-surface: #18241f;
+  --cockpit-nav-bg: #121c18;
   --cockpit-accent: #4ca48f;
   --cockpit-accent-hover: #7ddac3;
   --cockpit-accent-text: #04241d;
@@ -68,9 +68,9 @@ html[data-theme="dark"] {
 }
 
 html[data-theme="forest"] {
-  --cockpit-bg: #1a2318;
-  --cockpit-surface: #243024;
-  --cockpit-nav-bg: #1c261b;
+  --cockpit-bg: #1c251a;
+  --cockpit-surface: #263226;
+  --cockpit-nav-bg: #1e281d;
   --cockpit-accent: #5b9a4b;
   --cockpit-accent-hover: #7fbf6b;
   --cockpit-accent-text: #0b1f07;
@@ -96,9 +96,9 @@ html[data-theme="forest"] {
 }
 
 html[data-theme="ocean"] {
-  --cockpit-bg: #0d1b2a;
-  --cockpit-surface: #162a40;
-  --cockpit-nav-bg: #101f30;
+  --cockpit-bg: #0f1d2c;
+  --cockpit-surface: #182c42;
+  --cockpit-nav-bg: #122132;
   --cockpit-accent: #3b82c4;
   --cockpit-accent-hover: #60a5d6;
   --cockpit-accent-text: #04121f;
@@ -124,9 +124,9 @@ html[data-theme="ocean"] {
 }
 
 html[data-theme="sepia"] {
-  --cockpit-bg: #2b2218;
-  --cockpit-surface: #3a3024;
-  --cockpit-nav-bg: #2d2419;
+  --cockpit-bg: #2d241a;
+  --cockpit-surface: #3c3226;
+  --cockpit-nav-bg: #2f261b;
   --cockpit-accent: #c18642;
   --cockpit-accent-hover: #d99f5c;
   --cockpit-accent-text: #1a1008;
@@ -425,7 +425,7 @@ h3,
   --demo-motion-duration: 0.12s;
   --demo-panel-radius: var(--cockpit-radius);
   --demo-shell-font-size: 14px;
-  --demo-shell-line-height: 1.4;
+  --demo-shell-line-height: 1.5;
   --demo-card-title-weight: var(--font-display-weight);
   --demo-card-meta-weight: var(--font-body-weight);
   --demo-meta-font-weight: 480;
@@ -2322,7 +2322,7 @@ html[data-theme="dark"] .demo-header-metadata {
 
 .demo-screen {
   display: grid;
-  gap: 18px;
+  gap: 22px;
   min-width: 0;
 }
 

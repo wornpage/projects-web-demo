@@ -10,11 +10,11 @@
   --font-display: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
   /* The app's own light cockpit tokens. */
-  --bg: #f6f0e6;
-  --surface: #fffcf4;
-  --nav-bg: #efe7da;
-  --border: #ddd0bd;
-  --border-strong: #c9bca8;
+  --bg: #f5f3ef;
+  --surface: #fdfdfb;
+  --nav-bg: #efede7;
+  --border: #e2ddd5;
+  --border-strong: #d0cac1;
   --ink: #21322b;
   --ink-soft: #47564d;
   --muted: #6a7a70;
