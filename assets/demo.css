@@ -6769,9 +6769,9 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 
 .demo-landing-card { background:var(--cockpit-surface); border:1px solid var(--cockpit-border); border-radius:var(--cockpit-radius); padding:16px 18px; display:flex; flex-direction:column; gap:10px; transition:border-color 0.12s }
 .demo-landing-card.is-attention { box-shadow:inset 3px 0 0 #c18642; border-color:var(--cockpit-border) }
-.demo-landing-card.is-done { opacity:0.65 }
+.demo-landing-card.is-done { opacity:0.6 }
 .demo-landing-card .lp-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px }
-.demo-landing-card .lp-card-title { font-size:15px; font-weight:700; color:var(--cockpit-text) }
+.demo-landing-card .lp-card-title { font-size:15px; font-weight:700; color:var(--cockpit-text); background:transparent; border:none; padding:0; cursor:pointer; font:inherit; text-align:left }
 .demo-landing-card .lp-card-meta { display:flex; gap:8px; font-size:12px; color:var(--cockpit-text-muted) }
 .demo-landing-card .lp-command { display:flex; flex-direction:column; gap:2px }
 .demo-landing-card .lp-command span { font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--cockpit-text-muted) }
