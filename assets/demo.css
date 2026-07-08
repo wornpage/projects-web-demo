@@ -2,10 +2,10 @@
   --cockpit-bg: #f5f3ef;
   --cockpit-surface: #fdfdfb;
   --cockpit-nav-bg: #efede7;
-  --cockpit-accent: #1d6f64;
-  --cockpit-accent-hover: #15564d;
+  --cockpit-accent: #0d9488;
+  --cockpit-accent-hover: #0f766e;
   --cockpit-accent-text: #ffffff;
-  --cockpit-accent-50: #eaf4f0;
+  --cockpit-accent-50: #e6f7f5;
   --cockpit-selected-bg: #d7efe7;
   --cockpit-selected-fg: #082f2b;
   --cockpit-border: #e2ddd5;
@@ -2324,6 +2324,12 @@ html[data-theme="dark"] .demo-header-metadata {
   display: grid;
   gap: 22px;
   min-width: 0;
+  animation: screenIn 0.2s ease-out;
+}
+
+@keyframes screenIn {
+  from { opacity: 0.6; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .demo-grid {

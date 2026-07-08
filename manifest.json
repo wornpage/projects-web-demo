@@ -4,7 +4,7 @@
   "description": "Personal portfolio demo — work tracker with pre-built methods for daily ops, prompt engineering, and project work.",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#1d6f64",
+  "theme_color": "#0d9488",
   "background_color": "#f5f3ef",
   "icons": [
     { "src": "assets/favicon.png", "sizes": "100x100", "type": "image/png" }
