@@ -330,6 +330,37 @@ function showToast(message, type = "info") {
 window.addEventListener("offline", () => showToast("You are offline. Changes save locally.", "error"));
 window.addEventListener("online", () => showToast("Back online.", "success"));
 
+// Right-click context menu on work cards
+document.addEventListener("contextmenu", (event) => {
+  const card = event.target.closest("[data-pack-id]");
+  if (!card) return;
+  event.preventDefault();
+  const id = card.dataset.packId;
+  const pack = findPack(id);
+  if (!pack) return;
+  const menu = document.createElement("div");
+  menu.className = "demo-context-menu";
+  menu.innerHTML = [
+    { label: "Open work path", action: () => go("pack", id) },
+    { label: "Copy title", action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } },
+    { label: "Finish with proof", action: () => handlePackAction(id, "done") },
+    { label: "Cancel", action: null }
+  ].map((item) => `<button type="button" class="demo-context-item"${item.action ? "" : " data-close"}>${item.label}</button>`).join("");
+  menu.style.left = event.clientX + "px";
+  menu.style.top = event.clientY + "px";
+  document.body.appendChild(menu);
+  menu.querySelectorAll("button").forEach((btn, i) => {
+    btn.addEventListener("click", () => {
+      const items = [{ action: () => go("pack", id) }, { action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } }, { action: () => handlePackAction(id, "done") }, { action: null }];
+      items[i]?.action?.();
+      menu.remove();
+    });
+  });
+  const close = () => menu.remove();
+  document.addEventListener("click", close, { once: true });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); }, { once: true });
+});
+
 // Keyboard shortcuts
 document.addEventListener("keydown", (event) => {
   if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA" || event.target.tagName === "SELECT" || event.metaKey || event.ctrlKey) return;
