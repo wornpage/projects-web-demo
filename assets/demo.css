@@ -8,8 +8,8 @@
   --cockpit-accent-50: #eaf4f0;
   --cockpit-selected-bg: #d7efe7;
   --cockpit-selected-fg: #082f2b;
-  --cockpit-border: #ddd0bd;
-  --cockpit-border-strong: #c9bca8;
+  --cockpit-border: #e0d4c0;
+  --cockpit-border-strong: #cdc0aa;
   --cockpit-text: #21322b;
   --cockpit-text-secondary: #5b6a60;
   --cockpit-text-muted: #708277;
@@ -49,8 +49,8 @@ html[data-theme="dark"] {
   --cockpit-accent-50: #16372f;
   --cockpit-selected-bg: #16453b;
   --cockpit-selected-fg: #f7fffc;
-  --cockpit-border: #34473f;
-  --cockpit-border-strong: #5b6a60;
+  --cockpit-border: #3a4d45;
+  --cockpit-border-strong: #4d5c52;
   --cockpit-text: #f7fffc;
   --cockpit-text-secondary: #d9e8e2;
   --cockpit-text-muted: #9aa99f;
@@ -77,8 +77,8 @@ html[data-theme="forest"] {
   --cockpit-accent-50: #1e3819;
   --cockpit-selected-bg: #1e3d1a;
   --cockpit-selected-fg: #f2ffee;
-  --cockpit-border: #3a4d36;
-  --cockpit-border-strong: #556b4e;
+  --cockpit-border: #3f523b;
+  --cockpit-border-strong: #495d43;
   --cockpit-text: #e8f2e0;
   --cockpit-text-secondary: #c5d6bf;
   --cockpit-text-muted: #9aaa9c;
@@ -105,8 +105,8 @@ html[data-theme="ocean"] {
   --cockpit-accent-50: #152a42;
   --cockpit-selected-bg: #1a3d5c;
   --cockpit-selected-fg: #f0f8ff;
-  --cockpit-border: #2a4560;
-  --cockpit-border-strong: #4a6b8a;
+  --cockpit-border: #2f4a65;
+  --cockpit-border-strong: #3f5d78;
   --cockpit-text: #e6eff7;
   --cockpit-text-secondary: #c5d5e6;
   --cockpit-text-muted: #97b0c5;
@@ -133,8 +133,8 @@ html[data-theme="sepia"] {
   --cockpit-accent-50: #3a2818;
   --cockpit-selected-bg: #3d2a1a;
   --cockpit-selected-fg: #fff2e0;
-  --cockpit-border: #4a3c2e;
-  --cockpit-border-strong: #6b5a48;
+  --cockpit-border: #504234;
+  --cockpit-border-strong: #5d4e3e;
   --cockpit-text: #efe0cc;
   --cockpit-text-secondary: #d4c5b0;
   --cockpit-text-muted: #b09070;
@@ -424,7 +424,7 @@ h3,
   --demo-font-scale: 1;
   --demo-motion-duration: 0.12s;
   --demo-panel-radius: var(--cockpit-radius);
-  --demo-shell-font-size: 13px;
+  --demo-shell-font-size: 14px;
   --demo-shell-line-height: 1.4;
   --demo-card-title-weight: var(--font-display-weight);
   --demo-card-meta-weight: var(--font-body-weight);
@@ -531,6 +531,8 @@ html[data-theme="dark"] .demo-app-shell {
 
 .demo-sidebar {
   background: linear-gradient(180deg, var(--cockpit-nav-bg), color-mix(in srgb, var(--cockpit-nav-bg) 96%, var(--cockpit-bg)));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom: 0;
   border-right: 1px solid var(--cockpit-border);
   display: flex;
