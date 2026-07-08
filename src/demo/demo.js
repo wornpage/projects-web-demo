@@ -491,13 +491,16 @@ window.addEventListener("hashchange", () => {
 });
 
 function initTheme() {
-  const saved = localStorage.getItem(THEME_STORAGE_KEY);
+  let saved;
+  try { saved = localStorage.getItem(THEME_STORAGE_KEY); } catch { /* storage unavailable */ }
   const theme = THEMES.includes(saved) ? saved
     : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark"
     : "light";
   applyTheme(theme);
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
-    if (!localStorage.getItem(THEME_STORAGE_KEY)) applyTheme(event.matches ? "dark" : "light");
+    let hasStored;
+    try { hasStored = localStorage.getItem(THEME_STORAGE_KEY); } catch { hasStored = null; }
+    if (!hasStored) applyTheme(event.matches ? "dark" : "light");
   });
   el("theme-toggle").addEventListener("click", () => {
     const current = document.documentElement.dataset.theme || "light";
@@ -518,7 +521,7 @@ function applyTheme(theme) {
   toggle.setAttribute("aria-pressed", String(theme !== "light"));
   toggle.setAttribute("title", help);
   toggle.setAttribute("aria-label", `Theme: ${THEME_LABELS[theme]}. ${help}`);
-  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* storage unavailable */ }
 }
 
 function bindShellControls() {
