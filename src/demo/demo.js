@@ -114,7 +114,7 @@ const ROUTE_CONTRACT = Object.freeze({
   settings: { pattern: "#/settings", title: "Settings", commandSource: "route", navKey: "⚙", navLabel: "Settings" },
   insights: { pattern: "#/insights", title: "Insights", commandSource: "route", navKey: "📊", navLabel: "Insights" },
   activity: { pattern: "#/activity", title: "Activity", commandSource: "route", navKey: "📋", navLabel: "Activity" },
-  gantt: { pattern: "#/gantt", title: "Timeline", commandSource: "route", navKey: "📊", navLabel: "Gantt" },
+  gantt: { pattern: "#/gantt", title: "Timeline", commandSource: "route", navKey: "📈", navLabel: "Gantt" },
   terms: { pattern: "#/terms", title: "Terms & Privacy", commandSource: "route" }
 });
 
