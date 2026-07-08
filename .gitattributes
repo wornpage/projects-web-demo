@@ -1,6 +1,10 @@
 assets/demo.js text eol=lf
 assets/demo.css text eol=lf
+assets/landing.css text eol=lf
 index.html text eol=lf
+landing.html text eol=lf
+sw.js text eol=lf
+manifest.json text eol=lf
 data/demo-packs.json text eol=lf
 src/demo/demo.js text eol=lf
 scripts/*.mjs text eol=lf
