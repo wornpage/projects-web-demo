@@ -518,7 +518,7 @@ function applyTheme(theme) {
   const nextIdx = (THEMES.indexOf(theme) + 1) % THEMES.length;
   const nextTheme = THEMES[nextIdx];
   const help = `Switch to ${THEME_LABELS[nextTheme]} theme.`;
-  toggle.textContent = "Theme";
+  toggle.textContent = THEME_LABELS[theme];
   toggle.setAttribute("aria-pressed", String(theme !== "light"));
   toggle.setAttribute("title", help);
   toggle.setAttribute("aria-label", `Theme: ${THEME_LABELS[theme]}. ${help}`);
