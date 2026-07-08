@@ -337,6 +337,10 @@ document.addEventListener("keydown", (event) => {
   const route = map[event.key.toLowerCase()];
   if (route) { go(route); event.preventDefault(); return; }
   if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar", "info"); event.preventDefault(); }
+  if (event.key === "Enter" && event.target.closest("#pack-edit-form, .demo-inline-form")) {
+    const btn = el("pack-primary-action") || event.target.closest("form")?.querySelector("[type=submit], .btn-primary");
+    if (btn) { btn.click(); event.preventDefault(); }
+  }
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
