@@ -306,6 +306,14 @@ let apiSaveInFlight = false;
 let apiSavePromise = null;
 let apiSessionClientId = "";
 
+window.addEventListener("unhandledrejection", (event) => {
+  const msg = event.reason?.message || event.reason || "Unknown error";
+  state.status = routeStatus("Error", msg, "retry or refresh");
+  if (DEMO_API_BASE_URL) state.suppressNextSave = true;
+  render();
+  event.preventDefault();
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
   if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
