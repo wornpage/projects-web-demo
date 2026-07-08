@@ -7177,6 +7177,56 @@ time.demo-due-overdue{color:var(--cockpit-danger-text);font-weight:610}
 time.demo-due-today{color:var(--cockpit-warning-text);font-weight:610}
 time.demo-due-soon{color:var(--cockpit-warning-text)}
 
+.demo-activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.demo-activity-entry {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--cockpit-border);
+  position: relative;
+}
+
+.demo-activity-entry:last-child {
+  border-bottom: none;
+}
+
+.demo-activity-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cockpit-accent);
+  margin-top: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.demo-activity-entry:not(:last-child) .demo-activity-dot::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 4px;
+  width: 2px;
+  height: calc(100% + 28px);
+  background: var(--cockpit-border);
+}
+
+.demo-activity-body {
+  min-width: 0;
+}
+
+.demo-activity-body p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--cockpit-text-secondary);
+}
+
 .demo-activity-time {
   color: var(--cockpit-text-muted);
   font-size: 11px;
