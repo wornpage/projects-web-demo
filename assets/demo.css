@@ -6781,7 +6781,133 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .lp-pill-warn { background:var(--cockpit-warning-bg,#fef3e0); color:var(--cockpit-warning-text,#c18642) }
 .lp-pill-accent { background:var(--cockpit-accent-50); color:var(--cockpit-accent) }
 .lp-pill-muted { background:var(--cockpit-border); color:var(--cockpit-text-muted) }
-.demo-work-landing{display:flex;flex-direction:column;gap:10px}
-.demo-nl-create{margin-bottom:16px;padding:16px;background:var(--cockpit-accent-50);border:1px solid var(--cockpit-accent);border-radius:var(--cockpit-radius)}.demo-nl-field input{font-size:15px!important}
-.demo-context-menu{position:fixed;z-index:300;background:var(--cockpit-surface);border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;padding:4px;display:flex;flex-direction:column}.demo-context-item{display:block;width:100%;padding:8px 12px;font:inherit;font-size:13px;text-align:left;background:none;border:none;border-radius:4px;cursor:pointer;color:var(--cockpit-text)}.demo-context-item:hover{background:var(--cockpit-hover-bg)}.demo-context-show{left:12px;top:12px}
-.demo-gantt-chart{position:relative;overflow-x:auto;overflow-y:hidden;max-width:100%;padding-bottom:20px}.demo-gantt-today{position:absolute;top:0;bottom:0;width:2px;background:#c0392b;z-index:1;font-size:10px;color:#c0392b;font-weight:700;padding-top:4px;text-align:center;left:var(--bar-left);transform:translateX(-50%)}.demo-gantt-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--cockpit-border)}.demo-gantt-label{width:180px;flex-shrink:0;font-size:13px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}.demo-gantt-track{flex:1;height:24px;position:relative;background:var(--cockpit-border);border-radius:3px;min-width:60px;overflow:hidden}.demo-gantt-bar{position:absolute;top:2px;height:20px;border-radius:3px;transition:opacity .2s;left:var(--bar-left);width:var(--bar-width)}.demo-gantt-bar:hover{opacity:1!important}
+.demo-work-landing {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.demo-nl-create {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--cockpit-accent-50);
+  border: 1px solid var(--cockpit-accent);
+  border-radius: var(--cockpit-radius);
+}
+.demo-nl-field input {
+  font-size: 15px !important;
+}
+.demo-context-menu {
+  position: fixed;
+  z-index: 300;
+  background: var(--cockpit-surface);
+  border: 1px solid var(--cockpit-border);
+  border-radius: var(--cockpit-radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+.demo-context-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--cockpit-text);
+}
+.demo-context-item:hover {
+  background: var(--cockpit-hover-bg);
+}
+.demo-context-show {
+  left: var(--ctx-x, 12px);
+  top: var(--ctx-y, 12px);
+}
+.demo-gantt-chart {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding-bottom: 20px;
+}
+.demo-gantt-today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #c0392b;
+  z-index: 1;
+  font-size: 10px;
+  color: #c0392b;
+  font-weight: 700;
+  padding-top: 4px;
+  text-align: center;
+  left: var(--bar-left);
+  transform: translateX(-50%);
+}
+.demo-gantt-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--cockpit-border);
+}
+.demo-gantt-label {
+  width: 180px;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+.demo-gantt-track {
+  flex: 1;
+  height: 24px;
+  position: relative;
+  background: var(--cockpit-border);
+  border-radius: 3px;
+  min-width: 60px;
+  overflow: hidden;
+}
+.demo-gantt-bar {
+  position: absolute;
+  top: 2px;
+  height: 20px;
+  border-radius: 3px;
+  transition: opacity 0.2s;
+  left: var(--bar-left);
+  width: var(--bar-width);
+}
+.demo-gantt-bar:hover {
+  opacity: 1 !important;
+}
+
+/* Touch tooltip fallback for title attributes on touch devices */
+.demo-touch-tip {
+  position: fixed;
+  z-index: 500;
+  background: var(--cockpit-text);
+  color: var(--cockpit-bg);
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 1.35;
+  max-width: 240px;
+  padding: 6px 10px;
+  border-radius: var(--cockpit-radius-sm);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.demo-touch-tip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}

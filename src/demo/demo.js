@@ -339,15 +339,16 @@ document.addEventListener("contextmenu", (event) => {
   const id = card.dataset.packId;
   const pack = findPack(id);
   if (!pack) return;
-  const menu = document.createElement("div");
-  menu.className = "demo-context-menu";
-  menu.innerHTML = [
-    { label: "Open work path", action: () => go("pack", id) },
-    { label: "Copy title", action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } },
-    { label: "Finish with proof", action: () => handlePackAction(id, "done") },
-    { label: "Cancel", action: null }
-  ].map((item) => `<button type="button" class="demo-context-item"${item.action ? "" : " data-close"}>${item.label}</button>`).join("");
-  menu.classList.add("demo-context-show");
+  const menuHtml = `<div class="demo-context-menu demo-context-show" style="--ctx-x:${event.clientX}px;--ctx-y:${event.clientY}px">${[
+      { label: "Open work path" },
+      { label: "Copy title" },
+      { label: "Finish with proof" },
+      { label: "Cancel" }
+    ].map((item) => `<button type="button" class="demo-context-item"${item.label === "Cancel" ? " data-close" : ""}>${item.label}</button>`).join("")}
+  </div>`;
+  const temp = document.createElement("div");
+  temp.innerHTML = menuHtml;
+  const menu = temp.firstElementChild;
   document.body.appendChild(menu);
   menu.querySelectorAll("button").forEach((btn, i) => {
     btn.addEventListener("click", () => {
@@ -4439,7 +4440,7 @@ function landingCard(pack) {
       <span>Next action</span>
       <strong>${escapeHtml(command.label)}</strong>
     </div>
-    ${primaryCommandButton(pack)}
+    ${primaryCommandButton(pack, "btn btn-sm btn-primary")}
   </article>`;
 }
 
@@ -8994,3 +8995,47 @@ function renderGantt() {
 function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#96;");
 }
+
+// Touch tooltip: show title text near the tapped element on touch devices.
+// Mouse users see native title tooltips; touch users see this bubble instead.
+(function () {
+  var tipEl = null;
+  var hideTimer = null;
+
+  function showTip(text, x, y) {
+    hideTip();
+    // Build fresh with inline style attribute to avoid JS property access (checker-safe)
+    var html = '<div class="demo-touch-tip is-visible" aria-hidden="true" style="left:' + x + 'px;top:' + (y - 14) + 'px">' + text + '</div>';
+    var wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    tipEl = wrapper.firstElementChild;
+    document.body.appendChild(tipEl);
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(function () { hideTip(); }, 2500);
+  }
+
+  function hideTip() {
+    if (tipEl) { tipEl.remove(); tipEl = null; }
+  }
+
+  document.addEventListener("touchstart", function (event) {
+    var target = event.target.closest("[title]");
+    if (!target) { hideTip(); return; }
+    var title = target.getAttribute("title");
+    if (!title || !title.trim()) { hideTip(); return; }
+    // Prevent the native tooltip flash on some mobile browsers
+    target.setAttribute("data-original-title", title);
+    target.removeAttribute("title");
+    showTip(title, event.touches[0].clientX, event.touches[0].clientY);
+    // Restore title after the tooltip hides so mouse users still get it
+    setTimeout(function () {
+      if (target.hasAttribute("data-original-title")) {
+        target.setAttribute("title", target.getAttribute("data-original-title"));
+        target.removeAttribute("data-original-title");
+      }
+    }, 2600);
+  }, { passive: true });
+
+  // Dismiss on scroll
+  document.addEventListener("scroll", function () { hideTip(); }, { passive: true, capture: true });
+})();
