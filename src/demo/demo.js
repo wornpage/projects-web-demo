@@ -7057,7 +7057,7 @@ function filteredPacks() {
       state.filter === "all" ||
       (state.filter === "review" && isReview(pack)) ||
       pack.status === state.filter;
-    const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${pack.sources.join(" ")}`.toLowerCase();
+    const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${(pack.sources||[]).join(" ")} ${pack.purpose||""} ${(pack.memory||[]).join(" ")}`.toLowerCase();
     return filterMatch && (!query || haystack.includes(query));
   });
 }
