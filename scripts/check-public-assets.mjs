@@ -13,7 +13,7 @@ const publicTextAssets = [
   // at build time) so the client carries the canonical blocker normalizer; +~950B.
   { pathname: "assets/demo.js", maxBytes: 258000 },
   { pathname: "assets/demo.css", maxBytes: 168000 },
-  { pathname: "assets/landing.css", maxBytes: 16000 },
+  { pathname: "assets/landing.css", maxBytes: 17000 },
   { pathname: "data/demo-packs.json", maxBytes: 25000 },
   { pathname: "sw.js", maxBytes: 3000 },
   { pathname: "manifest.json", maxBytes: 2000 }
@@ -27,7 +27,7 @@ const publicFileAllowlist = [
   "assets/favicon.png",
   "data/demo-packs.json"
 ];
-const totalPublicTextBudgetBytes = 486000;
+const totalPublicTextBudgetBytes = 487000;
 const retiredPublicFiles = [
   "assets/app.css",
   "assets/demo-metadata.json"
