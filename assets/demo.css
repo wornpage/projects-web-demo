@@ -4144,19 +4144,19 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
   display: grid;
   grid-template-columns: 2fr 110px 90px 1fr 1fr auto;
   gap: 0;
-  background: var(--cockpit-nav-bg);
-  border-bottom: 1px solid var(--cockpit-border);
+  background: transparent;
+  border-bottom: 2px solid var(--cockpit-border);
   padding: 0;
   font-size: 11px;
-  font-weight: 570;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--cockpit-text-muted);
 }
 
 .demo-table-header > span {
-  padding: 8px 10px;
-  border-right: 1px solid var(--cockpit-border);
+  padding: 10px 12px;
+  border-right: none;
 }
 
 .demo-table-header > span:last-child {
@@ -4170,7 +4170,8 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
   padding: 0;
   border: none;
   border-bottom: 1px solid var(--cockpit-border);
-  background: var(--cockpit-surface);
+  background: transparent;
+  transition: background 0.1s ease;
   color: var(--cockpit-text);
   font: inherit;
   font-size: 13px;
@@ -4182,7 +4183,8 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
 }
 
 .demo-table-row:hover {
-  background: var(--cockpit-hover-bg);
+  background: var(--cockpit-accent-50);
+  border-radius: var(--cockpit-radius-sm);
 }
 
 .demo-table-row-selected,
