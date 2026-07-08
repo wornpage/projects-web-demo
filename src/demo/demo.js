@@ -3288,7 +3288,7 @@ function renderHome() {
       <button class="btn btn-sm demo-home-action" type="button" id="copy-link-home">Copy share link</button>
       <button class="btn btn-sm demo-home-action" type="button" id="email-standup-home">Email standup</button>
       <button class="btn btn-sm demo-home-action" type="button" id="export-ics-home">Export .ics</button>
-      <button class="btn btn-sm demo-home-action" type="button" id="speak-home">🔊 Read aloud</button>
+      <button class="btn btn-sm demo-home-action" type="button" id="speak-home" title="Read work status aloud using text-to-speech" aria-label="Read work status aloud">🔊 Read aloud</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
         <div class="demo-method-grid">
