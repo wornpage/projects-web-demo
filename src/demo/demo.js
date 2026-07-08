@@ -4139,6 +4139,9 @@ function bindToolbar() {
           if (state.workListView === "table") {
             listContainer.className = "demo-work-table";
             listContainer.innerHTML = `<div class="demo-table-header"><span>Title</span><span>Owner</span><span>Status</span><span>Blocker</span><span>Next action</span><span></span></div>${itemsHtml}`;
+          } else if (state.workListView === "landing") {
+            listContainer.className = "demo-work-list demo-work-landing";
+            listContainer.innerHTML = itemsHtml;
           } else {
             listContainer.className = "demo-work-list";
             listContainer.innerHTML = itemsHtml;
@@ -4188,9 +4191,9 @@ function bindToolbar() {
   const densityToggle = el("density-toggle");
   if (densityToggle) {
     densityToggle.addEventListener("click", () => {
-      state.workListView = state.workListView === "card" ? "table" : "card";
-      densityToggle.textContent = state.workListView === "card" ? "☰ List" : "▦ Cards";
-      densityToggle.setAttribute("aria-pressed", String(state.workListView === "table"));
+      state.workListView = state.workListView === "card" ? "landing" : state.workListView === "landing" ? "table" : "card";
+      densityToggle.textContent = state.workListView === "card" ? "▦ Cards" : state.workListView === "landing" ? "▤ Clean" : "☰ List";
+      densityToggle.setAttribute("aria-pressed", String(state.workListView !== "card"));
       updateWorkListAfterFilter();
     });
   }
@@ -4233,7 +4236,9 @@ function updateWorkListAfterFilter() {
 }
 
 function renderWorkItemHtml(pack) {
-  return state.workListView === "table" ? workRow(pack) : workCard(pack);
+  if (state.workListView === "table") return workRow(pack);
+  if (state.workListView === "landing") return landingCard(pack);
+  return workCard(pack);
 }
 
 function workListContainerHtml(itemsHtml) {
@@ -4313,6 +4318,27 @@ function workRow(pack) {
     <span class="demo-table-cell demo-table-next">${escapeHtml(command.label)}</span>
     <span class="demo-table-cell demo-table-action">${primaryCommandButton(pack, "btn btn-sm btn-primary")}</span>
   </button>`;
+}
+
+function landingCard(pack) {
+  const command = resolvePrimaryCommandForPack(pack);
+  const statusClass = pack.status === "blocked" ? "is-attention" : pack.status === "done" ? "is-done" : "";
+  const pillClass = pack.status === "blocked" ? "lp-pill-warn" : pack.status === "done" ? "lp-pill-muted" : "lp-pill-accent";
+  return `<article class="demo-landing-card ${statusClass}" data-pack-id="${escapeAttribute(pack.id)}">
+    <div class="lp-card-head">
+      <button class="lp-card-title" type="button" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
+      <span class="lp-pill ${pillClass}">${escapeHtml(pack.status)}</span>
+    </div>
+    <div class="lp-card-meta">
+      <span>${escapeHtml(pack.owner)}</span>
+      ${pack.due ? `<span>${escapeHtml(dueDateLabel(pack.due))}</span>` : ""}
+    </div>
+    <div class="lp-command">
+      <span>Next action</span>
+      <strong>${escapeHtml(command.label)}</strong>
+    </div>
+    ${primaryCommandButton(pack)}
+  </article>`;
 }
 
 function reviewCard(pack) {
