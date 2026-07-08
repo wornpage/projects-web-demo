@@ -820,7 +820,18 @@ function parseNaturalLanguage(raw) {
     } else if (rawDue === "today") {
       result.due = new Date().toISOString().slice(0, 10);
     } else {
-      result.due = rawDue;
+      const nextDayMatch = rawDue.match(/^next\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i);
+      if (nextDayMatch) {
+        const days = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+        const target = days.indexOf(nextDayMatch[1].toLowerCase());
+        const d = new Date();
+        const today = d.getDay();
+        const diff = (target + 7 - today) % 7 || 7;
+        d.setDate(d.getDate() + diff);
+        result.due = d.toISOString().slice(0, 10);
+      } else {
+        result.due = rawDue;
+      }
     }
   }
   const blockerMatch = text.match(/\b(?:blocked\s+by|waiting\s+(?:on|for))\s+(.+?)(?:\s*$|\s+(?:due|by|for)\b)/i);
