@@ -28,6 +28,10 @@ const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
+const RECOVERY_ID_MAX_LENGTH = 120;
+const PACK_FIELD_MEDIUM_MAX = 200;
+const FIELD_SHORT_MAX = 40;
+const FIELD_LONG_MAX = 1000;
 // Pure workflow rules are shared with the backend via server/src/workflow-rules.js,
 // prepended into this bundle at build time (exposes window.__workflowRules). Alias
 // them here so parity with the server engine is structural, not copy-pasted.
@@ -945,7 +949,7 @@ function normalizeRecoveryState(source) {
   }
   clearDanglingBlockedBy(normalizedPacks);
 
-  const selectedId = normalizeRecoveryText(source.selectedId, 120);
+  const selectedId = normalizeRecoveryText(source.selectedId, RECOVERY_ID_MAX_LENGTH);
   const copyProfile = copyProfiles[source.copyProfile] ? source.copyProfile : "general";
   const scenarioId = DEMO_SCENARIO_BY_ID[source.scenarioId] ? source.scenarioId : "default";
   const filter = filters.some(([key]) => key === source.filter) ? source.filter : "all";
@@ -957,10 +961,10 @@ function normalizeRecoveryState(source) {
     selectedId: normalizedPacks.some((pack) => pack.id === selectedId)
       ? selectedId
       : normalizedPacks[0]?.id || "",
-    status: normalizeRecoveryText(source.status, 1000) || "Where: Recovery. Blocker: None. Next action: review restored demo state.",
+    status: normalizeRecoveryText(source.status, FIELD_LONG_MAX) || "Where: Recovery. Blocker: None. Next action: review restored demo state.",
     actionReceipt: normalizeActionReceipt(source.actionReceipt),
     filter,
-    query: normalizeRecoveryText(source.query, 200)
+    query: normalizeRecoveryText(source.query, PACK_FIELD_MEDIUM_MAX)
   };
 }
 
@@ -969,8 +973,8 @@ function normalizeRecoveryPack(source) {
     throw new Error("backup contains an invalid work item");
   }
 
-  const id = normalizeRecoveryText(source.id, 120);
-  const title = normalizeRecoveryText(source.title, 200);
+  const id = normalizeRecoveryText(source.id, RECOVERY_ID_MAX_LENGTH);
+  const title = normalizeRecoveryText(source.title, PACK_FIELD_MEDIUM_MAX);
   if (!id || !title) {
     throw new Error("backup work items need an id and title");
   }
@@ -981,20 +985,20 @@ function normalizeRecoveryPack(source) {
     type: normalizeRecoveryText(source.type, 80) || "general",
     status: normalizeRecoveryStatus(source.status),
     blocker: normalizeStoredBlocker(source.blocker),
-    blockedBy: normalizeRecoveryText(source.blockedBy, 120),
-    next: normalizeRecoveryText(source.next, 120),
-    due: normalizeRecoveryText(source.due, 40),
-    owner: normalizeRecoveryText(source.owner, 120),
-    purpose: normalizeRecoveryText(source.purpose, 1000),
-    doneWhen: normalizeRecoveryText(source.doneWhen, 1000),
-    sources: normalizeRecoveryTextArray(source.sources, 50, 200),
+    blockedBy: normalizeRecoveryText(source.blockedBy, RECOVERY_ID_MAX_LENGTH),
+    next: normalizeRecoveryText(source.next, RECOVERY_ID_MAX_LENGTH),
+    due: normalizeRecoveryText(source.due, FIELD_SHORT_MAX),
+    owner: normalizeRecoveryText(source.owner, RECOVERY_ID_MAX_LENGTH),
+    purpose: normalizeRecoveryText(source.purpose, FIELD_LONG_MAX),
+    doneWhen: normalizeRecoveryText(source.doneWhen, FIELD_LONG_MAX),
+    sources: normalizeRecoveryTextArray(source.sources, 50, PACK_FIELD_MEDIUM_MAX),
     memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
     activity: normalizeRecoveryTextArray(source.activity, 100, 400)
   };
 }
 
 function normalizeRecoveryStatus(value) {
-  const status = normalizeRecoveryText(value, 40).toLowerCase();
+  const status = normalizeRecoveryText(value, FIELD_SHORT_MAX).toLowerCase();
   return WR.VALID_PACK_STATUSES.includes(status) ? status : "draft";
 }
 
@@ -3276,7 +3280,7 @@ function renderHome() {
   el("copy-standup-home")?.addEventListener("click", copyStandup);
   el("copy-link-home")?.addEventListener("click", () => {
     const url = `${location.origin}${location.pathname}${location.hash}`;
-    navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard.", "success"));
+    navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard.", "success")).catch(() => showToast("Copy blocked by browser.", "error"));
   });
   el("email-standup-home")?.addEventListener("click", () => {
     const subject = "Work status update";
@@ -5550,9 +5554,9 @@ function packActionSignature(pack) {
 }
 
 function packCommandSignature(pack) {
-  const status = normalizeCopy(pack?.status).slice(0, 40) || "unknown";
-  const blocker = normalizeStoredBlocker(normalizeCopy(pack?.blocker).slice(0, 200));
-  const next = normalizeCopy(pack?.next).slice(0, 200);
+  const status = normalizeCopy(pack?.status).slice(0, FIELD_SHORT_MAX) || "unknown";
+  const blocker = normalizeStoredBlocker(normalizeCopy(pack?.blocker).slice(0, PACK_FIELD_MEDIUM_MAX));
+  const next = normalizeCopy(pack?.next).slice(0, PACK_FIELD_MEDIUM_MAX);
   return `${status}|${blocker}|${next}`;
 }
 
@@ -7186,7 +7190,7 @@ function renderCommandPaletteList() {
   if (!list) {
     return;
   }
-  const rows = commandPalette.filtered.slice(0, 40);
+  const rows = commandPalette.filtered.slice(0, FIELD_SHORT_MAX);
   list.innerHTML = rows.length
     ? rows.map((item, index) => `<li class="demo-cmdk-item${index === commandPalette.selected ? " is-active" : ""}" role="option" aria-selected="${index === commandPalette.selected}" data-cmdk-index="${index}"><span>${escapeHtml(item.label)}</span><small>${escapeHtml(item.hint)}</small></li>`).join("")
     : `<li class="demo-cmdk-empty" role="option" aria-selected="false">No matches.</li>`;
@@ -9019,28 +9023,28 @@ function escapeAttribute(value) {
 // Touch tooltip: show title text near the tapped element on touch devices.
 // Mouse users see native title tooltips; touch users see this bubble instead.
 (function () {
-  var tipEl = null;
-  var hideTimer = null;
+  let tipEl = null;
+  let hideTimer = null;
 
   function showTip(text, x, y) {
     hideTip();
-    var safeText = escapeHtml(text);
+    const safeText = escapeHtml(text);
     // Measure first to get actual dimensions
-    var measureHtml = '<div class="demo-touch-tip" style="position:fixed;left:0;top:0;visibility:hidden;max-width:240px">' + safeText + '</div>';
-    var mWrapper = document.createElement("div");
+    const measureHtml = '<div class="demo-touch-tip" style="position:fixed;left:0;top:0;visibility:hidden;max-width:240px">' + safeText + '</div>';
+    const mWrapper = document.createElement("div");
     mWrapper.innerHTML = measureHtml;
-    var mEl = mWrapper.firstElementChild;
+    const mEl = mWrapper.firstElementChild;
     document.body.appendChild(mEl);
-    var tw = mEl.offsetWidth;
-    var th = mEl.offsetHeight;
+    const tw = mEl.offsetWidth;
+    const th = mEl.offsetHeight;
     mEl.remove();
     // Clamp to viewport, position above the touch point
-    var cx = Math.max(4, Math.min(x, window.innerWidth - tw - 4));
-    var cy = Math.max(4, y - th - 8);
+    const cx = Math.max(4, Math.min(x, window.innerWidth - tw - 4));
+    let cy = Math.max(4, y - th - 8);
     if (cy < 4) cy = y + 16; // fall below if not enough room above
     // Build real tip with clamped position
-    var html = '<div class="demo-touch-tip is-visible" aria-hidden="true" style="left:' + cx + 'px;top:' + cy + 'px">' + safeText + '</div>';
-    var wrapper = document.createElement("div");
+    const html = '<div class="demo-touch-tip is-visible" aria-hidden="true" style="left:' + cx + 'px;top:' + cy + 'px">' + safeText + '</div>';
+    const wrapper = document.createElement("div");
     wrapper.innerHTML = html;
     tipEl = wrapper.firstElementChild;
     document.body.appendChild(tipEl);
@@ -9053,9 +9057,9 @@ function escapeAttribute(value) {
   }
 
   document.addEventListener("touchstart", function (event) {
-    var target = event.target.closest("[title]");
+    const target = event.target.closest("[title]");
     if (!target) { hideTip(); return; }
-    var title = target.getAttribute("title");
+    const title = target.getAttribute("title");
     if (!title || !title.trim()) { hideTip(); return; }
     // Prevent the native tooltip flash on some mobile browsers
     target.setAttribute("data-original-title", title);
