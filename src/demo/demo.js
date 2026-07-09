@@ -6198,6 +6198,16 @@ function snoozePack(id, days) {
   render();
 }
 
+
+function renderMentions(text) {
+  if (!text) return "";
+  return text.replace(/@(\w[\w-]+)/g, function(match, name) {
+    var pack = state.packs.find(function(p) { return p.title.toLowerCase().indexOf(name.toLowerCase()) >= 0; });
+    if (pack) return '<span class="demo-mention" data-action="select" data-pack="' + pack.id + '" role="button" tabindex="0">' + match + '</span>';
+    return '<span class="demo-mention">' + match + '</span>';
+  });
+}
+
 function packActivityDisplay(pack) {
   // Newest first regardless of engine: the client unshifts, the server
   // appends — the stamp is the shared truth; unstamped legacy entries keep
