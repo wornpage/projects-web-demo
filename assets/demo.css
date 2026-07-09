@@ -219,7 +219,7 @@ html {
 
 ::-webkit-scrollbar-track {
   background: var(--cockpit-bg);
-  border-left: 1px solid var(--cockpit-border);
+  border-inset-inline-start: 1px solid var(--cockpit-border);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -324,7 +324,7 @@ h3,
   color: var(--cockpit-accent-text);
   font-size: 13px;
   font-weight: 560;
-  left: 8px;
+  inset-inline-start: 8px;
   padding: 8px 16px;
   position: absolute;
   text-decoration: none;
@@ -565,7 +565,7 @@ textarea {
 
 
 .demo-app-shell.app-shell {
-  padding-left: 0;
+  padding-inline-start: 0;
 }
 
 html.dark .demo-app-shell,
@@ -616,7 +616,7 @@ html[data-theme="dark"] .demo-app-shell {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 0;
-  border-right: 1px solid transparent;
+  border-inset-inline-end: 1px solid transparent;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -739,7 +739,7 @@ html[data-theme="dark"] .demo-app-shell {
   font-size: 14px;
   padding: 4px 8px;
   position: absolute;
-  right: 8px;
+  inset-inline-end: 8px;
   top: 12px;
   transition: color 0.15s ease, transform 0.2s ease;
   z-index: 2;
@@ -835,7 +835,7 @@ html[data-theme="dark"] .demo-app-shell {
   color: var(--cockpit-text-muted);
   content: "+";
   font-weight: 720;
-  margin-left: auto;
+  margin-inset-inline-start: auto;
 }
 
 .demo-nav-group[open] > .demo-nav-group-label::after {
@@ -985,7 +985,7 @@ body .demo-sidebar.nav-rail .demo-nav-item.nav-rail-btn.active .nav-rail-icon {
 .demo-header-metadata {
   align-items: center;
   border: 0;
-  border-left: 1px solid var(--cockpit-border);
+  border-inset-inline-start: 1px solid var(--cockpit-border);
   border-radius: 0;
   color: var(--cockpit-text-secondary);
   display: inline-flex;
@@ -1036,7 +1036,7 @@ html[data-theme="dark"] .demo-header-metadata {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
-  margin-left: auto;
+  margin-inset-inline-start: auto;
   min-width: 0;
 }
 
@@ -2137,7 +2137,7 @@ html[data-theme="dark"] .demo-header-metadata {
   content: "";
   height: 2px;
   position: absolute;
-  right: -11px;
+  inset-inline-end: -11px;
   top: 23px;
   width: 10px;
 }
@@ -2266,7 +2266,7 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-home-spotlight-fact {
-  border-left: 1px solid var(--demo-card-divider);
+  border-inset-inline-start: 1px solid var(--demo-card-divider);
   display: grid;
   gap: 5px;
   min-width: 0;
@@ -2275,7 +2275,7 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-home-spotlight-fact:first-child {
-  border-left: 0;
+  border-inline-start: 0;
 }
 
 /* Flow chevrons make the Where -> Blocker -> Next action logic legible. */
@@ -2285,7 +2285,7 @@ html[data-theme="dark"] .demo-header-metadata {
   font-size: 16px;
   line-height: 1;
   position: absolute;
-  right: -6px;
+  inset-inline-end: -6px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 1;
@@ -2505,7 +2505,7 @@ html[data-theme="dark"] .demo-header-metadata {
 }
 
 .demo-summary-strip .demo-metric + .demo-metric {
-  border-left: 1px solid var(--cockpit-border);
+  border-inset-inline-start: 1px solid var(--cockpit-border);
 }
 
 .demo-summary-strip .demo-metric:hover {
@@ -3578,7 +3578,7 @@ html[data-theme="dark"] .demo-state-pill {
 .demo-forward-triad .selected-work-where {
   background: var(--cockpit-selected-bg);
   border-color: var(--cockpit-accent);
-  padding-left: 10px;
+  padding-inset-inline-start: 10px;
 }
 
 .demo-forward-triad .selected-work-where span {
@@ -4155,7 +4155,7 @@ html[data-theme="dark"] .demo-command-work-path {
   display: grid;
   gap: 6px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  left: auto;
+  inset-inline-start: auto;
   max-width: 100%;
   overflow: hidden;
   padding: 6px;
@@ -4301,11 +4301,11 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
 
 .demo-table-header > span {
   padding: 10px 12px;
-  border-right: none;
+  border-inline-end: none;
 }
 
 .demo-table-header > span:last-child {
-  border-right: none;
+  border-inline-end: none;
 }
 
 .demo-table-row {
@@ -4345,14 +4345,14 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
 
 .demo-table-cell {
   padding: 7px 10px;
-  border-right: 1px solid var(--cockpit-border);
+  border-inset-inline-end: 1px solid var(--cockpit-border);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .demo-table-cell:last-child {
-  border-right: none;
+  border-inline-end: none;
 }
 
 .demo-table-title {
@@ -4531,7 +4531,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   .demo-sidebar {
     align-items: center;
     border-bottom: 1px solid var(--cockpit-border);
-    border-right: 0;
+    border-inline-end: 0;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 8px 12px;
@@ -4568,8 +4568,8 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
   .demo-header-inner,
   .demo-main {
-    margin-left: 0;
-    margin-right: 0;
+    margin-inline-start: 0;
+    margin-inline-end: 0;
   }
 
   .demo-nav {
@@ -4626,7 +4626,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 
   .demo-bottom-brief {
-    left: auto;
+    inset-inline-start: auto;
     max-width: 100%;
     transform: none;
     width: 100%;
@@ -4657,7 +4657,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
   .demo-header-actions {
     justify-content: flex-start;
-    margin-left: 0;
+    margin-inline-start: 0;
     overflow-x: auto;
     width: 100%;
   }
@@ -4737,7 +4737,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 
   .demo-summary-strip .demo-metric + .demo-metric {
-    border-left: 0;
+    border-inline-start: 0;
     border-top: 1px solid var(--cockpit-border);
   }
 
@@ -4751,7 +4751,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 
   .demo-home-spotlight-fact {
-    border-left: 0;
+    border-inline-start: 0;
     border-top: 1px solid var(--demo-card-divider);
   }
 
@@ -4768,7 +4768,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 
   .demo-home-spotlight-fact {
-    border-left: 0;
+    border-inline-start: 0;
     border-top: 1px solid var(--demo-card-divider);
     padding-block: 9px;
   }
@@ -4810,11 +4810,11 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   .demo-bottom-brief {
     bottom: calc(8px + env(safe-area-inset-bottom));
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    left: 12px;
+    inset-inline-start: 12px;
     margin-top: 0;
     max-width: none;
     position: fixed;
-    right: 12px;
+    inset-inline-end: 12px;
     transform: none;
     width: auto;
     z-index: 30;
@@ -4829,8 +4829,8 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   .demo-start-step:not(:last-child)::after {
     bottom: -11px;
     height: 10px;
-    left: 21px;
-    right: auto;
+    inset-inline-start: 21px;
+    inset-inline-end: auto;
     top: auto;
     width: 2px;
   }
@@ -4958,7 +4958,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
     grid-column: 2;
     grid-row: 1 / span 2;
     justify-content: flex-end;
-    margin-left: 0;
+    margin-inline-start: 0;
     overflow: visible;
     width: auto;
   }
@@ -5155,7 +5155,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 
   .demo-summary-strip .demo-metric + .demo-metric {
-    border-left: 0;
+    border-inline-start: 0;
     border-top: 1px solid var(--cockpit-border);
     padding-top: 13px;
   }
@@ -5243,10 +5243,10 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
     border-radius: var(--cockpit-radius);
     bottom: calc(8px + env(safe-area-inset-bottom));
     gap: 4px;
-    left: 8px;
+    inset-inline-start: 8px;
     max-width: none;
     padding: 4px;
-    right: 8px;
+    inset-inline-end: 8px;
     width: auto;
     transform: none;
   }
@@ -5325,8 +5325,8 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   }
 
   .demo-bottom-brief {
-    left: auto;
-    right: auto;
+    inset-inline-start: auto;
+    inset-inline-end: auto;
     width: 100%;
     max-width: 100%;
     padding: 4px;
@@ -5560,7 +5560,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
 .demo-header-metadata {
   background: transparent;
-  border-left: 1px solid var(--cockpit-border);
+  border-inset-inline-start: 1px solid var(--cockpit-border);
   border-radius: 0;
 }
 
@@ -5611,7 +5611,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 }
 
 .demo-command-actions {
-  margin-left: auto;
+  margin-inset-inline-start: auto;
 }
 
 .demo-summary-strip {
@@ -5643,7 +5643,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 }
 
 .demo-summary-strip .demo-metric + .demo-metric {
-  border-left: 0;
+  border-inline-start: 0;
 }
 
 .demo-summary-strip .demo-metric span {
@@ -5706,12 +5706,12 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 }
 
 .demo-row {
-  border-left: 1px solid var(--cockpit-border);
+  border-inset-inline-start: 1px solid var(--cockpit-border);
 }
 
 .demo-work-card,
 .demo-review-card {
-  border-left: 1px solid var(--demo-work-card-border);
+  border-inset-inline-start: 1px solid var(--demo-work-card-border);
 }
 
 .demo-work-card.selected,
@@ -5798,7 +5798,7 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   background: var(--cockpit-selected-bg);
   border-color: var(--cockpit-border);
   box-shadow: none;
-  padding-left: 9px;
+  padding-inset-inline-start: 9px;
 }
 
 .demo-card-head {
@@ -5998,7 +5998,7 @@ html[data-theme="dark"] .demo-command-work-path {
   }
 
   .demo-summary-strip .demo-metric:nth-child(even) {
-    border-left: 0;
+    border-inline-start: 0;
   }
 }
 
@@ -6309,11 +6309,11 @@ html[data-theme="dark"] .demo-app-shell {
 
   .demo-bottom-brief {
     bottom: calc(8px + env(safe-area-inset-bottom));
-    left: 8px;
+    inset-inline-start: 8px;
     margin: 0;
     max-width: none;
     position: fixed;
-    right: 8px;
+    inset-inline-end: 8px;
     width: auto;
   }
 }
@@ -6327,8 +6327,8 @@ html[data-theme="dark"] .demo-app-shell {
   .demo-command-line {
     padding-top: 8px;
     padding-bottom: 8px;
-    padding-left: 0;
-    padding-right: 0;
+    padding-inline-start: 0;
+    padding-inline-end: 0;
   }
 
   .demo-command-line::before {
@@ -6699,7 +6699,7 @@ html[data-theme="dark"] .demo-app-shell {
   margin-bottom: 16px;
   align-items: center;
 }
-.demo-cal-today { margin-left:auto; }
+.demo-cal-today { margin-inset-inline-start: auto; }
 
 .demo-insights-bars {
   display: flex;
@@ -6964,7 +6964,7 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-cal-count {
   position: absolute;
   top: 8px;
-  right: 8px;
+  inset-inline-end: 8px;
   min-width: 20px;
   height: 20px;
   border-radius: 999px;
@@ -7002,7 +7002,7 @@ html[data-theme="dark"] .demo-app-shell {
 .demo-cal-item-detail small {
   color: var(--cockpit-text-muted);
   font-size: 12px;
-  margin-left: auto;
+  margin-inset-inline-start: auto;
 }
 @media (max-width:640px) {
 .demo-cal-cell { min-height:64px; padding:5px; }
@@ -7131,7 +7131,7 @@ html[data-theme="dark"] .demo-app-shell {
   color: var(--cockpit-accent);
   font-size: 18px;
   text-decoration: none;
-  margin-left: 6px;
+  margin-inset-inline-start: 6px;
   transition: transform 0.12s;
 }
 .demo-url-link:hover{transform:scale(1.2)}
@@ -7304,7 +7304,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
   content: "";
   position: absolute;
   top: 16px;
-  left: 4px;
+  inset-inline-start: 4px;
   width: 2px;
   height: calc(100% + 28px);
   background: var(--cockpit-border);
@@ -7325,7 +7325,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
   color: var(--cockpit-text-muted);
   font-size: 11px;
   white-space: nowrap;
-  margin-left: 6px;
+  margin-inset-inline-start: 6px;
 }
 .demo-note {
   display: flex;
@@ -7360,7 +7360,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
   justify-content: center;
   width: 17px;
   height: 17px;
-  margin-right: 5px;
+  margin-inset-inline-end: 5px;
   border-radius: 50%;
   background: var(--cockpit-accent);
   color: var(--cockpit-accent-text);
@@ -7371,7 +7371,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-toast-container {
   position: fixed;
   top: 12px;
-  right: 12px;
+  inset-inline-end: 12px;
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -7407,7 +7407,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
   justify-content: center;
   min-width: 18px;
   height: 18px;
-  margin-left: auto;
+  margin-inset-inline-start: auto;
   font-size: 10px;
   font-weight: 800;
   color: #fff;
