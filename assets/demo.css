@@ -870,9 +870,9 @@ html[data-theme="dark"] .demo-app-shell {
 }
 
 body .demo-sidebar.nav-rail .demo-nav-item.nav-rail-btn.active .nav-rail-icon {
-  background: var(--demo-primary-on-accent) !important;
-  border-color: var(--demo-primary-on-accent) !important;
-  color: var(--cockpit-accent) !important;
+  background: var(--demo-primary-on-accent);
+  border-color: var(--demo-primary-on-accent);
+  color: var(--cockpit-accent);
 }
 
 .demo-sidebar-note {
@@ -2809,10 +2809,10 @@ html[data-theme="dark"] .demo-meta-row {
 .demo-table-row:active {
   cursor: grabbing;
 }
-.demo-work-card.drag-over,
-.demo-table-row.drag-over {
-  border-color: var(--cockpit-accent) !important;
-  box-shadow: 0 0 0 2px var(--cockpit-accent) !important;
+.demo-work-list .demo-work-card.drag-over,
+.demo-work-table .demo-table-row.drag-over {
+  border-color: var(--cockpit-accent);
+  box-shadow: 0 0 0 2px var(--cockpit-accent);
 }
 .demo-drag-indicator {
   height: 3px;
@@ -4199,10 +4199,10 @@ html[data-theme="sepia"] .demo-theme-toggle:hover {
 .demo-app-shell .btn-primary,
 html.dark .demo-app-shell .btn-primary,
 html[data-theme="dark"] .demo-app-shell .btn-primary {
-  background: var(--demo-primary-bg) !important;
-  border-color: var(--demo-primary-border) !important;
-  color: var(--demo-primary-on-accent) !important;
-  -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
+  background: var(--demo-primary-bg);
+  border-color: var(--demo-primary-border);
+  color: var(--demo-primary-on-accent);
+  -webkit-text-fill-color: var(--demo-primary-on-accent);
 }
 
 /* ---- Table/compact work list view ---- */
@@ -4380,17 +4380,17 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   transform: translateY(1px);
 }
 
-.demo-shell .btn:focus-visible {
-  outline: 3px solid var(--demo-focus-ring) !important;
+.demo-shell button.btn:focus-visible {
+  outline: 3px solid var(--demo-focus-ring);
   outline-offset: 2px;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
-.demo-shell .btn-primary:focus-visible {
+.demo-shell button.btn-primary:focus-visible {
   background: var(--demo-primary-focus-bg);
   border-color: var(--demo-primary-border);
-  color: var(--demo-primary-on-accent) !important;
-  -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
+  color: var(--demo-primary-on-accent);
+  -webkit-text-fill-color: var(--demo-primary-on-accent);
 }
 
 .demo-shell .btn,
@@ -4426,15 +4426,15 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   overflow-wrap: anywhere;
 }
 
-.demo-shell .btn.is-copied {
+.demo-shell button.btn.is-copied {
   background: var(--cockpit-accent);
   border-color: var(--cockpit-accent);
   box-shadow: var(--cockpit-shadow-sm);
-  color: var(--demo-primary-on-accent) !important;
-  -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
+  color: var(--demo-primary-on-accent);
+  -webkit-text-fill-color: var(--demo-primary-on-accent);
 }
 
-.demo-shell .btn.is-blocked {
+.demo-shell button.btn.is-blocked {
   background: var(--cockpit-danger-bg);
   border-color: var(--cockpit-danger-border);
   color: var(--cockpit-danger-text) !important;
@@ -5651,20 +5651,20 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
   box-shadow: var(--demo-work-card-selected-shadow);
 }
 
-.demo-profile-card[aria-pressed="true"] {
+.demo-app-shell .demo-profile-card[aria-pressed="true"] {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border-strong);
   border-width: 1px;
   border-color: var(--cockpit-accent);
   box-shadow: none;
-  color: var(--cockpit-text) !important;
-  -webkit-text-fill-color: var(--cockpit-text) !important;
+  color: var(--cockpit-text);
+  -webkit-text-fill-color: var(--cockpit-text);
 }
 
-.demo-profile-card[aria-pressed="true"] strong,
-.demo-profile-card[aria-pressed="true"] span {
-  color: var(--cockpit-text) !important;
-  -webkit-text-fill-color: var(--cockpit-text) !important;
+.demo-app-shell .demo-profile-card[aria-pressed="true"] strong,
+.demo-app-shell .demo-profile-card[aria-pressed="true"] span {
+  color: var(--cockpit-text);
+  -webkit-text-fill-color: var(--cockpit-text);
 }
 
 .demo-work-card.has-blocker,
@@ -7417,7 +7417,11 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 .demo-toast-hiding{opacity:0;transition:opacity .3s}@media (prefers-reduced-motion:reduce){.demo-toast{animation:none}.demo-toast-hiding{transition:none}}
 @media print{.demo-sidebar,.demo-bottom-brief,.demo-command-bar,.demo-quick-actions,.demo-secondary-paths,.demo-home-bookmarklet,.demo-home-methods,.demo-sidebar-footer,.demo-toast-container,button,.btn,details summary,header,footer,nav{display:none!important}.demo-command-brief,.demo-activity-panel summary,.demo-optional-fields summary{display:none!important}.demo-screen,.demo-panel{padding:0!important;max-width:100%!important}.demo-work-card,.demo-review-card{break-inside:avoid;border:1px solid #ccc!important;box-shadow:none!important}.demo-optional-fields,.demo-activity-panel,.demo-card-support[open]{display:block!important}.demo-optional-fields summary,.demo-activity-panel summary{display:none}}
-.demo-field-error input,.demo-field-error textarea,.demo-field-error select{border-color:#c0392b!important}
+.demo-field-error input,
+.demo-field-error textarea,
+.demo-field-error select {
+  border-color: #c0392b;
+}
 .demo-optional-fields,.demo-activity-panel{margin-top:4px;border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);padding:8px 12px}.demo-optional-fields summary,.demo-activity-panel summary{cursor:pointer;font-size:12px;font-weight:560;color:var(--cockpit-text-muted);padding:2px 0}.demo-optional-fields[open] summary,.demo-activity-panel[open] summary{margin-bottom:8px}.demo-activity-panel{margin-top:12px}.demo-activity-panel .demo-list{margin-top:0}
 .demo-nav-badge {
   display: inline-flex;
@@ -7518,8 +7522,8 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
   border: 1px solid var(--cockpit-accent);
   border-radius: var(--cockpit-radius);
 }
-.demo-nl-field input {
-  font-size: 15px !important;
+.demo-app-shell .demo-nl-field input {
+  font-size: 15px;
 }
 .demo-context-measure {
   position: fixed;
@@ -7619,7 +7623,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
   width: var(--bar-width);
 }
 .demo-gantt-bar:hover {
-  opacity: 1 !important;
+  opacity: 1;
 }
 
 /* Touch tooltip fallback for title attributes on touch devices */
