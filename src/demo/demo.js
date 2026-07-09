@@ -568,6 +568,27 @@ function bindShellControls() {
     const pack = currentPack() || preferredReviewPack();
     go("review", pack?.id || "", "blocker");
   });
+
+  // Sidebar collapse toggle
+  el("sidebar-collapse")?.addEventListener("click", () => {
+    const shell = document.querySelector(".demo-app-shell");
+    const btn = el("sidebar-collapse");
+    const collapsed = shell.classList.toggle("is-sidebar-collapsed");
+    btn.textContent = collapsed ? "▶" : "◀";
+    btn.setAttribute("title", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    btn.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    // Persist preference
+    try { localStorage.setItem("projects-demo-sidebar-collapsed", collapsed ? "1" : "0"); } catch {}
+  });
+
+  // Restore collapsed state
+  try {
+    if (localStorage.getItem("projects-demo-sidebar-collapsed") === "1") {
+      document.querySelector(".demo-app-shell")?.classList.add("is-sidebar-collapsed");
+      const btn = el("sidebar-collapse");
+      if (btn) { btn.textContent = "▶"; btn.setAttribute("title", "Expand sidebar"); btn.setAttribute("aria-label", "Expand sidebar"); }
+    }
+  } catch {}
 }
 
 function loadState(backendState = null) {
