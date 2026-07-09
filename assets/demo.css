@@ -7783,3 +7783,4 @@ mark.search-match{background:var(--cockpit-accent-50);color:var(--cockpit-accent
 .demo-gantt-label.clickable-gantt,.demo-gantt-bar.clickable-gantt{cursor:pointer}.demo-gantt-bar.clickable-gantt:hover{opacity:1!important}
 
 .offline-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:8px;background:#4ade80;transition:background .3s}.offline-indicator.is-offline{background:#f87171}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.demo-work-card,.demo-landing-card,.demo-table-row{animation:cardIn .2s ease-out}
