@@ -442,7 +442,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   purgeLegacyDemoState();
 
-  // Sync state across tabs via BroadcastChannel (instant, works in sending tab too)
+  // Notify on theme radio change
+var _themeRadios = document.querySelectorAll("input[name=\"theme-choice\"]");
+_themeRadios.forEach(function (r) {
+  r.addEventListener("change", function () {
+    if (r.checked) {
+      var themeName = r.id.replace("theme-", "");
+      showToast("Switched to " + themeName.charAt(0).toUpperCase() + themeName.slice(1) + " theme.", "info");
+    }
+  });
+});
+
+// Sync state across tabs via BroadcastChannel (instant, works in sending tab too)
   var _bcSync = null;
   try { _bcSync = new BroadcastChannel("projects-demo-sync"); } catch {}
   if (_bcSync) {
@@ -552,6 +563,8 @@ function initTheme() {
 function applyTheme(theme) {
   var radio = document.getElementById("theme-" + (theme || "light"));
   if (radio) radio.checked = true;
+  var lbl = THEME_LABELS[theme] || theme;
+  if (lbl) showToast(lbl + " theme.", "info");
   try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* storage unavailable */ }
 }
 
