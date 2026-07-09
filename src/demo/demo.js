@@ -9646,6 +9646,39 @@ function renderInsights() {
   const draft = state.packs.filter((p) => p.status === STATUS.DRAFT).length;
   const rate = total ? Math.round((done / total) * 100) : 0;
 
+  // Mini analytics
+  var activityDays = {};
+  state.packs.forEach(function(p) {
+    if (!p.activity) return;
+    p.activity.forEach(function(a) {
+      var parsed = activityParts(a);
+      if (parsed.at) {
+        var day = parsed.at.slice(0,10);
+        if (day) activityDays[day] = (activityDays[day] || 0) + 1;
+      }
+    });
+  });
+  var dayKeys = Object.keys(activityDays).sort();
+  var streak = 0;
+  var maxStreak = 0;
+  for (var si = 0; si < dayKeys.length; si++) {
+    if (si === 0) { streak = 1; continue; }
+    var diff = (new Date(dayKeys[si]) - new Date(dayKeys[si-1])) / 86400000;
+    if (diff <= 2) { streak++; maxStreak = Math.max(maxStreak, streak); }
+    else streak = 1;
+  }
+  maxStreak = Math.max(maxStreak, streak);
+  var dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  var dayCounts = [0,0,0,0,0,0,0];
+  Object.keys(activityDays).forEach(function(d) {
+    var idx = new Date(d).getDay();
+    dayCounts[idx] += activityDays[d];
+  });
+  var maxDay = 0;
+  for (var di = 0; di < 7; di++) { if (dayCounts[di] > dayCounts[maxDay]) maxDay = di; }
+  var avgPerDay = dayKeys.length ? Math.round(state.packs.length / dayKeys.length * 10) / 10 : 0;
+
+
   const owners = {};
   state.packs.forEach((p) => { const o = p.owner || "unassigned"; owners[o] = (owners[o] || 0) + 1; });
   const topOwner = Object.entries(owners).sort((a, b) => b[1] - a[1])[0] || ["none", 0];
