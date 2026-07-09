@@ -7189,11 +7189,12 @@ html:has(#theme-dark:checked) .demo-app-shell {
   cursor: pointer;
   font: inherit;
   text-align: left;
+  color: var(--cockpit-text);
   transition: border-color 0.12s,box-shadow 0.12s;
 }
 .demo-method-card:hover,.demo-method-card:focus-visible{border-color:var(--cockpit-accent);box-shadow:var(--cockpit-shadow-sm)}
 .demo-method-icon{font-size:28px}
-.demo-method-card strong{font-size:15px}
+.demo-method-card strong{font-size:15px;color:var(--cockpit-text)}
 .demo-method-card p {
   font-size: 13px;
   color: var(--cockpit-text-muted);
