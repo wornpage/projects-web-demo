@@ -490,6 +490,10 @@ textarea {
   line-height: var(--demo-shell-line-height);
 }
 
+.is-sidebar-collapsed.demo-app-shell {
+  grid-template-columns: var(--demo-sidebar-collapsed-width) minmax(0, 1fr);
+}
+
 .demo-app-shell.app-shell {
   padding-left: 0;
 }
