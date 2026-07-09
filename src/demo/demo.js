@@ -515,25 +515,12 @@ function initTheme() {
     try { hasStored = localStorage.getItem(THEME_STORAGE_KEY); } catch { hasStored = null; }
     if (!hasStored) applyTheme(event.matches ? "dark" : "light");
   });
-  el("theme-toggle").addEventListener("click", () => {
-    const current = document.documentElement.dataset.theme || "light";
-    const idx = (THEMES.indexOf(current) + 1) % THEMES.length;
-    applyTheme(THEMES[idx]);
-  });
+
 }
 
 function applyTheme(theme) {
-  const isDarkTheme = theme !== "light";
-  document.documentElement.dataset.theme = theme;
-  document.documentElement.classList.toggle("dark", isDarkTheme);
-  const toggle = el("theme-toggle");
-  const nextIdx = (THEMES.indexOf(theme) + 1) % THEMES.length;
-  const nextTheme = THEMES[nextIdx];
-  const help = `Switch to ${THEME_LABELS[nextTheme]} theme.`;
-  toggle.textContent = "Theme";
-  toggle.setAttribute("aria-pressed", String(theme !== "light"));
-  toggle.setAttribute("title", help);
-  toggle.setAttribute("aria-label", `Theme: ${THEME_LABELS[theme]}. ${help}`);
+  var radio = document.getElementById("theme-" + (theme || "light"));
+  if (radio) radio.checked = true;
   try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* storage unavailable */ }
 }
 
