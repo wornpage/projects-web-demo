@@ -6548,143 +6548,41 @@ html[data-theme="dark"] .demo-app-shell {
 }
 
 @media (max-width: 980px) {
-  body .demo-sidebar.nav-rail {
-    align-items: center !important;
-    background: var(--cockpit-nav-bg) !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--cockpit-border) !important;
-    border-radius: 0 !important;
-    bottom: auto !important;
-    box-shadow: none !important;
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 8px 12px !important;
-    height: auto !important;
-    left: auto !important;
-    max-height: none !important;
-    max-width: 100% !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    padding: 10px 24px !important;
-    position: static !important;
-    right: auto !important;
-    top: auto !important;
-    transform: none !important;
-    transition: none !important;
-    width: 100% !important;
-    z-index: 25 !important;
+  .demo-sidebar.nav-rail {
+    display: none;
   }
-
-  body .demo-sidebar.nav-rail::before {
-    content: none !important;
+  .demo-tab-bar {
+    background: var(--cockpit-nav-bg);
+    border-top: 1px solid var(--cockpit-border);
+    bottom: 0;
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    left: 0;
+    padding: 6px 8px;
+    position: fixed;
+    width: 100%;
+    z-index: 100;
   }
-
-  body .demo-sidebar.nav-rail .demo-brand {
-    border-bottom: 0 !important;
-    flex: 0 0 auto !important;
-    margin: 0 !important;
-    padding: 4px 10px 4px 0 !important;
-    width: auto !important;
+  .demo-tab-bar .demo-nav-item {
+    border-radius: 999px;
+    font-size: 11px;
+    gap: 4px;
+    min-height: 36px;
+    min-width: 0;
+    padding: 4px 8px;
+    width: auto;
   }
-
-  body .demo-sidebar.nav-rail .demo-nav {
-    display: flex !important;
-    flex: 1 1 100% !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow: visible !important;
-    padding-bottom: 4px !important;
-    width: 100% !important;
+  .demo-tab-bar .demo-nav-item .nav-rail-icon {
+    font-size: 14px;
   }
-
-  body .demo-sidebar.nav-rail .demo-nav::-webkit-scrollbar {
-    display: none !important;
+  .demo-app-shell {
+    grid-template-columns: 1fr;
   }
-}
-
-.demo-confetti-burst {
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  position: fixed;
-  z-index: 9999;
-}
-
-.demo-confetti-particle {
-  animation: demo-confetti-fall linear forwards;
-  font-size: 24px;
-  position: absolute;
-  top: -40px;
-}
-
-@keyframes demo-confetti-fall {
-  0% {
-    opacity: 1;
-    transform: translateY(0) rotate(0deg) scale(1);
+  .demo-main,
+  .demo-screen {
+    padding-bottom: 70px;
   }
-  100% {
-    opacity: 0;
-    transform: translateY(100vh) rotate(720deg) scale(0.3);
-  }
-}
-
-.demo-confetti-left-0 { left: 5%; }
-.demo-confetti-left-1 { left: 15%; }
-.demo-confetti-left-2 { left: 25%; }
-.demo-confetti-left-3 { left: 35%; }
-.demo-confetti-left-4 { left: 45%; }
-.demo-confetti-left-5 { left: 55%; }
-.demo-confetti-left-6 { left: 65%; }
-.demo-confetti-left-7 { left: 75%; }
-.demo-confetti-left-8 { left: 85%; }
-.demo-confetti-left-9 { left: 95%; }
-
-.demo-confetti-delay-0 { animation-delay: 0s; }
-.demo-confetti-delay-1 { animation-delay: 0.1s; }
-.demo-confetti-delay-2 { animation-delay: 0.2s; }
-.demo-confetti-delay-3 { animation-delay: 0.3s; }
-.demo-confetti-delay-4 { animation-delay: 0.4s; }
-
-.demo-confetti-dur-0 { animation-duration: 1.2s; }
-.demo-confetti-dur-1 { animation-duration: 1.6s; }
-.demo-confetti-dur-2 { animation-duration: 2.0s; }
-.demo-confetti-dur-3 { animation-duration: 2.5s; }
-
-.demo-pack-guidance {
-  color: var(--cockpit-text-secondary);
-  font-size: 14px;
-  font-weight: 520;
-  line-height: 1.4;
-  margin: 6px 0 0;
-}
-
-.demo-help-tip {
-  background: var(--cockpit-accent-50);
-  border: 1px solid var(--cockpit-accent);
-  border-radius: 50%;
-  color: var(--cockpit-accent);
-  cursor: help;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 560;
-  height: 18px;
-  width: 18px;
-  position: relative;
-  vertical-align: middle;
-  margin-left: 4px;
-}
-  height: 18px;
-  width: 18px;
-  line-height: 1;
-  margin-left: 4px;
-  vertical-align: middle;
-  transition: background 0.1s ease, color 0.1s ease;
 }
 
 .demo-help-tip:hover,
