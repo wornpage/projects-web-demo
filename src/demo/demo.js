@@ -949,7 +949,7 @@ function parseNaturalLanguage(raw) {
   const text = (raw || "").trim();
   if (!text) return {};
   const result = {};
-  const dueMatch = text.match(/\b(?:due|by)\s+((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2}|\d{4}-\d{2}-\d{2}|tomorrow|today|next\s+\w+|in\s+\d+\s+(?:day|week|month)s?)/i);
+  const dueMatch = text.match(/\b(?:due|by)\s+((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2}|\d{4}-\d{2}-\d{2}|tomorrow|today|next\s+\w+|this\s+\w+|in\s+\d+\s+(?:day|week|month)s?|end\s+of\s+(?:this\s+)?month)/i);
   if (dueMatch) {
     const rawDue = dueMatch[1];
     const relativeMatch = rawDue.match(/^in\s+(\d+)\s+(day|week|month)s?$/i);
@@ -967,14 +967,21 @@ function parseNaturalLanguage(raw) {
       result.due = d.toISOString().slice(0, 10);
     } else if (rawDue === "today") {
       result.due = new Date().toISOString().slice(0, 10);
+    } else if (rawDue === "end of month" || rawDue === "end of this month") {
+      var eom = new Date();
+      eom.setMonth(eom.getMonth() + 1, 0);
+      result.due = eom.toISOString().slice(0, 10);
     } else {
-      const nextDayMatch = rawDue.match(/^next\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i);
+      var nextDayMatch = rawDue.match(/^(?:next|this)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i);
       if (nextDayMatch) {
-        const days = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
-        const target = days.indexOf(nextDayMatch[1].toLowerCase());
-        const d = new Date();
-        const today = d.getDay();
-        const diff = (target + 7 - today) % 7 || 7;
+        var days = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+        var target = days.indexOf(nextDayMatch[1].toLowerCase());
+        var d = new Date();
+        var today = d.getDay();
+        var isThis = rawDue.match(/^this\s+/i);
+        var diff = (target + 7 - today) % 7;
+        if (diff === 0 && isThis) { /* this weekday = today */ }
+        else if (diff === 0) diff = 7; /* next weekday = next week */
         d.setDate(d.getDate() + diff);
         result.due = d.toISOString().slice(0, 10);
       } else {
