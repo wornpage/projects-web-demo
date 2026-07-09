@@ -1205,6 +1205,7 @@ function normalizeRecoveryPack(source) {
     doneWhen: normalizeRecoveryText(source.doneWhen, FIELD_LONG_MAX),
     sources: normalizeRecoveryTextArray(source.sources, 50, PACK_FIELD_MEDIUM_MAX),
     memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
+    milestone: normalizeRecoveryText(source.milestone, 120) || undefined,
     location: normalizeRecoveryText(source.location, 60) || undefined,
     energy: ["low","medium","high"].indexOf(source.energy) >= 0 ? source.energy : undefined,
     progress: typeof source.progress === "number" ? Math.min(100, Math.max(0, Math.round(source.progress))) : undefined,
@@ -9692,6 +9693,20 @@ function renderInsights() {
   const blocked = state.packs.filter((p) => p.status === STATUS.BLOCKED).length;
   const draft = state.packs.filter((p) => p.status === STATUS.DRAFT).length;
   const rate = total ? Math.round((done / total) * 100) : 0;
+
+  // Milestone grouping
+  var milestones = {};
+  state.packs.forEach(function(p) {
+    if (p.milestone) {
+      if (!milestones[p.milestone]) milestones[p.milestone] = { total: 0, done: 0 };
+      milestones[p.milestone].total++;
+      if (p.status === STATUS.DONE) milestones[p.milestone].done++;
+    }
+  });
+  var milestoneHtml = Object.keys(milestones).length ? '<div class="demo-insight-section"><h3>Milestones</h3><div class="demo-insight-mini">' + Object.keys(milestones).sort().map(function(m) {
+    var pct = milestones[m].total ? Math.round(milestones[m].done / milestones[m].total * 100) : 0;
+    return '<div class="stat"><strong>' + escapeHtml(m) + '</strong><small>' + milestones[m].done + '/' + milestones[m].total + ' (' + pct + '%)</small></div>';
+  }).join("") + '</div></div>' : "";
 
   // Mini analytics
   var activityDays = {};
