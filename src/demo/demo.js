@@ -99,6 +99,7 @@ const state = {
   density: "card",
   recentlyUnblockedIds: [],
   routeParam: "",
+  scrollPositions: {},
 };
 
 let unblockAnimationTimer = null;
@@ -2416,6 +2417,16 @@ function render() {
     requestAnimationFrame(() => {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     });
+    // Reset saved scroll for this route when navigating fresh
+    var _resetKey = state.route + ":" + (state.filter || "all");
+    if (state.scrollPositions) delete state.scrollPositions[_resetKey];
+  } else {
+    // Restore saved scroll position
+    var _restoreKey = state.route + ":" + (state.filter || "all");
+    var _savedY = state.scrollPositions && state.scrollPositions[_restoreKey];
+    if (_savedY) {
+      requestAnimationFrame(function () { window.scrollTo({ top: _savedY, left: 0 }); });
+    }
   }
 
   applyPendingFocus();
@@ -2446,6 +2457,11 @@ function applyVirtualScroll() {
 document.addEventListener("scroll", function () {
   if (_virtualScrollTimer) clearTimeout(_virtualScrollTimer);
   _virtualScrollTimer = setTimeout(applyVirtualScroll, 100);
+  if (state && state.route) {
+    var _key = state.route + ":" + (state.filter || "all");
+    if (!state.scrollPositions) state.scrollPositions = {};
+    state.scrollPositions[_key] = window.scrollY;
+  }
 }, { passive: true });
 
 function screenTitleForRoute() {
