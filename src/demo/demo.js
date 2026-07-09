@@ -1203,6 +1203,7 @@ function normalizeRecoveryPack(source) {
     doneWhen: normalizeRecoveryText(source.doneWhen, FIELD_LONG_MAX),
     sources: normalizeRecoveryTextArray(source.sources, 50, PACK_FIELD_MEDIUM_MAX),
     memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
+    subtasks: Array.isArray(source.subtasks) ? source.subtasks.slice(0,50).map(function(s){return{text:normalizeRecoveryText(s.text,200),done:Boolean(s.done)}}) : [],
     activity: normalizeRecoveryTextArray(source.activity, 100, 400)
   };
 }
@@ -6383,6 +6384,10 @@ async function handlePackAction(id, action) {
     state.status = memoryRouteStatus(pack);
     go("memory", pack.id);
     return;
+  } else if (btn.matches("[data-subtask-pack]")) {
+    var subId = btn.dataset.subtaskPack;
+    var subIdx = parseInt(btn.dataset.subtaskIdx, 10);
+    if (!isNaN(subIdx)) toggleSubtask(subId, subIdx);
   } else if (action === "snooze") {
     var days = parseInt(btn.dataset.snoozeDays, 10) || 1;
     snoozePack(packId, days);
@@ -8397,6 +8402,22 @@ function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
     </div>
     <strong${copySurfaceAttributes("Work path", pathCopy)}>${escapeHtml(pathCopy.visible)}</strong>
   </div>`;
+}
+
+function renderSubtasks(pack) {
+  var subs = pack.subtasks || [];
+  if (subs.length === 0) return "";
+  var done = 0;
+  for (var si = 0; si < subs.length; si++) { if (subs[si].done) done++; }
+  var items = "";
+  for (var si = 0; si < subs.length; si++) {
+    items += '<div class="demo-subtask' + (subs[si].done ? " is-done" : "") + '"><input type="checkbox"' + (subs[si].done ? " checked" : "") + ' data-subtask-pack="' + pack.id + '" data-subtask-idx="' + si + '"><label>' + escapeHtml(subs[si].text) + '</label></div>';
+  }
+  var pct = subs.length ? Math.round(done / subs.length * 100) : 0;
+  var cls = "sp-" + pack.id.replace(/[^a-z0-9]/gi,"");
+  var sheet = new CSSStyleSheet();
+  try { sheet.insertRule("." + cls + "{width:" + pct + "%}"); document.adoptedStyleSheets.push(sheet); } catch(e) {}
+  return '<details class="demo-subtasks" open><summary>Subtasks (' + done + '/' + subs.length + ')</summary><div class="demo-subtask-progress"><div class="demo-subtask-progress-fill ' + cls + '"></div></div><div class="demo-subtasks-inner">' + items + '</div></details>';
 }
 
 function renderWorkPathStepTrail(steps) {
