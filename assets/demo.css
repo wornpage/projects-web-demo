@@ -7393,6 +7393,8 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-toast-error{background:#c0392b;color:#fff}
 .demo-toast-success{background:var(--cockpit-accent);color:var(--cockpit-accent-text)}
 @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+[dir="rtl"] .demo-nav-item:hover{transform:translateX(-2px)}
+[dir="rtl"] .demo-landing-card.is-attention{box-shadow:inset -3px 0 0 var(--cockpit-warning-text,#c18642)}
 .demo-toast-hiding{opacity:0;transition:opacity .3s}@media (prefers-reduced-motion:reduce){.demo-toast{animation:none}.demo-toast-hiding{transition:none}}
 @media print{.demo-sidebar,.demo-bottom-brief,.demo-command-bar,.demo-quick-actions,.demo-secondary-paths,.demo-home-bookmarklet,.demo-home-methods,.demo-sidebar-footer,.demo-toast-container,button,.btn,details summary,header,footer,nav{display:none!important}.demo-command-brief,.demo-activity-panel summary,.demo-optional-fields summary{display:none!important}.demo-screen,.demo-panel{padding:0!important;max-width:100%!important}.demo-work-card,.demo-review-card{break-inside:avoid;border:1px solid #ccc!important;box-shadow:none!important}.demo-optional-fields,.demo-activity-panel,.demo-card-support[open]{display:block!important}.demo-optional-fields summary,.demo-activity-panel summary{display:none}}
 .demo-field-error input,
