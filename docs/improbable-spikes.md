@@ -75,3 +75,28 @@
 | AH | **Goal / OKR linking** | Tie work items to higher-level objectives. Add an `objective` field, group by objective on the Insights page, and show progress toward each goal. |
 | AI | **Import from JSON / CSV** | The current import only handles a proprietary list format. Adding generic JSON and CSV import would let users migrate from other tools. Detect column mapping automatically. |
 | AJ | **Export as formatted PDF** | Beyond CSV, generate a formatted PDF report with the work list, completion stats, and a summary table. Use `window.print()` with a dedicated print stylesheet. |
+| AK | **Subtasks / checklist within a work item** | A collapsible checklist inside each pack — mark subtasks done without changing the pack's status. Progress bar auto-computes from checked subtasks. |
+| AL | **Work item dependencies graph** | Visualize `blockedBy` relationships as a directed graph. Nodes are packs, edges are dependencies. Click a node to navigate. Canvas or SVG-based. |
+| AM | **Inline editing on cards** | Edit title, owner, or next-action directly on the work card without navigating to the full work path. Double-click to edit, Enter to save, Escape to cancel. |
+| AN | **Quick-add from URL params** | `?add=Buy+milk+due+tomorrow` parses at launch and opens the create form pre-filled. The natural-language parser handles the rest. Bookmarkable quick-add. |
+| AO | **Drag to resize sidebar** | A draggable handle on the sidebar edge. User can widen or narrow the sidebar, persistent in localStorage. Min 160px, max 320px. |
+| AP | **Custom accent color** | A color picker in Settings that overrides `--cockpit-accent`. Saved to localStorage. All 5 built-in themes still available alongside the custom option. |
+| AQ | **Burndown / velocity chart** | Show completed vs remaining work over time as a line chart. Track weekly velocity. CSS-only sparkline version or a small canvas. |
+| AR | **Deadline countdown** | Cards with a past due date show "2 days overdue" in red. Cards due today show "Due today" in amber. Urgency computed from `pack.due` vs `new Date()`. |
+| AS | **Work item age indicator** | Each card shows how long ago it was created, last edited, or last touched. "Opened 3 days ago · touched 2 hours ago". Helps spot stale items. |
+| AT | **File attachments via blob URLs** | Upload files/images to a work item. Store as base64 blobs in IndexedDB. Preview inline with `<img>` or `<a download>`. Max 1MB per attachment. |
+| AU | **Shareable read-only link** | Generate a URL that loads the demo with a specific snapshot — `?share=base64encodedState`. The recipient sees a read-only view with a "Copy to my demo" button. |
+| AV | **Guided interactive tour** | First-visit overlay that walks through the sidebar, work list, command brief, and keyboard shortcuts. Dismissed permanently. Uses `step-1`, `step-2` floating tooltips. |
+| AW | **Achievement badges** | Gamification: "First completion", "10 tasks done", "7-day streak", "All fields filled". Displayed as small emoji badges in the sidebar footer. Persisted in localStorage. |
+| AX | **Dark mode scheduling** | Auto-switch theme at sunset based on geolocation or a user-set schedule. "Dark mode from 18:00–06:00". Falls back to `prefers-color-scheme` if no schedule set. |
+| AY | **Command palette natural-language** | Type "block venue hold" in Cmd+K and it finds the pack and runs the blocker toggle. Type "done lighting checklist" to mark it done. Parse intent from free text. |
+| AZ | **Workflow automation rules** | Simple if-this-then-that: "When any pack is marked done, unblock all packs blocked by it." Configured in Settings with a dropdown. Stored as JSON rules. |
+| BA | **Multiple workspaces / projects** | Switch between independent sets of packs via a project selector in the header. Each workspace has its own state file. "General", "Music", "Dev" etc. |
+| BB | **Offline sync indicator** | A small dot in the header: green = saved, amber = unsaved changes, red = offline. Updates reactively after each `saveState()`. Uses `navigator.onLine` + a periodic ping. |
+| BC | **Screen reader optimized mode** | Toggle that adds `role="status"` live regions, `aria-description` on complex components, and skips decorative animations. Stored as an accessibility preference. |
+| BD | **Two-factor / passkey auth** | For the hosted Outplane version: WebAuthn passkey support. Registration and login via `navigator.credentials`. Falls back to client-key header for browsers without WebAuthn. |
+| BE | **Magic link email login** | Passwordless auth: enter email, receive a link, click to authenticate. The link contains a signed token. Backend-only spike (server changes to generate/verify tokens). |
+| BF | **Copy as Markdown / Notion format** | Right-click → "Copy as Markdown" outputs `- [ ] Title (owner, due date)`. "Copy as Notion" outputs a Notion-compatible block. Clipboard-friendly formatting. |
+| BG | **Voice input for notes** | `SpeechRecognition` API for dictating memory notes. A microphone button in the memory input that starts listening. Falls back gracefully. Transcript appended to the note field. |
+| BH | **Multi-language i18n** | Extract all user-facing strings into a `LANG` object. Switch language via Settings. Start with English + Spanish. Community-contributable translation files. |
+| BI | **Card density toggle per route** | Remember card/list/table preference per route independently. Work list might be table, Review might be cards. Stored in a `viewPreferences` map in localStorage. |
