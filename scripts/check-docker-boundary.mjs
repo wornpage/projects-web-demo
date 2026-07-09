@@ -24,6 +24,7 @@ const allowedBuildCopyLines = [
   "COPY assets/demo.js ./assets/demo.js",
   "COPY assets/landing.css ./assets/landing.css",
   "COPY assets/favicon.png ./assets/favicon.png",
+  "COPY assets/favicon.svg ./assets/favicon.svg",
   "COPY data/demo-packs.json ./data/demo-packs.json",
   "COPY src/demo/demo.js ./src/demo/demo.js",
   "COPY src/demo/telemetry.js ./src/demo/telemetry.js",
@@ -42,6 +43,7 @@ const allowedRuntimeCopyLines = [
   "COPY --from=build /app/assets/demo.js ./assets/demo.js",
   "COPY --from=build /app/assets/landing.css ./assets/landing.css",
   "COPY --from=build /app/assets/favicon.png ./assets/favicon.png",
+  "COPY --from=build /app/assets/favicon.svg ./assets/favicon.svg",
   "COPY --from=build /app/data/demo-packs.json ./data/demo-packs.json",
   "COPY --from=build /app/server/server.js ./server/server.js",
   "COPY --from=build /app/server/src ./server/src"

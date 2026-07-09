@@ -18,6 +18,7 @@ export const STATIC_PUBLISH_FILES = Object.freeze([
   "assets/demo.js",
   "assets/landing.css",
   "assets/favicon.png",
+  "assets/favicon.svg",
   "data/demo-packs.json"
 ]);
 

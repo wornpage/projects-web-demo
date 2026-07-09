@@ -16,6 +16,7 @@ COPY assets/demo.css ./assets/demo.css
 COPY assets/demo.js ./assets/demo.js
 COPY assets/landing.css ./assets/landing.css
 COPY assets/favicon.png ./assets/favicon.png
+COPY assets/favicon.svg ./assets/favicon.svg
 COPY data/demo-packs.json ./data/demo-packs.json
 COPY src/demo/demo.js ./src/demo/demo.js
 COPY src/demo/telemetry.js ./src/demo/telemetry.js

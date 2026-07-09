@@ -17,6 +17,7 @@ const publicStaticFiles = new Set([
   "/assets/demo.js",
   "/assets/landing.css",
   "/assets/favicon.png",
+  "/assets/favicon.svg",
   "/data/demo-packs.json"
 ]);
 // Pages that carry the strict content-security-policy header. The landing page
