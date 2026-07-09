@@ -8710,8 +8710,8 @@ function renderCompare() {
         <span class="demo-status">${packA && packB ? "2 selected" : "Choose two"}</span>
       </div>
       <div class="demo-compare-grid">
-        ${renderCompareColumn("A", packA, ids[0])}
-        ${renderCompareColumn("B", packB, ids[1])}
+        ${renderCompareColumn("A", packA, packB, ids[0])}
+        ${renderCompareColumn("B", packB, packA, ids[1])}
       </div>
       ${!packA || !packB ? `<div class="demo-compare-picker">
         <div class="demo-panel-head"><h3>${!packA ? "Pick first" : "Pick second"} item</h3></div>
@@ -8724,7 +8724,7 @@ function renderCompare() {
   bindListActions();
 }
 
-function renderCompareColumn(slot, pack, id) {
+function renderCompareColumn(slot, pack, otherPack, id) {
   if (!pack) {
     return `<article class="demo-compare-col demo-compare-empty">
       <div class="demo-panel-head"><h3>${slot}</h3></div>
@@ -8739,14 +8739,14 @@ function renderCompareColumn(slot, pack, id) {
       <span class="demo-state-pill">${escapeHtml(workflow.label)}</span>
     </div>
     <div class="demo-compare-fields">
-      <div class="demo-compare-field"><span>Status</span><strong>${escapeHtml(pack.status)}</strong></div>
-      <div class="demo-compare-field"><span>Owner</span><strong>${escapeHtml(pack.owner)}</strong></div>
-      <div class="demo-compare-field"><span>Blocker</span><strong>${escapeHtml(blockerTextForPack(pack))}</strong></div>
-      <div class="demo-compare-field"><span>Next action</span><strong>${escapeHtml(command.label)}</strong></div>
-      <div class="demo-compare-field"><span>Due</span><strong>${escapeHtml(pack.due || "—")}</strong></div>
-      <div class="demo-compare-field"><span>Purpose</span><strong>${escapeHtml(pack.purpose || "—")}</strong></div>
-      <div class="demo-compare-field"><span>Proof target</span><strong>${escapeHtml(pack.doneWhen || "—")}</strong></div>
-      <div class="demo-compare-field"><span>Sources</span><strong>${escapeHtml((pack.sources || []).join(", ") || "—")}</strong></div>
+      <div class="demo-compare-field${otherPack && pack.status !== otherPack.status ? " diff-changed" : (otherPack ? " diff-same" : "")}"><span>Status</span><strong>${escapeHtml(pack.status)}</strong></div>
+      <div class="demo-compare-field${otherPack && pack.owner !== otherPack.owner ? " diff-changed" : (otherPack ? " diff-same" : "")}"><span>Owner</span><strong>${escapeHtml(pack.owner)}</strong></div>
+      <div class="demo-compare-field${otherPack && pack.blocker !== otherPack.blocker ? " diff-changed" : (otherPack ? " diff-same" : "")}"><span>Blocker</span><strong>${escapeHtml(blockerTextForPack(pack))}</strong></div>
+      <div class="demo-compare-field${otherPack && pack.next !== otherPack.next ? " diff-changed" : (otherPack ? " diff-same" : "")}"><span>Next action</span><strong>${escapeHtml(command.label)}</strong></div>
+      <div class="demo-compare-field${otherPack && pack.due !== otherPack.due ? " diff-changed" : (otherPack ? " diff-same" : "")}"><span>Due</span><strong>${escapeHtml(pack.due || "—")}</strong></div>
+      <div class="demo-compare-field${otherPack && pack.purpose !== otherPack.purpose ? " diff-changed" : (otherPack ? " diff-same" : "")}"><span>Purpose</span><strong>${escapeHtml(pack.purpose || "—")}</strong></div>
+      <div class="demo-compare-field${otherPack && pack.doneWhen !== otherPack.doneWhen ? " diff-changed" : (otherPack ? " diff-same" : "")}"><span>Proof target</span><strong>${escapeHtml(pack.doneWhen || "—")}</strong></div>
+      <div class="demo-compare-field${otherPack ? ((pack.sources||[]).join(",") !== (otherPack.sources||[]).join(",") ? " diff-changed" : " diff-same") : ""}"><span>Sources</span><strong>${escapeHtml((pack.sources || []).join(", ") || "—")}</strong></div>
       <div class="demo-compare-field"><span>Memory</span><strong>${parseInlineMarkdown((pack.memory || []).join("; ") || "—")}</strong></div>
     </div>
     ${primaryCommandButton(pack)}
@@ -8754,14 +8754,19 @@ function renderCompareColumn(slot, pack, id) {
 }
 
 function compareDiffSummary(a, b) {
-  const diffs = [];
+  var diffs = [];
   if (a.status !== b.status) diffs.push("status");
   if (a.blocker !== b.blocker) diffs.push("blocker");
   if (a.owner !== b.owner) diffs.push("owner");
   if (a.next !== b.next) diffs.push("next action");
   if (a.due !== b.due) diffs.push("due date");
+  if (a.purpose !== b.purpose) diffs.push("purpose");
+  if (a.doneWhen !== b.doneWhen) diffs.push("proof target");
+  var aSrc = (a.sources || []).join(",");
+  var bSrc = (b.sources || []).join(",");
+  if (aSrc !== bSrc) diffs.push("sources");
   if (!diffs.length) return `<p class="demo-field-help">These two items are identical across key fields.</p>`;
-  return `<p class="demo-field-help">Differs on: ${diffs.join(", ")}.</p>`;
+  return `<p class="demo-field-help"><strong>${diffs.length}</strong> field${diffs.length > 1 ? "s" : ""} differ: ${diffs.join(", ")}.</p>`;
 }
 
 function bindComparePickers() {
