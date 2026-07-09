@@ -426,12 +426,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   purgeLegacyDemoState();
 
-  // Sync state across tabs
-  window.addEventListener("storage", (event) => {
-    if (event.key === DEMO_STORAGE_KEY && event.newValue) {
-      try { const saved = JSON.parse(event.newValue); loadState(saved); render(); showToast("State synced from another tab.", "info"); } catch {}
-    }
-  });
+  // Sync state across tabs via BroadcastChannel (instant, works in sending tab too)
+  var _bcSync = null;
+  try { _bcSync = new BroadcastChannel("projects-demo-sync"); } catch {}
+  if (_bcSync) {
+    _bcSync.onmessage = function (event) {
+      var msg = event.data;
+      if (!msg || !msg.packs) return;
+      // Smart merge: if only one pack changed, update in-place
+      var old = state.packs.length;
+      loadState(msg);
+      if (old > 0 && state.packs.length === old) {
+        // In-place update — re-render without full reset
+        routeFromHash();
+        render();
+        return;
+      }
+      routeFromHash();
+      render();
+      showToast("Synced from another tab.", "info");
+    };
+  }
 
   bindShellControls();
   setupCommandPalette();
@@ -754,7 +769,7 @@ function _idbGet(store, key) {
   }).catch(function () { return null; });
 }
 
-function saveState(){if(state.suppressNextSave){state.suppressNextSave=false;return}if(DEMO_API_BASE_URL){scheduleBackendStateSave(browserRowStateSnapshot());return}var snapStr=JSON.stringify(demoStateSnapshot());localStorage.setItem(DEMO_STORAGE_KEY,snapStr);_idbPut("state",DEMO_STORAGE_KEY,snapStr)}
+function saveState(){if(state.suppressNextSave){state.suppressNextSave=false;return}if(DEMO_API_BASE_URL){scheduleBackendStateSave(browserRowStateSnapshot());return}var snapStr=JSON.stringify(demoStateSnapshot());localStorage.setItem(DEMO_STORAGE_KEY,snapStr);_idbPut("state",DEMO_STORAGE_KEY,snapStr);try{if(_bcSync){_bcSync.postMessage(JSON.parse(snapStr))}}catch{}}
 
 function demoStateSnapshot(){return{packs:state.packs,copyProfile:state.copyProfile,scenarioId:state.scenarioId,selectedId:state.selectedId,status:state.status,actionReceipt:state.actionReceipt,filter:state.filter,query:state.query}}
 
