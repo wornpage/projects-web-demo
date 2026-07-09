@@ -3958,6 +3958,7 @@ function recoveryPanel() {
         <textarea id="demo-recovery-output" class="demo-search-input" readonly spellcheck="false">${escapeHtml(snapshot)}</textarea>
         <button class="btn btn-sm" type="button" id="copy-recovery-state">Copy backup</button>
         <button class="btn btn-sm" type="button" id="download-recovery-state">Download backup</button>
+        <button class="btn btn-sm" type="button" id="export-markdown">Export as Markdown</button>
       </div>
       <div class="demo-inline-form demo-recovery-restore">
         <label for="demo-recovery-input">Restore pasted backup</label>
@@ -9480,6 +9481,30 @@ function repeatPack(id) {
   saveState();
   render();
   showToast("Repeated: " + pack.title, "success");
+}
+
+function exportMarkdown() {
+  var lines = ["# Work List\n"];
+  state.packs.forEach(function(p) {
+    lines.push("- [ ] **" + p.title + "**");
+    if (p.owner) lines.push("  - Owner: " + p.owner);
+    if (p.status) lines.push("  - Status: " + p.status);
+    if (p.due) lines.push("  - Due: " + p.due);
+    if (p.blocker && p.blocker !== "none") lines.push("  - Blocker: " + p.blocker);
+    if (p.next) lines.push("  - Next: " + p.next);
+    lines.push("");
+  });
+  var md = lines.join("\n");
+  var blob = new Blob([md], { type: "text/markdown" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "work-list.md";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Work list exported as Markdown.", "success");
 }
 
 function renderSettings() {
