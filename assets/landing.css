@@ -55,13 +55,16 @@
     --accent-50: #16372f;
     --accent-text: #04241d;
     --selected-bg: #16453b;
+    --hover-bg: #16372f;
     --warning-border: #fdba74;
     --warning-text: #fed7aa;
     --warning-bg: #431407;
     --success-border: #14b8a6;
     --success-text: #a7f3d0;
+    --success-bg: #022c22;
     --danger-text: #fecaca;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --danger-bg: #450a0a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.15);
     --shadow-lift: 0 24px 60px -28px rgba(0, 0, 0, 0.55);
   }
 }
