@@ -4456,7 +4456,7 @@ function workCard(pack) {
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack, "btn btn-sm")
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
-  return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}">
+  return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${escapeHtml(workTitle(pack))}</button>
       ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span>` : ""}
@@ -4501,7 +4501,7 @@ function workRow(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const workflow = workflowStateForPack(pack, command);
   const cellClass = `demo-table-row ${pack.id === state.selectedId ? "demo-table-row-selected" : ""}`;
-  return `<button type="button" class="${escapeAttribute(cellClass)}" data-action="select" data-pack="${escapeAttribute(pack.id)}">
+  return `<button type="button" class="${escapeAttribute(cellClass)}" data-action="select" data-pack="${escapeAttribute(pack.id)}" draggable="true">
     <span class="demo-table-cell demo-table-title">${escapeHtml(workTitle(pack))}${pack.type && pack.type !== "general" ? ` <span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span>` : ""}</span>
     <span class="demo-table-cell demo-table-owner">${escapeHtml(pack.owner)}</span>
     <span class="demo-table-cell demo-table-status" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.statusLabel || workflow.label)}</span>
@@ -4515,7 +4515,7 @@ function landingCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const statusClass = pack.status === STATUS.BLOCKED ? "is-attention" : pack.status === STATUS.DONE ? "is-done" : "";
   const pillClass = pack.status === STATUS.BLOCKED ? "lp-pill-warn" : pack.status === STATUS.DONE ? "lp-pill-muted" : "lp-pill-accent";
-  return `<article class="demo-landing-card ${statusClass}" data-pack-id="${escapeAttribute(pack.id)}">
+  return `<article class="demo-landing-card ${statusClass}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true">
     <div class="lp-card-head">
       <button class="lp-card-title" type="button" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
       <span class="lp-pill ${pillClass}">${escapeHtml(pack.status)}</span>
@@ -4827,6 +4827,50 @@ function bindTableRows() {
     });
   });
 }
+
+
+// ── Drag-and-drop reordering ──
+var _dragPackId = null;
+
+function reorderPacks(fromId, toId) {
+  const from = state.packs.findIndex(function (p) { return p.id === fromId; });
+  const to = state.packs.findIndex(function (p) { return p.id === toId; });
+  if (from < 0 || to < 0) return;
+  const item = state.packs.splice(from, 1)[0];
+  state.packs.splice(to, 0, item);
+  saveState();
+  render();
+}
+
+document.addEventListener("dragstart", function (e) {
+  const card = e.target.closest("[data-pack-id]");
+  if (!card) return;
+  _dragPackId = card.dataset.packId;
+  e.dataTransfer.effectAllowed = "move";
+  card.classList.add("dragging");
+});
+
+document.addEventListener("dragover", function (e) {
+  const card = e.target.closest("[data-pack-id]");
+  if (!card || !_dragPackId || card.dataset.packId === _dragPackId) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  document.querySelectorAll(".drag-over").forEach(function (el) { el.classList.remove("drag-over"); });
+  card.classList.add("drag-over");
+});
+
+document.addEventListener("drop", function (e) {
+  e.preventDefault();
+  const card = e.target.closest("[data-pack-id]");
+  if (!card || !_dragPackId) return;
+  reorderPacks(_dragPackId, card.dataset.packId);
+  _dragPackId = null;
+});
+
+document.addEventListener("dragend", function () {
+  document.querySelectorAll(".dragging, .drag-over").forEach(function (el) { el.classList.remove("dragging", "drag-over"); });
+  _dragPackId = null;
+});
 
 function bindListActions() {
   el("screen-content").querySelectorAll("[data-action]").forEach((button) => {

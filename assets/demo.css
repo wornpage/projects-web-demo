@@ -2798,6 +2798,30 @@ html[data-theme="dark"] .demo-meta-row {
   transform: translateY(-1px);
 }
 
+/* Drag-and-drop affordance */
+.demo-work-card,
+.demo-table-row {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.demo-work-card:active,
+.demo-table-row:active {
+  cursor: grabbing;
+}
+.demo-work-card.drag-over,
+.demo-table-row.drag-over {
+  border-color: var(--cockpit-accent) !important;
+  box-shadow: 0 0 0 2px var(--cockpit-accent) !important;
+}
+.demo-drag-indicator {
+  height: 3px;
+  background: var(--cockpit-accent);
+  border-radius: 999px;
+  margin: 2px 0;
+  pointer-events: none;
+}
+
 .demo-row:hover {
   border-color: var(--cockpit-border-strong);
 }
