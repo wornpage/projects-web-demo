@@ -338,8 +338,16 @@ function showToast(message, type = "info", durationMs = 5000) {
   toast._dismiss = () => { clearTimeout(timer); toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); };
 }
 
-window.addEventListener("offline", () => showToast("You are offline. Changes save locally.", "error"));
-window.addEventListener("online", () => showToast("Back online.", "success"));
+function updateOfflineIndicator() {
+  var dot = document.getElementById("offline-indicator");
+  if (!dot) return;
+  var offline = !navigator.onLine;
+  dot.classList.toggle("is-offline", offline);
+  dot.setAttribute("title", offline ? "Offline — changes save locally" : "Online");
+  dot.setAttribute("aria-label", offline ? "Offline" : "Online");
+}
+window.addEventListener("offline", function () { updateOfflineIndicator(); showToast("You are offline. Changes save locally.", "error"); });
+window.addEventListener("online", function () { updateOfflineIndicator(); showToast("Back online.", "success"); });
 
 // Right-click context menu — uses CSSStyleSheet for positioning (zero inline styles)
 document.addEventListener("contextmenu", (event) => {
@@ -440,6 +448,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   initTheme();
+  updateOfflineIndicator();
+  window.addEventListener("online", updateOfflineIndicator);
+  window.addEventListener("offline", updateOfflineIndicator);
   purgeLegacyDemoState();
 
   // Notify on theme radio change
