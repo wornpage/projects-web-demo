@@ -6557,15 +6557,22 @@ html[data-theme="dark"] .demo-app-shell {
     bottom: 0;
     display: flex;
     gap: 4px;
-    justify-content: center;
+    justify-content: flex-start;
     left: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 6px 8px;
     position: fixed;
+    scrollbar-width: none;
     width: 100%;
     z-index: 100;
   }
+  .demo-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
   .demo-tab-bar .demo-nav-item {
     border-radius: 999px;
+    flex-shrink: 0;
     font-size: 11px;
     gap: 4px;
     min-height: 36px;
@@ -6581,7 +6588,10 @@ html[data-theme="dark"] .demo-app-shell {
   }
   .demo-main,
   .demo-screen {
-    padding-bottom: 70px;
+    padding-bottom: 100px;
+  }
+  .demo-bottom-brief {
+    bottom: 80px;
   }
 }
 
