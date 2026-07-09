@@ -103,6 +103,8 @@ const state = {
   undoStack: [],
   undoIndex: -1,
   recentIds: [],
+  batchMode: false,
+  batchSelected: new Set(),
 };
 
 let unblockAnimationTimer = null;
@@ -3467,6 +3469,54 @@ function homeReceiptsPanel() {
   </div>`;
 }
 
+function toggleBatchMode() {
+  state.batchMode = !state.batchMode;
+  if (!state.batchMode) state.batchSelected.clear();
+  document.documentElement.classList.toggle("batch-mode", state.batchMode);
+  render();
+}
+
+function clearBatchSelection() {
+  state.batchSelected.clear();
+  render();
+}
+
+function batchAction(action) {
+  var ids = [...state.batchSelected];
+  ids.forEach(function(id) {
+    var pack = state.packs.find(function(p) { return p.id === id; });
+    if (!pack) return;
+    if (action === "done") {
+      handlePackAction(id, "done");
+    } else if (action === "block") {
+      handlePackAction(id, "block");
+    } else if (action === "delete") {
+      state.packs = state.packs.filter(function(p) { return p.id !== id; });
+      state.batchSelected.delete(id);
+    }
+  });
+  state.batchSelected.clear();
+  saveState();
+  render();
+  var label = { done: "done", block: "blocked", delete: "deleted" }[action] || action;
+  state.status = routeStatus("Batch", DEMO_BLOCKER_NONE, ids.length + " items " + label);
+  if (DEMO_API_BASE_URL) state.suppressNextSave = true;
+}
+
+function handleCardClick(event) {
+  if (!state.batchMode) return;
+  var card = event.target.closest("[data-pack-id]");
+  if (!card) return;
+  var id = card.dataset.packId;
+  if (!id) return;
+  if (state.batchSelected.has(id)) {
+    state.batchSelected.delete(id);
+  } else {
+    state.batchSelected.add(id);
+  }
+  render();
+}
+
 function renderHome() {
   if (!hasWelcomed()) {
     renderWelcome();
@@ -3733,7 +3783,13 @@ function recoveryPanel() {
 }
 
 function importPanel() {
-  return `<details class="demo-recovery-panel demo-import-panel">
+  return `<div class="demo-batch-bar${state.batchSelected.size ? " is-active" : ""}">
+    <span class="demo-batch-count">${state.batchSelected.size} selected</span>
+    <button class="btn btn-sm" onclick="batchAction('done')"${state.batchSelected.size ? "" : " disabled"}>Done</button>
+    <button class="btn btn-sm" onclick="batchAction('block')"${state.batchSelected.size ? "" : " disabled"}>Block</button>
+    <button class="btn btn-sm" onclick="batchAction('delete')"${state.batchSelected.size ? "" : " disabled"}>Delete</button>
+    <button class="btn btn-sm" onclick="clearBatchSelection()">Clear</button>
+  </div><details class="demo-recovery-panel demo-import-panel">
     <summary>
       <span>Import your work</span>
       <small>Paste a task list to try the demo on your own work.</small>
@@ -4684,7 +4740,7 @@ function workCard(pack) {
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack, "btn btn-sm")
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
-  return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true">
+  return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true" onclick="handleCardClick(event)"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${highlightMatch(workTitle(pack), state.query)}</button>
       ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span><span class="demo-age">${escapeHtml(packAge(pack))}</span>` : ""}
@@ -4743,7 +4799,7 @@ function landingCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const statusClass = pack.status === STATUS.BLOCKED ? "is-attention" : pack.status === STATUS.DONE ? "is-done" : "";
   const pillClass = pack.status === STATUS.BLOCKED ? "lp-pill-warn" : pack.status === STATUS.DONE ? "lp-pill-muted" : "lp-pill-accent";
-  return `<article class="demo-landing-card ${statusClass}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true">
+  return `<article class="demo-landing-card ${statusClass}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true" onclick="handleCardClick(event)"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
     <div class="lp-card-head">
       <button class="lp-card-title" type="button" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
       <span class="lp-pill ${pillClass}">${escapeHtml(pack.status)}</span>
