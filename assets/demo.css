@@ -7784,3 +7784,5 @@ mark.search-match{background:var(--cockpit-accent-50);color:var(--cockpit-accent
 
 .offline-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:8px;background:#4ade80;transition:background .3s}.offline-indicator.is-offline{background:#f87171}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.demo-work-card,.demo-landing-card,.demo-table-row{animation:cardIn .2s ease-out}
+
+.demo-age{font-size:10px;color:var(--cockpit-text-muted);margin-inline-start:4px;white-space:nowrap}

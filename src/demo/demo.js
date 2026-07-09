@@ -4637,6 +4637,19 @@ function workListContainerHtml(itemsHtml) {
   return `<div class="demo-work-list">${state.recentIds.length > 0 && state.workListView !== "table" ? `<div class="demo-chip-row"><small class="demo-status">Jump back:</small>${state.recentIds.map(function (rid) { var rp = state.packs.find(function (p) { return p.id === rid; }); if (!rp) return ""; return `<button type="button" class="demo-chip demo-chip-recent" data-action="select" data-pack="${escapeAttribute(rid)}">${escapeHtml(workTitle(rp))}</button>`; }).join("")}</div>` : ""}<div class="demo-work-list">${itemsHtml}</div>`;
 }
 
+function packAge(pack) {
+  var act = pack.activity;
+  if (!act || act.length < 1) return "";
+  var ts = (act[0] || "").match(/^\[([\d-]+\s[\d:]+)\]/);
+  if (!ts) return "";
+  var then = new Date(ts[1].replace(" ", "T") + "Z");
+  var days = Math.round((Date.now() - then.getTime()) / 86400000);
+  if (days < 1) return "today";
+  if (days === 1) return "1 day ago";
+  if (days < 30) return days + " days ago";
+  return Math.round(days / 30) + " months ago";
+}
+
 function highlightMatch(text, query) {
   if (!query || !text) return escapeHtml(text || "");
   var safe = escapeHtml(text);
@@ -4654,7 +4667,7 @@ function workCard(pack) {
   return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true">
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${highlightMatch(workTitle(pack), state.query)}</button>
-      ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span>` : ""}
+      ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span><span class="demo-age">${escapeHtml(packAge(pack))}</span>` : ""}
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
     <div class="demo-card-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. ${dueDateLabel(pack.due) || "No due date"}.`)}">
