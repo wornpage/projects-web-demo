@@ -3517,6 +3517,70 @@ function handleCardClick(event) {
   render();
 }
 
+
+var _inlineEditEl = null;
+var _inlineEditPackId = null;
+var _inlineEditField = null;
+var _inlineEditOrig = null;
+
+function inlineEditValue(el, packId, field) {
+  _inlineEditEl = el;
+  _inlineEditPackId = packId;
+  _inlineEditField = field;
+  _inlineEditOrig = el.textContent.trim();
+  el.contentEditable = true;
+  el.classList.add("demo-inline-edit");
+  el.focus();
+  // Select all text
+  var range = document.createRange();
+  range.selectNodeContents(el);
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function inlineEditSave() {
+  if (!_inlineEditEl) return;
+  var val = _inlineEditEl.textContent.trim();
+  if (val && val !== _inlineEditOrig) {
+    var pack = state.packs.find(function(p) { return p.id === _inlineEditPackId; });
+    if (pack) {
+      pushUndoSnapshot();
+      pack[_inlineEditField] = val;
+      if (!pack.activity) pack.activity = [];
+      pack.activity.push({ text: "Edited " + _inlineEditField + ": " + val, at: new Date().toISOString() });
+      saveState();
+    }
+  }
+  _inlineEditEl.contentEditable = false;
+  _inlineEditEl.classList.remove("demo-inline-edit");
+  _inlineEditEl = null;
+  _inlineEditPackId = null;
+  _inlineEditField = null;
+  _inlineEditOrig = null;
+}
+
+// Delegated dblclick handler for inline editing
+function bindInlineEdit() {
+  document.getElementById("screen-content")?.addEventListener("dblclick", function(e) {
+    var title = e.target.closest(".demo-card-title");
+    if (title) { var c = title.closest("[data-pack-id]"); if (c) { inlineEditValue(title, c.dataset.packId, "title"); return; } }
+    var owner = e.target.closest(".demo-owner-text");
+    if (owner) { var c = owner.closest("[data-pack-id]"); if (c) { inlineEditValue(owner, c.dataset.packId, "owner"); return; } }
+  });
+  document.addEventListener("keydown", function(e) {
+    if (!_inlineEditEl) return;
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); inlineEditSave(); render(); }
+    if (e.key === "Escape") { _inlineEditEl.textContent = _inlineEditOrig; inlineEditSave(); render(); }
+  });
+  // Save on blur
+  document.addEventListener("click", function(e) {
+    if (!_inlineEditEl || _inlineEditEl.contains(e.target)) return;
+    inlineEditSave();
+    render();
+  });
+}
+
 function renderHome() {
   if (!hasWelcomed()) {
     renderWelcome();
@@ -4761,7 +4825,7 @@ function workCard(pack) {
     </div>
     <div class="demo-card-meta">
       ${dueDateMeta(pack)}
-      <span>${highlightMatch(pack.owner, state.query)}</span>
+      <span class="demo-owner-text">${highlightMatch(pack.owner, state.query)}</span>
     </div>
     ${relevantMemoryCardStrip(pack)}
     ${actionReceiptCard(pack)}
@@ -9254,6 +9318,7 @@ function renderSettings() {
   bindScenarioCards();
   bindThemeChoices();
   el("reset-demo-settings")?.addEventListener("click", resetState);
+  bindInlineEdit();
   bindRecoveryControls();
 }
 
