@@ -406,7 +406,19 @@ document.addEventListener("keydown", (event) => {
   const map = { "h": "home", "r": "review", "w": "work", "n": "next", "c": "create", "m": "memory", "s": "settings", "i": "insights", "a": "activity", "t": "calendar", "g": "gantt", "?": null };
   const route = map[event.key.toLowerCase()];
   if (route) { go(route); event.preventDefault(); return; }
-  if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work n=Next c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar g=Gantt", "info", 8000); event.preventDefault(); }
+  if (event.key === "?") {
+    event.preventDefault();
+    var existing = document.querySelector(".demo-shortcuts");
+    if (existing) { existing.remove(); return; }
+    var shortcuts = document.createElement("div");
+    shortcuts.className = "demo-shortcuts";
+    shortcuts.innerHTML = '<div class="demo-shortcuts-inner"><h3>Keyboard shortcuts</h3>' +
+      '<div class="sk-group"><div class="sk-row"><kbd>h</kbd><span class="sk-label">Home</span></div><div class="sk-row"><kbd>r</kbd><span class="sk-label">Review</span></div><div class="sk-row"><kbd>w</kbd><span class="sk-label">Work</span></div><div class="sk-row"><kbd>n</kbd><span class="sk-label">Next (Choose action)</span></div><div class="sk-row"><kbd>c</kbd><span class="sk-label">Create</span></div><div class="sk-row"><kbd>m</kbd><span class="sk-label">Memory</span></div><div class="sk-row"><kbd>s</kbd><span class="sk-label">Settings</span></div><div class="sk-row"><kbd>i</kbd><span class="sk-label">Insights</span></div><div class="sk-row"><kbd>a</kbd><span class="sk-label">Activity</span></div><div class="sk-row"><kbd>t</kbd><span class="sk-label">Calendar</span></div><div class="sk-row"><kbd>g</kbd><span class="sk-label">Gantt</span></div></div>' +
+      '<div class="sk-group"><div class="sk-row"><kbd>Space</kbd><span class="sk-label">Run primary action</span></div><div class="sk-row"><kbd>d</kbd><span class="sk-label">Mark done</span></div><div class="sk-row"><kbd>b</kbd><span class="sk-label">Toggle blocker</span></div><div class="sk-row"><kbd>o</kbd><span class="sk-label">Open work path</span></div><div class="sk-row"><kbd>Escape</kbd><span class="sk-label">Dismiss toast / Close</span></div><div class="sk-row"><kbd>Ctrl+K</kbd><span class="sk-label">Command palette</span></div><div class="sk-row"><kbd>Ctrl+Z</kbd><span class="sk-label">Undo</span></div><div class="sk-row"><kbd>Ctrl+Shift+Z</kbd><span class="sk-label">Redo</span></div><div class="sk-row"><kbd>?</kbd><span class="sk-label">Show this help</span></div></div>' +
+      '</div>';
+    document.body.appendChild(shortcuts);
+    shortcuts.addEventListener("click", function (e) { if (e.target === shortcuts) shortcuts.remove(); });
+  }
   if (event.key === "Escape") { const toasts = document.querySelectorAll(".demo-toast:not(.demo-toast-hiding)"); if (toasts.length) { toasts[toasts.length - 1]._dismiss?.(); event.preventDefault(); } }
   if (event.key === "Enter" && event.target.closest("#pack-edit-form, .demo-inline-form")) {
     const btn = el("pack-primary-action") || event.target.closest("form")?.querySelector("[type=submit], .btn-primary");
