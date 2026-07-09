@@ -59,3 +59,19 @@
 | R | **Card color coding by type** | Each pack has a `type` field (music, design, developer, etc.). Adding a subtle left-border or background tint per type would add visual grouping. |
 | S | **Audio cue on notifications** | The toast system is visual-only. A subtle sound on error or success toasts would help when the tab is backgrounded. |
 | T | **Print-friendly work list** | The `@media print` rule hides most UI chrome. A dedicated print layout with a clean table of all work items would be useful for meetings. |
+| U | **Pin / star work items** | Let users pin important items to the top of the work list. Pinned status persisted in the pack data, indicated with a 📌 icon. Pin state survives filter/sort. |
+| V | **Batch multi-select actions** | Checkbox mode: tap checkboxes to select multiple cards, then apply a single action (done, block, delete) to all selected at once. Needs a floating action bar that appears when items are selected. |
+| W | **Kanban / board view** | A fourth work-list view: columns by status (Active → Blocked → Done). Cards drag between columns to change status. Uses the same card rendering with a horizontal scroll layout. |
+| X | **Focus mode** | Collapse everything except one work item. Dim the sidebar and other cards. Show only the selected pack's full detail. Toggle with `F` key. |
+| Y | **Recurring / template work items** | Mark a pack as a template. A "Repeat" button spawns a new copy with the same title, owner, and next-action, resetting status to active. Useful for daily/weekly routines like standups or checklists. |
+| Z | **Work item timeline / changelog** | Every field edit appends a timestamped entry to `pack.history`. Show the full edit history on the work path as a chronological log. Undo could roll back to any point in the timeline. |
+| AA | **Snooze / defer** | A "Snooze" button that sets `due` to +1 day, +3 days, +1 week, or a custom date. The item disappears from active views until the due date arrives. |
+| AB | **Progress slider** | A 0–100% slider or stepper on each pack. The donut chart on Insights could show average progress across all items. Visual indicator on cards. |
+| AC | **Merge two work items** | Select two packs on the Compare page and merge them: combine memory notes, pick the most recent blocker/owner, keep the first title. The merged item absorbs both histories. |
+| AD | **Keyboard shortcut cheat sheet** | Press `?` to show a modal panel listing all shortcuts: route keys, card keys, Cmd+K, Ctrl+Z, Ctrl+Shift+Z, Escape (dismiss toast), Space, d, b, o. Replaces the brief toast. |
+| AE | **Density / view preference memory** | Remember the last `workListView` (card / landing / table) per route, stored in localStorage. The toggle starts where the user left it instead of always resetting to "card". |
+| AF | **Command palette fuzzy search** | The Cmd+K palette uses exact substring matching. Adding fuzzy matching (typos, partial matches) would make it more forgiving. (Listed earlier as P — expanded here for completeness.) |
+| AG | **Calendar heatmap** | The Calendar page is a traditional grid. Adding a GitHub-style contribution heatmap for activity density would be a compelling visualization. (Listed earlier as O — expanded here for completeness.) |
+| AH | **Goal / OKR linking** | Tie work items to higher-level objectives. Add an `objective` field, group by objective on the Insights page, and show progress toward each goal. |
+| AI | **Import from JSON / CSV** | The current import only handles a proprietary list format. Adding generic JSON and CSV import would let users migrate from other tools. Detect column mapping automatically. |
+| AJ | **Export as formatted PDF** | Beyond CSV, generate a formatted PDF report with the work list, completion stats, and a summary table. Use `window.print()` with a dedicated print stylesheet. |
