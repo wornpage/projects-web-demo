@@ -32,6 +32,12 @@
 | 21 | UX |**Scroll position persistence** | Saves `window.scrollY` per `route:filter` key. Restored on `render()`. Filter changes and fresh navigations clear the saved position. |
 | 22 | A11Y |**Roving tabindex on work lists** | Arrow keys navigate between cards. Enter selects. Space runs primary action. `d` marks done, `b` toggles blocker, `o` opens work path. |
 | 23 | UI |**Dark mode FOUC elimination** | `@media (prefers-color-scheme: dark)` blocks with all `--cockpit-*` and `--demo-*` variables, applied before JS loads. Zero white flash on dark-mode OS. |
+| 24 | UX |**Card color coding by type** | Each pack type (music, design, developer, etc.) gets a distinct left-border accent color and tinted badge. 15 types. |
+| 25 | UX |**Pin / star work items** | Right-click context menu includes Pin/Unpin. Pinned items sort to top of work list. |
+| 26 | UX |**Keyboard shortcut cheat sheet** | Pressing `?` now opens a proper dialog with grouped shortcut keys instead of an ephemeral toast. |
+| 27 | UX |**Offline form drafts** | Create form and memory note auto-save to `sessionStorage` on each keystroke. Restored on route return. |
+| 28 | UX |**Copy as Markdown** | Right-click context menu includes "Copy as Markdown". Outputs `- [ ] Title | Owner | Due | Blocker`. |
+| 29 | UX |**Recently viewed quick-access** | Last 5 viewed pack IDs tracked in `state.recentIds`. Shown as clickable "Jump back" chips above the work list. |
 
 ---
 
@@ -47,7 +53,6 @@
 | F | UI |**Settings theme chooser — CSS-only** | The Settings screen renders theme chips that call `applyTheme()` via JS. Converting these to radio-button labels (same pattern as the header) would remove the last JS dependency from the theme system. |
 | G | UX |**Gantt chart interactivity** | The gantt bars render as CSSStyleSheet-driven divs but have no click, hover, or drag behavior. Adding click-to-navigate and hover-tooltips would make it a real planning tool. |
 | H | UX |**Animated route transitions per-screen** | View transitions (#9) use a default cross-fade. Adding specific `view-transition-name` to cards, lists, and the sidebar would create staggered, more polished transitions. |
-| I | DATA |**Offline form drafts** | The create form and memory note input lose typed text on navigation. Saving drafts to `sessionStorage` and restoring them would prevent data loss. |
 | J | UX |**Scroll-synced side-by-side compare** | The Compare page shows two columns that scroll independently. Syncing their scroll positions would make diffing easier. |
 | K | UX |**Animation for filter/sort changes** | When the filter changes or search is applied, cards disappear/appear abruptly. A staggered fade or scale animation would smooth the transition. |
 | L | A11Y |**Voice input for notes** | `webkitSpeechRecognition` or the `SpeechRecognition` API could transcribe spoken memory notes. Falls back gracefully on unsupported browsers. |
@@ -56,10 +61,8 @@
 | O | VIZ |**Calendar heatmap** | The Calendar page is a traditional grid. Adding a GitHub-style contribution heatmap for activity would be a compelling visualization. |
 | P | SEARCH |**Command palette fuzzy search** | The Cmd+K palette uses exact substring matching. Adding fuzzy matching (typos, partial matches) would make it more forgiving. |
 | Q | NLP |**Natural-language relative dates** | The parser handles "in 3 days" and "next Monday" but not "this Friday" or "end of month". Expanding the date parser to handle more human phrases would be useful. |
-| R | UI |**Card color coding by type** | Each pack has a `type` field (music, design, developer, etc.). Adding a subtle left-border or background tint per type would add visual grouping. |
 | S | UX |**Audio cue on notifications** | The toast system is visual-only. A subtle sound on error or success toasts would help when the tab is backgrounded. |
 | T | DATA |**Print-friendly work list** | The `@media print` rule hides most UI chrome. A dedicated print layout with a clean table of all work items would be useful for meetings. |
-| U | UX |**Pin / star work items** | Let users pin important items to the top of the work list. Pinned status persisted in the pack data, indicated with a 📌 icon. Pin state survives filter/sort. |
 | V | UX |**Batch multi-select actions** | Checkbox mode: tap checkboxes to select multiple cards, then apply a single action (done, block, delete) to all selected at once. Needs a floating action bar that appears when items are selected. |
 | W | UX |**Kanban / board view** | A fourth work-list view: columns by status (Active → Blocked → Done). Cards drag between columns to change status. Uses the same card rendering with a horizontal scroll layout. |
 | X | UX |**Focus mode** | Collapse everything except one work item. Dim the sidebar and other cards. Show only the selected pack's full detail. Toggle with `F` key. |
@@ -68,7 +71,6 @@
 | AA | UX |**Snooze / defer** | A "Snooze" button that sets `due` to +1 day, +3 days, +1 week, or a custom date. The item disappears from active views until the due date arrives. |
 | AB | UX |**Progress slider** | A 0–100% slider or stepper on each pack. The donut chart on Insights could show average progress across all items. Visual indicator on cards. |
 | AC | UX |**Merge two work items** | Select two packs on the Compare page and merge them: combine memory notes, pick the most recent blocker/owner, keep the first title. The merged item absorbs both histories. |
-| AD | UX |**Keyboard shortcut cheat sheet** | Press `?` to show a modal panel listing all shortcuts: route keys, card keys, Cmd+K, Ctrl+Z, Ctrl+Shift+Z, Escape (dismiss toast), Space, d, b, o. Replaces the brief toast. |
 | AE | UX |**Density / view preference memory** | Remember the last `workListView` (card / landing / table) per route, stored in localStorage. The toggle starts where the user left it instead of always resetting to "card". |
 | AF | SEARCH |**Command palette fuzzy search** | The Cmd+K palette uses exact substring matching. Adding fuzzy matching (typos, partial matches) would make it more forgiving. (Listed earlier as P — expanded here for completeness.) |
 | AG | VIZ |**Calendar heatmap** | The Calendar page is a traditional grid. Adding a GitHub-style contribution heatmap for activity density would be a compelling visualization. (Listed earlier as O — expanded here for completeness.) |
@@ -96,7 +98,6 @@
 | BC | A11Y |**Screen reader optimized mode** | Toggle that adds `role="status"` live regions, `aria-description` on complex components, and skips decorative animations. Stored as an accessibility preference. |
 | BD | SEC |**Two-factor / passkey auth** | For the hosted Outplane version: WebAuthn passkey support. Registration and login via `navigator.credentials`. Falls back to client-key header for browsers without WebAuthn. |
 | BE | SEC |**Magic link email login** | Passwordless auth: enter email, receive a link, click to authenticate. The link contains a signed token. Backend-only spike (server changes to generate/verify tokens). |
-| BF | UX |**Copy as Markdown / Notion format** | Right-click → "Copy as Markdown" outputs `- [ ] Title (owner, due date)`. "Copy as Notion" outputs a Notion-compatible block. Clipboard-friendly formatting. |
 | BG | A11Y |**Voice input for notes** | `SpeechRecognition` API for dictating memory notes. A microphone button in the memory input that starts listening. Falls back gracefully. Transcript appended to the note field. |
 | BH | I18N |**Multi-language i18n** | Extract all user-facing strings into a `LANG` object. Switch language via Settings. Start with English + Spanish. Community-contributable translation files. |
 | BI | UX |**Card density toggle per route** | Remember card/list/table preference per route independently. Work list might be table, Review might be cards. Stored in a `viewPreferences` map in localStorage. |
@@ -131,7 +132,6 @@
 | CL | DATA |**Parent/child work-item hierarchy** | Nested tasks: a pack can have `pack.parentId` pointing to another pack. Children inherit the parent's blocker/owner. Show as an indented tree in the work list. Collapsible branches. |
 | CM | DATA |**Archive and trash** | Move done items to an archive (hidden from the work list, visible via a toggle). Soft-delete sends items to trash with 30-day recovery. Both are just filtered views on the same packs array. |
 | CN | UX |**Duplicate detection on create** | When typing a new title, fuzzy-compare against existing titles. If similarity > 80%, show a warning: "This looks similar to 'Venue hold calendar'. Create anyway?" |
-| CO | UX |**Recently viewed quick-access** | Track the last 5 viewed pack IDs. Show as a small chip row at the top of the work list. "Jump back to…" with pack titles and timestamps. Stored in `state.recentIds`. |
 | CP | COLLAB |**Calendar sync (Google / Outlook)** | Generate an `.ics` file per pack with due date and title. Offer a "Subscribe to calendar" link that serves a live `.ics` feed endpoint from the server. Read-only, one-way sync. |
 | CQ | UX |**Daily standup optimized view** | A special view at `#/standup` that shows: "What I did", "What I'm doing", "Blockers". Auto-generated from pack status, activity, and blocker fields. Designed to be read aloud in 30 seconds. |
 | CR | UX |**Check-in reminders** | If `Notification` permission is granted, send a daily reminder at a configurable time: "Time to update your work status. 3 items need attention." Clicking the notification opens the app. |
