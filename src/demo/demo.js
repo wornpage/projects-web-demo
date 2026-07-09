@@ -9371,6 +9371,19 @@ function copyLayerPanel() {
       </div>`;
 }
 
+function applyCustomAccent(color) {
+  if (!color) return;
+  try { localStorage.setItem("projects-demo-accent", color); } catch {}
+  document.documentElement.style.setProperty("--cockpit-accent", color);
+}
+
+function loadCustomAccent() {
+  try {
+    var color = localStorage.getItem("projects-demo-accent");
+    if (color) applyCustomAccent(color);
+  } catch {}
+}
+
 function renderSettings() {
   const resetHelp = resetDemoHelp();
   const profileChoices = Object.entries(copyProfiles).map(([key, value]) => {
