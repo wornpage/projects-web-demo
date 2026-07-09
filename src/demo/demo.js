@@ -7771,10 +7771,22 @@ function buildCommandPaletteItems() {
   return items;
 }
 
+
+function fuzzyMatch(query, target) {
+  if (!query) return true;
+  var q = query.toLowerCase();
+  var t = target.toLowerCase();
+  var qi = 0;
+  for (var ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) qi++;
+  }
+  return qi === q.length;
+}
+
 function filterCommandPalette(query) {
   const needle = query.trim().toLowerCase();
   commandPalette.filtered = needle
-    ? commandPalette.items.filter((item) => item.label.toLowerCase().includes(needle))
+    ? commandPalette.items.filter((item) => fuzzyMatch(needle, item.label))
     : commandPalette.items;
   commandPalette.selected = 0;
   renderCommandPaletteList();
