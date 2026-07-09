@@ -2541,6 +2541,18 @@ document.addEventListener("scroll", function () {
     if (!state.scrollPositions) state.scrollPositions = {};
     state.scrollPositions[_key] = window.scrollY;
   }
+  // Update scroll progress bar
+  var _scrollH = document.documentElement.scrollHeight - window.innerHeight;
+  if (_scrollH > 0 && !window._scrollSheet) {
+    window._scrollSheet = new CSSStyleSheet();
+    window._scrollSheet.insertRule("#scroll-progress { width: 0; }");
+    document.adoptedStyleSheets.push(window._scrollSheet);
+  }
+  if (window._scrollSheet) {
+    var _pct = Math.round((window.scrollY / _scrollH) * 100);
+    window._scrollSheet.deleteRule(0);
+    window._scrollSheet.insertRule("#scroll-progress { width: " + _pct + "%; }", 0);
+  }
 }, { passive: true });
 
 function screenTitleForRoute() {
