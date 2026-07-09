@@ -97,6 +97,7 @@ const state = {
   workListView: "card",
   suppressNextSave: false,
   density: "card",
+  energyFilter: "all",
   focusMode: false,
   recentlyUnblockedIds: [],
   routeParam: "",
@@ -1204,6 +1205,7 @@ function normalizeRecoveryPack(source) {
     doneWhen: normalizeRecoveryText(source.doneWhen, FIELD_LONG_MAX),
     sources: normalizeRecoveryTextArray(source.sources, 50, PACK_FIELD_MEDIUM_MAX),
     memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
+    energy: ["low","medium","high"].indexOf(source.energy) >= 0 ? source.energy : undefined,
     progress: typeof source.progress === "number" ? Math.min(100, Math.max(0, Math.round(source.progress))) : undefined,
     subtasks: Array.isArray(source.subtasks) ? source.subtasks.slice(0,50).map(function(s){return{text:normalizeRecoveryText(s.text,200),done:Boolean(s.done)}}) : [],
     activity: normalizeRecoveryTextArray(source.activity, 100, 400)
@@ -4972,7 +4974,7 @@ function workCard(pack) {
       ${primaryCommandReasonNote(pack, command)}
     </div>
     <div class="demo-card-meta">
-      ${dueDateMeta(pack)}
+      ${pack.energy ? '<span class="demo-energy-icon">' + {low:"🔋",medium:"⚡",high:"🚀"}[pack.energy] + '</span>' : ""}${dueDateMeta(pack)}
       <span class="demo-owner-text">${highlightMatch(pack.owner, state.query)}</span>
     </div>
     ${relevantMemoryCardStrip(pack)}
@@ -6439,10 +6441,16 @@ async function handlePackAction(id, action) {
     state.status = memoryRouteStatus(pack);
     go("memory", pack.id);
     return;
+  } else if (btn.matches("[data-pack-energy]")) {
+    var ePack = findPack(btn.dataset.packEnergy);
+    if (ePack) { ePack.energy = btn.dataset.energy; saveState(); render(); }
   } else if (btn.matches("[data-subtask-pack]")) {
     var subId = btn.dataset.subtaskPack;
     var subIdx = parseInt(btn.dataset.subtaskIdx, 10);
     if (!isNaN(subIdx)) toggleSubtask(subId, subIdx);
+  } else if (action === "energy-filter") {
+    state.energyFilter = btn.dataset.energyFilter || "all";
+    render();
   } else if (action === "repeat") {
     repeatPack(packId);
   } else if (action === "snooze") {
