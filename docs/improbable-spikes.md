@@ -66,6 +66,10 @@
 | 55 | UX |**Snooze / defer (AA)** | Snooze 1d/3d/7d buttons in card support, pushes due date forward with activity log entry. |
 | 56 | UI |**Custom accent color (AP)** | Color picker in Settings overrides --cockpit-accent, persisted in localStorage. |
 | 65 | UX |**Energy level (BN)** | Low/Medium/High per work item, filter chips, icon on cards, selector in work path.
+| 65 | UX |**Energy level (BN)** | Low/Medium/High per work item, filter chips, icon on cards. |
+| 66 | VIZ |**Analytics mini-dashboard (CJ)** | Streak, active day, avg tasks/day, busiest owner on Insights. |
+| 67 | UX |**Work item age detail (AS)** | Cards show "Opened 3d ago · Last 2h ago" from activity log. |
+| 68 | UX |**Duplicate detection on create (CN)** | Warns when typing a title that matches an existing pack. |
 | 64 | UI |**Seasonal/holiday themes (BY)** | Halloween, Winter, Holiday accent colors via CSS radio selectors.
 | 63 | UX |**Progress slider (AB)** | Range slider per work item in work path, 0-100%, debounced save.
 | 62 | A11Y |**Roving sidebar nav (C)** | Arrow keys navigate sidebar items, tabindex managed, focus follows.
@@ -122,7 +126,6 @@
 | BK | UX |**Gantt chart drag-to-reschedule** | Drag bar edges to change start/end dates. Drag the whole bar to shift both dates. Updates `pack.due` and triggers re-render. Uses the same DnD primitives as card reordering. |
 | BL | UX |**Weekly review guided mode** | A step-by-step review flow: "1. Review done items", "2. Update blocked items", "3. Set next actions", "4. Plan next week". Progress bar. Prompts and reflection text areas. |
 | BM | UX |**Timeboxing / Pomodoro timer** | A 25-minute focus timer attached to a work item. Start/stop button on the card. Logs completed pomodoros to `pack.activity`. Shows a small timer in the header. Uses `setInterval`. |
-| BN | UX |**Work item "energy level"** | Add a `pack.energy` field: low / medium / high. Filterable. Shown as 🔋/⚡ icons on cards. Helps users pick work that matches their current energy state. |
 | BO | GAME |**Card emoji reactions** | Add a small reaction bar at the bottom of each card: 👍 👎 🚀 😅 🔥. Click to toggle. Reaction counts stored in `pack.reactions`. Anonymous, local-only. |
 | BP | DATA |**Work item "mood" tracking** | Optional daily mood check-in attached to a work item. "How did this work feel today? 😊 😐 😤". Stored as `pack.moodLog` with timestamps. Plotted on the work path as a tiny trendline. |
 | BQ | UX |**Custom fields** | Users can define extra fields per work item: "Estimated hours", "Client name", "Priority score". Stored in `pack.customFields`. Rendered dynamically in the work path and card summaries. |
@@ -147,7 +150,6 @@
 | CK | A11Y |**High contrast mode** | Independent of the OS setting: a toggle in the accessibility panel that enables `forced-colors: active` CSS rules across the app. Higher contrast borders, thicker text, system color palette. |
 | CL | DATA |**Parent/child work-item hierarchy** | Nested tasks: a pack can have `pack.parentId` pointing to another pack. Children inherit the parent's blocker/owner. Show as an indented tree in the work list. Collapsible branches. |
 | CM | DATA |**Archive and trash** | Move done items to an archive (hidden from the work list, visible via a toggle). Soft-delete sends items to trash with 30-day recovery. Both are just filtered views on the same packs array. |
-| CN | UX |**Duplicate detection on create** | When typing a new title, fuzzy-compare against existing titles. If similarity > 80%, show a warning: "This looks similar to 'Venue hold calendar'. Create anyway?" |
 | CP | COLLAB |**Calendar sync (Google / Outlook)** | Generate an `.ics` file per pack with due date and title. Offer a "Subscribe to calendar" link that serves a live `.ics` feed endpoint from the server. Read-only, one-way sync. |
 | CQ | UX |**Daily standup optimized view** | A special view at `#/standup` that shows: "What I did", "What I'm doing", "Blockers". Auto-generated from pack status, activity, and blocker fields. Designed to be read aloud in 30 seconds. |
 | CR | UX |**Check-in reminders** | If `Notification` permission is granted, send a daily reminder at a configurable time: "Time to update your work status. 3 items need attention." Clicking the notification opens the app. |
