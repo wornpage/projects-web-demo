@@ -6505,9 +6505,6 @@ async function handlePackAction(id, action) {
     state.status = memoryRouteStatus(pack);
     go("memory", pack.id);
     return;
-  } else if (btn.matches("[data-pack-energy]")) {
-    var ePack = findPack(btn.dataset.packEnergy);
-    if (ePack) { ePack.energy = btn.dataset.energy; saveState(); render(); }
   
   } else if (btn.matches("[data-subtask-pack]")) {
     var subId = btn.dataset.subtaskPack;
@@ -8574,11 +8571,11 @@ function renderExtraFields(pack) {
   // Progress slider (always visible)
   html += '<div class="demo-progress-slider"><input type="range" min="0" max="100" value="' + (pack.progress || 0) + '" class="demo-progress-range" data-pack-id="' + pack.id + '"><span class="demo-progress-pct">' + (pack.progress || 0) + '%</span></div>';
   // Energy (always visible)
-  html += '<div class="demo-field-card"><label>Energy</label><div class="demo-energy"><button class="demo-energy-btn' + (pack.energy === "low" ? " is-active" : "") + '" data-pack-energy="' + pack.id + '" data-energy="low">🔋 Low</button><button class="demo-energy-btn' + (pack.energy === "medium" ? " is-active" : "") + '" data-pack-energy="' + pack.id + '" data-energy="medium">⚡ Medium</button><button class="demo-energy-btn' + (pack.energy === "high" ? " is-active" : "") + '" data-pack-energy="' + pack.id + '" data-energy="high">🚀 High</button></div></div>';
+  html += '<div class="demo-field-card"><label>Energy</label><div class="demo-energy"><button class="demo-energy-btn' + (pack.energy === "low" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="low">🔋 Low</button><button class="demo-energy-btn' + (pack.energy === "medium" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="medium">⚡ Medium</button><button class="demo-energy-btn' + (pack.energy === "high" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="high">🚀 High</button></div></div>';
   // Milestone
-  html += '<div class="demo-field-card"><label>Milestone</label><input class="demo-search-input" type="text" value="' + escapeHtml(pack.milestone || "") + '" data-milestone-pack="' + pack.id + '" placeholder="e.g. Sprint 1, Phase 2"></div>';
+  html += '<label class="demo-field demo-state-field"><span>Milestone</span><input class="demo-search-input" type="text" value="' + escapeHtml(pack.milestone || "") + '" data-milestone-pack="' + pack.id + '" placeholder="e.g. Sprint 1, Phase 2"></label>';
   // Location
-  html += '<div class="demo-field-card"><label>Location</label><input class="demo-search-input" type="text" value="' + escapeHtml(pack.location || "") + '" data-location-pack="' + pack.id + '" placeholder="office, home, field..."></div>';
+  html += '<label class="demo-field demo-state-field"><span>Location</span><input class="demo-search-input" type="text" value="' + escapeHtml(pack.location || "") + '" data-location-pack="' + pack.id + '" placeholder="office, home, field..."></label>';
   return html;
 }
 
