@@ -3703,6 +3703,7 @@ function recoveryPanel() {
         <label for="demo-recovery-output">Current demo backup</label>
         <textarea id="demo-recovery-output" class="demo-search-input" readonly spellcheck="false">${escapeHtml(snapshot)}</textarea>
         <button class="btn btn-sm" type="button" id="copy-recovery-state">Copy backup</button>
+        <button class="btn btn-sm" type="button" id="download-recovery-state">Download backup</button>
       </div>
       <div class="demo-inline-form demo-recovery-restore">
         <label for="demo-recovery-input">Restore pasted backup</label>
