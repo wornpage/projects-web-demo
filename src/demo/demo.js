@@ -9084,11 +9084,13 @@ function renderInsights() {
 function insightCardWithDonut(label, rate, done, total, noun) {
   var pct = Math.round((done / total) * 100) || 0;
   var color = pct >= 80 ? "var(--cockpit-accent)" : pct >= 40 ? "var(--cockpit-warning-text)" : "var(--cockpit-danger-text)";
-  return `<div class="demo-insight-card demo-insight-good">
-    <div class="insight-donut" style="background:conic-gradient(${color} ${pct}%, var(--cockpit-border) ${pct}%)"><span class="insight-donut-value">${pct}%</span></div>
-    <strong>Completed</strong>
-    <small>${done} of ${total} ${noun}</small>
-  </div>`;
+  var uid = "dn" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  var sheet = new CSSStyleSheet();
+  sheet.insertRule("." + uid + "::before { display: none; }");
+  sheet.insertRule("." + uid + " { background: conic-gradient(" + color + " " + pct + "%, var(--cockpit-border) " + pct + "%); }");
+  document.adoptedStyleSheets.push(sheet);
+  var html = '<div class="demo-insight-card demo-insight-good"><div class="insight-donut ' + uid + '"><span class="insight-donut-value">' + pct + '%</span></div><strong>Completed</strong><small>' + done + ' of ' + total + ' ' + noun + '</small></div>';
+  return html;
 }
 
 function insightCard(label, value, detail, tone) {
