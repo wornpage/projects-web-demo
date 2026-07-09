@@ -3581,6 +3581,47 @@ function bindInlineEdit() {
   });
 }
 
+
+var ACHIEVEMENTS = [
+  { id: "first-done", icon: "🎉", label: "First completion", check: function() { return state.packs.some(function(p) { return p.status === "done"; }); } },
+  { id: "ten-done", icon: "🏆", label: "10 tasks done", check: function() { return state.packs.filter(function(p) { return p.status === "done"; }).length >= 10; } },
+  { id: "seven-day", icon: "🔥", label: "7-day streak", check: function() { var ds = {}; state.packs.forEach(function(p) { if (p.activity) p.activity.forEach(function(a) { var at = activityParts(a).at; if (at) { var d = at.slice(0,10); if (d) ds[d] = true; } }); }); var days = Object.keys(ds).sort(); if (days.length < 7) return false; var streak = 1; for (var i = 1; i < days.length; i++) { var diff = (new Date(days[i]) - new Date(days[i-1])) / 86400000; streak = diff <= 2 ? streak + 1 : 1; if (streak >= 7) return true; } return false; } },
+  { id: "all-fields", icon: "💎", label: "All fields filled", check: function() { return state.packs.some(function(p) { return p.title && p.owner && p.next && p.due && p.purpose && p.doneWhen; }); } },
+  { id: "twenty-pack", icon: "📦", label: "20 work items", check: function() { return state.packs.length >= 20; } },
+  { id: "blocker-cleared", icon: "🚀", label: "Blocker cleared", check: function() { return !state.packs.some(function(p) { return p.blocker && p.blocker !== "none" && p.status !== "done"; }); } },
+];
+
+var _unlockedAch = {};
+
+function updateAchievements() {
+  var changed = false;
+  ACHIEVEMENTS.forEach(function(a) {
+    if (_unlockedAch[a.id]) return;
+    if (a.check()) {
+      _unlockedAch[a.id] = true;
+      changed = true;
+      showToast("Achievement: " + a.icon + " " + a.label, "success");
+    }
+  });
+  if (changed) {
+    try { localStorage.setItem("projects-demo-achievements", JSON.stringify(_unlockedAch)); } catch {}
+  }
+}
+
+function loadAchievements() {
+  try {
+    var saved = JSON.parse(localStorage.getItem("projects-demo-achievements") || "{}");
+    _unlockedAch = saved;
+  } catch { _unlockedAch = {}; }
+}
+
+function renderAchievements() {
+  return '<div class="demo-achievements">' + ACHIEVEMENTS.map(function(a) {
+    var unlocked = _unlockedAch[a.id];
+    return '<span class="ach' + (unlocked ? " is-unlocked" : "") + '" title="' + a.label + (unlocked ? '"' : " — locked'") + ">" + a.icon + "</span>";
+  }).join("") + "</div>";
+}
+
 function renderHome() {
   if (!hasWelcomed()) {
     renderWelcome();
