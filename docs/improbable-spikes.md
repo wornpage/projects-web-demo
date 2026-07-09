@@ -43,6 +43,7 @@
 | 32 | UX |**Offline sync indicator** | Green/red dot in the header — updates on online/offline events. |
 | 33 | UX |**Card fade-in animation** | Work/list/table cards animate in with opacity+translateY on render. |
 | 34 | UX |**Work item age indicator** | Shows "today", "3 days ago", "2 months ago" from first activity timestamp. |
+| 37 | DATA |**Backup to JSON download** | "Download backup" button in Settings creates a timestamped .json from state. |
 | 36 | UX |**Per-route view preference** | Work-list view mode remembered per route in localStorage. |
 | 35 | UX |**Extra actions mobile cleanup** | Hide verbose `<strong>` text in card-support summary on ≤640px screens. |
 
