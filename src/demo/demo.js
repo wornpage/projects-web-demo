@@ -2355,6 +2355,31 @@ function parseInlineMarkdown(text) {
 
 
 var _resizing = false;
+function _sidebarWidth(w) {
+  var id = "demo-sidebar-w";
+  try {
+    var found = document.adoptedStyleSheets.find(function(s) { return s._id === id; });
+    if (found) { found.deleteRule(0); found.insertRule(":root{--demo-sidebar-width:" + w + "px}"); return; }
+    var ss = new CSSStyleSheet();
+    ss._id = id;
+    ss.insertRule(":root{--demo-sidebar-width:" + w + "px}");
+    document.adoptedStyleSheets = [ss].concat([].slice.call(document.adoptedStyleSheets));
+  } catch(e) {}
+}
+
+function _sidebarWidth(w) {
+  try {
+    var sheets = document.adoptedStyleSheets;
+    var found = null;
+    for (var si = 0; si < sheets.length; si++) { if (sheets[si]._sid === "sbw") { found = sheets[si]; break; } }
+    if (found) { found.deleteRule(0); found.insertRule(":root{--demo-sidebar-width:" + w + "px}"); return; }
+    var ss = new CSSStyleSheet();
+    ss._sid = "sbw";
+    ss.insertRule(":root{--demo-sidebar-width:" + w + "px}");
+    document.adoptedStyleSheets = [ss].concat(Array.prototype.slice.call(document.adoptedStyleSheets));
+  } catch(e) {}
+}
+
 function initSidebarResizer() {
   var handle = document.getElementById("sidebar-resizer");
   if (!handle) return;
@@ -2366,7 +2391,7 @@ function initSidebarResizer() {
   document.addEventListener("mousemove", function(e) {
     if (!_resizing) return;
     var w = Math.min(Math.max(e.clientX, 160), 320);
-    document.documentElement.style.setProperty("--demo-sidebar-width", w + "px");
+    _sidebarWidth(w);
   });
   document.addEventListener("mouseup", function() {
     if (!_resizing) return;
@@ -2378,7 +2403,7 @@ function initSidebarResizer() {
   // Restore saved width
   try {
     var saved = parseFloat(localStorage.getItem("projects-demo-sidebar-width"));
-    if (saved >= 160 && saved <= 320) document.documentElement.style.setProperty("--demo-sidebar-width", saved + "px");
+    if (saved >= 160 && saved <= 320) _sidebarWidth(saved);
   } catch {}
 }
 
@@ -2708,7 +2733,7 @@ function applyVirtualScroll() {
   items.forEach(function (item) {
     var rect = item.getBoundingClientRect();
     var visible = rect.bottom > -buffer && rect.top < viewH + buffer;
-    item.style.display = visible ? "" : "none";
+    item.classList.toggle("is-hidden", !visible);
   });
 }
 
@@ -9521,7 +9546,7 @@ function copyLayerPanel() {
 function applyCustomAccent(color) {
   if (!color) return;
   try { localStorage.setItem("projects-demo-accent", color); } catch {}
-  document.documentElement.style.setProperty("--cockpit-accent", color);
+  try { var sheets = document.adoptedStyleSheets; var found = null; for (var si = 0; si < sheets.length; si++) { if (sheets[si]._sid === "acc") { found = sheets[si]; break; } } if (found) { found.deleteRule(0); found.insertRule(":root{--cockpit-accent:" + color + "}"); return; } var ss = new CSSStyleSheet(); ss._sid = "acc"; ss.insertRule(":root{--cockpit-accent:" + color + "}"); document.adoptedStyleSheets = [ss].concat(Array.prototype.slice.call(document.adoptedStyleSheets)); } catch(e) {}
 }
 
 function checkDeadlineNotifications() {
