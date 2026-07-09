@@ -9015,6 +9015,33 @@ function bindComparePickers() {
   });
 }
 
+
+function activityHeatmap() {
+  var now = new Date();
+  var cells = [];
+  var daily = {};
+  state.packs.forEach(function(p) {
+    if (!p.activity) return;
+    p.activity.forEach(function(a) {
+      if (typeof a !== "object" || a === null) return;
+      var at = a.at;
+      if (at == null) return;
+      var d = typeof at === "number" ? new Date(at).toISOString().slice(0,10) : String(at).slice(0,10);
+      if (d && d.length === 10) daily[d] = (daily[d] || 0) + 1;
+    });
+  });
+  var levels = ["heat-lvl-0","heat-lvl-1","heat-lvl-2","heat-lvl-3","heat-lvl-4"];
+  for (var i = 83; i >= 0; i--) {
+    var d = new Date(now);
+    d.setDate(d.getDate() - i);
+    var key = d.toISOString().slice(0,10);
+    var count = daily[key] || 0;
+    var lvl = count === 0 ? 0 : count <= 1 ? 1 : count <= 3 ? 2 : count <= 6 ? 3 : 4;
+    cells.push('<div class="demo-heatmap-cell '+levels[lvl]+'" title="'+key+': '+count+' activities"></div>');
+  }
+  return '<div class="demo-heat-label">Activity density</div><div class="demo-heatmap">' + cells.join("") + '</div>';
+}
+
 function renderCalendar() {
   const params = (state.routeParam || "").split("/").filter(Boolean);
   const now = new Date();
@@ -9075,6 +9102,7 @@ function renderCalendar() {
         <button class="btn btn-sm" type="button" data-action="calendar-nav" data-date="${nextYear}/${nextMonth}">→</button>
         <button class="btn btn-sm demo-cal-today" type="button" data-action="calendar-nav" data-date="${now.getFullYear()}/${now.getMonth()}">Today</button>
       </div>
+      ${activityHeatmap()}
       <div class="demo-calendar-grid">
         ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => `<div class="demo-cal-header">${d}</div>`).join("")}
         ${cells}
