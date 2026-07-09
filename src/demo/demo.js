@@ -9087,10 +9087,10 @@ function activityHeatmap() {
   state.packs.forEach(function(p) {
     if (!p.activity) return;
     p.activity.forEach(function(a) {
-      if (typeof a !== "object" || a === null) return;
-      var at = a.at;
-      if (at == null) return;
-      var d = typeof at === "number" ? new Date(at).toISOString().slice(0,10) : String(at).slice(0,10);
+      var parsed = activityParts(a);
+      var at = parsed.at;
+      if (!at) return;
+      var d = String(at).slice(0, 10);
       if (d && d.length === 10) daily[d] = (daily[d] || 0) + 1;
     });
   });
