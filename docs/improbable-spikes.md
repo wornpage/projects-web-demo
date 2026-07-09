@@ -55,6 +55,10 @@
 | 37 | DATA |**Backup to JSON download** | "Download backup" button in Settings creates a timestamped .json from state. |
 | 36 | UX |**Per-route view preference** | Work-list view mode remembered per route in localStorage. |
 | 35 | UX |**Extra actions mobile cleanup** | Hide verbose `<strong>` text in card-support summary on ≤640px screens. |
+| 47 | UX |**Deadline countdown (AR)** | Cards show "2 days overdue" (red), "Due today" (amber), urgency from `pack.due` vs current date. |
+| 48 | UX |**Inline editing on cards (AM)** | Double-click title or owner to edit inline. Enter saves, Escape cancels, blur auto-saves. |
+| 49 | GAME |**Achievement badges (AW)** | 6 unlockable emoji badges in sidebar footer — first done, 10 tasks, 7-day streak, all fields, 20 items, blocker cleared. Persistent in localStorage. |
+| 50 | UX |**Gantt click-to-navigate (G)** | Gantt bars and labels navigate to the pack on click. Delegated handler, CSSStyleSheet-safe. |
 
 ---
 
@@ -68,45 +72,33 @@
 | D | UI |**Eliminate *all* `!important`** | Partially done (#5 removed 18, #6 removed 44). 19 remain — all in legitimate places: `prefers-reduced-motion` (2), `@media print` (7), forced-colors (1), responsive media-queries (2), dark-theme `:is()` selectors (2), a `prefers-reduced-motion: no-preference` block (4), and a color override (1). Most are unavoidable cascade constraints. |
 | E | PERF |**Virtualized work list with true DOM recycling** | Partially done (the `applyVirtualScroll` function hides off-screen items via `display: none`). True virtualization would keep only ~20 DOM nodes and recycle them as the user scrolls, using a spacer to maintain scroll height. The current hide/show approach still creates all DOM nodes on render. |
 | F | UI |**Settings theme chooser — CSS-only** | The Settings screen renders theme chips that call `applyTheme()` via JS. Converting these to radio-button labels (same pattern as the header) would remove the last JS dependency from the theme system. |
-| G | UX |**Gantt chart interactivity** | The gantt bars render as CSSStyleSheet-driven divs but have no click, hover, or drag behavior. Adding click-to-navigate and hover-tooltips would make it a real planning tool. |
+| G | UX |**Gantt chart interactivity** | Partially done: click-to-navigate is live. Remaining: hover tooltips, drag-to-reschedule bar edges. |
 | H | UX |**Animated route transitions per-screen** | View transitions (#9) use a default cross-fade. Adding specific `view-transition-name` to cards, lists, and the sidebar would create staggered, more polished transitions. |
 | J | UX |**Scroll-synced side-by-side compare** | The Compare page shows two columns that scroll independently. Syncing their scroll positions would make diffing easier. |
-| K | UX |**Animation for filter/sort changes** | When the filter changes or search is applied, cards disappear/appear abruptly. A staggered fade or scale animation would smooth the transition. |
 | L | A11Y |**Voice input for notes** | `webkitSpeechRecognition` or the `SpeechRecognition` API could transcribe spoken memory notes. Falls back gracefully on unsupported browsers. |
 | M | DATA |**Daily digest email template** | The Email Standup button opens a `mailto:` link. A proper HTML email template with inline styles and a summary table would be more useful. |
 | N | COLLAB |**QR code share link** | The sync panel copies a URL. Generating a QR code inline (via canvas or CSS grid) would make sharing faster on mobile. |
-| O | VIZ |**Calendar heatmap** | The Calendar page is a traditional grid. Adding a GitHub-style contribution heatmap for activity would be a compelling visualization. |
-| P | SEARCH |**Command palette fuzzy search** | The Cmd+K palette uses exact substring matching. Adding fuzzy matching (typos, partial matches) would make it more forgiving. |
 | Q | NLP |**Natural-language relative dates** | The parser handles "in 3 days" and "next Monday" but not "this Friday" or "end of month". Expanding the date parser to handle more human phrases would be useful. |
 | S | UX |**Audio cue on notifications** | The toast system is visual-only. A subtle sound on error or success toasts would help when the tab is backgrounded. |
 | T | DATA |**Print-friendly work list** | The `@media print` rule hides most UI chrome. A dedicated print layout with a clean table of all work items would be useful for meetings. |
-| V | UX |**Batch multi-select actions** | Checkbox mode: tap checkboxes to select multiple cards, then apply a single action (done, block, delete) to all selected at once. Needs a floating action bar that appears when items are selected. |
 | W | UX |**Kanban / board view** | A fourth work-list view: columns by status (Active → Blocked → Done). Cards drag between columns to change status. Uses the same card rendering with a horizontal scroll layout. |
-| X | UX |**Focus mode** | Collapse everything except one work item. Dim the sidebar and other cards. Show only the selected pack's full detail. Toggle with `F` key. |
 | Y | AUTOM |**Recurring / template work items** | Mark a pack as a template. A "Repeat" button spawns a new copy with the same title, owner, and next-action, resetting status to active. Useful for daily/weekly routines like standups or checklists. |
 | Z | UX |**Work item timeline / changelog** | Every field edit appends a timestamped entry to `pack.history`. Show the full edit history on the work path as a chronological log. Undo could roll back to any point in the timeline. |
 | AA | UX |**Snooze / defer** | A "Snooze" button that sets `due` to +1 day, +3 days, +1 week, or a custom date. The item disappears from active views until the due date arrives. |
 | AB | UX |**Progress slider** | A 0–100% slider or stepper on each pack. The donut chart on Insights could show average progress across all items. Visual indicator on cards. |
 | AC | UX |**Merge two work items** | Select two packs on the Compare page and merge them: combine memory notes, pick the most recent blocker/owner, keep the first title. The merged item absorbs both histories. |
-| AE | UX |**Density / view preference memory** | Remember the last `workListView` (card / landing / table) per route, stored in localStorage. The toggle starts where the user left it instead of always resetting to "card". |
-| AF | SEARCH |**Command palette fuzzy search** | The Cmd+K palette uses exact substring matching. Adding fuzzy matching (typos, partial matches) would make it more forgiving. (Listed earlier as P — expanded here for completeness.) |
-| AG | VIZ |**Calendar heatmap** | The Calendar page is a traditional grid. Adding a GitHub-style contribution heatmap for activity density would be a compelling visualization. (Listed earlier as O — expanded here for completeness.) |
 | AH | UX |**Goal / OKR linking** | Tie work items to higher-level objectives. Add an `objective` field, group by objective on the Insights page, and show progress toward each goal. |
 | AI | DATA |**Import from JSON / CSV** | The current import only handles a proprietary list format. Adding generic JSON and CSV import would let users migrate from other tools. Detect column mapping automatically. |
 | AJ | DATA |**Export as formatted PDF** | Beyond CSV, generate a formatted PDF report with the work list, completion stats, and a summary table. Use `window.print()` with a dedicated print stylesheet. |
 | AK | UX |**Subtasks / checklist within a work item** | A collapsible checklist inside each pack — mark subtasks done without changing the pack's status. Progress bar auto-computes from checked subtasks. |
 | AL | VIZ |**Work item dependencies graph** | Visualize `blockedBy` relationships as a directed graph. Nodes are packs, edges are dependencies. Click a node to navigate. Canvas or SVG-based. |
-| AM | UX |**Inline editing on cards** | Edit title, owner, or next-action directly on the work card without navigating to the full work path. Double-click to edit, Enter to save, Escape to cancel. |
-| AN | UX |**Quick-add from URL params** | `?add=Buy+milk+due+tomorrow` parses at launch and opens the create form pre-filled. The natural-language parser handles the rest. Bookmarkable quick-add. |
 | AO | UX |**Drag to resize sidebar** | A draggable handle on the sidebar edge. User can widen or narrow the sidebar, persistent in localStorage. Min 160px, max 320px. |
 | AP | UI |**Custom accent color** | A color picker in Settings that overrides `--cockpit-accent`. Saved to localStorage. All 5 built-in themes still available alongside the custom option. |
 | AQ | VIZ |**Burndown / velocity chart** | Show completed vs remaining work over time as a line chart. Track weekly velocity. CSS-only sparkline version or a small canvas. |
-| AR | UX |**Deadline countdown** | Cards with a past due date show "2 days overdue" in red. Cards due today show "Due today" in amber. Urgency computed from `pack.due` vs `new Date()`. |
 | AS | UX |**Work item age indicator** | Each card shows how long ago it was created, last edited, or last touched. "Opened 3 days ago · touched 2 hours ago". Helps spot stale items. |
 | AT | UX |**File attachments via blob URLs** | Upload files/images to a work item. Store as base64 blobs in IndexedDB. Preview inline with `<img>` or `<a download>`. Max 1MB per attachment. |
 | AU | COLLAB |**Shareable read-only link** | Generate a URL that loads the demo with a specific snapshot — `?share=base64encodedState`. The recipient sees a read-only view with a "Copy to my demo" button. |
 | AV | UX |**Guided interactive tour** | First-visit overlay that walks through the sidebar, work list, command brief, and keyboard shortcuts. Dismissed permanently. Uses `step-1`, `step-2` floating tooltips. |
-| AW | GAME |**Achievement badges** | Gamification: "First completion", "10 tasks done", "7-day streak", "All fields filled". Displayed as small emoji badges in the sidebar footer. Persisted in localStorage. |
 | AX | UI |**Dark mode scheduling** | Auto-switch theme at sunset based on geolocation or a user-set schedule. "Dark mode from 18:00–06:00". Falls back to `prefers-color-scheme` if no schedule set. |
 | AY | NLP |**Command palette natural-language** | Type "block venue hold" in Cmd+K and it finds the pack and runs the blocker toggle. Type "done lighting checklist" to mark it done. Parse intent from free text. |
 | AZ | AUTOM |**Workflow automation rules** | Simple if-this-then-that: "When any pack is marked done, unblock all packs blocked by it." Configured in Settings with a dropdown. Stored as JSON rules. |
@@ -117,7 +109,6 @@
 | BE | SEC |**Magic link email login** | Passwordless auth: enter email, receive a link, click to authenticate. The link contains a signed token. Backend-only spike (server changes to generate/verify tokens). |
 | BG | A11Y |**Voice input for notes** | `SpeechRecognition` API for dictating memory notes. A microphone button in the memory input that starts listening. Falls back gracefully. Transcript appended to the note field. |
 | BH | I18N |**Multi-language i18n** | Extract all user-facing strings into a `LANG` object. Switch language via Settings. Start with English + Spanish. Community-contributable translation files. |
-| BI | UX |**Card density toggle per route** | Remember card/list/table preference per route independently. Work list might be table, Review might be cards. Stored in a `viewPreferences` map in localStorage. |
 | BJ | VIZ |**Eisenhower matrix view** | A 2×2 grid: Urgent/Not Urgent × Important/Not Important. Drag cards into quadrants. Quadrant stored as a pack property. Filter work list by quadrant. |
 | BK | UX |**Gantt chart drag-to-reschedule** | Drag bar edges to change start/end dates. Drag the whole bar to shift both dates. Updates `pack.due` and triggers re-render. Uses the same DnD primitives as card reordering. |
 | BL | UX |**Weekly review guided mode** | A step-by-step review flow: "1. Review done items", "2. Update blocked items", "3. Set next actions", "4. Plan next week". Progress bar. Prompts and reflection text areas. |
@@ -168,9 +159,7 @@
 | DF | COLLAB |**Quick-add from email** | A dedicated email address (for the hosted version) that parses incoming emails into work items. Subject → title, body → purpose. Reply-to address used as owner. Mailgun/Postmark integration. |
 | DG | UX |**Work item milestone grouping** | Add `pack.milestone`. Group work items by milestone on the Insights page. Show milestone progress (completed/total). Milestones have optional due dates. |
 | DH | AUTOM |**Recurring work items** | A `pack.recurring` field: "daily", "weekly", "monthly". When marked done, a new copy spawns with the next due date. Shows the recurrence pattern on the card. |
-| DI | DATA |**Backup to JSON file download** | One-click "Download backup" in Settings. Downloads a timestamped `.json` file with the full state snapshot. "Restore backup" button opens a file picker to load a backup. |
 | DJ | UX |**Drag calendar event to reschedule** | In the Calendar view, drag a day cell with items to a different day. Updates all due dates for items on that day. Visual drag indicator. |
 | DK | A11Y |**Keyboard-first mode** | A toggle that makes every interactive element reachable via keyboard. Shows shortcut hints on hover. Disables mouse-specific interactions. Single-key navigation where possible. |
 | DL | UX |**Work item "rot" detection** | Items untouched for 30+ days get a subtle "stale" indicator — reduced opacity and a 🕸️ icon. Configurable threshold in Settings. "Tidy up" button archives all stale items. |
-| DM | UX |**Autosave form drafts** | The create form and memory input save typed text to `sessionStorage` on every keystroke. If the user navigates away and back, the draft is restored. Cleared on successful save. |
 | DN | PWA |**Progressive web app install prompt** | Detect `beforeinstallprompt` and show a custom "Install app" banner. Tracks dismissal. The banner only shows after the user has interacted with the app for 30+ seconds. |
