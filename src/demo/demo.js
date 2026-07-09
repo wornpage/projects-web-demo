@@ -354,6 +354,7 @@ document.addEventListener("contextmenu", (event) => {
   const measureHtml = `<div class="demo-context-menu demo-context-measure">${[
       { label: "Open work path" },
       { label: "Copy title" },
+      { label: "Copy as markdown" },
       { label: "Finish with proof" },
       { label: "Cancel" }
     ].map((item) => `<button type="button" class="demo-context-item"${item.label === "Cancel" ? " data-close" : ""}>${item.label}</button>`).join("")}
@@ -389,7 +390,7 @@ document.addEventListener("contextmenu", (event) => {
   };
   menu.querySelectorAll("button").forEach((btn, i) => {
     btn.addEventListener("click", () => {
-      const items = [{ action: () => go("pack", id) }, { action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } }, { action: () => handlePackAction(id, "done") }, { action: null }];
+      const items = [{ action: () => go("pack", id) }, { action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } }, { action: () => { navigator.clipboard.writeText(formatPackForMarkdown(pack)); showToast("Markdown copied.", "success"); } }, { action: () => handlePackAction(id, "done") }, { action: null }];
       items[i]?.action?.();
       cleanup();
     });
@@ -4966,6 +4967,16 @@ function bindWorkCards() {
       handlePackAction(card.dataset.packId, button.dataset.action);
     });
   });
+}
+
+function formatPackForMarkdown(pack) {
+  var status = pack.status === STATUS.DONE ? "[x]" : "[ ]";
+  var parts = [status + " " + pack.title];
+  if (pack.owner) parts.push("Owner: " + pack.owner);
+  if (pack.due) parts.push("Due: " + pack.due);
+  if (pack.blocker && pack.blocker !== "none") parts.push("Blocker: " + pack.blocker);
+  parts.push("");
+  return parts.join(" | ");
 }
 
 function rovingTabindex() {
