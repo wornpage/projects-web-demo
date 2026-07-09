@@ -515,6 +515,7 @@ _themeRadios.forEach(function (r) {
   loadAchievements();
   loadCustomAccent();
   renderNav();
+  initSidebarResizer();
   updateServiceBoundaryNotice();
 
   try {
@@ -2345,6 +2346,35 @@ function parseInlineMarkdown(text) {
   // Links: [text](url) — only http/https
   safe = safe.replace(/\[([^\]]+)\]\(((?:https?:\/\/)[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   return safe;
+}
+
+
+var _resizing = false;
+function initSidebarResizer() {
+  var handle = document.getElementById("sidebar-resizer");
+  if (!handle) return;
+  handle.addEventListener("mousedown", function(e) {
+    _resizing = true;
+    handle.classList.add("is-dragging");
+    e.preventDefault();
+  });
+  document.addEventListener("mousemove", function(e) {
+    if (!_resizing) return;
+    var w = Math.min(Math.max(e.clientX, 160), 320);
+    document.documentElement.style.setProperty("--demo-sidebar-width", w + "px");
+  });
+  document.addEventListener("mouseup", function() {
+    if (!_resizing) return;
+    _resizing = false;
+    handle.classList.remove("is-dragging");
+    var w = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--demo-sidebar-width"));
+    if (w) { try { localStorage.setItem("projects-demo-sidebar-width", w); } catch {} }
+  });
+  // Restore saved width
+  try {
+    var saved = parseFloat(localStorage.getItem("projects-demo-sidebar-width"));
+    if (saved >= 160 && saved <= 320) document.documentElement.style.setProperty("--demo-sidebar-width", saved + "px");
+  } catch {}
 }
 
 function renderNav() {
