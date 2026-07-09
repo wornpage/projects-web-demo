@@ -102,6 +102,7 @@ const state = {
   scrollPositions: {},
   undoStack: [],
   undoIndex: -1,
+  recentIds: [],
 };
 
 let unblockAnimationTimer = null;
@@ -2337,6 +2338,9 @@ function go(route, id = "", focusKind = "") {
     queueFocus(focusKind, id || state.selectedId);
   }
 
+  if (route === "pack" && id) {
+    state.recentIds = [id].concat(state.recentIds.filter(function (r) { return r !== id; })).slice(0, 5);
+  }
   const nextHash = formatRouteHash(route, id);
   if (location.hash === nextHash) {
     routeFromHash();
@@ -4592,7 +4596,7 @@ function workListContainerHtml(itemsHtml) {
       ${itemsHtml}
     </div>`;
   }
-  return `<div class="demo-work-list">${itemsHtml}</div>`;
+  return `<div class="demo-work-list">${state.recentIds.length > 0 && state.workListView !== "table" ? `<div class="demo-chip-row"><small class="demo-status">Jump back:</small>${state.recentIds.map(function (rid) { var rp = state.packs.find(function (p) { return p.id === rid; }); if (!rp) return ""; return `<button type="button" class="demo-chip demo-chip-recent" data-action="select" data-pack="${escapeAttribute(rid)}">${escapeHtml(workTitle(rp))}</button>`; }).join("")}</div>` : ""}<div class="demo-work-list">${itemsHtml}</div>`;
 }
 
 function highlightMatch(text, query) {
