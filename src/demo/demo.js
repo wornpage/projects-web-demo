@@ -512,6 +512,8 @@ _themeRadios.forEach(function (r) {
   bindBottomDockVisibility();
   const launchedSyncCode = applyLaunchSyncCode();
   applyQuickAddParam();
+  loadAchievements();
+  loadCustomAccent();
   renderNav();
   updateServiceBoundaryNotice();
 
@@ -543,6 +545,7 @@ _themeRadios.forEach(function (r) {
     });
     el("screen-content").innerHTML = `<div class="demo-empty">${escapeHtml(error.message)}</div>`;
   }
+  setTimeout(checkDeadlineNotifications, 3000);
 });
 
 function liftBootVeil() {
@@ -9375,6 +9378,21 @@ function applyCustomAccent(color) {
   if (!color) return;
   try { localStorage.setItem("projects-demo-accent", color); } catch {}
   document.documentElement.style.setProperty("--cockpit-accent", color);
+}
+
+function checkDeadlineNotifications() {
+  if (!("Notification" in window) || Notification.permission === "denied") return;
+  if (Notification.permission === "default") { Notification.requestPermission(); return; }
+  var today = new Date().toISOString().slice(0, 10);
+  state.packs.forEach(function(pack) {
+    if (pack.due === today && pack.status !== STATUS.DONE) {
+      try { new Notification("Due today: " + pack.title, {
+        body: "Blocker: " + (pack.blocker || "none") + ". Next: " + (pack.next || "choose action") + ".",
+        tag: "deadline-" + pack.id,
+        silent: false
+      }); } catch(e) {}
+    }
+  });
 }
 
 function loadCustomAccent() {
