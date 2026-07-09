@@ -97,6 +97,7 @@ const state = {
   workListView: "card",
   suppressNextSave: false,
   density: "card",
+  focusMode: false,
   recentlyUnblockedIds: [],
   routeParam: "",
   scrollPositions: {},
@@ -3493,10 +3494,13 @@ function toggleBatchMode() {
   state.batchMode = !state.batchMode;
   if (!state.batchMode) state.batchSelected.clear();
   document.documentElement.classList.toggle("batch-mode", state.batchMode);
+  document.documentElement.classList.toggle("focus-mode", state.focusMode);
   render();
 }
 
 function clearBatchSelection() {
+  state.focusMode = false;
+  document.documentElement.classList.remove("focus-mode");
   state.batchSelected.clear();
   render();
 }
