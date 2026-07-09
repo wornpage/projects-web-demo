@@ -2471,7 +2471,8 @@ function render() {
 
   bindClipboardReceiptControls();
   };
-  if (_vt) { _vt.startViewTransition(_doRender); } else { _doRender(); }
+  var _transition = null;
+  if (_vt) { _transition = _vt.startViewTransition(_doRender); } else { _doRender(); }
 
   if (shouldResetScroll) {
     requestAnimationFrame(() => {
@@ -2489,7 +2490,11 @@ function render() {
     }
   }
 
-  applyPendingFocus();
+  if (_transition) {
+    _transition.finished.then(function () { applyPendingFocus(); });
+  } else {
+    applyPendingFocus();
+  }
   state.lastRenderedHash = currentHash;
   state.lastRenderedRoute = state.route;
   saveState();
