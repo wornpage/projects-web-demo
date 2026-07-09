@@ -7369,15 +7369,23 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 
 .demo-landing-card {
   background: var(--cockpit-surface);
-  border: 1px solid var(--cockpit-border);
+  border: 1px solid transparent;
   border-radius: var(--cockpit-radius);
+  box-shadow: var(--cockpit-shadow-sm);
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: border-color 0.12s,box-shadow 0.12s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
-.demo-landing-card:hover,.demo-landing-card:focus-within { border-color:var(--cockpit-accent); box-shadow:var(--cockpit-shadow-sm) }
+
+.demo-landing-card:hover {
+  transform: translateY(-1px);
+}
+.demo-landing-card:hover,.demo-landing-card:focus-within {
+  border-color: var(--cockpit-border);
+  box-shadow: var(--cockpit-shadow-md);
+}
 .demo-landing-card.is-attention { box-shadow:inset 3px 0 0 var(--cockpit-warning-text,#c18642); border-color:var(--cockpit-border) }
 .demo-landing-card.is-done { opacity:0.6 }
 .demo-landing-card .lp-card-head {
