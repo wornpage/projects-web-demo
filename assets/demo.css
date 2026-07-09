@@ -7638,3 +7638,6 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 }
 .demo-home-action { margin-top: 4px; }
 .demo-home-action-first { margin-top: 12px; }
+
+.demo-screen-title { view-transition-name: screen-title; }
+.demo-command-brief { view-transition-name: command-brief; }

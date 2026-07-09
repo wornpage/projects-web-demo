@@ -2363,6 +2363,10 @@ function render() {
   if (state.route === "pack") {
     document.documentElement.dataset.demoRoute = "work";
   }
+
+  // View transition — smooth cross-fade between route changes
+  var _vt = typeof document.startViewTransition === "function" ? document : null;
+  var _doRender = function () {
   el("screen-title").textContent = screenTitle;
   updateDocumentTitle(screenTitle);
   renderCommand(currentPack());
@@ -2414,6 +2418,8 @@ function render() {
   }
 
   bindClipboardReceiptControls();
+  };
+  if (_vt) { _vt.startViewTransition(_doRender); } else { _doRender(); }
 
   if (shouldResetScroll) {
     requestAnimationFrame(() => {
