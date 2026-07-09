@@ -2418,7 +2418,31 @@ function render() {
   state.lastRenderedHash = currentHash;
   state.lastRenderedRoute = state.route;
   saveState();
+  requestAnimationFrame(applyVirtualScroll);
 }
+
+// Virtual scroll — hide work items outside viewport for performance
+var _virtualScrollTimer = null;
+
+function applyVirtualScroll() {
+  // Only virtualize on work, review, next routes when there are many items
+  if (state.route !== "work" && state.route !== "review" && state.route !== "next") return;
+  var items = document.querySelectorAll(".demo-work-card, .demo-landing-card, .demo-table-row");
+  if (items.length < 50) return; // Not worth virtualizing small lists
+  var viewH = window.innerHeight;
+  var buffer = viewH; // One screen buffer above and below
+  items.forEach(function (item) {
+    var rect = item.getBoundingClientRect();
+    var visible = rect.bottom > -buffer && rect.top < viewH + buffer;
+    item.style.display = visible ? "" : "none";
+  });
+}
+
+// Bind scroll listener for virtualization
+document.addEventListener("scroll", function () {
+  if (_virtualScrollTimer) clearTimeout(_virtualScrollTimer);
+  _virtualScrollTimer = setTimeout(applyVirtualScroll, 100);
+}, { passive: true });
 
 function screenTitleForRoute() {
   const profile = copyProfiles[state.copyProfile] || copyProfiles.general;
