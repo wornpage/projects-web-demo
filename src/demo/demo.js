@@ -2175,6 +2175,10 @@ function renderNav() {
     const separator = item.route === NAV_SECONDARY_START ? '<span class="demo-nav-sep" role="separator" aria-hidden="true"></span>' : "";
     return separator + navItemMarkup(item.route);
   }).join("");
+  var tabBar = document.getElementById("demo-tab-bar");
+  if (tabBar) {
+    tabBar.innerHTML = navItems.map(function (item) { return navItemMarkup(item.route); }).join("");
+  }
 }
 
 function syncNavGroupExpandedState(group) {
