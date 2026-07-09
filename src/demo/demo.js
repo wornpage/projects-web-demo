@@ -6493,9 +6493,7 @@ async function handlePackAction(id, action) {
   } else if (btn.matches("[data-pack-energy]")) {
     var ePack = findPack(btn.dataset.packEnergy);
     if (ePack) { ePack.energy = btn.dataset.energy; saveState(); render(); }
-  } else if (btn.matches("[data-pack-energy]")) {
-    var ePack = findPack(btn.dataset.packEnergy);
-    if (ePack) { ePack.energy = btn.dataset.energy; saveState(); render(); }
+  
   } else if (btn.matches("[data-subtask-pack]")) {
     var subId = btn.dataset.subtaskPack;
     var subIdx = parseInt(btn.dataset.subtaskIdx, 10);
@@ -9852,6 +9850,7 @@ function renderInsights() {
           `).join("")}
         </div>
       </div>
+      ${milestoneHtml}
     </section>
   `;
   bindListActions();
