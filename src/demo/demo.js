@@ -4924,7 +4924,7 @@ function workCard(pack) {
         <strong>Extra tools for opening, focusing, clearing blockers, or saving proof.</strong>
       </summary>
       <div class="demo-card-actions">
-        ${supportActionButton("open", "Open", pack, "btn btn-sm")}
+        ${supportActionButton("open", "Open", pack, "btn btn-sm")}<button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="1" data-pack="${escapeAttribute(pack.id)}">Snooze 1d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="3" data-pack="${escapeAttribute(pack.id)}">Snooze 3d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="7" data-pack="${escapeAttribute(pack.id)}">Snooze 7d</button>
         ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
         ${supportActionButton("compare", "Compare", pack, "btn btn-sm")}
         ${blockerAction}
@@ -6122,6 +6122,19 @@ function relativeActivityTime(at) {
   return `${MONTHS[then.getMonth()]} ${then.getDate()}`;
 }
 
+function snoozePack(id, days) {
+  var pack = state.packs.find(function(p) { return p.id === id; });
+  if (!pack) return;
+  pushUndoSnapshot();
+  var d = new Date();
+  d.setDate(d.getDate() + days);
+  pack.due = d.toISOString().slice(0, 10);
+  if (!pack.activity) pack.activity = [];
+  pack.activity.push({ text: "Snoozed " + days + "d", at: new Date().toISOString() });
+  saveState();
+  render();
+}
+
 function packActivityDisplay(pack) {
   // Newest first regardless of engine: the client unshifts, the server
   // appends — the stamp is the shared truth; unstamped legacy entries keep
@@ -6367,6 +6380,9 @@ async function handlePackAction(id, action) {
     state.status = memoryRouteStatus(pack);
     go("memory", pack.id);
     return;
+  } else if (action === "snooze") {
+    var days = parseInt(btn.dataset.snoozeDays, 10) || 1;
+    snoozePack(packId, days);
   } else if (action === "open") {
     queueFocus("pack-detail", pack.id);
     const changed = addPackActivity(pack, "Opened.");
