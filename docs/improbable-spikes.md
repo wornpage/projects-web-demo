@@ -71,6 +71,8 @@
 | 67 | UX |**Work item age detail (AS)** | Cards show "Opened 3d ago · Last 2h ago" from activity log. |
 | 70 | COLLAB |**@mentions in memory notes (DE)** | @name highlights as clickable chip, navigates to pack.
 | 70 | COLLAB |**@mentions in memory notes (DE)** | @name highlights as clickable chip, navigates to pack.
+| 70 | COLLAB |**@mentions in memory notes (DE)** | @name highlights as clickable chip, navigates to pack.
+| 71 | UX |**Milestone grouping (DG)** | Milestone field per work item, grouped progress on Insights.
 | 69 | UX |**Work item location (DB)** | office/home/field/remote field, 📍 emoji on cards.
 | 68 | UX |**Duplicate detection on create (CN)** | Warns when typing a title that matches an existing pack. |
 | 64 | UI |**Seasonal/holiday themes (BY)** | Halloween, Winter, Holiday accent colors via CSS radio selectors.
