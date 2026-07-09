@@ -43,6 +43,7 @@
 | 32 | UX |**Offline sync indicator** | Green/red dot in the header — updates on online/offline events. |
 | 33 | UX |**Card fade-in animation** | Work/list/table cards animate in with opacity+translateY on render. |
 | 34 | UX |**Work item age indicator** | Shows "today", "3 days ago", "2 months ago" from first activity timestamp. |
+| 43 | SEARCH |**Command palette fuzzy search** | Cmd+K matches non-consecutive chars — "st" finds "Start", "cl" finds "Calendar". |
 | 42 | UX |**Inline editing on cards** | Double-click title or owner to edit inline. Enter saves, Escape cancels, blur saves.
 | 41 | VIZ |**Calendar heatmap** | Activity density grid (84 days) below calendar nav — GitHub-style contribution squares.
 | 40 | UX |**Batch multi-select** | ☑ button toggles checkbox mode. Select cards and batch done/block/delete from floating bar.
