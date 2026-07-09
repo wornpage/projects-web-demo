@@ -4850,6 +4850,7 @@ function handleImagePaste(event) {
 }
 
 function bindWorkCards() {
+  rovingTabindex();
   document.querySelectorAll(".demo-work-card button").forEach((button) => {
     button.addEventListener("click", () => {
       const card = button.closest(".demo-work-card");
@@ -4859,7 +4860,56 @@ function bindWorkCards() {
   });
 }
 
+function rovingTabindex() {
+  var lists = document.querySelectorAll(".demo-work-list, .demo-work-table, .demo-recent-work");
+  lists.forEach(function (list) {
+    var items = list.querySelectorAll("[data-pack-id]");
+    if (!items.length) return;
+    // Find selected or first item
+    var selected = list.querySelector("[data-pack-id].selected") || items[0];
+    items.forEach(function (item) { item.setAttribute("tabindex", item === selected ? "0" : "-1"); });
+  });
+}
+
+// Roving keydown handler for work lists
+document.addEventListener("keydown", function (e) {
+  var card = e.target.closest("[data-pack-id]");
+  if (!card || !card.closest(".demo-work-list, .demo-work-table, .demo-recent-work")) return;
+  var list = card.closest(".demo-work-list, .demo-work-table, .demo-recent-work");
+  var items = Array.prototype.slice.call(list.querySelectorAll("[data-pack-id]"));
+  var idx = items.indexOf(card);
+  if (idx < 0) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+    e.preventDefault();
+    var next = items[idx + 1] || items[0];
+    items.forEach(function (i) { i.setAttribute("tabindex", "-1"); });
+    next.setAttribute("tabindex", "0");
+    next.focus();
+  } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+    e.preventDefault();
+    var prev = items[idx - 1] || items[items.length - 1];
+    items.forEach(function (i) { i.setAttribute("tabindex", "-1"); });
+    prev.setAttribute("tabindex", "0");
+    prev.focus();
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    handlePackAction(card.dataset.packId, "select");
+  } else if (e.key === " " || e.key === "Spacebar" || e.key === "Space") {
+    e.preventDefault();
+    var primaryBtn = card.querySelector("[data-action=\"run-next\"]");
+    if (primaryBtn) primaryBtn.click();
+  } else if (e.key === "d" || e.key === "D") {
+    handlePackAction(card.dataset.packId, "done");
+  } else if (e.key === "b" || e.key === "B") {
+    handlePackAction(card.dataset.packId, "toggle-blocker");
+  } else if (e.key === "o" || e.key === "O") {
+    e.preventDefault();
+    go("pack", card.dataset.packId);
+  }
+});
+
 function bindTableRows() {
+  rovingTabindex();
   document.querySelectorAll(".demo-table-row").forEach((row) => {
     row.addEventListener("click", (event) => {
       // Ignore clicks on nested buttons (run-next)
