@@ -329,6 +329,22 @@ window.addEventListener("unhandledrejection", (event) => {
   event.preventDefault();
 });
 
+function playBeep(freq, dur) {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+  } catch(e) { /* audio unavailable */ }
+}
+
 function showToast(message, type = "info", durationMs = 5000) {
   const container = document.getElementById("demo-toast-container");
   if (!container) return;
@@ -338,6 +354,7 @@ function showToast(message, type = "info", durationMs = 5000) {
   let timer = setTimeout(() => { toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); }, durationMs);
   toast.addEventListener("click", () => { clearTimeout(timer); toast.remove(); });
   container.appendChild(toast);
+  if (type === "error") playBeep(220, 0.12); else playBeep(880, 0.04);
   toast._dismiss = () => { clearTimeout(timer); toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); };
 }
 
