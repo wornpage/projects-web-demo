@@ -4928,7 +4928,7 @@ function workCard(pack) {
         <strong>Extra tools for opening, focusing, clearing blockers, or saving proof.</strong>
       </summary>
       <div class="demo-card-actions">
-        ${supportActionButton("open", "Open", pack, "btn btn-sm")}<button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="1" data-pack="${escapeAttribute(pack.id)}">Snooze 1d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="3" data-pack="${escapeAttribute(pack.id)}">Snooze 3d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="7" data-pack="${escapeAttribute(pack.id)}">Snooze 7d</button>
+        ${supportActionButton("open", "Open", pack, "btn btn-sm")}<button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="1" data-pack="${escapeAttribute(pack.id)}">Snooze 1d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="3" data-pack="${escapeAttribute(pack.id)}">Snooze 3d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="7" data-pack="${escapeAttribute(pack.id)}">Snooze 7d</button><button type="button" class="btn btn-sm" data-action="repeat" data-pack="${escapeAttribute(pack.id)}">Repeat</button>
         ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
         ${supportActionButton("compare", "Compare", pack, "btn btn-sm")}
         ${blockerAction}
@@ -6388,6 +6388,8 @@ async function handlePackAction(id, action) {
     var subId = btn.dataset.subtaskPack;
     var subIdx = parseInt(btn.dataset.subtaskIdx, 10);
     if (!isNaN(subIdx)) toggleSubtask(subId, subIdx);
+  } else if (action === "repeat") {
+    repeatPack(packId);
   } else if (action === "snooze") {
     var days = parseInt(btn.dataset.snoozeDays, 10) || 1;
     snoozePack(packId, days);
@@ -9421,6 +9423,33 @@ function loadCustomAccent() {
     var color = localStorage.getItem("projects-demo-accent");
     if (color) applyCustomAccent(color);
   } catch {}
+}
+
+function repeatPack(id) {
+  var pack = state.packs.find(function(p) { return p.id === id; });
+  if (!pack) return;
+  pushUndoSnapshot();
+  var newId = "pack-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  state.packs.push({
+    id: newId,
+    title: pack.title,
+    status: STATUS.ACTIVE,
+    owner: pack.owner || "",
+    next: pack.next || "Open",
+    blocker: DEMO_BLOCKER_NONE,
+    blockedBy: "",
+    due: "",
+    purpose: pack.purpose || "",
+    type: pack.type || "",
+    sources: [],
+    memory: [],
+    activity: [{ text: "Repeated from " + pack.title, at: new Date().toISOString() }],
+    subtasks: []
+  });
+  state.selectedId = newId;
+  saveState();
+  render();
+  showToast("Repeated: " + pack.title, "success");
 }
 
 function renderSettings() {
