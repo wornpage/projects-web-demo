@@ -579,7 +579,9 @@ html[data-theme="dark"] .demo-app-shell {
 
 .is-sidebar-collapsed .demo-sidebar.nav-rail .demo-nav-item strong,
 .is-sidebar-collapsed .demo-sidebar.nav-rail .demo-sidebar-note,
-.is-sidebar-collapsed .demo-sidebar.nav-rail .demo-brand span:not(.demo-brand-mark),
+.is-sidebar-collapsed .demo-sidebar.nav-rail .demo-brand span:not(.demo-brand-mark) {
+  display: none;
+}
 
 
 .is-sidebar-collapsed .demo-sidebar.nav-rail .demo-nav-item { justify-content: center; padding: 0; }
