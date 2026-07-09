@@ -595,9 +595,20 @@ function bindShellControls() {
 }
 
 function loadState(backendState = null) {
-  const saved = DEMO_API_BASE_URL
-    ? normalizeStoredDemoState(backendState)
-    : safeJson(localStorage.getItem(DEMO_STORAGE_KEY));
+  var saved;
+  if (DEMO_API_BASE_URL) {
+    saved = normalizeStoredDemoState(backendState);
+  } else {
+    saved = safeJson(localStorage.getItem(DEMO_STORAGE_KEY));
+    if (!saved) {
+      // Try migrating from IndexedDB (async, best-effort)
+      _idbGet("state", DEMO_STORAGE_KEY).then(function (val) {
+        if (val) {
+          try { localStorage.setItem(DEMO_STORAGE_KEY, val); } catch {}
+        }
+      });
+    }
+  }
   state.packs = clearDanglingBlockedBy(normalizeLegacyVisibleCopy(Array.isArray(saved?.packs) ? saved.packs : structuredClone(state.basePacks)));
   state.copyProfile = saved?.copyProfile || "general";
   state.scenarioId = saved?.scenarioId || "default";
@@ -715,7 +726,48 @@ async function applyScenario(scenario, options = {}) {
   render();
 }
 
-function saveState(){if(state.suppressNextSave){state.suppressNextSave=false;return}if(DEMO_API_BASE_URL){scheduleBackendStateSave(browserRowStateSnapshot());return}localStorage.setItem(DEMO_STORAGE_KEY,JSON.stringify(demoStateSnapshot()))}
+// IndexedDB helpers — async persistence with localStorage fallback
+var _idb = null;
+var _idbPromise = null;
+
+function _idbOpen() {
+  if (_idbPromise) return _idbPromise;
+  _idbPromise = new Promise(function (resolve, reject) {
+    if (typeof indexedDB === "undefined") return reject(new Error("no IndexedDB"));
+    var req = indexedDB.open("projects-demo", 1);
+    req.onupgradeneeded = function () {
+      var db = req.result;
+      if (!db.objectStoreNames.contains("state")) db.createObjectStore("state");
+    };
+    req.onsuccess = function () { _idb = req.result; resolve(_idb); };
+    req.onerror = function () { reject(new Error("IndexedDB open failed")); };
+  });
+  return _idbPromise;
+}
+
+function _idbPut(store, key, value) {
+  return _idbOpen().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(store, "readwrite");
+      tx.objectStore(store).put(value, key);
+      tx.oncomplete = function () { resolve(); };
+      tx.onerror = function () { reject(new Error("IndexedDB put failed")); };
+    });
+  }).catch(function () { /* silently fall back to localStorage */ });
+}
+
+function _idbGet(store, key) {
+  return _idbOpen().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(store, "readonly");
+      var req = tx.objectStore(store).get(key);
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(new Error("IndexedDB get failed")); };
+    });
+  }).catch(function () { return null; });
+}
+
+function saveState(){if(state.suppressNextSave){state.suppressNextSave=false;return}if(DEMO_API_BASE_URL){scheduleBackendStateSave(browserRowStateSnapshot());return}var snapStr=JSON.stringify(demoStateSnapshot());localStorage.setItem(DEMO_STORAGE_KEY,snapStr);_idbPut("state",DEMO_STORAGE_KEY,snapStr)}
 
 function demoStateSnapshot(){return{packs:state.packs,copyProfile:state.copyProfile,scenarioId:state.scenarioId,selectedId:state.selectedId,status:state.status,actionReceipt:state.actionReceipt,filter:state.filter,query:state.query}}
 

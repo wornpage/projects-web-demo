@@ -493,7 +493,7 @@ function homePathFlowStylesContractOk() {
   const mobileStyles = mobileStart < 0 ? "" : styles.slice(mobileStart, mobileEnd > mobileStart ? mobileEnd : undefined);
   return includesAll(styles, [
     ".demo-start-step:not(:last-child)::after",
-    "right: -11px;",
+    "inset-inline-end: -11px;",
     "top: 23px;"
   ]) && includesAll(mobileStyles, [
     ".demo-start-step",
