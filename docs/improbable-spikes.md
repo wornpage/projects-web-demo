@@ -64,6 +64,8 @@
 | 53 | UX |**Audio cue on toasts (S)** | Subtle beep via Web Audio API — low tone on error, short tick on info/success. |
 | 54 | DATA |**Print-friendly work list (T)** | Enhanced @media print: clean card borders, page-break avoidance, full-width layout. |
 | 55 | UX |**Snooze / defer (AA)** | Snooze 1d/3d/7d buttons in card support, pushes due date forward with activity log entry. |
+| 56 | UI |**Custom accent color (AP)** | Color picker in Settings overrides --cockpit-accent, persisted in localStorage. |
+| 57 | UX |**Desktop deadline notifications (BV)** | System notification for items due today on startup. Requests permission. |
 
 ---
 
@@ -94,7 +96,6 @@
 | AK | UX |**Subtasks / checklist within a work item** | A collapsible checklist inside each pack — mark subtasks done without changing the pack's status. Progress bar auto-computes from checked subtasks. |
 | AL | VIZ |**Work item dependencies graph** | Visualize `blockedBy` relationships as a directed graph. Nodes are packs, edges are dependencies. Click a node to navigate. Canvas or SVG-based. |
 | AO | UX |**Drag to resize sidebar** | A draggable handle on the sidebar edge. User can widen or narrow the sidebar, persistent in localStorage. Min 160px, max 320px. |
-| AP | UI |**Custom accent color** | A color picker in Settings that overrides `--cockpit-accent`. Saved to localStorage. All 5 built-in themes still available alongside the custom option. |
 | AQ | VIZ |**Burndown / velocity chart** | Show completed vs remaining work over time as a line chart. Track weekly velocity. CSS-only sparkline version or a small canvas. |
 | AS | UX |**Work item age indicator** | Each card shows how long ago it was created, last edited, or last touched. "Opened 3 days ago · touched 2 hours ago". Helps spot stale items. |
 | AT | UX |**File attachments via blob URLs** | Upload files/images to a work item. Store as base64 blobs in IndexedDB. Preview inline with `<img>` or `<a download>`. Max 1MB per attachment. |
@@ -121,7 +122,6 @@
 | BS | COLLAB |**RSS feed of changes** | An RSS endpoint `/feed/demo-packs.xml` that lists recent activity as feed items. Subscribe to your own work log. Read-only, no auth needed for the demo version. |
 | BT | VIZ |**Workflow state machine visualizer** | A small SVG diagram on the work path showing the pack's journey: Draft → Active → Blocked → Done. Current state highlighted. Click a state to see when the pack entered it. |
 | BU | A11Y |**Color-blind accessible mode** | Add a toggle that replaces the default palette with a color-blind-friendly one (deuteranopia/protanopia/tritanopia). Uses distinct patterns and luminance contrast instead of hue alone. |
-| BV | UX |**Desktop notifications on deadline** | Request Notification permission. When a card's due date is today and the tab is backgrounded, fire a `new Notification("Lighting checklist is due today")`. |
 | BW | UX |**Bulk import from clipboard table** | Paste a TSV/CSV table directly into the work list. Parse headers, create one pack per row. Show a preview before committing. Reuses the natural-language parser for field detection. |
 | BX | DATA |**Work item relationships** | Add `pack.relatedTo` and `pack.duplicateOf` fields. Show related items as linked chips below the card. Bidirectional — if A relates to B, B shows A. Navigate between related items. |
 | BY | UI |**Seasonal / holiday themes** | Automatically apply a festive theme on specific dates: 🎃 Halloween (Oct 31), ❄️ Winter (Dec 1–31), 🎆 New Year (Jan 1). CSS-only overrides for accent colors. Disabled by default, opt-in. |
