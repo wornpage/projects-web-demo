@@ -2564,6 +2564,7 @@ function render() {
   }
   state.lastRenderedHash = currentHash;
   state.lastRenderedRoute = state.route;
+  try { var savedView = localStorage.getItem("demo-view-" + state.route); if (savedView && ["card","landing","table"].indexOf(savedView) >= 0) state.workListView = savedView; } catch {}
   saveState();
   requestAnimationFrame(applyVirtualScroll);
 }
@@ -4573,6 +4574,7 @@ function bindToolbar() {
   if (densityToggle) {
     densityToggle.addEventListener("click", () => {
       state.workListView = state.workListView === "card" ? "landing" : state.workListView === "landing" ? "table" : "card";
+    try { localStorage.setItem("demo-view-" + state.route, state.workListView); } catch {}
       densityToggle.textContent = state.workListView === "card" ? "▦ Cards" : state.workListView === "landing" ? "▤ Table" : "☰ List";
       densityToggle.setAttribute("aria-pressed", String(state.workListView !== "card"));
       updateWorkListAfterFilter();
