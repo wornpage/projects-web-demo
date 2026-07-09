@@ -8569,7 +8569,7 @@ function workPathStrip(pack, command = resolvePrimaryCommandForPack(pack)) {
 function renderExtraFields(pack) {
   var html = "";
   // Progress slider (always visible)
-  html += '<div class="demo-progress-slider"><input type="range" min="0" max="100" value="' + (pack.progress || 0) + '" class="demo-progress-range" data-pack-id="' + pack.id + '"><span class="demo-progress-pct">' + (pack.progress || 0) + '%</span></div>';
+  html += '<div class="demo-progress-slider"><span>Progress</span><div class="demo-slider-row"><input type="range" min="0" max="100" value="' + (pack.progress || 0) + '" class="demo-progress-range" data-pack-id="' + pack.id + '"><span class="demo-progress-pct">' + (pack.progress || 0) + '%</span></div></div>';
   // Energy (always visible)
   html += '<div class="demo-field-card"><label>Energy</label><div class="demo-energy"><button class="demo-energy-btn' + (pack.energy === "low" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="low">🔋 Low</button><button class="demo-energy-btn' + (pack.energy === "medium" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="medium">⚡ Medium</button><button class="demo-energy-btn' + (pack.energy === "high" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="high">🚀 High</button></div></div>';
   // Milestone
