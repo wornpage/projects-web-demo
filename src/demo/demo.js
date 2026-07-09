@@ -4186,7 +4186,7 @@ function renderMemory() {
       </div>
       <div class="demo-inline-form">
         <label class="sr-only" for="memory-note">Add memory note</label>
-        <input id="memory-note" class="demo-search-input" type="text" placeholder="Capture decision, source, or proof" autocomplete="off" aria-describedby="memory-note-help">
+        <input id="memory-note" class="demo-search-input" type="text" placeholder="Capture decision, source, or proof" autocomplete="off" aria-describedby="memory-note-help" value="${escapeHtml(function(){try{return sessionStorage.getItem("memory-draft")||""}catch{return ""}}())}">
         <p id="memory-note-help" class="demo-field-help" aria-live="polite">${escapeHtml(memoryState.help)}</p>
         <button id="add-memory" class="btn btn-primary" type="button" aria-describedby="memory-note-help"${disabledReasonAttributes(!memoryState.canSave, memoryState.help)}>Add note</button>
       </div>
@@ -6581,11 +6581,21 @@ function createActionForBlocker(blocker) {
 }
 
 function bindCreateValidation() {
-  ["new-title", "new-owner", "new-next"].forEach((id) => {
-    const control = el(id);
-    control?.addEventListener("input", syncCreateValidation);
-    control?.addEventListener("change", syncCreateValidation);
+  ["new-title", "new-owner", "new-next"].forEach(function (id) {
+    var ctrl = el(id);
+    ctrl?.addEventListener("input", function () { syncCreateValidation(); try { sessionStorage.setItem("create-form", JSON.stringify(createFormValues())); } catch {} });
+    ctrl?.addEventListener("change", syncCreateValidation);
   });
+  // Restore create form draft from sessionStorage
+  try {
+    var savedForm = sessionStorage.getItem("create-form");
+    if (savedForm) {
+      var fields = JSON.parse(savedForm);
+      if (fields.title) el("new-title").value = fields.title;
+      if (fields.owner) el("new-owner").value = fields.owner;
+      if (fields.next) el("new-next").value = fields.next;
+    }
+  } catch {}
   syncCreateValidation();
 }
 
@@ -6691,7 +6701,7 @@ function memoryRouteStatus(pack) {
 }
 
 function bindMemoryValidation(pack) {
-  el("memory-note")?.addEventListener("input", () => syncMemoryValidation(pack));
+  el("memory-note")?.addEventListener("input", function () { syncMemoryValidation(pack); try { sessionStorage.setItem("memory-draft", this.value); } catch {} });
   syncMemoryValidation(pack);
 }
 
