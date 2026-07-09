@@ -3640,7 +3640,7 @@ function loadAchievements() {
 }
 
 function renderAchievements() {
-  return '<div class="demo-achievements">' + ACHIEVEMENTS.map(function(a) {
+  return '<div class="demo-achievements"><span id="offline-indicator" class="offline-indicator" title="Online"></span>' + ACHIEVEMENTS.map(function(a) {
     var unlocked = _unlockedAch[a.id];
     return '<span class="ach' + (unlocked ? " is-unlocked" : "") + '" title="' + a.label + (unlocked ? '"' : " — locked'") + ">" + a.icon + "</span>";
   }).join("") + "</div>";
