@@ -361,9 +361,15 @@ function themeToggleContractOk() {
   return includesAll(html, [
     'id="theme-light"',
     'id="theme-dark"',
+    'id="theme-forest"',
+    'id="theme-ocean"',
+    'id="theme-sepia"',
+    'id="theme-halloween"',
+    'id="theme-winter"',
+    'id="theme-holiday"',
     'name="theme-choice"'
   ]) && includesAll(source, [
-    'THEMES = ["light", "dark", "forest", "ocean", "sepia"]'
+    'THEMES = ["light", "dark", "forest", "ocean", "sepia", "halloween", "winter", "holiday"]'
   ]) && !source.includes('"Light mode"');
 }
 
