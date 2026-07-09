@@ -359,12 +359,11 @@ function demoNoticeContractOk() {
 
 function themeToggleContractOk() {
   return includesAll(html, [
-    'id="theme-toggle"',
-    'aria-pressed="false"'
+    'id="theme-light"',
+    'id="theme-dark"',
+    'name="theme-choice"'
   ]) && includesAll(source, [
-    'THEMES = ["light", "dark", "forest", "ocean", "sepia"]',
-    'toggle.textContent = "Theme"',
-    'toggle.setAttribute("aria-pressed", String(theme !== "light"))'
+    'THEMES = ["light", "dark", "forest", "ocean", "sepia"]'
   ]) && !source.includes('"Light mode"');
 }
 

@@ -45,8 +45,17 @@
             <div class="demo-kicker">Portfolio demo</div>
             <h1 id="screen-title" class="demo-screen-title">Start</h1>
           </div>
-          <div class="demo-header-actions">
-            <button id="theme-toggle" class="btn btn-sm demo-theme-toggle" type="button" aria-pressed="false" title="Switch to Dark theme." aria-label="Theme: Light. Switch to Dark theme.">Theme</button>
+          <div class="demo-header-actions demo-theme-radios">
+            <input type="radio" id="theme-light" name="theme-choice" class="sr-only" checked>
+            <label for="theme-light" class="btn btn-sm" title="Light theme" aria-label="Light theme">☀️</label>
+            <input type="radio" id="theme-dark" name="theme-choice" class="sr-only">
+            <label for="theme-dark" class="btn btn-sm" title="Dark theme" aria-label="Dark theme">🌙</label>
+            <input type="radio" id="theme-forest" name="theme-choice" class="sr-only">
+            <label for="theme-forest" class="btn btn-sm" title="Forest theme" aria-label="Forest theme">🌲</label>
+            <input type="radio" id="theme-ocean" name="theme-choice" class="sr-only">
+            <label for="theme-ocean" class="btn btn-sm" title="Ocean theme" aria-label="Ocean theme">🌊</label>
+            <input type="radio" id="theme-sepia" name="theme-choice" class="sr-only">
+            <label for="theme-sepia" class="btn btn-sm" title="Sepia theme" aria-label="Sepia theme">🏜️</label>
           </div>
         </div>
       </header>

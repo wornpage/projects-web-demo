@@ -69,8 +69,8 @@
   }
 }
 
-html.dark,
-html[data-theme="dark"] {
+html:has(#theme-dark:checked),
+html:has(#theme-dark:checked) {
   --cockpit-bg: #0f1714;
   --cockpit-surface: #18241f;
   --cockpit-nav-bg: #121c18;
@@ -98,7 +98,7 @@ html[data-theme="dark"] {
   --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
-html[data-theme="forest"] {
+html:has(#theme-forest:checked) {
   --cockpit-bg: #1c251a;
   --cockpit-surface: #263226;
   --cockpit-nav-bg: #1e281d;
@@ -126,7 +126,7 @@ html[data-theme="forest"] {
   --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
-html[data-theme="ocean"] {
+html:has(#theme-ocean:checked) {
   --cockpit-bg: #0f1d2c;
   --cockpit-surface: #182c42;
   --cockpit-nav-bg: #122132;
@@ -154,7 +154,7 @@ html[data-theme="ocean"] {
   --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
-html[data-theme="sepia"] {
+html:has(#theme-sepia:checked) {
   --cockpit-bg: #2d241a;
   --cockpit-surface: #3c3226;
   --cockpit-nav-bg: #2f261b;
@@ -568,8 +568,8 @@ textarea {
   padding-inline-start: 0;
 }
 
-html.dark .demo-app-shell,
-html[data-theme="dark"] .demo-app-shell {
+html:has(#theme-dark:checked) .demo-app-shell,
+html:has(#theme-dark:checked) .demo-app-shell {
   --demo-panel-bg: var(--cockpit-surface);
   --demo-card-bg: var(--cockpit-surface);
   --demo-card-border: var(--cockpit-border-strong);
@@ -602,8 +602,8 @@ html[data-theme="dark"] .demo-app-shell {
   --demo-card-status-border: var(--cockpit-accent);
 }
 
-html.dark .demo-app-shell,
-html[data-theme="dark"] .demo-app-shell {
+html:has(#theme-dark:checked) .demo-app-shell,
+html:has(#theme-dark:checked) .demo-app-shell {
   --demo-panel-shadow: var(--cockpit-shadow-sm);
   --demo-panel-hover-shadow: var(--cockpit-shadow-sm);
   --demo-card-shadow: var(--cockpit-shadow-sm);
@@ -995,8 +995,8 @@ body .demo-sidebar.nav-rail .demo-nav-item.nav-rail-btn.active .nav-rail-icon {
   padding: 4px 0 4px 12px;
 }
 
-html.dark .demo-header-metadata,
-html[data-theme="dark"] .demo-header-metadata {
+html:has(#theme-dark:checked) .demo-header-metadata,
+html:has(#theme-dark:checked) .demo-header-metadata {
   background: transparent;
   border-color: var(--cockpit-border);
   color: var(--cockpit-text-secondary);
@@ -2778,13 +2778,13 @@ html[data-theme="dark"] .demo-header-metadata {
   padding: 10px 12px;
 }
 
-html.dark .demo-status,
-html[data-theme="dark"] .demo-status {
+html:has(#theme-dark:checked) .demo-status,
+html:has(#theme-dark:checked) .demo-status {
   color: var(--cockpit-accent-hover);
 }
 
-html.dark .demo-status-line,
-html[data-theme="dark"] .demo-status-line {
+html:has(#theme-dark:checked) .demo-status-line,
+html:has(#theme-dark:checked) .demo-status-line {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
   color: var(--cockpit-text);
@@ -2810,8 +2810,8 @@ html[data-theme="dark"] .demo-status-line {
   padding: 10px 12px;
 }
 
-html.dark .demo-meta-row,
-html[data-theme="dark"] .demo-meta-row {
+html:has(#theme-dark:checked) .demo-meta-row,
+html:has(#theme-dark:checked) .demo-meta-row {
   background: var(--demo-meta-bg);
   border-color: var(--cockpit-border);
   color: var(--cockpit-text-secondary);
@@ -3064,8 +3064,8 @@ html[data-theme="dark"] .demo-meta-row {
   overflow: visible;
 }
 
-html.dark .demo-card-head,
-html[data-theme="dark"] .demo-card-head {
+html:has(#theme-dark:checked) .demo-card-head,
+html:has(#theme-dark:checked) .demo-card-head {
   background: var(--demo-card-head-bg);
   border-color: var(--cockpit-border);
   color: var(--cockpit-text);
@@ -3091,8 +3091,8 @@ html[data-theme="dark"] .demo-card-head {
   text-decoration: none;
 }
 
-html.dark .demo-work-card .demo-card-title,
-html[data-theme="dark"] .demo-work-card .demo-card-title {
+html:has(#theme-dark:checked) .demo-work-card .demo-card-title,
+html:has(#theme-dark:checked) .demo-work-card .demo-card-title {
   color: var(--cockpit-text);
 }
 
@@ -3316,8 +3316,8 @@ html[data-theme="dark"] .demo-work-card .demo-card-title {
   padding: 8px 10px;
 }
 
-html.dark .demo-disabled-reason,
-html[data-theme="dark"] .demo-disabled-reason {
+html:has(#theme-dark:checked) .demo-disabled-reason,
+html:has(#theme-dark:checked) .demo-disabled-reason {
   background: var(--cockpit-nav-bg);
   border-color: var(--cockpit-border);
   color: var(--cockpit-text-secondary);
@@ -3345,8 +3345,8 @@ html[data-theme="dark"] .demo-disabled-reason {
   max-width: min(100%, 180px);
 }
 
-html.dark .demo-state-pill,
-html[data-theme="dark"] .demo-state-pill {
+html:has(#theme-dark:checked) .demo-state-pill,
+html:has(#theme-dark:checked) .demo-state-pill {
   background: var(--demo-card-status-bg);
   border-color: var(--demo-card-status-border);
   color: var(--cockpit-text);
@@ -3881,49 +3881,49 @@ html[data-theme="dark"] .demo-state-pill {
   color: var(--cockpit-text);
 }
 
-html.dark .demo-segmented-control,
-html[data-theme="dark"] .demo-segmented-control {
+html:has(#theme-dark:checked) .demo-segmented-control,
+html:has(#theme-dark:checked) .demo-segmented-control {
   background: var(--demo-form-control-bg);
   border-color: var(--cockpit-border-strong);
 }
 
-html.dark .demo-forward-panel,
-html[data-theme="dark"] .demo-forward-panel {
+html:has(#theme-dark:checked) .demo-forward-panel,
+html:has(#theme-dark:checked) .demo-forward-panel {
   background: var(--cockpit-surface);
   border-color: var(--demo-form-outer-border);
 }
 
-html.dark .demo-forward-fields,
-html[data-theme="dark"] .demo-forward-fields {
+html:has(#theme-dark:checked) .demo-forward-fields,
+html:has(#theme-dark:checked) .demo-forward-fields {
   background: var(--cockpit-bg);
   border-color: var(--demo-form-group-border);
 }
 
-html.dark .demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
-html[data-theme="dark"] .demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
-html.dark .demo-blocker-field,
-html[data-theme="dark"] .demo-blocker-field,
-html.dark .demo-state-preview,
-html[data-theme="dark"] .demo-state-preview {
+html:has(#theme-dark:checked) .demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
+html:has(#theme-dark:checked) .demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
+html:has(#theme-dark:checked) .demo-blocker-field,
+html:has(#theme-dark:checked) .demo-blocker-field,
+html:has(#theme-dark:checked) .demo-state-preview,
+html:has(#theme-dark:checked) .demo-state-preview {
   background: var(--demo-form-field-bg);
   border-color: var(--demo-form-field-border);
 }
 
-html.dark .demo-edit-panel .demo-search-input,
-html[data-theme="dark"] .demo-edit-panel .demo-search-input,
-html.dark .demo-edit-panel .demo-field input,
-html[data-theme="dark"] .demo-edit-panel .demo-field input,
-html.dark .demo-edit-panel .demo-field textarea,
-html[data-theme="dark"] .demo-edit-panel .demo-field textarea,
-html.dark .demo-edit-panel .demo-field select,
-html[data-theme="dark"] .demo-edit-panel .demo-field select {
+html:has(#theme-dark:checked) .demo-edit-panel .demo-search-input,
+html:has(#theme-dark:checked) .demo-edit-panel .demo-search-input,
+html:has(#theme-dark:checked) .demo-edit-panel .demo-field input,
+html:has(#theme-dark:checked) .demo-edit-panel .demo-field input,
+html:has(#theme-dark:checked) .demo-edit-panel .demo-field textarea,
+html:has(#theme-dark:checked) .demo-edit-panel .demo-field textarea,
+html:has(#theme-dark:checked) .demo-edit-panel .demo-field select,
+html:has(#theme-dark:checked) .demo-edit-panel .demo-field select {
   background: var(--demo-form-control-bg);
   border-color: var(--demo-form-control-border);
   box-shadow: none;
 }
 
-html.dark .demo-segment.active,
-html[data-theme="dark"] .demo-segment.active {
+html:has(#theme-dark:checked) .demo-segment.active,
+html:has(#theme-dark:checked) .demo-segment.active {
   outline: 1px solid var(--cockpit-border-strong);
   outline-offset: -1px;
 }
@@ -3947,14 +3947,14 @@ html[data-theme="dark"] .demo-segment.active {
   display: none;
 }
 
-html.dark .demo-work-path,
-html[data-theme="dark"] .demo-work-path {
+html:has(#theme-dark:checked) .demo-work-path,
+html:has(#theme-dark:checked) .demo-work-path {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
 }
 
-html.dark .demo-command-work-path,
-html[data-theme="dark"] .demo-command-work-path {
+html:has(#theme-dark:checked) .demo-command-work-path,
+html:has(#theme-dark:checked) .demo-command-work-path {
   background: var(--cockpit-selected-bg);
 }
 
@@ -4231,44 +4231,44 @@ html:not(.dark) .demo-theme-toggle {
   color: var(--cockpit-text-secondary);
 }
 
-html.dark .demo-theme-toggle,
-html[data-theme="dark"] .demo-theme-toggle {
+html:has(#theme-dark:checked) .demo-theme-toggle,
+html:has(#theme-dark:checked) .demo-theme-toggle {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
   color: var(--cockpit-text);
   -webkit-text-fill-color: var(--cockpit-text);
 }
 
-html.dark .demo-theme-toggle:hover,
-html.dark .demo-theme-toggle:focus-visible,
-html[data-theme="dark"] .demo-theme-toggle:hover,
-html[data-theme="dark"] .demo-theme-toggle:focus-visible {
+html:has(#theme-dark:checked) .demo-theme-toggle:hover,
+html:has(#theme-dark:checked) .demo-theme-toggle:focus-visible,
+html:has(#theme-dark:checked) .demo-theme-toggle:hover,
+html:has(#theme-dark:checked) .demo-theme-toggle:focus-visible {
   border-color: var(--cockpit-text);
   background: var(--cockpit-accent-50);
   color: var(--cockpit-text);
   -webkit-text-fill-color: var(--cockpit-text);
 }
 
-html[data-theme="forest"] .demo-theme-toggle,
-html[data-theme="ocean"] .demo-theme-toggle,
-html[data-theme="sepia"] .demo-theme-toggle {
+html:has(#theme-forest:checked) .demo-theme-toggle,
+html:has(#theme-ocean:checked) .demo-theme-toggle,
+html:has(#theme-sepia:checked) .demo-theme-toggle {
   background: var(--cockpit-accent-50);
   border-color: var(--cockpit-accent);
   color: var(--cockpit-accent);
   -webkit-text-fill-color: var(--cockpit-accent);
 }
 
-html[data-theme="forest"] .demo-theme-toggle:hover,
-html[data-theme="ocean"] .demo-theme-toggle:hover,
-html[data-theme="sepia"] .demo-theme-toggle:hover {
+html:has(#theme-forest:checked) .demo-theme-toggle:hover,
+html:has(#theme-ocean:checked) .demo-theme-toggle:hover,
+html:has(#theme-sepia:checked) .demo-theme-toggle:hover {
   background: var(--cockpit-accent);
   color: var(--cockpit-accent-text);
   -webkit-text-fill-color: var(--cockpit-accent-text);
 }
 
 .demo-app-shell .btn-primary,
-html.dark .demo-app-shell .btn-primary,
-html[data-theme="dark"] .demo-app-shell .btn-primary {
+html:has(#theme-dark:checked) .demo-app-shell .btn-primary,
+html:has(#theme-dark:checked) .demo-app-shell .btn-primary {
   background: var(--demo-primary-bg);
   border-color: var(--demo-primary-border);
   color: var(--demo-primary-on-accent);
@@ -4423,8 +4423,8 @@ html[data-theme="dark"] .demo-app-shell .btn-primary {
 }
 /* ---- End table view ---- */
 
-html.dark .demo-app-shell :is(.demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]),
-html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]) {
+html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]),
+html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]) {
   color: var(--demo-primary-on-accent) !important;
   -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
 }
@@ -5808,8 +5808,8 @@ html[data-theme="dark"] .demo-app-shell :is(.demo-chip[aria-pressed="true"], .de
 
 .demo-work-path,
 .demo-command-work-path,
-html.dark .demo-command-work-path,
-html[data-theme="dark"] .demo-command-work-path {
+html:has(#theme-dark:checked) .demo-command-work-path,
+html:has(#theme-dark:checked) .demo-command-work-path {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
   box-shadow: none;
@@ -6081,8 +6081,8 @@ html[data-theme="dark"] .demo-command-work-path {
   --demo-work-card-setup-rail: var(--cockpit-warning-border);
 }
 
-html.dark .demo-app-shell,
-html[data-theme="dark"] .demo-app-shell {
+html:has(#theme-dark:checked) .demo-app-shell,
+html:has(#theme-dark:checked) .demo-app-shell {
   --demo-work-card-bg: var(--cockpit-surface);
   --demo-work-card-bg-alt: var(--cockpit-nav-bg);
   --demo-work-card-border: var(--cockpit-border);
@@ -7685,3 +7685,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 
 .demo-screen-title { view-transition-name: screen-title; }
 .demo-command-brief { view-transition-name: command-brief; }
+.demo-theme-radios { display: flex; gap: 2px; }
+.demo-theme-radios label { cursor: pointer; padding: 4px 6px; font-size: 14px; line-height: 1; border-radius: 999px; border: 1px solid transparent; }
+.demo-theme-radios label:hover { border-color: var(--cockpit-border); }
+.demo-theme-radios input:checked + label { background: var(--cockpit-accent-50); border-color: var(--cockpit-accent); }
