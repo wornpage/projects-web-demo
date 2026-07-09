@@ -5660,6 +5660,44 @@ function restoreUndoSnapshot() {
   return true;
 }
 
+async function triggerConfetti(x, y) {
+  var emojis = ["✨","🎉","💫","⭐","🌟"];
+  var html = "";
+  for (var i = 0; i < 8; i++) {
+    var xx = (x + (Math.random() * 40 - 20)).toFixed(0);
+    var yy = (y + (Math.random() * 10 - 5)).toFixed(0);
+    var delay = (Math.random() * 0.2).toFixed(2);
+    var dur = (0.6 + Math.random() * 0.4).toFixed(2);
+    var size = (12 + Math.random() * 10).toFixed(0);
+    var emo = emojis[i % emojis.length];
+    html += '<span class="demo-confetti" style="left:' + xx + 'px;top:' + yy + 'px;animation-delay:' + delay + 's;animation-duration:' + dur + 's;font-size:' + size + 'px">' + emo + '</span>';
+  }
+  var wrapper = document.createElement("div");
+  wrapper.innerHTML = html;
+  var particles = wrapper.querySelectorAll("span");
+  particles.forEach(function (p) { document.body.appendChild(p); setTimeout(function () { p.remove(); }, 1200); });
+}
+
+function triggerConfetti(x, y) {
+  var emojis = ["✨","🎉","💫","⭐","🌟"];
+  var html = "";
+  for (var i = 0; i < 8; i++) {
+    var xx = (x + (Math.random() * 40 - 20)).toFixed(0);
+    var yy = (y + (Math.random() * 10 - 5)).toFixed(0);
+    var delay = (Math.random() * 0.2).toFixed(2);
+    var dur = (0.6 + Math.random() * 0.4).toFixed(2);
+    var size = (12 + Math.random() * 10).toFixed(0);
+    var emo = emojis[i % emojis.length];
+    html += '<span class="demo-confetti" style="left:' + xx + 'px;top:' + yy + 'px;animation-delay:' + delay + 's;animation-duration:' + dur + 's;font-size:' + size + 'px">' + emo + '</span>';
+  }
+  var wrapper = document.createElement("div");
+  wrapper.innerHTML = html;
+  wrapper.querySelectorAll("span").forEach(function (p) {
+    document.body.appendChild(p);
+    setTimeout(function () { p.remove(); }, 1200);
+  });
+}
+
 async function undoActionReceipt() {
   const undo = state.actionReceipt?.undo;
   if (!undo) {

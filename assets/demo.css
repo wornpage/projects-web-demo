@@ -7742,3 +7742,6 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 #scroll-progress{position:fixed;top:0;inset-inline-start:0;height:3px;width:0;background:var(--cockpit-accent);z-index:200;pointer-events:none;border-radius:0 2px 2px 0;transition:width .1s linear}.is-booting #scroll-progress{display:none}
 
 mark.search-match{background:var(--cockpit-accent-50);color:var(--cockpit-accent);border-radius:2px;padding:0 1px;}
+
+.demo-confetti{position:fixed;pointer-events:none;z-index:9999;animation:cf-fall .8s ease-in forwards;font-size:16px;user-select:none}
+@keyframes cf-fall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(60px) rotate(180deg)}}
