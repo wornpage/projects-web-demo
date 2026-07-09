@@ -1204,6 +1204,7 @@ function normalizeRecoveryPack(source) {
     doneWhen: normalizeRecoveryText(source.doneWhen, FIELD_LONG_MAX),
     sources: normalizeRecoveryTextArray(source.sources, 50, PACK_FIELD_MEDIUM_MAX),
     memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
+    progress: typeof source.progress === "number" ? Math.min(100, Math.max(0, Math.round(source.progress))) : undefined,
     subtasks: Array.isArray(source.subtasks) ? source.subtasks.slice(0,50).map(function(s){return{text:normalizeRecoveryText(s.text,200),done:Boolean(s.done)}}) : [],
     activity: normalizeRecoveryTextArray(source.activity, 100, 400)
   };
