@@ -5519,6 +5519,11 @@ function bindListActions() {
           state.status = noSelectedWorkStatus("choose work before setting Next action");
         }
       } else {
+        if (action === "energy") {
+          var ePack = findPack(button.dataset.pack);
+          if (ePack) { ePack.energy = button.dataset.energyValue; saveState(); render(); }
+          return;
+        }
         if (runRouteAction(action, button.dataset.pack || "")) {
           return;
         }
