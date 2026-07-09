@@ -39,6 +39,36 @@
   --demo-sidebar-collapsed-width: 52px;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+  --cockpit-bg: #0f1714;
+  --cockpit-surface: #18241f;
+  --cockpit-nav-bg: #121c18;
+  --cockpit-accent: #4ca48f;
+  --cockpit-accent-hover: #7ddac3;
+  --cockpit-accent-text: #04241d;
+  --cockpit-accent-50: #16372f;
+  --cockpit-selected-bg: #16453b;
+  --cockpit-selected-fg: #f7fffc;
+  --cockpit-border: #3a4d45;
+  --cockpit-border-strong: #4d5c52;
+  --cockpit-text: #f7fffc;
+  --cockpit-text-secondary: #d9e8e2;
+  --cockpit-text-muted: #9aa99f;
+  --cockpit-hover-bg: #16372f;
+  --cockpit-success-bg: #022c22;
+  --cockpit-success-border: #14b8a6;
+  --cockpit-success-text: #a7f3d0;
+  --cockpit-warning-bg: #431407;
+  --cockpit-warning-border: #fdba74;
+  --cockpit-warning-text: #fed7aa;
+  --cockpit-danger-bg: #450a0a;
+  --cockpit-danger-border: #fca5a5;
+  --cockpit-danger-text: #fecaca;
+  --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.12);
+  }
+}
+
 html.dark,
 html[data-theme="dark"] {
   --cockpit-bg: #0f1714;
@@ -493,6 +523,41 @@ textarea {
 .is-sidebar-collapsed.demo-app-shell {
   grid-template-columns: var(--demo-sidebar-collapsed-width) minmax(0, 1fr);
 }
+@media (prefers-color-scheme: dark) {
+  .demo-app-shell {
+  --demo-panel-bg: var(--cockpit-surface);
+  --demo-card-bg: var(--cockpit-surface);
+  --demo-card-border: var(--cockpit-border-strong);
+  --demo-card-head-bg: transparent;
+  --demo-card-banner-bg: var(--cockpit-nav-bg);
+  --demo-command-accent: var(--cockpit-selected-bg);
+  --demo-focus-ring: var(--cockpit-accent);
+  --demo-primary-bg: var(--cockpit-accent);
+  --demo-primary-border: var(--cockpit-accent);
+  --demo-primary-focus-bg: var(--cockpit-accent-hover);
+  --demo-primary-on-accent: var(--cockpit-accent-text);
+  --demo-command-line-accent: var(--cockpit-border-strong);
+  --demo-command-line-border: var(--cockpit-border);
+  --demo-command-bg: var(--cockpit-surface);
+  --demo-meta-bg: var(--cockpit-nav-bg);
+  --demo-work-card-bg: var(--cockpit-surface);
+  --demo-work-card-border: var(--cockpit-border);
+  --demo-work-card-shadow: var(--cockpit-shadow-sm);
+  --demo-work-card-hover-shadow: var(--cockpit-shadow-md, var(--cockpit-shadow-sm));
+  --demo-work-card-selected-shadow: 0 0 0 2px var(--cockpit-accent);
+  --demo-work-card-alert-border: var(--cockpit-warning-border);
+  --demo-card-inner-bg: var(--cockpit-nav-bg);
+  --demo-card-inner-border: var(--cockpit-border);
+  --demo-card-divider: var(--cockpit-border);
+  --demo-card-command-bg: var(--cockpit-accent-50);
+  --demo-card-memory-bg: var(--cockpit-accent-50);
+  --demo-card-memory-border: var(--cockpit-accent);
+  --demo-card-meta-bg: var(--cockpit-nav-bg);
+  --demo-card-status-bg: var(--cockpit-accent-50);
+  --demo-card-status-border: var(--cockpit-accent);
+  }
+}
+
 
 .demo-app-shell.app-shell {
   padding-left: 0;
