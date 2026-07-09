@@ -7740,3 +7740,5 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-compare-field.diff-changed{border-inline-start:3px solid var(--cockpit-warning-text);background:var(--cockpit-warning-bg);padding-inline-start:8px;border-radius:2px}.demo-compare-field.diff-same{border-inline-start:3px solid var(--cockpit-success-text);padding-inline-start:8px;border-radius:2px}
 
 #scroll-progress{position:fixed;top:0;inset-inline-start:0;height:3px;width:0;background:var(--cockpit-accent);z-index:200;pointer-events:none;border-radius:0 2px 2px 0;transition:width .1s linear}.is-booting #scroll-progress{display:none}
+
+mark.search-match{background:var(--cockpit-accent-50);color:var(--cockpit-accent);border-radius:2px;padding:0 1px;}

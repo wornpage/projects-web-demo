@@ -3579,7 +3579,7 @@ function homeSpotlightPanel() {
       <div>
         <span class="section-label">Do this next</span>
         <h3>
-          <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(pack.id)}"${cardTitleButtonAttributes(pack)}>${escapeHtml(workTitle(pack))}</button>
+          <button type="button" class="demo-card-title" data-action="select" data-pack="${escapeAttribute(pack.id)}"${cardTitleButtonAttributes(pack)}>${highlightMatch(workTitle(pack), state.query)}</button>
         </h3>
       </div>
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
@@ -4584,6 +4584,13 @@ function workListContainerHtml(itemsHtml) {
   return `<div class="demo-work-list">${itemsHtml}</div>`;
 }
 
+function highlightMatch(text, query) {
+  if (!query || !text) return escapeHtml(text || "");
+  var safe = escapeHtml(text);
+  var q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\function workCard(pack) {");
+  return safe.replace(new RegExp("(" + q + ")", "gi"), '<mark class="search-match">$1</mark>');
+}
+
 function workCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const workflow = workflowStateForPack(pack, command);
@@ -4593,7 +4600,7 @@ function workCard(pack) {
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
   return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true">
     <div class="demo-card-head">
-      <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${escapeHtml(workTitle(pack))}</button>
+      <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${highlightMatch(workTitle(pack), state.query)}</button>
       ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span>` : ""}
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
@@ -4612,7 +4619,7 @@ function workCard(pack) {
     </div>
     <div class="demo-card-meta">
       ${dueDateMeta(pack)}
-      <span>${escapeHtml(pack.owner)}</span>
+      <span>${highlightMatch(pack.owner, state.query)}</span>
     </div>
     ${relevantMemoryCardStrip(pack)}
     ${actionReceiptCard(pack)}
