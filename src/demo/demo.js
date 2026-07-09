@@ -9420,6 +9420,15 @@ function exportWorkListCSV() {
   showToast("Work list exported as CSV.", "success");
 }
 
+// Delegated click for gantt bars — navigate to the pack
+document.addEventListener("click", function (e) {
+  var ganttEl = e.target.closest(".clickable-gantt");
+  if (ganttEl) {
+    var gid = ganttEl.getAttribute("data-gantt-bar");
+    if (gid) go("pack", gid);
+  }
+});
+
 function renderGantt() {
   const now = new Date();
   const items = state.packs.filter((p) => p.due).sort((a, b) => new Date(a.due + "T00:00:00") - new Date(b.due + "T00:00:00"));
@@ -9444,7 +9453,7 @@ function renderGantt() {
     const opacity = pack.status === STATUS.DONE ? "0.4" : "0.85";
     const sel = '.demo-gantt-bar[data-gantt-bar="' + escapeHtml(pack.id).replace(/"/g, "\\\"") + '"]';
     sheet.insertRule(sel + " { --bar-left:" + (offset * dayWidth) + "px;--bar-width:" + (width * dayWidth) + "px;background:" + color + ";opacity:" + opacity + "; }");
-    return '<div class="demo-gantt-row"><span class="demo-gantt-label">' + escapeHtml(workTitle(pack)) + '</span><div class="demo-gantt-track"><div class="demo-gantt-bar" data-gantt-bar="' + escapeAttribute(pack.id) + '"></div></div></div>';
+    return '<div class="demo-gantt-row"><span class="demo-gantt-label clickable-gantt" data-gantt-bar="' + escapeAttribute(pack.id) + '">' + escapeHtml(workTitle(pack)) + '</span><div class="demo-gantt-track"><div class="demo-gantt-bar clickable-gantt" data-gantt-bar="' + escapeAttribute(pack.id) + '"></div></div></div>';
   }).join("");
 
   // Replace any previous gantt sheet
