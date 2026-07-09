@@ -9084,9 +9084,9 @@ function renderSettings() {
   const currentTheme = document.documentElement.dataset.theme || "light";
   const themeChoices = THEMES.map((theme) => {
     const active = theme === currentTheme;
-    return `<button class="demo-profile-card" type="button" data-theme-choice="${escapeAttribute(theme)}" aria-pressed="${String(active)}" title="${escapeAttribute(themeChoiceHelp(theme, active))}" aria-label="${escapeAttribute(themeChoiceHelp(theme, active))}">
+    return `<label class="demo-profile-card" for="theme-${escapeAttribute(theme)}" title="${escapeAttribute(themeChoiceHelp(theme, active))}" aria-label="${escapeAttribute(themeChoiceHelp(theme, active))}">
       <strong>${escapeHtml(THEME_LABELS[theme])}</strong>
-    </button>`;
+    </label>`;
   }).join("");
 
   el("screen-content").innerHTML = `
