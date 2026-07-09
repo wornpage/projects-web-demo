@@ -9056,7 +9056,7 @@ function renderInsights() {
       </div>
 
       <div class="demo-insights-grid">
-        ${insightCard("Completion", `${rate}%`, `${done} of ${total} ${workNoun(total)} done`, rate >= 80 ? "good" : rate >= 40 ? "warn" : "low")}
+        ${insightCardWithDonut("Completion", rate, done, total, workNoun(total))}
         ${insightCard("Active", String(active), `${active} in progress`, "neutral")}
         ${insightCard("Blocked", String(blocked), `${blocked} need attention`, blocked > 0 ? "warn" : "good")}
         ${insightCard("Draft", String(draft), `${draft} not started`, "neutral")}
@@ -9092,6 +9092,16 @@ function renderInsights() {
     </section>
   `;
   bindListActions();
+}
+
+function insightCardWithDonut(label, rate, done, total, noun) {
+  var pct = Math.round((done / total) * 100) || 0;
+  var color = pct >= 80 ? "var(--cockpit-accent)" : pct >= 40 ? "var(--cockpit-warning-text)" : "var(--cockpit-danger-text)";
+  return `<div class="demo-insight-card demo-insight-good">
+    <div class="insight-donut" style="background:conic-gradient(${color} ${pct}%, var(--cockpit-border) ${pct}%)"><span class="insight-donut-value">${pct}%</span></div>
+    <strong>Completed</strong>
+    <small>${done} of ${total} ${noun}</small>
+  </div>`;
 }
 
 function insightCard(label, value, detail, tone) {

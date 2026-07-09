@@ -7689,3 +7689,49 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-theme-radios label { cursor: pointer; padding: 4px 6px; font-size: 14px; line-height: 1; border-radius: 999px; border: 1px solid transparent; }
 .demo-theme-radios label:hover { border-color: var(--cockpit-border); }
 .demo-theme-radios input:checked + label { background: var(--cockpit-accent-50); border-color: var(--cockpit-accent); }
+/* Donut completion chart */
+.insight-donut {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+}
+.insight-donut::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  background: var(--cockpit-surface);
+  border-radius: 50%;
+  z-index: 1;
+}
+.insight-donut-value {
+  position: relative;
+  z-index: 2;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cockpit-text);
+}
+@keyframes donut-fill {
+  from { background: conic-gradient(var(--cockpit-accent) 0deg, var(--cockpit-border) 0deg); }
+}
+/* Sparkline bar animation */
+@keyframes sparkbar {
+  from { height: 0; }
+}
+.insight-sparkline {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 40px;
+}
+.insight-sparkline span {
+  flex: 1;
+  min-width: 4px;
+  background: var(--cockpit-accent);
+  border-radius: 2px 2px 0 0;
+  animation: sparkbar 0.5s ease-out backwards;
+}
