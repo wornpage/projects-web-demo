@@ -65,6 +65,7 @@
 | 54 | DATA |**Print-friendly work list (T)** | Enhanced @media print: clean card borders, page-break avoidance, full-width layout. |
 | 55 | UX |**Snooze / defer (AA)** | Snooze 1d/3d/7d buttons in card support, pushes due date forward with activity log entry. |
 | 56 | UI |**Custom accent color (AP)** | Color picker in Settings overrides --cockpit-accent, persisted in localStorage. |
+| 65 | UX |**Energy level (BN)** | Low/Medium/High per work item, filter chips, icon on cards, selector in work path.
 | 64 | UI |**Seasonal/holiday themes (BY)** | Halloween, Winter, Holiday accent colors via CSS radio selectors.
 | 63 | UX |**Progress slider (AB)** | Range slider per work item in work path, 0-100%, debounced save.
 | 62 | A11Y |**Roving sidebar nav (C)** | Arrow keys navigate sidebar items, tabindex managed, focus follows.
