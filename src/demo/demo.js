@@ -4358,6 +4358,7 @@ function renderCreate() {
   `;
   el("create-sample").addEventListener("click", createSamplePack);
   bindCreateValidation();
+  el("new-title")?.addEventListener("input", function() { checkDuplicateTitle(this.value); });
   el("new-title")?.focus();
   // Natural language quick-add
   el("nl-create")?.addEventListener("input", () => {
@@ -6933,6 +6934,31 @@ function createActionForBlocker(blocker) {
   }
 
   return persistenceVerb();
+}
+
+
+var _dupWarningEl = null;
+
+function checkDuplicateTitle(value) {
+  if (!value || value.length < 3) {
+    if (_dupWarningEl) { _dupWarningEl.remove(); _dupWarningEl = null; }
+    return;
+  }
+  var lower = value.toLowerCase();
+  var found = state.packs.find(function(p) {
+    return p.title.toLowerCase() === lower;
+  });
+  if (found && _dupWarningEl && _dupWarningEl.dataset.packId !== found.id) {
+    _dupWarningEl.remove(); _dupWarningEl = null;
+  }
+  if (found && !_dupWarningEl) {
+    _dupWarningEl = document.createElement("div");
+    _dupWarningEl.className = "demo-clipboard-notice";
+    _dupWarningEl.dataset.packId = found.id;
+    _dupWarningEl.innerHTML = '<div class="demo-clipboard-notice-head"><span>Possible duplicate</span></div><div class="demo-clipboard-next"><strong>' + escapeHtml(found.title) + '</strong><span>already exists</span></div>';
+    var titleField = document.getElementById("new-title");
+    if (titleField) titleField.parentElement.appendChild(_dupWarningEl);
+  }
 }
 
 function bindCreateValidation() {
