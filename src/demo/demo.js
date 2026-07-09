@@ -517,6 +517,21 @@ _themeRadios.forEach(function (r) {
   loadCustomAccent();
   renderNav();
   initSidebarResizer();
+  initSidebarKeyboard();
+  document.addEventListener("input", function(e) {
+    if (e.target.matches(".demo-progress-range")) {
+      var pPack = findPack(e.target.dataset.packId || e.target.dataset.pack);
+      if (pPack) { pPack.progress = parseInt(e.target.value, 10) || 0; var pct = e.target.parentElement.querySelector(".demo-progress-pct"); if (pct) pct.textContent = pPack.progress + "%"; if (!window._pst) { window._pst = setTimeout(function() { window._pst = null; saveState(); }, 500); } }
+    }
+    if (e.target.matches("[data-milestone-pack]")) {
+      var mPack = findPack(e.target.dataset.milestonePack);
+      if (mPack) { mPack.milestone = e.target.value || ""; if (!window._mst) { window._mst = setTimeout(function() { window._mst = null; saveState(); }, 500); } }
+    }
+    if (e.target.matches("[data-location-pack]")) {
+      var lPack = findPack(e.target.dataset.locationPack);
+      if (lPack) { lPack.location = e.target.value || ""; if (!window._lst) { window._lst = setTimeout(function() { window._lst = null; saveState(); }, 500); } }
+    }
+  });
   updateServiceBoundaryNotice();
 
   try {
