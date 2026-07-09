@@ -337,7 +337,7 @@ function showToast(message, type = "info", durationMs = 5000) {
 window.addEventListener("offline", () => showToast("You are offline. Changes save locally.", "error"));
 window.addEventListener("online", () => showToast("Back online.", "success"));
 
-// Right-click context menu on work cards
+// Right-click context menu — uses CSSStyleSheet for positioning (zero inline styles)
 document.addEventListener("contextmenu", (event) => {
   const card = event.target.closest("[data-pack-id]");
   if (!card) return;
@@ -347,8 +347,8 @@ document.addEventListener("contextmenu", (event) => {
   if (!pack) return;
   // Remove any existing menu
   document.querySelector(".demo-context-menu")?.remove();
-  // Measure first to clamp to viewport
-  const measureHtml = `<div class="demo-context-menu" style="position:fixed;left:0;top:0;visibility:hidden">${[
+  // Measure first to clamp to viewport (measure class avoids inline style)
+  const measureHtml = `<div class="demo-context-menu demo-context-measure">${[
       { label: "Open work path" },
       { label: "Copy title" },
       { label: "Finish with proof" },
@@ -364,8 +364,12 @@ document.addEventListener("contextmenu", (event) => {
   mEl.remove();
   const cx = Math.max(4, Math.min(event.clientX, window.innerWidth - mw - 4));
   const cy = Math.max(4, Math.min(event.clientY, window.innerHeight - mh - 4));
-  // Build real menu with clamped position
-  const menuHtml = `<div class="demo-context-menu demo-context-show" style="--ctx-x:${cx}px;--ctx-y:${cy}px">${[
+  // Position via CSSStyleSheet — no inline style attribute
+  const menuSheet = new CSSStyleSheet();
+  menuSheet.insertRule(".demo-context-menu-" + id.replace(/[^a-zA-Z0-9-]/g, "-") + ".demo-context-show { --ctx-x:" + cx + "px; --ctx-y:" + cy + "px; }");
+  document.adoptedStyleSheets.push(menuSheet);
+  const menuClass = "demo-context-menu-" + id.replace(/[^a-zA-Z0-9-]/g, "-");
+  const menuHtml = `<div class="demo-context-menu demo-context-show ${menuClass}">${[
       { label: "Open work path" },
       { label: "Copy title" },
       { label: "Finish with proof" },
@@ -376,16 +380,19 @@ document.addEventListener("contextmenu", (event) => {
   temp.innerHTML = menuHtml;
   const menu = temp.firstElementChild;
   document.body.appendChild(menu);
+  const cleanup = () => {
+    menu.remove();
+    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(function (s) { return s !== menuSheet; });
+  };
   menu.querySelectorAll("button").forEach((btn, i) => {
     btn.addEventListener("click", () => {
       const items = [{ action: () => go("pack", id) }, { action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } }, { action: () => handlePackAction(id, "done") }, { action: null }];
       items[i]?.action?.();
-      menu.remove();
+      cleanup();
     });
   });
-  const close = () => menu.remove();
-  document.addEventListener("click", close, { once: true });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); }, { once: true });
+  document.addEventListener("click", cleanup, { once: true });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") cleanup(); }, { once: true });
 });
 
 // Keyboard shortcuts
@@ -9058,8 +9065,8 @@ function escapeAttribute(value) {
   function showTip(text, x, y) {
     hideTip();
     const safeText = escapeHtml(text);
-    // Measure first to get actual dimensions
-    const measureHtml = '<div class="demo-touch-tip" style="position:fixed;left:0;top:0;visibility:hidden;max-width:240px">' + safeText + '</div>';
+    // Measure first to get actual dimensions (measure class avoids inline style)
+    const measureHtml = '<div class="demo-touch-tip demo-tip-measure">' + safeText + '</div>';
     const mWrapper = document.createElement("div");
     mWrapper.innerHTML = measureHtml;
     const mEl = mWrapper.firstElementChild;
@@ -9071,18 +9078,28 @@ function escapeAttribute(value) {
     const cx = Math.max(4, Math.min(x, window.innerWidth - tw - 4));
     let cy = Math.max(4, y - th - 8);
     if (cy < 4) cy = y + 16; // fall below if not enough room above
-    // Build real tip with clamped position
-    const html = '<div class="demo-touch-tip is-visible" aria-hidden="true" style="left:' + cx + 'px;top:' + cy + 'px">' + safeText + '</div>';
+    // Position via CSSStyleSheet — no inline style attribute
+    const tipSheet = new CSSStyleSheet();
+    tipSheet.insertRule(".demo-tip-position { left:" + cx + "px; top:" + cy + "px; }");
+    document.adoptedStyleSheets.push(tipSheet);
+    const html = '<div class="demo-touch-tip is-visible demo-tip-position" aria-hidden="true">' + safeText + '</div>';
     const wrapper = document.createElement("div");
     wrapper.innerHTML = html;
     tipEl = wrapper.firstElementChild;
     document.body.appendChild(tipEl);
+    // Store sheet for cleanup
+    tipEl._tipSheet = tipSheet;
     clearTimeout(hideTimer);
     hideTimer = setTimeout(function () { hideTip(); }, 2500);
   }
 
   function hideTip() {
-    if (tipEl) { tipEl.remove(); tipEl = null; }
+    if (tipEl) {
+      if (tipEl._tipSheet) {
+        document.adoptedStyleSheets = document.adoptedStyleSheets.filter(function (s) { return s !== tipEl._tipSheet; });
+      }
+      tipEl.remove(); tipEl = null;
+    }
   }
 
   document.addEventListener("touchstart", function (event) {

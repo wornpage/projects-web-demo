@@ -7454,6 +7454,13 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-nl-field input {
   font-size: 15px !important;
 }
+.demo-context-measure {
+  position: fixed;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+}
+
 .demo-context-menu {
   position: fixed;
   z-index: 300;
@@ -7549,6 +7556,14 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 }
 
 /* Touch tooltip fallback for title attributes on touch devices */
+.demo-tip-measure {
+  position: fixed;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  max-width: 240px;
+}
+
 .demo-touch-tip {
   position: fixed;
   z-index: 500;
