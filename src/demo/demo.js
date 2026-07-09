@@ -2486,7 +2486,17 @@ function render() {
   bindClipboardReceiptControls();
   };
   var _transition = null;
-  if (_vt) { _transition = _vt.startViewTransition(_doRender); } else { _doRender(); }
+  // Avoid overlapping transitions — "old view transition aborted" noise
+  if (_vt && !window.__vtPending) {
+    window.__vtPending = true;
+    _transition = _vt.startViewTransition(function () {
+      _doRender();
+      window.__vtPending = false;
+    });
+    _transition.finished.then(function () { window.__vtPending = false; });
+  } else {
+    _doRender();
+  }
 
   if (shouldResetScroll) {
     requestAnimationFrame(() => {
