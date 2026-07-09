@@ -4839,6 +4839,35 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
   .demo-start-step .btn {
     grid-column: 2;
   }
+
+  .demo-optional-fields[open] {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 480px) and (max-width: 900px) {
+  .demo-sidebar.nav-rail {
+    display: none;
+  }
+  .demo-app-shell {
+    grid-template-columns: 1fr;
+  }
+  .demo-main,
+  .demo-screen {
+    padding-bottom: 60px;
+  }
+  .demo-panel {
+    padding: 10px 12px;
+  }
+  .demo-header-inner,
+  .demo-main {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .demo-page-header,
+  .demo-page-content {
+    padding-inline: 12px;
+  }
 }
 
 @media (max-width: 560px) {
