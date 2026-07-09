@@ -4953,14 +4953,14 @@ function highlightMatch(text, query) {
 function workCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const workflow = workflowStateForPack(pack, command);
-  const cardClass = workflowCardClass("demo-work-card", pack, workflow, pack.id === state.selectedId);
+  const cardClass = workflowCardClass("demo-work-card", pack, workflow, pack.id === state.selectedId) + (isStalePack(pack) ? " is-stale" : "");
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack, "btn btn-sm")
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
   return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true" onclick="handleCardClick(event)"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${highlightMatch(workTitle(pack), state.query)}</button>
-      ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span><span class="demo-age">${escapeHtml(packAge(pack))}</span><span class="demo-age-detail">${escapeHtml(packAgeDetail(pack))}</span>` : ""}
+      ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span><span class="demo-age">${escapeHtml(packAge(pack))}${isStalePack(pack) ? " 🕸️" : ""}</span><span class="demo-age-detail">${escapeHtml(packAgeDetail(pack))}</span>` : ""}
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
     <div class="demo-card-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. ${dueDateLabel(pack.due) || "No due date"}.`)}">
@@ -5001,7 +5001,7 @@ function workCard(pack) {
 function workRow(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const workflow = workflowStateForPack(pack, command);
-  const cellClass = `demo-table-row ${pack.id === state.selectedId ? "demo-table-row-selected" : ""}`;
+  const cellClass = `demo-table-row ${pack.id === state.selectedId ? "demo-table-row-selected" : ""}${isStalePack(pack) ? " is-stale" : ""}`;
   return `<button type="button" class="${escapeAttribute(cellClass)}" data-action="select" data-pack="${escapeAttribute(pack.id)}" draggable="true">
     <span class="demo-table-cell demo-table-title">${escapeHtml(workTitle(pack))}${pack.type && pack.type !== "general" ? ` <span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span>` : ""}</span>
     <span class="demo-table-cell demo-table-owner">${escapeHtml(pack.owner)}</span>
@@ -5080,6 +5080,16 @@ function reviewCard(pack) {
       </div>
     </details>
   </article>`;
+}
+
+function isStalePack(pack) {
+  if (!pack.activity || pack.activity.length === 0) return false;
+  var last = activityParts(pack.activity[pack.activity.length - 1]);
+  if (!last.at) return false;
+  var then = new Date(last.at.replace(" ", "T") + "Z");
+  if (isNaN(then.getTime())) return false;
+  var days = (Date.now() - then.getTime()) / 86400000;
+  return days > 30;
 }
 
 function workflowCardClass(baseClass, pack, workflow, selected = false) {
