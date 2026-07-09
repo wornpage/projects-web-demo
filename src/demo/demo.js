@@ -328,11 +328,10 @@ function showToast(message, type = "info", durationMs = 5000) {
   const toast = document.createElement("div");
   toast.className = `demo-toast demo-toast-${type}`;
   toast.textContent = message;
-  toast.addEventListener("click", () => toast.remove());
+  let timer = setTimeout(() => { toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); }, durationMs);
+  toast.addEventListener("click", () => { clearTimeout(timer); toast.remove(); });
   container.appendChild(toast);
-  const removeToast = () => { toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); };
-  setTimeout(removeToast, durationMs);
-  toast._removeToast = removeToast;
+  toast._dismiss = () => { clearTimeout(timer); toast.classList.add("demo-toast-hiding"); setTimeout(() => toast.remove(), 300); };
 }
 
 window.addEventListener("offline", () => showToast("You are offline. Changes save locally.", "error"));
@@ -396,7 +395,7 @@ document.addEventListener("keydown", (event) => {
   const route = map[event.key.toLowerCase()];
   if (route) { go(route); event.preventDefault(); return; }
   if (event.key === "?") { showToast("Shortcuts: h=Home r=Review w=Work n=Next c=Create m=Memory s=Settings i=Insights a=Activity t=Calendar g=Gantt", "info", 8000); event.preventDefault(); }
-  if (event.key === "Escape") { const toasts = document.querySelectorAll(".demo-toast:not(.demo-toast-hiding)"); if (toasts.length) { toasts[toasts.length - 1]._removeToast?.(); event.preventDefault(); } }
+  if (event.key === "Escape") { const toasts = document.querySelectorAll(".demo-toast:not(.demo-toast-hiding)"); if (toasts.length) { toasts[toasts.length - 1]._dismiss?.(); event.preventDefault(); } }
   if (event.key === "Enter" && event.target.closest("#pack-edit-form, .demo-inline-form")) {
     const btn = el("pack-primary-action") || event.target.closest("form")?.querySelector("[type=submit], .btn-primary");
     if (btn) { btn.click(); event.preventDefault(); }
