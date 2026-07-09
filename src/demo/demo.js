@@ -493,6 +493,7 @@ _themeRadios.forEach(function (r) {
   bindDemoSyncControls();
   bindBottomDockVisibility();
   const launchedSyncCode = applyLaunchSyncCode();
+  applyQuickAddParam();
   renderNav();
   updateServiceBoundaryNotice();
 
@@ -1587,6 +1588,25 @@ function bindDemoSyncControls() {
   el("sync-code-leave")?.addEventListener("click", () => {
     withSyncControlsBusy(leaveSyncCode);
   });
+}
+
+function applyQuickAddParam() {
+  var add = launchParams.get("add");
+  if (!add) return;
+  launchParams.delete("add");
+  syncSearchParam("add", "");
+  state.route = "create";
+  go("create");
+  setTimeout(function() {
+    var input = document.getElementById("nl-create");
+    if (!input) return;
+    input.value = decodeURIComponent(add);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    setTimeout(function() {
+      var btn = document.querySelector("#create .btn-primary");
+      if (btn && !btn.disabled) btn.click();
+    }, 200);
+  }, 100);
 }
 
 function applyLaunchSyncCode() {
