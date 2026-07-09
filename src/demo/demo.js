@@ -356,6 +356,7 @@ document.addEventListener("contextmenu", (event) => {
       { label: "Open work path" },
       { label: "Copy title" },
       { label: "Copy as markdown" },
+      { label: "Pin" },
       { label: "Finish with proof" },
       { label: "Cancel" }
     ].map((item) => `<button type="button" class="demo-context-item"${item.label === "Cancel" ? " data-close" : ""}>${item.label}</button>`).join("")}
@@ -377,6 +378,7 @@ document.addEventListener("contextmenu", (event) => {
   const menuHtml = `<div class="demo-context-menu demo-context-show ${menuClass}">${[
       { label: "Open work path" },
       { label: "Copy title" },
+      { label: pack.pinned ? "Unpin" : "Pin" },
       { label: "Finish with proof" },
       { label: "Cancel" }
     ].map((item) => `<button type="button" class="demo-context-item"${item.label === "Cancel" ? " data-close" : ""}>${item.label}</button>`).join("")}
@@ -391,7 +393,7 @@ document.addEventListener("contextmenu", (event) => {
   };
   menu.querySelectorAll("button").forEach((btn, i) => {
     btn.addEventListener("click", () => {
-      const items = [{ action: () => go("pack", id) }, { action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } }, { action: () => { navigator.clipboard.writeText(formatPackForMarkdown(pack)); showToast("Markdown copied.", "success"); } }, { action: () => handlePackAction(id, "done") }, { action: null }];
+      var items = [{ action: () => go("pack", id) }, { action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } }, { action: () => { navigator.clipboard.writeText(formatPackForMarkdown(pack)); showToast("Markdown copied.", "success"); } }, { action: function () { pack.pinned = !pack.pinned; saveState(); render(); showToast(pack.pinned ? "Pinned." : "Unpinned.", "info"); } }, { action: () => handlePackAction(id, "done") }, { action: null }];
       items[i]?.action?.();
       cleanup();
     });
