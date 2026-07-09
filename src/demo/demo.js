@@ -850,6 +850,23 @@ async function resetState() {
   render();
 }
 
+function downloadRecoverySnapshot() {
+  var json = recoverySnapshotText();
+  var now = new Date().toISOString().slice(0,10);
+  var blob = new Blob([json], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "projects-demo-backup-" + now + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  state.status = routeStatus("Backup", DEMO_BLOCKER_NONE, "download another backup");
+  if (DEMO_API_BASE_URL) state.suppressNextSave = true;
+  render();
+}
+
 function copyRecoverySnapshot() {
   const snapshot = recoverySnapshotText();
   const output = el("demo-recovery-output");
