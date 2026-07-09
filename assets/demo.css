@@ -7482,7 +7482,7 @@ time.demo-due-soon{color:var(--cockpit-warning-text)}
 .demo-field-error select {
   border-color: #c0392b;
 }
-.demo-optional-fields,.demo-activity-panel{margin-top:4px;border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);padding:8px 12px}.demo-optional-fields summary,.demo-activity-panel summary{cursor:pointer;font-size:12px;font-weight:560;color:var(--cockpit-text-muted);padding:2px 0}.demo-optional-fields[open] summary,.demo-activity-panel[open] summary{margin-bottom:8px}.demo-optional-fields[open]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.demo-optional-fields[open] summary{grid-column:1/ -1}
+.demo-optional-fields,.demo-activity-panel{margin-top:4px;border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);padding:8px 12px;grid-column:1/-1}.demo-optional-fields summary,.demo-activity-panel summary{cursor:pointer;font-size:12px;font-weight:560;color:var(--cockpit-text-muted);padding:2px 0}.demo-optional-fields[open] summary,.demo-activity-panel[open] summary{margin-bottom:8px}.demo-optional-fields[open]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.demo-optional-fields[open] summary{grid-column:1/ -1}
 .demo-optional-fields[open]>.demo-field-help{grid-column:1/ -1;margin-top:-4px}.demo-activity-panel{margin-top:12px}.demo-activity-panel .demo-list{margin-top:0}
 .demo-nav-badge {
   display: inline-flex;
