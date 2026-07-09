@@ -4957,7 +4957,7 @@ function workCard(pack) {
   return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true" onclick="handleCardClick(event)"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${highlightMatch(workTitle(pack), state.query)}</button>
-      ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span><span class="demo-age">${escapeHtml(packAge(pack))}</span>` : ""}
+      ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span><span class="demo-age">${escapeHtml(packAge(pack))}</span><span class="demo-age-detail">${escapeHtml(packAgeDetail(pack))}</span>` : ""}
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
     <div class="demo-card-facts" aria-label="${escapeAttribute(`Where: ${workTitle(pack)}. Blocker: ${blockerTextForPack(pack)}. ${dueDateLabel(pack.due) || "No due date"}.`)}">
@@ -8201,6 +8201,16 @@ function dueUrgency(value) {
   if (days === 0) return "today";
   if (days <= 7) return "soon";
   return "";
+}
+
+function packAgeDetail(pack) {
+  if (!pack.activity || pack.activity.length === 0) return "";
+  var first = activityParts(pack.activity[0]);
+  var last = activityParts(pack.activity[pack.activity.length - 1]);
+  var opened = first.at ? relativeActivityTime(first.at) : "";
+  var touched = last.at ? relativeActivityTime(last.at) : "";
+  if (!opened && !touched) return "";
+  return "Opened " + opened + (touched && touched !== opened ? " · Last " + touched : "");
 }
 
 function dueDateLabel(value) {
