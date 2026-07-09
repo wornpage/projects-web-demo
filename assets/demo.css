@@ -4845,7 +4845,7 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
   }
 }
 
-@media (max-height: 480px) and (max-width: 900px) {
+@media (max-height: 540px) and (max-width: 900px) {
   .demo-sidebar.nav-rail {
     display: none;
   }
@@ -4867,6 +4867,9 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
   .demo-page-header,
   .demo-page-content {
     padding-inline: 12px;
+  }
+  .demo-optional-fields[open] {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -6626,6 +6629,9 @@ html:has(#theme-dark:checked) .demo-app-shell {
   }
   .demo-bottom-brief {
     bottom: 80px;
+  }
+  .demo-optional-fields[open] {
+    grid-template-columns: 1fr;
   }
 }
 
