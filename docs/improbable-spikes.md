@@ -65,6 +65,7 @@
 | 54 | DATA |**Print-friendly work list (T)** | Enhanced @media print: clean card borders, page-break avoidance, full-width layout. |
 | 55 | UX |**Snooze / defer (AA)** | Snooze 1d/3d/7d buttons in card support, pushes due date forward with activity log entry. |
 | 56 | UI |**Custom accent color (AP)** | Color picker in Settings overrides --cockpit-accent, persisted in localStorage. |
+| 60 | UX |**Drag-to-resize sidebar (AO)** | Draggable handle on sidebar edge, 160-320px, persisted.
 | 59 | AUTOM |**Recurring/template items (Y)** | Repeat button in card support creates a fresh copy of any work item.
 | 58 | UX |**Subtasks/checklist (AK)** | Collapsible checklist per work item with checkboxes and progress bar. CSP-safe.
 | 57 | UX |**Desktop deadline notifications (BV)** | System notification for items due today on startup. Requests permission. |
