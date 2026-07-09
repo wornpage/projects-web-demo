@@ -69,6 +69,7 @@
 | 65 | UX |**Energy level (BN)** | Low/Medium/High per work item, filter chips, icon on cards. |
 | 66 | VIZ |**Analytics mini-dashboard (CJ)** | Streak, active day, avg tasks/day, busiest owner on Insights. |
 | 67 | UX |**Work item age detail (AS)** | Cards show "Opened 3d ago · Last 2h ago" from activity log. |
+| 69 | UX |**Work item location (DB)** | office/home/field/remote field, 📍 emoji on cards.
 | 68 | UX |**Duplicate detection on create (CN)** | Warns when typing a title that matches an existing pack. |
 | 64 | UI |**Seasonal/holiday themes (BY)** | Halloween, Winter, Holiday accent colors via CSS radio selectors.
 | 63 | UX |**Progress slider (AB)** | Range slider per work item in work path, 0-100%, debounced save.
