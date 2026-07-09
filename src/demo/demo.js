@@ -2212,6 +2212,18 @@ function routeStatus(where, blocker, next) {
 // apart from the primary do-the-work loop without reordering any route.
 const NAV_SECONDARY_START = "calendar";
 
+// Inline markdown parser — supports **bold**, *italic*, [text](url)
+function parseInlineMarkdown(text) {
+  var safe = escapeHtml(text || "");
+  // Bold: **text**
+  safe = safe.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  // Italic: *text* (not preceded by another *)
+  safe = safe.replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
+  // Links: [text](url) — only http/https
+  safe = safe.replace(/\[([^\]]+)\]\(((?:https?:\/\/)[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return safe;
+}
+
 function renderNav() {
   el("demo-nav").innerHTML = navItems.map((item) => {
     const separator = item.route === NAV_SECONDARY_START ? '<span class="demo-nav-sep" role="separator" aria-hidden="true"></span>' : "";
@@ -4056,7 +4068,7 @@ function renderPackDetail() {
           <span class="section-label">${escapeHtml(workLabelTitle())} path</span>
           <h2 id="pack-detail-title">${escapeHtml(workTitle(pack))}${pack.url ? ` <a href="${escapeAttribute(pack.url)}" target="_blank" rel="noopener" class="demo-url-link" title="Open ${escapeAttribute(pack.url)}" aria-label="Open link">↗</a>` : ""}</h2>
           <p class="demo-pack-subtitle">${escapeHtml(workDetailSubtitle(pack, packCommand))}</p>
-          ${pack.purpose ? `<p class="demo-pack-purpose">${escapeHtml(pack.purpose)}</p>` : ""}
+          ${pack.purpose ? `<p class="demo-pack-purpose">${parseInlineMarkdown(pack.purpose)}</p>` : ""}
           ${packGuidanceLine(pack, packCommand, workflow)}
         </div>
         <span class="demo-status">${escapeHtml(persistenceEditStatus("Edits stay in this browser"))}</span>
@@ -7729,7 +7741,7 @@ function metricCard(label, value, note) {
   return `<section class="demo-metric">
     <span class="demo-summary-label">${escapeHtml(label)}</span>
     <strong class="demo-summary-value">${escapeHtml(value)}</strong>
-    <p>${escapeHtml(note)}</p>
+    <p>${parseInlineMarkdown(note)}</p>
   </section>`;
 }
 
@@ -7886,7 +7898,7 @@ function relevantMemoryStrip(pack) {
     <div class="demo-memory-copy">
       <span>Relevant Memory</span>
       <strong>${escapeHtml(visible)}</strong>
-      <small class="demo-memory-next">${escapeHtml(memoryStripNextLine(pack))}</small>
+      <small class="demo-memory-next">${parseInlineMarkdown(memoryStripNextLine(pack))}</small>
       ${latest ? "" : `<small>Add a memory note here or from the Memory screen.</small>`}
     </div>
     <button class="btn btn-sm demo-memory-action" type="button" data-action="memory" data-pack="${escapeAttribute(pack?.id || "")}"${controlLabelAttributes(actionHelp)}>${escapeHtml(actionLabel)}</button>
@@ -8735,7 +8747,7 @@ function renderCompareColumn(slot, pack, id) {
       <div class="demo-compare-field"><span>Purpose</span><strong>${escapeHtml(pack.purpose || "—")}</strong></div>
       <div class="demo-compare-field"><span>Proof target</span><strong>${escapeHtml(pack.doneWhen || "—")}</strong></div>
       <div class="demo-compare-field"><span>Sources</span><strong>${escapeHtml((pack.sources || []).join(", ") || "—")}</strong></div>
-      <div class="demo-compare-field"><span>Memory</span><strong>${escapeHtml((pack.memory || []).join("; ") || "—")}</strong></div>
+      <div class="demo-compare-field"><span>Memory</span><strong>${parseInlineMarkdown((pack.memory || []).join("; ") || "—")}</strong></div>
     </div>
     ${primaryCommandButton(pack)}
   </article>`;
