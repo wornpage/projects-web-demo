@@ -2377,6 +2377,29 @@ function initSidebarResizer() {
   } catch {}
 }
 
+
+function initSidebarKeyboard() {
+  var nav = document.getElementById("demo-nav");
+  if (!nav) return;
+  var items = nav.querySelectorAll(".demo-nav-item");
+  if (items.length < 2) return;
+  items.forEach(function(item, i) {
+    item.tabIndex = i === 0 ? 0 : -1;
+    item.addEventListener("keydown", function(e) {
+      var dir = 0;
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") dir = 1;
+      else if (e.key === "ArrowUp" || e.key === "ArrowLeft") dir = -1;
+      else return;
+      e.preventDefault();
+      var next = i + dir;
+      if (next < 0 || next >= items.length) return;
+      items[i].tabIndex = -1;
+      items[next].tabIndex = 0;
+      items[next].focus();
+    });
+  });
+}
+
 function renderNav() {
   el("demo-nav").innerHTML = navItems.map((item) => {
     const separator = item.route === NAV_SECONDARY_START ? '<span class="demo-nav-sep" role="separator" aria-hidden="true"></span>' : "";
