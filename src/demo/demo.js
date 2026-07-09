@@ -1205,6 +1205,7 @@ function normalizeRecoveryPack(source) {
     doneWhen: normalizeRecoveryText(source.doneWhen, FIELD_LONG_MAX),
     sources: normalizeRecoveryTextArray(source.sources, 50, PACK_FIELD_MEDIUM_MAX),
     memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
+    location: normalizeRecoveryText(source.location, 60) || undefined,
     energy: ["low","medium","high"].indexOf(source.energy) >= 0 ? source.energy : undefined,
     progress: typeof source.progress === "number" ? Math.min(100, Math.max(0, Math.round(source.progress))) : undefined,
     subtasks: Array.isArray(source.subtasks) ? source.subtasks.slice(0,50).map(function(s){return{text:normalizeRecoveryText(s.text,200),done:Boolean(s.done)}}) : [],
@@ -4975,7 +4976,7 @@ function workCard(pack) {
       ${primaryCommandReasonNote(pack, command)}
     </div>
     <div class="demo-card-meta">
-      ${pack.energy ? '<span class="demo-energy-icon">' + {low:"🔋",medium:"⚡",high:"🚀"}[pack.energy] + '</span>' : ""}${dueDateMeta(pack)}
+      ${pack.energy ? '<span class="demo-energy-icon">' + {low:"🔋",medium:"⚡",high:"🚀"}[pack.energy] + '</span>' : ""}${pack.location ? "<span title='"+escapeHtml(pack.location)+"'>\ud83d\udccd</span>" : ""}${dueDateMeta(pack)}
       <span class="demo-owner-text">${highlightMatch(pack.owner, state.query)}</span>
     </div>
     ${relevantMemoryCardStrip(pack)}
