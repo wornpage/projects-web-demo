@@ -100,6 +100,8 @@ const state = {
   recentlyUnblockedIds: [],
   routeParam: "",
   scrollPositions: {},
+  undoStack: [],
+  undoIndex: -1,
 };
 
 let unblockAnimationTimer = null;
@@ -4927,6 +4929,7 @@ function bindTableRows() {
 var _dragPackId = null;
 
 function reorderPacks(fromId, toId) {
+  pushUndoSnapshot();
   const from = state.packs.findIndex(function (p) { return p.id === fromId; });
   const to = state.packs.findIndex(function (p) { return p.id === toId; });
   if (from < 0 || to < 0) return;
@@ -5538,6 +5541,27 @@ function persistClientStateNow() {
   if (DEMO_API_BASE_URL) {
     flushBackendStateSave();
   }
+}
+
+function pushUndoSnapshot() {
+  var stack = state.undoStack;
+  var snapshot = state.packs.map(function (p) { return JSON.parse(JSON.stringify(p)); });
+  if (stack.length > 0 && state.undoIndex >= 0 && JSON.stringify(stack[state.undoIndex]) === JSON.stringify(snapshot)) return;
+  if (state.undoIndex < stack.length - 1) {
+    stack.length = state.undoIndex + 1;
+  }
+  stack.push(snapshot);
+  if (stack.length > 50) stack.shift();
+  state.undoIndex = stack.length - 1;
+}
+
+function restoreUndoSnapshot() {
+  var stack = state.undoStack;
+  if (state.undoIndex < 0 || state.undoIndex >= stack.length) return false;
+  state.packs = stack[state.undoIndex].map(function (p) { return JSON.parse(JSON.stringify(p)); });
+  saveState();
+  render();
+  return true;
 }
 
 async function undoActionReceipt() {
@@ -7326,11 +7350,20 @@ function setupCommandPalette() {
     // Cmd/Ctrl+Z undoes the last action when a receipt offers it — but never
     // while the user is editing a field (that's the browser's text undo).
     if ((event.metaKey || event.ctrlKey) && !event.shiftKey && (event.key === "z" || event.key === "Z")) {
-      if (isTextEntryTarget(event.target) || !state.actionReceipt?.undo) {
-        return;
-      }
+      if (isTextEntryTarget(event.target)) return;
       event.preventDefault();
-      undoActionReceipt();
+      if (state.undoIndex > 0) {
+        state.undoIndex--;
+        restoreUndoSnapshot();
+      }
+    }
+    if ((event.metaKey || event.ctrlKey) && event.shiftKey && (event.key === "z" || event.key === "Z")) {
+      if (isTextEntryTarget(event.target)) return;
+      event.preventDefault();
+      if (state.undoIndex < state.undoStack.length - 1) {
+        state.undoIndex++;
+        restoreUndoSnapshot();
+      }
     }
   });
 
