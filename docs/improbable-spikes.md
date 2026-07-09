@@ -38,6 +38,12 @@
 | 27 | UX |**Offline form drafts** | Create form and memory note auto-save to `sessionStorage` on each keystroke. Restored on route return. |
 | 28 | UX |**Copy as Markdown** | Right-click context menu includes "Copy as Markdown". Outputs `- [ ] Title | Owner | Due | Blocker`. |
 | 29 | UX |**Recently viewed quick-access** | Last 5 viewed pack IDs tracked in `state.recentIds`. Shown as clickable "Jump back" chips above the work list. |
+| 30 | UX |**Settings theme CSS-only** | Settings theme chips are `<label for="theme-xxx">` targeting header radio inputs — zero JS needed. |
+| 31 | UX |**Gantt chart clickable** | Gantt bars and labels navigate to the pack on click via delegated handler. |
+| 32 | UX |**Offline sync indicator** | Green/red dot in the header — updates on online/offline events. |
+| 33 | UX |**Card fade-in animation** | Work/list/table cards animate in with opacity+translateY on render. |
+| 34 | UX |**Work item age indicator** | Shows "today", "3 days ago", "2 months ago" from first activity timestamp. |
+| 35 | UX |**Extra actions mobile cleanup** | Hide verbose `<strong>` text in card-support summary on ≤640px screens. |
 
 ---
 
