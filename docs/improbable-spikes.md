@@ -59,6 +59,11 @@
 | 48 | UX |**Inline editing on cards (AM)** | Double-click title or owner to edit inline. Enter saves, Escape cancels, blur auto-saves. |
 | 49 | GAME |**Achievement badges (AW)** | 6 unlockable emoji badges in sidebar footer — first done, 10 tasks, 7-day streak, all fields, 20 items, blocker cleared. Persistent in localStorage. |
 | 50 | UX |**Gantt click-to-navigate (G)** | Gantt bars and labels navigate to the pack on click. Delegated handler, CSSStyleSheet-safe. |
+| 51 | UX |**Offline sync indicator (BB)** | Green/red dot in sidebar achievements area — updates on online/offline events. |
+| 52 | NLP |**Natural-language relative dates (Q)** | Parser handles "this Friday", "end of month", "end of this month". |
+| 53 | UX |**Audio cue on toasts (S)** | Subtle beep via Web Audio API — low tone on error, short tick on info/success. |
+| 54 | DATA |**Print-friendly work list (T)** | Enhanced @media print: clean card borders, page-break avoidance, full-width layout. |
+| 55 | UX |**Snooze / defer (AA)** | Snooze 1d/3d/7d buttons in card support, pushes due date forward with activity log entry. |
 
 ---
 
@@ -78,13 +83,9 @@
 | L | A11Y |**Voice input for notes** | `webkitSpeechRecognition` or the `SpeechRecognition` API could transcribe spoken memory notes. Falls back gracefully on unsupported browsers. |
 | M | DATA |**Daily digest email template** | The Email Standup button opens a `mailto:` link. A proper HTML email template with inline styles and a summary table would be more useful. |
 | N | COLLAB |**QR code share link** | The sync panel copies a URL. Generating a QR code inline (via canvas or CSS grid) would make sharing faster on mobile. |
-| Q | NLP |**Natural-language relative dates** | The parser handles "in 3 days" and "next Monday" but not "this Friday" or "end of month". Expanding the date parser to handle more human phrases would be useful. |
-| S | UX |**Audio cue on notifications** | The toast system is visual-only. A subtle sound on error or success toasts would help when the tab is backgrounded. |
-| T | DATA |**Print-friendly work list** | The `@media print` rule hides most UI chrome. A dedicated print layout with a clean table of all work items would be useful for meetings. |
 | W | UX |**Kanban / board view** | A fourth work-list view: columns by status (Active → Blocked → Done). Cards drag between columns to change status. Uses the same card rendering with a horizontal scroll layout. |
 | Y | AUTOM |**Recurring / template work items** | Mark a pack as a template. A "Repeat" button spawns a new copy with the same title, owner, and next-action, resetting status to active. Useful for daily/weekly routines like standups or checklists. |
 | Z | UX |**Work item timeline / changelog** | Every field edit appends a timestamped entry to `pack.history`. Show the full edit history on the work path as a chronological log. Undo could roll back to any point in the timeline. |
-| AA | UX |**Snooze / defer** | A "Snooze" button that sets `due` to +1 day, +3 days, +1 week, or a custom date. The item disappears from active views until the due date arrives. |
 | AB | UX |**Progress slider** | A 0–100% slider or stepper on each pack. The donut chart on Insights could show average progress across all items. Visual indicator on cards. |
 | AC | UX |**Merge two work items** | Select two packs on the Compare page and merge them: combine memory notes, pick the most recent blocker/owner, keep the first title. The merged item absorbs both histories. |
 | AH | UX |**Goal / OKR linking** | Tie work items to higher-level objectives. Add an `objective` field, group by objective on the Insights page, and show progress toward each goal. |
@@ -103,7 +104,6 @@
 | AY | NLP |**Command palette natural-language** | Type "block venue hold" in Cmd+K and it finds the pack and runs the blocker toggle. Type "done lighting checklist" to mark it done. Parse intent from free text. |
 | AZ | AUTOM |**Workflow automation rules** | Simple if-this-then-that: "When any pack is marked done, unblock all packs blocked by it." Configured in Settings with a dropdown. Stored as JSON rules. |
 | BA | INFRA |**Multiple workspaces / projects** | Switch between independent sets of packs via a project selector in the header. Each workspace has its own state file. "General", "Music", "Dev" etc. |
-| BB | UX |**Offline sync indicator** | A small dot in the header: green = saved, amber = unsaved changes, red = offline. Updates reactively after each `saveState()`. Uses `navigator.onLine` + a periodic ping. |
 | BC | A11Y |**Screen reader optimized mode** | Toggle that adds `role="status"` live regions, `aria-description` on complex components, and skips decorative animations. Stored as an accessibility preference. |
 | BD | SEC |**Two-factor / passkey auth** | For the hosted Outplane version: WebAuthn passkey support. Registration and login via `navigator.credentials`. Falls back to client-key header for browsers without WebAuthn. |
 | BE | SEC |**Magic link email login** | Passwordless auth: enter email, receive a link, click to authenticate. The link contains a signed token. Backend-only spike (server changes to generate/verify tokens). |
