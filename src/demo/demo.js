@@ -3870,16 +3870,21 @@ function renderHome() {
         ${navButton("settings", "Settings")}
         <button class="btn" type="button" id="reset-demo-home"${controlHelpAttributes(false, resetHelp, "reset-demo-home-help")}>Reset sample</button>
       </div>
-      <div class="demo-home-bookmarklet">
-        <small>Bookmarklet — drag to your bookmarks bar, then click on any page to save it:</small>
-        <a id="demo-bookmarklet-link" class="btn btn-sm" href="#">+ Save to demo</a>
+      <div class="demo-home-share" aria-label="Share and export">
+        <h3>Share and export</h3>
+        <div class="demo-quick-actions">
+          <button class="btn btn-sm" type="button" id="export-csv-home">Export CSV</button>
+          <button class="btn btn-sm" type="button" id="export-ics-home">Export .ics</button>
+          <button class="btn btn-sm" type="button" id="copy-standup-home">Copy standup</button>
+          <button class="btn btn-sm" type="button" id="email-standup-home">Email standup</button>
+          <button class="btn btn-sm" type="button" id="copy-link-home">Copy share link</button>
+          <button class="btn btn-sm" type="button" id="speak-home" title="Read work status aloud using text-to-speech" aria-label="Read work status aloud">🔊 Read aloud</button>
+        </div>
+        <div class="demo-home-bookmarklet">
+          <small>Bookmarklet — drag to your bookmarks bar, then click on any page to save it:</small>
+          <a id="demo-bookmarklet-link" class="btn btn-sm" href="#">+ Save to demo</a>
+        </div>
       </div>
-      <button class="btn btn-sm demo-home-action-first" type="button" id="export-csv-home">Export CSV</button>
-      <button class="btn btn-sm demo-home-action" type="button" id="copy-standup-home">Copy standup</button>
-      <button class="btn btn-sm demo-home-action" type="button" id="copy-link-home">Copy share link</button>
-      <button class="btn btn-sm demo-home-action" type="button" id="email-standup-home">Email standup</button>
-      <button class="btn btn-sm demo-home-action" type="button" id="export-ics-home">Export .ics</button>
-      <button class="btn btn-sm demo-home-action" type="button" id="speak-home" title="Read work status aloud using text-to-speech" aria-label="Read work status aloud">🔊 Read aloud</button>
       <div class="demo-home-methods">
         <h3>Try a method</h3>
         <div class="demo-method-grid">
@@ -8443,13 +8448,6 @@ function navButton(route, label, className = "btn") {
   return `<button class="${escapeAttribute(className)}" type="button" data-go="${escapeAttribute(route)}" data-pack="${escapeAttribute(routeLinkPackId(route))}" title="${escapeAttribute(copy)}" aria-label="${escapeAttribute(copy)}">${escapeHtml(label)}</button>`;
 }
 
-function homeSecondaryAction(route, label, reason) {
-  return `<div class="demo-home-action">
-    ${navButton(route, label)}
-    <small>${escapeHtml(reason)}</small>
-  </div>`;
-}
-
 function routeButtonReason(route, label) {
   const reasons = {
     home: "Return to the simplified demo start.",
@@ -10140,23 +10138,27 @@ function bindMethodCards() {
   });
 }
 
+function csvField(value) {
+  const text = String(value ?? "");
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
 function exportWorkListCSV() {
-  const header = "Title,Owner,Status,Blocker,Next action,Due,URL";
-  const rows = state.packs.map((p) => [
-    `"${(p.title || "").replace(/"/g, '""')}"`,
-    p.owner || "",
-    p.status || "",
-    p.blocker || "",
-    p.next || "",
-    p.due || "",
-    p.url || ""
-  ].join(","));
-  const csv = [header, ...rows].join("\n");
+  const header = ["Title", "Owner", "Status", "Blocker", "Next action", "Due", "URL"].join(",");
+  const rows = state.packs.map((p) => [p.title, p.owner, p.status, p.blocker, p.next, p.due, p.url]
+    .map(csvField)
+    .join(","));
+  // BOM so Excel opens UTF-8 titles correctly; CRLF per RFC 4180
+  const csv = "\uFEFF" + [header, ...rows].join("\r\n");
   const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = "work-list.csv";
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
   showToast("Work list exported as CSV.", "success");
 }
 
