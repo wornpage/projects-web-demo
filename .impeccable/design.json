@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-10T16:30:00Z",
+  "title": "Design System: Projects Web Demo",
+  "extensions": {
+    "colorMeta": {
+      "steady-teal": { "role": "primary", "displayName": "Steady Teal", "canonical": "#0d9488", "tonalRamp": ["oklch(20% 0.05 180)", "oklch(30% 0.07 180)", "oklch(40% 0.09 180)", "oklch(52% 0.1 180)", "oklch(62% 0.1 180)", "oklch(75% 0.08 180)", "oklch(87% 0.05 180)", "oklch(95% 0.02 180)"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#21322b", "tonalRamp": ["oklch(15% 0.02 165)", "oklch(27% 0.02 165)", "oklch(38% 0.02 165)", "oklch(50% 0.02 165)", "oklch(62% 0.02 165)", "oklch(75% 0.015 165)", "oklch(87% 0.01 165)", "oklch(95% 0.005 165)"] },
+      "warm-canvas": { "role": "neutral", "displayName": "Warm Canvas", "canonical": "#f5f3ef", "tonalRamp": ["oklch(20% 0.01 85)", "oklch(35% 0.01 85)", "oklch(50% 0.01 85)", "oklch(65% 0.01 85)", "oklch(78% 0.01 85)", "oklch(88% 0.008 85)", "oklch(94% 0.006 85)", "oklch(97% 0.004 85)"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#e2ddd5", "tonalRamp": ["oklch(30% 0.01 80)", "oklch(45% 0.01 80)", "oklch(58% 0.01 80)", "oklch(70% 0.012 80)", "oklch(80% 0.012 80)", "oklch(88% 0.012 80)", "oklch(92% 0.01 80)", "oklch(96% 0.006 80)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Panel headings; drops from 20px to 18px under 480px." },
+      "label": { "displayName": "Label", "purpose": "Uppercase 11px section and meta labels, always muted or secondary ink." }
+    },
+    "shadows": [
+      { "name": "ambient", "value": "0 1px 2px rgba(0,0,0,0.04), 0 1px 4px rgba(0,0,0,0.06)", "purpose": "Resting panels and cards; near-subliminal." },
+      { "name": "hover", "value": "0 2px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.08)", "purpose": "Interactive containers under the pointer, paired with a border-color shift." }
+    ],
+    "motion": [
+      { "name": "duration-standard", "value": "0.12s ease", "purpose": "Button and border state transitions." },
+      { "name": "press", "value": "transform 0.06s ease", "purpose": "1px press-down on button active." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "480px" },
+      { "name": "phone-wide", "value": "560px" },
+      { "name": "tablet", "value": "700px" },
+      { "name": "desktop-nav", "value": "981px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one teal action on a screen: create, save, run next.",
+      "html": "<button class=\"ds-btn-primary\">New work</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; background: #0d9488; border: 1px solid #0d9488; border-radius: 999px; color: #fff; font-size: 13px; font-weight: 560; padding: 6px 14px; cursor: pointer; transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.06s ease; } .ds-btn-primary:hover { background: #0f766e; border-color: #0f766e; } .ds-btn-primary:active { transform: translateY(1px); box-shadow: inset 0 2px 3px rgba(0,0,0,0.22); } .ds-btn-primary:focus-visible { outline: 3px solid #0d9488; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The default quiet button for support actions.",
+      "html": "<button class=\"ds-btn\">Snooze 1d</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 6px; background: #fdfdfb; border: 1px solid #e2ddd5; border-radius: 999px; color: #5b6a60; font-size: 13px; font-weight: 560; padding: 6px 14px; cursor: pointer; transition: background-color 0.12s ease, border-color 0.12s ease; } .ds-btn:hover { background: #eaf4f0; border-color: #d0cac1; } .ds-btn:focus-visible { outline: 3px solid #0d9488; outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Status/energy filter pill; pressed state fills with selected mint.",
+      "html": "<button class=\"ds-chip\" aria-pressed=\"false\">Blocked <b class=\"ds-chip-count\">10</b></button><button class=\"ds-chip\" aria-pressed=\"true\">All <b class=\"ds-chip-count\">37</b></button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; justify-content: space-between; gap: 6px; background: transparent; border: 1px solid #e2ddd5; border-radius: 999px; color: #5b6a60; font-size: 13px; font-weight: 560; min-height: 42px; padding: 8px 12px; cursor: pointer; margin-inline-end: 8px; transition: border-color 0.12s ease, background-color 0.12s ease; } .ds-chip:hover { background: #eaf4f0; border-color: #d0cac1; } .ds-chip[aria-pressed=\"true\"] { background: #d7efe7; border-color: #0d9488; color: #082f2b; } .ds-chip-count { font-weight: 660; font-size: 11px; } .ds-chip:focus-visible { outline: 3px solid #0d9488; outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Shared field styling for search and form inputs.",
+      "html": "<input class=\"ds-input\" type=\"search\" placeholder=\"Search work title, blocker\" />",
+      "css": ".ds-input { background: #fdfdfb; border: 1px solid #e2ddd5; border-radius: 10px; color: #21322b; font-size: 15px; font-weight: 450; padding: 8px 14px; width: 100%; transition: border-color 0.12s ease, background-color 0.12s ease; } .ds-input:focus-visible { border-color: #0d9488; outline: 3px solid #0d9488; outline-offset: 2px; }"
+    },
+    {
+      "name": "Work Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The core surface: title, Where/Blocker facts, one next action.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-head\"><strong>Venue hold calendar</strong><span class=\"ds-pill\">Blocked</span></div><p class=\"ds-card-fact\"><em>BLOCKER:</em> missing owner</p><button class=\"ds-btn-primary\">Review blocker</button></article>",
+      "css": ".ds-card { background: #fdfdfb; border: 1px solid #e2ddd5; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 4px rgba(0,0,0,0.06); display: grid; gap: 8px; padding: 14px; max-width: 340px; transition: border-color 0.12s ease, box-shadow 0.12s ease; } .ds-card:hover { border-color: #d0cac1; box-shadow: 0 2px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.08); } .ds-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #21322b; font-size: 16px; } .ds-pill { background: #fff7ed; border: 1px solid #fdba74; border-radius: 999px; color: #9a3412; font-size: 11px; font-weight: 660; letter-spacing: 0.02em; padding: 2px 8px; text-transform: uppercase; } .ds-card-fact { color: #5b6a60; font-size: 13px; margin: 0; } .ds-card-fact em { color: #63746a; font-size: 10px; font-style: normal; font-weight: 620; letter-spacing: 0.02em; text-transform: uppercase; }"
+    },
+    {
+      "name": "Empty State",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Signature dashed empty state: fact, help, Where/Blocker/Next triad, one real action.",
+      "html": "<div class=\"ds-empty\"><strong>No work matches this filter.</strong><span><b>How to fill:</b> Clear search or choose another status filter.</span><small><b>Blocker:</b> current filter hides every work item</small><button class=\"ds-btn ds-empty-action\">Show everything</button></div>",
+      "css": ".ds-empty { border: 1px dashed #e2ddd5; border-radius: 10px; color: #63746a; display: grid; gap: 6px; padding: 22px; text-align: center; max-width: 360px; } .ds-empty strong { color: #21322b; font-size: 15px; } .ds-empty span { color: #5b6a60; font-size: 13px; } .ds-empty small { font-size: 12px; } .ds-empty-action { justify-self: center; margin-top: 4px; min-width: 160px; justify-content: center; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Honest Clipboard",
+    "overview": "A friendly clipboard on a workbench: dense, practical, and nothing decorative. Every screen answers Where, Blocker, and Next action; the visual system makes those answers scannable and checkable, never performative. Warmth is carried by copy and forgiving flows, not ornament — surfaces stay quiet so the words can be friendly.",
+    "keyCharacteristics": [
+      "Dense where work happens; air where a visitor is orienting.",
+      "Everything is bordered: 1px hairlines define surfaces; depth is a whisper.",
+      "One accent, used for state: Steady Teal marks selection, actions, and progress — never decoration.",
+      "Three-theme token system (light, dark, forest) via --cockpit-* custom properties."
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Steady Teal is the only saturated voice on any screen and it always signals state. If teal appears somewhere a click or a status isn't, it's wrong.", "section": "colors" },
+      { "name": "The Contrast Floor Rule", "body": "Body-size text never drops below 4.5:1 against its actual background; #63746a is the light-theme floor.", "section": "colors" },
+      { "name": "The Weight-Not-Width Rule", "body": "Emphasis is a weight step, never letterspacing tricks, italics, or a second family.", "section": "typography" },
+      { "name": "The Full Border Rule", "body": "Accents are full 1px borders or background tints — never a thick colored side stripe. Enforced by CI.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do express every color through --cockpit-* tokens so light/dark/forest stay in lockstep.",
+      "Do give every interactive element aria state and a visible 3px focus ring.",
+      "Do keep working screens dense and orientation screens breathable.",
+      "Do ship an action button inside every empty state.",
+      "Do run the full gate sweep plus check-behavior-smoke.mjs before shipping UI."
+    ],
+    "donts": [
+      "Don't use side-stripe borders — CI fails them; use full borders or tints.",
+      "Don't reach for generic AI/SaaS slop: gradient text, glassmorphism, hero-metric cards, identical icon-card grids.",
+      "Don't put muted gray below 4.5:1 on body-size text.",
+      "Don't use Steady Teal decoratively.",
+      "Don't add inline onclick/style attributes — the hosted CSP blocks them.",
+      "Don't render a control without binding it — the behavior smoke fails dead buttons."
+    ]
+  }
+}
