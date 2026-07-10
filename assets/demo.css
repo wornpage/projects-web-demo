@@ -7895,3 +7895,4 @@ html:has(#theme-holiday:checked){--cockpit-accent:#e91e63;--cockpit-accent-hover
 .demo-toolbar-modes{display:flex;flex-wrap:wrap;gap:8px}.demo-toolbar-modes .btn,.demo-toolbar-modes .demo-view-toggle{flex:1 1 auto;min-height:36px}
 .demo-api-busy #screen-content{cursor:progress}.demo-api-busy .demo-work-card button,.demo-api-busy .demo-card-actions .btn{opacity:.65;pointer-events:none}
 .demo-empty .demo-empty-action{justify-self:center;margin-top:4px;min-width:160px}
+.demo-pin-flag{display:inline-block;font-size:12px;margin-inline-end:4px}

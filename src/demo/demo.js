@@ -1271,6 +1271,7 @@ function normalizeRecoveryPack(source) {
     location: normalizeRecoveryText(source.location, 60) || undefined,
     energy: ["low","medium","high"].indexOf(source.energy) >= 0 ? source.energy : undefined,
     progress: typeof source.progress === "number" ? Math.min(100, Math.max(0, Math.round(source.progress))) : undefined,
+    pinned: source.pinned === true ? true : undefined,
     subtasks: Array.isArray(source.subtasks) ? source.subtasks.slice(0,50).map(function(s){return{text:normalizeRecoveryText(s.text,200),done:Boolean(s.done)}}) : [],
     activity: normalizeRecoveryTextArray(source.activity, 100, 400)
   };
@@ -2417,18 +2418,6 @@ function parseInlineMarkdown(text) {
 
 
 var _resizing = false;
-function _sidebarWidth(w) {
-  var id = "demo-sidebar-w";
-  try {
-    var found = document.adoptedStyleSheets.find(function(s) { return s._id === id; });
-    if (found) { found.deleteRule(0); found.insertRule(":root{--demo-sidebar-width:" + w + "px}"); return; }
-    var ss = new CSSStyleSheet();
-    ss._id = id;
-    ss.insertRule(":root{--demo-sidebar-width:" + w + "px}");
-    document.adoptedStyleSheets = [ss].concat([].slice.call(document.adoptedStyleSheets));
-  } catch(e) {}
-}
-
 function _sidebarWidth(w) {
   try {
     var sheets = document.adoptedStyleSheets;
@@ -4148,9 +4137,16 @@ function workListDisplayPacks(visible) {
     return ordered;
   }
 
-  const ordered = selectedFirstPacks(urgencyFirstPacks(visible));
+  const ordered = selectedFirstPacks(pinnedFirstPacks(urgencyFirstPacks(visible)));
   workListOrderIds = ordered.map((pack) => pack.id);
   return ordered;
+}
+
+function pinnedFirstPacks(packs) {
+  if (!Array.isArray(packs) || packs.length < 2 || !packs.some((pack) => pack.pinned)) {
+    return packs;
+  }
+  return [...packs.filter((pack) => pack.pinned), ...packs.filter((pack) => !pack.pinned)];
 }
 
 function workListEmptyState() {
@@ -5110,7 +5106,7 @@ function packAge(pack) {
 function highlightMatch(text, query) {
   if (!query || !text) return escapeHtml(text || "");
   var safe = escapeHtml(text);
-  var q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\function workCard(pack) {");
+  var q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return safe.replace(new RegExp("(" + q + ")", "gi"), '<mark class="search-match">$1</mark>');
 }
 
@@ -5123,7 +5119,7 @@ function workCard(pack) {
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
   return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
     <div class="demo-card-head">
-      <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${highlightMatch(workTitle(pack), state.query)}</button>
+      <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${pack.pinned ? '<span class="demo-pin-flag" title="Pinned to the top of the list" aria-label="Pinned">📌</span>' : ""}${highlightMatch(workTitle(pack), state.query)}</button>
       ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span><span class="demo-age">${escapeHtml(packAge(pack))}${isStalePack(pack) ? " 🕸️" : ""}</span><span class="demo-age-detail">${escapeHtml(packAgeDetail(pack))}</span>` : ""}
       <span class="demo-state-pill" title="${escapeAttribute(workflow.help)}">${escapeHtml(workflow.label)}</span>
     </div>
@@ -10381,6 +10377,16 @@ document.addEventListener("click", function (e) {
 function renderGantt() {
   const now = new Date();
   const items = state.packs.filter((p) => p.due).sort((a, b) => new Date(a.due + "T00:00:00") - new Date(b.due + "T00:00:00"));
+  if (!items.length) {
+    el("screen-content").innerHTML = `<section class="demo-panel"><div class="demo-panel-head"><div><span class="section-label">Timeline</span><h2>Gantt</h2></div></div>${emptyState(
+      "Nothing has a due date yet.",
+      `Give any ${workNoun(1)} a due date and it appears here as a timeline bar.`,
+      emptyStateContextFor("Timeline", `no ${workNoun(1)} carries a due date`, "open work and set a due date"),
+      '<button class="btn btn-sm demo-empty-action" type="button" data-go="work">Open the work list</button>'
+    )}</section>`;
+    bindGoButtons();
+    return;
+  }
   const today = now.toISOString().slice(0, 10);
   const dates = items.map((p) => new Date(p.due + "T00:00:00"));
   const minDate = new Date(Math.min(now.getTime(), ...dates.map((d) => d.getTime())));
