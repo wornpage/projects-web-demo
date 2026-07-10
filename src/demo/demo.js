@@ -442,7 +442,7 @@ document.addEventListener("contextmenu", (event) => {
   };
   menu.querySelectorAll("button").forEach((btn, i) => {
     btn.addEventListener("click", () => {
-      var items = [{ action: () => go("pack", id) }, { action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } }, { action: () => { navigator.clipboard.writeText(formatPackForMarkdown(pack)); showToast("Markdown copied.", "success"); } }, { action: function () { pack.pinned = !pack.pinned; saveState(); render(); showToast(pack.pinned ? "Pinned." : "Unpinned.", "info"); } }, { action: () => handlePackAction(id, "done") }, { action: null }];
+      var items = [{ action: () => go("pack", id) }, { action: () => { navigator.clipboard.writeText(pack.title); showToast("Title copied.", "success"); } }, { action: () => { navigator.clipboard.writeText(formatPackForMarkdown(pack)); showToast("Markdown copied.", "success"); } }, { action: () => togglePackPinned(id) }, { action: () => handlePackAction(id, "done") }, { action: null }];
       items[i]?.action?.();
       cleanup();
     });
@@ -4142,6 +4142,15 @@ function workListDisplayPacks(visible) {
   return ordered;
 }
 
+function togglePackPinned(id) {
+  var pack = findPack(id);
+  if (!pack) return;
+  pack.pinned = !pack.pinned;
+  saveState();
+  render();
+  showToast(pack.pinned ? "Pinned to the top of the list." : "Unpinned.", "info");
+}
+
 function pinnedFirstPacks(packs) {
   if (!Array.isArray(packs) || packs.length < 2 || !packs.some((pack) => pack.pinned)) {
     return packs;
@@ -5149,7 +5158,7 @@ function workCard(pack) {
         <strong>Extra tools for opening, focusing, clearing blockers, or saving proof.</strong>
       </summary>
       <div class="demo-card-actions">
-        ${supportActionButton("open", "Open", pack, "btn btn-sm")}<button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="1" data-pack="${escapeAttribute(pack.id)}">Snooze 1d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="3" data-pack="${escapeAttribute(pack.id)}">Snooze 3d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="7" data-pack="${escapeAttribute(pack.id)}">Snooze 7d</button><button type="button" class="btn btn-sm" data-action="repeat" data-pack="${escapeAttribute(pack.id)}">Repeat</button>
+        ${supportActionButton("open", "Open", pack, "btn btn-sm")}<button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="1" data-pack="${escapeAttribute(pack.id)}">Snooze 1d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="3" data-pack="${escapeAttribute(pack.id)}">Snooze 3d</button><button type="button" class="btn btn-sm" data-action="snooze" data-snooze-days="7" data-pack="${escapeAttribute(pack.id)}">Snooze 7d</button><button type="button" class="btn btn-sm" data-action="repeat" data-pack="${escapeAttribute(pack.id)}">Repeat</button><button type="button" class="btn btn-sm" data-action="pin" data-pack="${escapeAttribute(pack.id)}" title="${pack.pinned ? "Remove from the top of the list" : "Keep this at the top of the list"}">${pack.pinned ? "📌 Unpin" : "📌 Pin"}</button>
         ${supportActionButton("focus", "Focus", pack, "btn btn-sm")}
         ${supportActionButton("compare", "Compare", pack, "btn btn-sm")}
         ${blockerAction}
@@ -6680,6 +6689,9 @@ async function handlePackAction(id, action) {
     return;
   } else if (action === "repeat") {
     repeatPack(pack.id);
+    return;
+  } else if (action === "pin") {
+    togglePackPinned(pack.id);
     return;
   } else if (action === "open") {
     queueFocus("pack-detail", pack.id);
