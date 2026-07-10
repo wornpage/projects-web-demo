@@ -8,7 +8,7 @@ const DEMO_WELCOMED_KEY = "projects-demo-welcomed-v1";
 const DEMO_TOUR_KEY = "projects-demo-tour-done-v1";
 const THEME_STORAGE_KEY = "projects-demo-theme-v3";
 const THEMES = ["system", "light", "dark", "forest", "ocean", "sepia", "halloween", "winter", "holiday"];
-const THEME_LABELS = { light: "Light", dark: "Dark", forest: "Forest", ocean: "Ocean", sepia: "Sepia", halloween: "Halloween", winter: "Winter", holiday: "Holiday" };
+const THEME_LABELS = { light: "Light", dark: "Dark", forest: "Forest", ocean: "Ocean", sepia: "Sepia", system: "System", halloween: "Halloween", winter: "Winter", holiday: "Holiday" };
 const API_STATE_SAVE_DEBOUNCE_MS = 300;
 const API_CLIENT_STORAGE_KEY = "projects-static-demo-api-client-v1";
 const SYNC_CODE_STORAGE_KEY = "projects-static-demo-sync-code-v1";
@@ -486,29 +486,7 @@ _themeRadios.forEach(function (r) {
   });
 });
 
-// Sync state across tabs via BroadcastChannel (instant, works in sending tab too)
-  var _bcSync = null;
-  try { _bcSync = new BroadcastChannel("projects-demo-sync"); } catch {}
-  if (_bcSync) {
-    _bcSync.onmessage = function (event) {
-      var msg = event.data;
-      if (!msg || !msg.packs) return;
-      // Smart merge: if only one pack changed, update in-place
-      var old = state.packs.length;
-      loadState(msg);
-      if (old > 0 && state.packs.length === old) {
-        // In-place update — re-render without full reset
-        routeFromHash();
-        render();
-        return;
-      }
-      routeFromHash();
-      render();
-      showToast("Synced from another tab.", "info");
-    };
-  }
-
-  bindShellControls();
+bindShellControls();
   setupCommandPalette();
   bindDemoSyncControls();
   bindBottomDockVisibility();
@@ -563,8 +541,30 @@ _themeRadios.forEach(function (r) {
     });
     el("screen-content").innerHTML = `<div class="demo-empty">${escapeHtml(error.message)}</div>`;
   }
+  initTabSync();
   setTimeout(checkDeadlineNotifications, 3000);
 });
+
+// Sync state across tabs via BroadcastChannel; registered after boot so a
+// message from another tab can never render before this tab's state is ready
+function initTabSync() {
+  var channel = null;
+  try { channel = new BroadcastChannel("projects-demo-sync"); } catch {}
+  if (!channel) {
+    return;
+  }
+  channel.onmessage = function (event) {
+    var msg = event.data;
+    if (!msg || !msg.packs || !state.ready) return;
+    var old = state.packs.length;
+    loadState(msg);
+    routeFromHash();
+    render();
+    if (old === 0 || state.packs.length !== old) {
+      showToast("Synced from another tab.", "info");
+    }
+  };
+}
 
 function liftBootVeil() {
   document.querySelector(".demo-app-shell")?.classList.remove("is-booting");
@@ -4982,10 +4982,18 @@ function updateWorkListAfterFilter() {
   renderCommand(currentPack());
 }
 
+function reactToPack(id, emoji) {
+  const pack = findPack(id);
+  if (!pack || !emoji) return;
+  if (!pack.reactions) pack.reactions = {};
+  pack.reactions[emoji] = (pack.reactions[emoji] || 0) + 1;
+  saveState();
+  render();
+}
+
 function renderCardReactions(pack) {
   if (!pack.reactions) pack.reactions = {};
   var emojis = ["👍","🎉","🚀","😅","🔥"];
-  var hasReactions = emojis.some(function(e) { return (pack.reactions[e] || 0) > 0; });
   return '<div class="demo-card-reactions">' +
     emojis.map(function(emoji) {
       var count = pack.reactions[emoji] || 0;
@@ -5068,6 +5076,7 @@ function workCard(pack) {
     </div>
     ${relevantMemoryCardStrip(pack)}
     ${actionReceiptCard(pack)}
+    ${renderCardReactions(pack)}
     <details class="demo-card-support" data-support-actions="work-card">
       <summary>
         <span>Other actions</span>
@@ -5408,6 +5417,10 @@ function bindWorkCards() {
     button.addEventListener("click", () => {
       const card = button.closest(".demo-work-card");
       workListKeepOrder = true;
+      if (button.dataset.action === "react") {
+        reactToPack(card.dataset.packId, button.dataset.reactionEmoji);
+        return;
+      }
       handlePackAction(card.dataset.packId, button.dataset.action);
     });
   });
@@ -5565,25 +5578,7 @@ function bindListActions() {
         }
       } else {
         if (action === "react") {
-          var reactionPack = findPack(button.dataset.pack);
-          if (reactionPack) {
-            if (!reactionPack.reactions) reactionPack.reactions = {};
-            var emoji = button.dataset.reactionEmoji;
-            reactionPack.reactions[emoji] = (reactionPack.reactions[emoji] || 0) + 1;
-            saveState();
-            render();
-          }
-          return;
-        }
-        if (action === "react") {
-          var reactionPack = findPack(button.dataset.pack);
-          if (reactionPack) {
-            if (!reactionPack.reactions) reactionPack.reactions = {};
-            var emoji = button.dataset.reactionEmoji;
-            reactionPack.reactions[emoji] = (reactionPack.reactions[emoji] || 0) + 1;
-            saveState();
-            render();
-          }
+          reactToPack(button.dataset.pack, button.dataset.reactionEmoji);
           return;
         }
         if (action === "energy") {
@@ -6157,33 +6152,21 @@ function restoreUndoSnapshot() {
   return true;
 }
 
-async function triggerConfetti(x, y) {
-  var emojis = ["✨","🎉","💫","⭐","🌟"];
-  var html = "";
-  for (var i = 0; i < 8; i++) {
-    var xx = (x + (Math.random() * 40 - 20)).toFixed(0);
-    var yy = (y + (Math.random() * 10 - 5)).toFixed(0);
-    var delay = (Math.random() * 0.2).toFixed(2);
-    var dur = (0.6 + Math.random() * 0.4).toFixed(2);
-    var size = (12 + Math.random() * 10).toFixed(0);
-    var emo = emojis[i % emojis.length];
-    html += '<span class="demo-confetti" style="left:' + xx + 'px;top:' + yy + 'px;animation-delay:' + delay + 's;animation-duration:' + dur + 's;font-size:' + size + 'px">' + emo + '</span>';
-  }
-  var wrapper = document.createElement("div");
-  wrapper.innerHTML = html;
-  var particles = wrapper.querySelectorAll("span");
-  particles.forEach(function (p) { document.body.appendChild(p); setTimeout(function () { p.remove(); }, 1200); });
+function randomUnit() {
+  const bytes = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(bytes);
+  return bytes[0] / 4294967296;
 }
 
 function triggerConfetti(x, y) {
   var emojis = ["✨","🎉","💫","⭐","🌟"];
   var html = "";
   for (var i = 0; i < 8; i++) {
-    var xx = (x + (Math.random() * 40 - 20)).toFixed(0);
-    var yy = (y + (Math.random() * 10 - 5)).toFixed(0);
-    var delay = (Math.random() * 0.2).toFixed(2);
-    var dur = (0.6 + Math.random() * 0.4).toFixed(2);
-    var size = (12 + Math.random() * 10).toFixed(0);
+    var xx = (x + (randomUnit() * 40 - 20)).toFixed(0);
+    var yy = (y + (randomUnit() * 10 - 5)).toFixed(0);
+    var delay = (randomUnit() * 0.2).toFixed(2);
+    var dur = (0.6 + randomUnit() * 0.4).toFixed(2);
+    var size = (12 + randomUnit() * 10).toFixed(0);
     var emo = emojis[i % emojis.length];
     html += '<span class="demo-confetti" style="left:' + xx + 'px;top:' + yy + 'px;animation-delay:' + delay + 's;animation-duration:' + dur + 's;font-size:' + size + 'px">' + emo + '</span>';
   }
@@ -9692,7 +9675,7 @@ function repeatPack(id) {
   var pack = state.packs.find(function(p) { return p.id === id; });
   if (!pack) return;
   pushUndoSnapshot();
-  var newId = "pack-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  var newId = "pack-" + Date.now().toString(36) + randomUnit().toString(36).slice(2, 6);
   state.packs.push({
     id: newId,
     title: pack.title,
@@ -9961,7 +9944,7 @@ function renderInsights() {
 function insightCardWithDonut(label, rate, done, total, noun) {
   var pct = Math.round((done / total) * 100) || 0;
   var color = pct >= 80 ? "var(--cockpit-accent)" : pct >= 40 ? "var(--cockpit-warning-text)" : "var(--cockpit-danger-text)";
-  var uid = "dn" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  var uid = "dn" + Date.now().toString(36) + randomUnit().toString(36).slice(2, 5);
   var sheet = new CSSStyleSheet();
   sheet.insertRule("." + uid + "::before { display: none; }");
   sheet.insertRule("." + uid + " { background: conic-gradient(" + color + " " + pct + "%, var(--cockpit-border) " + pct + "%); }");
