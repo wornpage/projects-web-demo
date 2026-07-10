@@ -1036,6 +1036,24 @@ function parseNaturalLanguage(raw) {
 }
 
 function parseWorkList(text) {
+  var lines = String(text || "").split(/\r?\n/u);
+  // Check if first data line looks like TSV or CSV
+  var dataLines = lines.filter(function(l) { return l.trim().length > 0; });
+  if (dataLines.length > 0) {
+    var first = dataLines[0];
+    var hasTabs = first.includes("\t");
+    var hasCommas = first.includes(",") && first.indexOf(",") < first.indexOf(" ") && first.split(",").length >= 3;
+    if (hasTabs || hasCommas) {
+      var sep = hasTabs ? "\t" : ",";
+      var result = [];
+      for (var li = 0; li < dataLines.length && result.length < DEMO_STATE_MAX_PACKS; li++) {
+        var parts = dataLines[li].split(sep).map(function(s) { return s.trim().replace(/^["']|["']$/g, ""); });
+        if (parts.length < 1 || !parts[0]) continue;
+        result.push({ title: parts[0], owner: (parts[1]||"").trim(), due: (parts[2]||"").trim(), blocker: (parts[3]||"").trim(), done: false });
+      }
+      return result;
+    }
+  }
   const packs = [];
   for (const rawLine of String(text || "").split(/\r?\n/u)) {
     if (packs.length >= DEMO_STATE_MAX_PACKS) {
