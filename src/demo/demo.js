@@ -451,7 +451,7 @@ document.addEventListener("keydown", (event) => {
     shortcuts.addEventListener("click", function (e) { if (e.target === shortcuts) shortcuts.remove(); });
   }
   if (event.key === "Escape") { const toasts = document.querySelectorAll(".demo-toast:not(.demo-toast-hiding)"); if (toasts.length) { toasts[toasts.length - 1]._dismiss?.(); event.preventDefault(); } }
-  if (event.key === "Enter" && event.target.closest("#pack-edit-form, .demo-inline-form")) {
+  if (event.key === "Enter" && event.target.closest("#pack-edit-form, #create, .demo-inline-form")) {
     const btn = el("pack-primary-action") || event.target.closest("form")?.querySelector("[type=submit], .btn-primary");
     if (btn) { btn.click(); event.preventDefault(); }
   }
@@ -4401,7 +4401,7 @@ function renderCreate() {
   el("create-sample").addEventListener("click", createSamplePack);
   bindCreateValidation();
   el("new-title")?.addEventListener("input", function() { checkDuplicateTitle(this.value); });
-  el("new-title")?.focus();
+  setTimeout(function() { el("new-title")?.focus(); }, 100);
   // Natural language quick-add
   el("nl-create")?.addEventListener("input", () => {
     const raw = el("nl-create")?.value || "";
@@ -4913,7 +4913,7 @@ function bindToolbar() {
     densityToggle.addEventListener("click", () => {
       state.workListView = state.workListView === "card" ? "landing" : state.workListView === "landing" ? "table" : "card";
     try { localStorage.setItem("demo-view-" + state.route, state.workListView); } catch {}
-      densityToggle.textContent = state.workListView === "card" ? "▦ Cards" : state.workListView === "landing" ? "▤ Table" : "☰ List";
+      densityToggle.textContent = state.workListView === "card" ? "▦ Cards" : state.workListView === "landing" ? "▤ Clean" : "☰ List";
       densityToggle.setAttribute("aria-pressed", String(state.workListView !== "card"));
       updateWorkListAfterFilter();
     });

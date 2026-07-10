@@ -4521,7 +4521,7 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .demo-optional-fields[open] {
     grid-template-columns: 1fr;
   }
@@ -6588,7 +6588,7 @@ html:has(#theme-dark:checked) .demo-app-shell {
   }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .demo-sidebar.nav-rail {
     display: none;
   }
