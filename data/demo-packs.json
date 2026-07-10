@@ -87,7 +87,12 @@
         "text": "Update inventory list",
         "done": false
       }
-    ]
+    ],
+    "reactions": {
+      "👍": 3,
+      "🚀": 2,
+      "🎉": 1
+    }
   },
   {
     "id": "release-flyer-assets",
@@ -203,7 +208,11 @@
         "text": "Photo document findings",
         "done": false
       }
-    ]
+    ],
+    "reactions": {
+      "👍": 1,
+      "🔥": 2
+    }
   },
   {
     "id": "api-contract-review",
@@ -230,7 +239,13 @@
     ],
     "milestone": "Sprint 2",
     "location": "remote",
-    "progress": 10
+    "progress": 10,
+    "reactions": {
+      "👍": 2,
+      "😅": 1,
+      "🚀": 1
+    },
+    "pin": true
   },
   {
     "id": "owner-cleanup-pass",
@@ -276,7 +291,8 @@
       "Screenshot added.",
       "Contrast issue reproduced."
     ],
-    "milestone": "Sprint 2"
+    "milestone": "Sprint 2",
+    "pin": true
   },
   {
     "id": "github-pages-demo-copy",
@@ -322,7 +338,12 @@
     "activity": [
       "Personal work added.",
       "Ready to open."
-    ]
+    ],
+    "reactions": {
+      "👍": 5,
+      "🎉": 3,
+      "🔥": 1
+    }
   },
   {
     "id": "calendar-date-pass",
