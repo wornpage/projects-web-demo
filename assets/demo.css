@@ -69,8 +69,8 @@
   }
 }
 
+html:has(#theme-light:checked){--cockpit-bg:#f5f3ef;--cockpit-surface:#fdfdfb;--cockpit-nav-bg:#efede7;--cockpit-accent:#0d9488;--cockpit-accent-hover:#0f766e;--cockpit-accent-text:#fff;--cockpit-accent-50:#e6f7f5;--cockpit-selected-bg:#d7efe7;--cockpit-selected-fg:#082f2b;--cockpit-border:#e2ddd5;--cockpit-border-strong:#d0cac1;--cockpit-text:#21322b;--cockpit-text-secondary:#5b6a60;--cockpit-text-muted:#708277;--cockpit-hover-bg:#eaf4f0;--cockpit-success-bg:#ecfdf5;--cockpit-success-border:#14b8a6;--cockpit-success-text:#134e4a;--cockpit-warning-bg:#fff7ed;--cockpit-warning-border:#fdba74;--cockpit-warning-text:#9a3412;--cockpit-danger-bg:#fef2f2;--cockpit-danger-border:#fca5a5;--cockpit-danger-text:#991b1b;--cockpit-shadow-sm:0 1px 2px rgba(0,0,0,0.04),0 1px 4px rgba(0,0,0,0.06)}
 html:has(#theme-dark:checked),
-html:has(#theme-dark:checked) {
   --cockpit-bg: #0f1714;
   --cockpit-surface: #18241f;
   --cockpit-nav-bg: #121c18;
