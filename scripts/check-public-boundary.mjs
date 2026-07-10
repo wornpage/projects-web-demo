@@ -82,7 +82,7 @@ try {
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
   check("runtime API config loads before the frontend script", runtimeConfigPath && appShell.text.indexOf("assets/runtime-config.js") < appShell.text.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
   check("runtime asset version is content-derived", appShellUsesAssetVersion(appShell.text, expectedAssetVersion) && runtimeConfigPath === `assets/runtime-config.js?v=${expectedAssetVersion}`, runtimeConfigPath || "missing");
-  check("runtime API config is served as same-origin JavaScript", runtimeConfig.text.startsWith("window.__projectsDemoConfig=") && runtimeConfig.text.includes(`"apiBase":"//127.0.0.1:${port}"`) && runtimeConfig.text.includes("window.PROJECTS_API_BASE_URL=") && !/https?:\/\//u.test(runtimeConfig.text), runtimeConfig.text.trim() || "missing");
+  check("runtime API config is served as same-origin JavaScript", runtimeConfig.text.startsWith("window.__projectsDemoConfig=") && runtimeConfig.text.includes('"apiBase":""') && runtimeConfig.text.includes('"backendMode":true') && runtimeConfig.text.includes("window.PROJECTS_API_BASE_URL=") && !/https?:\/\//u.test(runtimeConfig.text), runtimeConfig.text.trim() || "missing");
   check("app shell contains no inline scripts", !hasInlineScript(appShell.text), "external scripts only");
   check("script policy avoids unsafe inline scripts", scriptSrcDirective(csp) === "script-src 'self'", scriptSrcDirective(csp) || "missing");
   check("style policy avoids unsafe inline styles", styleSrcDirective(csp) === "style-src 'self'", styleSrcDirective(csp) || "missing");
