@@ -1432,7 +1432,7 @@ function frontendSearchStaysLocalOnly(source) {
   }
 
   const inputIndex = toolbarBody.indexOf('search.addEventListener("input"');
-  const filterIndex = toolbarBody.indexOf('document.querySelectorAll(".demo-chip")');
+  const filterIndex = toolbarBody.indexOf('document.querySelectorAll(".demo-chip[');
   const searchBody = inputIndex < 0
     ? ""
     : toolbarBody.slice(inputIndex, filterIndex > inputIndex ? filterIndex : undefined);
