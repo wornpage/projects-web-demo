@@ -122,6 +122,7 @@ const ROUTE_CONTRACT = Object.freeze({
   next: { pattern: "#/next/{packId}", title: "Choose action", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "▶", navLabel: "Choose action" },
   memory: { pattern: "#/memory/{packId}", title: "Memory", commandSource: "route-and-selected-work", acceptsPackId: true, navKey: "💭", navLabel: "Memory" },
   create: { pattern: "#/create", title: "Create", commandSource: "route", navKey: "+", navLabel: "Create" },
+  search: { pattern: "#/search", title: "Search", commandSource: "route", navKey: "🔎", navLabel: "Search" },
   pack: { pattern: "#/pack/{packId}", title: "Work path", commandSource: "selected-work", acceptsPackId: true },
   compare: { pattern: "#/compare/{packId}/{packId}", title: "Compare", commandSource: "route", acceptsPackId: true },
   calendar: { pattern: "#/calendar/{packId}", title: "Calendar", commandSource: "route", acceptsPackId: true, navKey: "📅", navLabel: "Calendar" },
@@ -136,7 +137,7 @@ const NAV_ROUTE_GROUPS = Object.freeze([
   Object.freeze({
     id: "public",
     label: "Demo",
-    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "calendar", "gantt", "settings", "insights", "activity"])
+    routes: Object.freeze(["home", "review", "work", "next", "memory", "create", "search", "calendar", "gantt", "settings", "insights", "activity"])
   })
 ]);
 
@@ -2719,6 +2720,9 @@ function render() {
       break;
     case "settings":
       renderSettings();
+      break;
+    case "search":
+      renderSearch();
       break;
     case "insights":
       renderInsights();
@@ -10099,6 +10103,139 @@ function bindMemorySearch() {
     const list = document.querySelector(".demo-list");
     if (list) list.innerHTML = globalMemoryNotes(pack);
     bindListActions();
+  });
+}
+
+const searchPage = { query: "", status: "all", energy: "all", owner: "all" };
+
+function searchablePackFields(pack) {
+  return [
+    ["title", pack.title],
+    ["purpose", pack.purpose],
+    ["next action", pack.next],
+    ["blocker", pack.blocker],
+    ["owner", pack.owner],
+    ["milestone", pack.milestone],
+    ["location", pack.location],
+    ["memory", (pack.memory || []).join("\n")],
+    ["activity", (pack.activity || []).join("\n")]
+  ];
+}
+
+function searchPackMatches(pack, needle) {
+  const hits = [];
+  for (const [field, value] of searchablePackFields(pack)) {
+    const text = String(value || "");
+    const at = text.toLowerCase().indexOf(needle);
+    if (at !== -1) hits.push({ field, snippet: searchSnippet(text, at, needle.length) });
+  }
+  return hits;
+}
+
+function searchSnippet(text, at, length) {
+  const start = Math.max(0, at - 40);
+  const end = Math.min(text.length, at + length + 60);
+  return {
+    before: (start > 0 ? "…" : "") + text.slice(start, at),
+    match: text.slice(at, at + length),
+    after: text.slice(at + length, end) + (end < text.length ? "…" : "")
+  };
+}
+
+function searchPageResults() {
+  const needle = searchPage.query.trim().toLowerCase();
+  if (!needle) return [];
+  return state.packs
+    .filter((pack) =>
+      (searchPage.status === "all" || pack.status === searchPage.status) &&
+      (searchPage.energy === "all" || pack.energy === searchPage.energy) &&
+      (searchPage.owner === "all" || pack.owner === searchPage.owner))
+    .map((pack) => ({ pack, hits: searchPackMatches(pack, needle) }))
+    .filter((result) => result.hits.length);
+}
+
+function searchResultsHtml() {
+  const query = searchPage.query.trim();
+  if (!query) {
+    return `<div class="demo-empty" role="note">Type to search ${state.packs.length} ${escapeHtml(workNoun(state.packs.length))} — title, purpose, memory, activity, blockers, and more.</div>`;
+  }
+  const results = searchPageResults();
+  if (!results.length) {
+    return `<div class="demo-empty" role="note">No matches for "${escapeHtml(query)}". Try fewer words or reset the filters.</div>`;
+  }
+  const items = results.map(({ pack, hits }) => {
+    const meta = [pack.status, pack.owner, pack.energy ? `${pack.energy} energy` : ""].filter(Boolean).join(" · ");
+    const snippets = hits.slice(0, 3).map((hit) => `<span class="demo-search-hit-snippet"><em>${escapeHtml(hit.field)}:</em> ${escapeHtml(hit.snippet.before)}<mark>${escapeHtml(hit.snippet.match)}</mark>${escapeHtml(hit.snippet.after)}</span>`).join("");
+    const help = `Open ${pack.title} — matched ${hits.map((hit) => hit.field).join(", ")}`;
+    return `<button class="demo-search-hit" type="button" role="listitem" data-search-open="${escapeAttribute(pack.id)}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">
+      <strong>${escapeHtml(pack.title)}</strong>
+      <span class="demo-search-hit-meta">${escapeHtml(meta)}</span>
+      ${snippets}
+    </button>`;
+  }).join("");
+  return `<p class="demo-search-count" role="status">${results.length} of ${state.packs.length} ${escapeHtml(workNoun(state.packs.length))} match.</p>${items}`;
+}
+
+function renderSearch() {
+  const owners = [...new Set(state.packs.map((pack) => pack.owner).filter(Boolean))].sort();
+  if (searchPage.owner !== "all" && !owners.includes(searchPage.owner)) searchPage.owner = "all";
+  const option = (value, label, current) => `<option value="${escapeAttribute(value)}"${value === current ? " selected" : ""}>${escapeHtml(label)}</option>`;
+  el("screen-content").innerHTML = `
+    <section class="demo-panel demo-search-page">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Search</span>
+          <h2>Full-text search across every ${escapeHtml(workNoun(1))}.</h2>
+        </div>
+      </div>
+      <div class="demo-search-controls">
+        <input id="search-page-input" class="demo-search-input" type="search" placeholder="Search title, purpose, memory, activity…" value="${escapeAttribute(searchPage.query)}" aria-label="Search all work" autocomplete="off" />
+        <div class="demo-search-filters" aria-label="Search filters">
+          <label>Status <select id="search-status-filter" aria-label="Filter by status">${filters.map(([value, label]) => option(value, label, searchPage.status)).join("")}</select></label>
+          <label>Energy <select id="search-energy-filter" aria-label="Filter by energy">${[["all", "All"], ["low", "Low"], ["medium", "Medium"], ["high", "High"]].map(([value, label]) => option(value, label, searchPage.energy)).join("")}</select></label>
+          <label>Owner <select id="search-owner-filter" aria-label="Filter by owner">${[["all", "All"], ...owners.map((owner) => [owner, owner])].map(([value, label]) => option(value, label, searchPage.owner)).join("")}</select></label>
+        </div>
+      </div>
+      <div id="search-page-results" class="demo-search-results" role="list" aria-live="polite">${searchResultsHtml()}</div>
+    </section>
+  `;
+  bindSearchPage();
+}
+
+function bindSearchPage() {
+  const input = el("search-page-input");
+  if (input) {
+    let searchPageTimer = null;
+    input.addEventListener("input", (event) => {
+      searchPage.query = event.currentTarget.value;
+      clearTimeout(searchPageTimer);
+      searchPageTimer = setTimeout(updateSearchPageResults, 120);
+    });
+    input.focus();
+  }
+  [["search-status-filter", "status"], ["search-energy-filter", "energy"], ["search-owner-filter", "owner"]].forEach(([id, key]) => {
+    el(id)?.addEventListener("change", (event) => {
+      searchPage[key] = event.currentTarget.value;
+      updateSearchPageResults();
+    });
+  });
+  bindSearchPageResults();
+}
+
+function updateSearchPageResults() {
+  const container = el("search-page-results");
+  if (!container) return;
+  container.innerHTML = searchResultsHtml();
+  bindSearchPageResults();
+}
+
+function bindSearchPageResults() {
+  document.querySelectorAll("[data-search-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.searchOpen;
+      state.selectedId = id;
+      go("pack", id);
+    });
   });
 }
 
