@@ -719,7 +719,7 @@ function loadState(backendState = null) {
       });
     }
   }
-  state.packs = clearDanglingBlockedBy(normalizeLegacyVisibleCopy(Array.isArray(saved?.packs) ? saved.packs : structuredClone(state.basePacks)));
+  state.packs = clearDanglingBlockedBy(normalizeLegacyActivityEntries(normalizeLegacyVisibleCopy(Array.isArray(saved?.packs) ? saved.packs : structuredClone(state.basePacks))));
   state.copyProfile = saved?.copyProfile || "general";
   state.scenarioId = saved?.scenarioId || "default";
   state.filter = saved?.filter || "all";
@@ -3757,8 +3757,7 @@ function inlineEditSave() {
     if (pack) {
       pushUndoSnapshot();
       pack[_inlineEditField] = val;
-      if (!pack.activity) pack.activity = [];
-      pack.activity.push({ text: "Edited " + _inlineEditField + ": " + val, at: new Date().toISOString() });
+      addPackActivity(pack, "Edited " + _inlineEditField + ": " + val);
       saveState();
     }
   }
@@ -5473,6 +5472,10 @@ function bindWorkCards() {
         reactToPack(card.dataset.packId, button.dataset.reactionEmoji);
         return;
       }
+      if (button.dataset.action === "snooze") {
+        snoozePack(card.dataset.packId, parseInt(button.dataset.snoozeDays, 10) || 1);
+        return;
+      }
       handlePackAction(card.dataset.packId, button.dataset.action);
     });
   });
@@ -5596,6 +5599,13 @@ document.addEventListener("dragend", function () {
 });
 
 function bindListActions() {
+  el("screen-content").querySelectorAll("input[data-subtask-pack]").forEach((box) => {
+    box.addEventListener("change", () => {
+      const index = parseInt(box.dataset.subtaskIdx, 10);
+      if (!isNaN(index)) toggleSubtask(box.dataset.subtaskPack, index);
+    });
+  });
+
   el("screen-content").querySelectorAll("[data-action]").forEach((button) => {
     if (button.closest(".demo-work-card") || button.id === "pack-primary-action" || button.matches(".demo-table-row")) {
       return;
@@ -6333,6 +6343,24 @@ function addPackActivity(pack, message) {
 
 const ACTIVITY_STAMP_RE = /^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] /u;
 
+// Older saved states may hold { text, at } objects instead of canonical
+// stamped strings; fold them back into strings on load.
+function normalizeLegacyActivityEntries(packs) {
+  for (const pack of packs) {
+    if (!Array.isArray(pack.activity)) continue;
+    pack.activity = pack.activity.map((entry) => {
+      if (entry && typeof entry === "object" && typeof entry.text === "string") {
+        const stamp = typeof entry.at === "string" && entry.at.length >= 19
+          ? `[${entry.at.replace("T", " ").slice(0, 19)}] `
+          : "";
+        return stamp + entry.text;
+      }
+      return entry;
+    }).filter((entry) => typeof entry === "string" && entry);
+  }
+  return packs;
+}
+
 function activityParts(entry) {
   const value = typeof entry === "string" ? entry : "";
   const match = ACTIVITY_STAMP_RE.exec(value);
@@ -6361,8 +6389,7 @@ function snoozePack(id, days) {
   var d = new Date();
   d.setDate(d.getDate() + days);
   pack.due = d.toISOString().slice(0, 10);
-  if (!pack.activity) pack.activity = [];
-  pack.activity.push({ text: "Snoozed " + days + "d", at: new Date().toISOString() });
+  addPackActivity(pack, "Snoozed " + days + "d");
   saveState();
   render();
 }
@@ -6622,22 +6649,9 @@ async function handlePackAction(id, action) {
     state.status = memoryRouteStatus(pack);
     go("memory", pack.id);
     return;
-  
-  } else if (btn.matches("[data-subtask-pack]")) {
-    var subId = btn.dataset.subtaskPack;
-    var subIdx = parseInt(btn.dataset.subtaskIdx, 10);
-    if (!isNaN(subIdx)) toggleSubtask(subId, subIdx);
-  } else if (action === "energy-filter") {
-    state.energyFilter = btn.dataset.energyFilter || "all";
-    render();
   } else if (action === "repeat") {
-    repeatPack(packId);
-  } else if (action === "snooze") {
-    var days = parseInt(btn.dataset.snoozeDays, 10) || 1;
-    snoozePack(packId, days);
-  } else if (action === "energy-filter") {
-    state.energyFilter = button ? button.dataset.energyFilter || "all" : "all";
-    render();
+    repeatPack(pack.id);
+    return;
   } else if (action === "open") {
     queueFocus("pack-detail", pack.id);
     const changed = addPackActivity(pack, "Opened.");
@@ -8698,20 +8712,40 @@ function renderExtraFields(pack) {
   return html;
 }
 
+var _subtaskSheets = {};
+
 function renderSubtasks(pack) {
   var subs = pack.subtasks || [];
   if (subs.length === 0) return "";
   var done = 0;
   for (var si = 0; si < subs.length; si++) { if (subs[si].done) done++; }
+  var cls = "sp-" + pack.id.replace(/[^a-z0-9]/gi,"");
   var items = "";
   for (var si = 0; si < subs.length; si++) {
-    items += '<div class="demo-subtask' + (subs[si].done ? " is-done" : "") + '"><input type="checkbox"' + (subs[si].done ? " checked" : "") + ' data-subtask-pack="' + pack.id + '" data-subtask-idx="' + si + '"><label>' + escapeHtml(subs[si].text) + '</label></div>';
+    var boxId = cls + "-sub-" + si;
+    items += '<div class="demo-subtask' + (subs[si].done ? " is-done" : "") + '"><input type="checkbox" id="' + boxId + '"' + (subs[si].done ? " checked" : "") + ' data-subtask-pack="' + escapeAttribute(pack.id) + '" data-subtask-idx="' + si + '"><label for="' + boxId + '">' + escapeHtml(subs[si].text) + '</label></div>';
   }
   var pct = subs.length ? Math.round(done / subs.length * 100) : 0;
-  var cls = "sp-" + pack.id.replace(/[^a-z0-9]/gi,"");
-  var sheet = new CSSStyleSheet();
-  try { sheet.insertRule("." + cls + "{width:" + pct + "%}"); document.adoptedStyleSheets.push(sheet); } catch(e) {}
+  // One adopted sheet per pack, updated in place — pushing a fresh sheet per
+  // render grows document.adoptedStyleSheets without bound.
+  try {
+    if (!_subtaskSheets[cls]) {
+      _subtaskSheets[cls] = new CSSStyleSheet();
+      document.adoptedStyleSheets.push(_subtaskSheets[cls]);
+    }
+    _subtaskSheets[cls].replaceSync("." + cls + "{width:" + pct + "%}");
+  } catch(e) {}
   return '<details class="demo-subtasks" open><summary>Subtasks (' + done + '/' + subs.length + ')</summary><div class="demo-subtask-progress"><div class="demo-subtask-progress-fill ' + cls + '"></div></div><div class="demo-subtasks-inner">' + items + '</div></details>';
+}
+
+function toggleSubtask(packId, index) {
+  var pack = state.packs.find(function(p) { return p.id === packId; });
+  var subtask = pack && Array.isArray(pack.subtasks) ? pack.subtasks[index] : null;
+  if (!subtask) return;
+  pushUndoSnapshot();
+  subtask.done = !subtask.done;
+  saveState();
+  render();
 }
 
 function renderWorkPathStepTrail(steps) {
@@ -9740,9 +9774,10 @@ function repeatPack(id) {
     type: pack.type || "",
     sources: [],
     memory: [],
-    activity: [{ text: "Repeated from " + pack.title, at: new Date().toISOString() }],
+    activity: [],
     subtasks: []
   });
+  addPackActivity(state.packs[state.packs.length - 1], "Repeated from " + pack.title);
   state.selectedId = newId;
   saveState();
   render();
@@ -9889,47 +9924,13 @@ function renderInsights() {
       if (p.status === STATUS.DONE) milestones[p.milestone].done++;
     }
   });
-  var milestoneHtml = Object.keys(milestones).length ? '<div class="demo-insight-section"><h3>Milestones</h3><div class="demo-insight-mini">' + Object.keys(milestones).sort().map(function(m) {
+  var milestoneHtml = Object.keys(milestones).length ? '<div class="demo-insights-section"><h3>Milestones</h3><div class="demo-insight-mini">' + Object.keys(milestones).sort().map(function(m) {
     var pct = milestones[m].total ? Math.round(milestones[m].done / milestones[m].total * 100) : 0;
     return '<div class="stat"><strong>' + escapeHtml(m) + '</strong><small>' + milestones[m].done + '/' + milestones[m].total + ' (' + pct + '%)</small></div>';
   }).join("") + '</div></div>' : "";
 
-  // Mini analytics
-  var activityDays = {};
-  state.packs.forEach(function(p) {
-    if (!p.activity) return;
-    p.activity.forEach(function(a) {
-      var parsed = activityParts(a);
-      if (parsed.at) {
-        var day = parsed.at.slice(0,10);
-        if (day) activityDays[day] = (activityDays[day] || 0) + 1;
-      }
-    });
-  });
-  var dayKeys = Object.keys(activityDays).sort();
-  var streak = 0;
-  var maxStreak = 0;
-  for (var si = 0; si < dayKeys.length; si++) {
-    if (si === 0) { streak = 1; continue; }
-    var diff = (new Date(dayKeys[si]) - new Date(dayKeys[si-1])) / 86400000;
-    if (diff <= 2) { streak++; maxStreak = Math.max(maxStreak, streak); }
-    else streak = 1;
-  }
-  maxStreak = Math.max(maxStreak, streak);
-  var dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  var dayCounts = [0,0,0,0,0,0,0];
-  Object.keys(activityDays).forEach(function(d) {
-    var idx = new Date(d).getDay();
-    dayCounts[idx] += activityDays[d];
-  });
-  var maxDay = 0;
-  for (var di = 0; di < 7; di++) { if (dayCounts[di] > dayCounts[maxDay]) maxDay = di; }
-  var avgPerDay = dayKeys.length ? Math.round(state.packs.length / dayKeys.length * 10) / 10 : 0;
-
-
   const owners = {};
   state.packs.forEach((p) => { const o = p.owner || "unassigned"; owners[o] = (owners[o] || 0) + 1; });
-  const topOwner = Object.entries(owners).sort((a, b) => b[1] - a[1])[0] || ["none", 0];
 
   const types = {};
   state.packs.forEach((p) => { const t = p.type || "other"; types[t] = (types[t] || 0) + 1; });
@@ -10118,7 +10119,8 @@ function searchablePackFields(pack) {
     ["milestone", pack.milestone],
     ["location", pack.location],
     ["memory", (pack.memory || []).join("\n")],
-    ["activity", (pack.activity || []).join("\n")]
+    ["subtasks", (pack.subtasks || []).map((subtask) => subtask && subtask.text ? subtask.text : "").join("\n")],
+    ["activity", (pack.activity || []).map((entry) => activityParts(entry).text).join("\n")]
   ];
 }
 
