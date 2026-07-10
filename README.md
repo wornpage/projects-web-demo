@@ -181,79 +181,50 @@ request is too large. Declared oversized bodies are rejected before the request
 stream is read.
 ### Workflow Endpoints
 
-Full recovery and sync writes must be JSON object snapshots with a `packs`
-array; scalar, array, empty, or missing-work payloads are rejected before they
-can sanitize into an empty row. Use the backend erase endpoint to clear the
-current row.
-Browser-row writes must use the typed `projects-browser-state-v1` envelope and
-save only the durable row state, omitting transient receipt, search, and
-browser-derived status text. The backend validates the browser payload, keeps
-the current server-owned status, and clears transient receipt/search fields
-before storage.
-State writes also require supported text profile, scenario, and filter values,
-bounded top-level status text, plus each work item must keep bounded text
-fields with a unique id, title, and valid workflow status, and the saved
-selected work id must be text that references one of those items. Work source,
-memory, and activity lists must also be bounded text arrays. That keeps browser
-rows, backup restores, and sync copies from silently creating duplicate rows,
-dangling selections, malformed notes, malformed receipts, or off-contract work
-rows.
-Saved state that still uses the retired "Button runs next" vocabulary migrates
-to the current "Next action" copy on read, in both browser-local state and
-backend rows, so older demo rows keep working after the rename.
-Selected-work commands in hosted app mode wait for the server command preview
-before enabling the primary command buttons, so the browser does not briefly run
-the local workflow fallback while `/api/packs/{id}/command` is loading.
-Run-next dispatch also uses that server command preview in hosted app mode and
-stops at a retry/refresh blocker while the preview is unavailable.
-Card-level run-next buttons stay generic in hosted app mode instead of
-rendering browser-resolved command labels; pressing one still enters the same
-server-preview run-next path.
-That same command preview owns the selected-work flow hint and primary "why"
-copy in hosted app mode; the browser-side copy remains only as the static
-fallback.
-Server-owned workflow calls cancel pending generic state saves and call the
-specific backend endpoint directly instead of first writing the full browser
-state through `PUT /api/state`.
-Recovery restores in hosted app mode post to `POST /api/state/restore` instead
-of going through the browser's generic full-state save path. Static mode still
-uses the local browser save path because GitHub Pages has no backend.
-New sync-code copies in hosted app mode post to `POST /api/state/sync-copy`
-instead of sending a browser-defined state snapshot. Hosted browser-row snapshots save
-through the typed `PUT /api/state/browser` envelope without transient receipt,
-search, or browser-derived status text; the older generic `PUT /api/state`
-write path is retired. Browser-row writes preserve the current backend-owned
-status instead of accepting browser status copy.
-Hosted search text is treated as transient browser UI: typing in the work-list
-search box re-renders locally without scheduling a backend browser-row save.
-Hosted clipboard receipt banners are also transient browser UI and do not
-schedule backend browser-row persistence.
-Hosted filter changes post to `POST /api/state/filter` so that supported filter
-values and the saved filter status copy are owned by the backend instead of the
-browser-row snapshot path.
-Hosted selected-work navigation posts to `POST /api/state/selected` so the
-current work context is saved as a named backend field update instead of a
-browser-row snapshot.
-Hosted route-only navigation stays local-only; changing screens without
-changing selected work does not schedule backend browser-row persistence.
-Hosted scenario changes post to `POST /api/state/scenario` so the scenario
-transform and empty-state scenario are owned by the backend instead of a
-browser-row snapshot.
-Hosted profile launch changes post to `POST /api/state/profile` so URL-selected
-copy labels are saved by the backend instead of a browser-row snapshot.
-Hosted reset posts to `POST /api/state/reset` so the server rebuilds the
-default row from checked-in seed data instead of accepting a browser-row
-snapshot.
-If a hosted workflow endpoint fails, the browser shows a retry/refresh blocker
-and does not continue into the static fallback write path.
-Those workflow endpoints reject malformed or overlong request fields before
-storage, including invalid create source lists, action keys, memory notes, next
-values, and work-path text. The work-path endpoint also rejects unsupported
-saved status values before storage, so hosted workflow writes cannot silently
-normalize private or off-contract statuses.
-When those endpoints return backend-owned state, the next render is marked
-save-suppressed so the browser does not immediately re-upload that response
-through the generic state endpoint.
+Hosted app mode uses named endpoints instead of a single generic state write path.
+Each endpoint owns one concern; the browser calls the right one for the action.
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/state/browser` | `PUT` | Save typed browser-row snapshot (durable fields only, no transient receipt/search). The older generic `PUT /api/state` is retired. |
+| `/api/state/restore` | `POST` | Restore a full recovery snapshot. |
+| `/api/state/sync-copy` | `POST` | Copy state under a new sync code. |
+| `/api/state/filter` | `POST` | Persist the active work-list filter. |
+| `/api/state/selected` | `POST` | Persist the selected work item. |
+| `/api/state/scenario` | `POST` | Apply a scenario transform. |
+| `/api/state/profile` | `POST` | Apply a copy-profile change. |
+| `/api/state/reset` | `POST` | Rebuild the default row from seed data. |
+| `/api/packs/{id}/command` | `GET` | Server-owned command preview for the primary button. |
+
+#### Write validation
+
+All state writes validate before storage:
+
+- Recovery and sync payloads must be JSON objects with a `packs` array — scalar, empty, or missing-work payloads are rejected.
+- Browser-row writes use the typed `projects-browser-state-v1` envelope. The backend strips transient receipt, search, and browser-derived status text, preserving only durable fields.
+- Each work item must have a unique id, title, and valid workflow status. Text fields are bounded. Source, memory, and activity must be bounded arrays.
+- Supported profile, scenario, and filter values are enforced. Top-level status text is capped.
+- Unsupported saved status values are rejected — hosted writes cannot silently normalize off-contract statuses.
+- Request fields are validated: malformed action keys, overlong memory notes, invalid next values, and bad create source lists are all rejected before storage.
+- Each keyed backend row is capped at 50 work items. JSON body writes are capped at 1 MiB.
+
+#### Command preview
+
+In hosted app mode, the primary command button waits for `/api/packs/{id}/command` before enabling. This prevents the browser from briefly showing the local workflow fallback. The server preview also owns the flow hint and "why" copy; the browser-side copy is only a static fallback. Card-level run-next buttons stay generic in hosted mode but still enter the same server-preview path.
+
+#### Server-owned writes
+
+Workflow actions (start, unblock, block, done) cancel pending generic state saves and call the specific backend endpoint directly instead of writing the full browser state. When a workflow endpoint returns backend-owned state, the next render is marked save-suppressed so the browser doesn't immediately re-upload it.
+
+State-changing routes (filter, selected-work, scenario, profile) each post to their named endpoint. Route-only navigation — changing screens without changing selected work — stays local-only and does not schedule backend persistence. Search text and clipboard receipts are transient browser UI and never trigger saves.
+
+#### Legacy migration
+
+Saved state using the retired "Button runs next" vocabulary migrates to "Next action" on read, in both browser-local and backend rows, so older demo rows keep working after the rename.
+
+#### Error handling
+
+If any hosted workflow endpoint fails, the browser shows a retry/refresh blocker and does not fall through to the static write path.
 
 ### Sync / Sharing
 
