@@ -1239,6 +1239,8 @@ function normalizeRecoveryPack(source) {
     sources: normalizeRecoveryTextArray(source.sources, 50, PACK_FIELD_MEDIUM_MAX),
     memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
     milestone: normalizeRecoveryText(source.milestone, 120) || undefined,
+    reactions: source.reactions && typeof source.reactions === "object" ? source.reactions : {},
+    reactions: source.reactions && typeof source.reactions === "object" ? source.reactions : {},
     location: normalizeRecoveryText(source.location, 60) || undefined,
     energy: ["low","medium","high"].indexOf(source.energy) >= 0 ? source.energy : undefined,
     progress: typeof source.progress === "number" ? Math.min(100, Math.max(0, Math.round(source.progress))) : undefined,
@@ -4972,6 +4974,17 @@ function updateWorkListAfterFilter() {
   renderCommand(currentPack());
 }
 
+function renderCardReactions(pack) {
+  if (!pack.reactions) pack.reactions = {};
+  var emojis = ["👍","🎉","🚀","😅","🔥"];
+  var hasReactions = emojis.some(function(e) { return (pack.reactions[e] || 0) > 0; });
+  return '<div class="demo-card-reactions">' +
+    emojis.map(function(emoji) {
+      var count = pack.reactions[emoji] || 0;
+      return '<button class="demo-reaction' + (count > 0 ? " is-active" : "") + '" data-action="react" data-pack="' + pack.id + '" data-reaction-emoji="' + emoji + '"><span>' + emoji + '</span><span class="demo-reaction-count">' + (count || "") + '</span></button>';
+    }).join("") + "</div>";
+}
+
 function renderWorkItemHtml(pack) {
   if (state.workListView === "table") return workRow(pack);
   if (state.workListView === "landing") return landingCard(pack);
@@ -5543,6 +5556,28 @@ function bindListActions() {
           state.status = noSelectedWorkStatus("choose work before setting Next action");
         }
       } else {
+        if (action === "react") {
+          var reactionPack = findPack(button.dataset.pack);
+          if (reactionPack) {
+            if (!reactionPack.reactions) reactionPack.reactions = {};
+            var emoji = button.dataset.reactionEmoji;
+            reactionPack.reactions[emoji] = (reactionPack.reactions[emoji] || 0) + 1;
+            saveState();
+            render();
+          }
+          return;
+        }
+        if (action === "react") {
+          var reactionPack = findPack(button.dataset.pack);
+          if (reactionPack) {
+            if (!reactionPack.reactions) reactionPack.reactions = {};
+            var emoji = button.dataset.reactionEmoji;
+            reactionPack.reactions[emoji] = (reactionPack.reactions[emoji] || 0) + 1;
+            saveState();
+            render();
+          }
+          return;
+        }
         if (action === "energy") {
           var ePack = findPack(button.dataset.pack);
           if (ePack) { ePack.energy = button.dataset.energyValue; saveState(); render(); }
