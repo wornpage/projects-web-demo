@@ -7,7 +7,7 @@ const LEGACY_DEMO_STORAGE_KEYS = [
 const DEMO_WELCOMED_KEY = "projects-demo-welcomed-v1";
 const DEMO_TOUR_KEY = "projects-demo-tour-done-v1";
 const THEME_STORAGE_KEY = "projects-demo-theme-v3";
-const THEMES = ["light", "dark", "forest", "ocean", "sepia", "halloween", "winter", "holiday"];
+const THEMES = ["system", "light", "dark", "forest", "ocean", "sepia", "halloween", "winter", "holiday"];
 const THEME_LABELS = { light: "Light", dark: "Dark", forest: "Forest", ocean: "Ocean", sepia: "Sepia", halloween: "Halloween", winter: "Winter", holiday: "Holiday" };
 const API_STATE_SAVE_DEBOUNCE_MS = 300;
 const API_CLIENT_STORAGE_KEY = "projects-static-demo-api-client-v1";
@@ -105,6 +105,7 @@ const state = {
   undoStack: [],
   undoIndex: -1,
   recentIds: [],
+  comparisonHistory: [],
   batchMode: false,
   batchSelected: new Set(),
 };
@@ -600,9 +601,10 @@ window.addEventListener("hashchange", () => {
 function initTheme() {
   let saved;
   try { saved = localStorage.getItem(THEME_STORAGE_KEY); } catch { /* storage unavailable */ }
-  const theme = THEMES.includes(saved) ? saved
+  var theme = THEMES.includes(saved) ? saved
     : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark"
     : "light";
+  if (theme === "system") theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   applyTheme(theme);
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
     let hasStored;
@@ -613,6 +615,12 @@ function initTheme() {
 }
 
 function applyTheme(theme) {
+  if (theme === "system") {
+    try { localStorage.removeItem(THEME_STORAGE_KEY); } catch { /* storage unavailable */ }
+    showToast("Following system theme.", "info");
+    document.querySelectorAll("[name=\"theme-choice\"]").forEach(function(r) { r.checked = false; });
+    return;
+  }
   var radio = document.getElementById("theme-" + (theme || "light"));
   if (radio) radio.checked = true;
   var lbl = THEME_LABELS[theme] || theme;
@@ -9390,8 +9398,13 @@ function renderCompare() {
   const ids = (state.routeParam || "").split("/").filter(Boolean);
   const packA = ids.length > 0 ? findPack(ids[0]) : null;
   const packB = ids.length > 1 ? findPack(ids[1]) : null;
+  if (packA && packB) {
+    var pair = [packA.id, packB.id].sort().join("/");
+    state.comparisonHistory = [pair].concat(state.comparisonHistory.filter(function(p) { return p !== pair; })).slice(0, 5);
+  }
 
   el("screen-content").innerHTML = `
+    ${state.comparisonHistory.length > 1 ? '<div class="demo-compare-history">' + state.comparisonHistory.map(function(pair) { var parts = pair.split("/"); var a = findPack(parts[0]); var b = findPack(parts[1]); if (!a || !b) return ""; return '<button class="demo-chip demo-compare-chip" data-action="compare" data-pack="' + parts[0] + '" title="' + escapeHtml(workTitle(a)) + ' vs ' + escapeHtml(workTitle(b)) + '">' + escapeHtml(workTitle(a)) + ' ↔ ' + escapeHtml(workTitle(b)) + '</button>'; }).join("") + '</div>' : ""}
     <section class="demo-panel">
       <div class="demo-panel-head">
         <div>

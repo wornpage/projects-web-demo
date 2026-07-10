@@ -359,6 +359,7 @@ function demoNoticeContractOk() {
 
 function themeToggleContractOk() {
   return includesAll(html, [
+    'id="theme-system"',
     'id="theme-light"',
     'id="theme-dark"',
     'id="theme-forest"',
@@ -369,7 +370,7 @@ function themeToggleContractOk() {
     'id="theme-holiday"',
     'name="theme-choice"'
   ]) && includesAll(source, [
-    'THEMES = ["light", "dark", "forest", "ocean", "sepia", "halloween", "winter", "holiday"]'
+    'THEMES = ["system", "light", "dark", "forest", "ocean", "sepia", "halloween", "winter", "holiday"]'
   ]) && !source.includes('"Light mode"');
 }
 
