@@ -559,6 +559,10 @@ bindShellControls();
       scope: "Scope: no work is visible."
     });
     el("screen-content").innerHTML = `<div class="demo-empty">${escapeHtml(error.message)}</div>`;
+    // Stay navigable in degraded mode: the hashchange handler refuses to
+    // render while state.ready is false, which turned a failed boot into
+    // dead navigation buttons. The error status above stays honest.
+    state.ready = true;
   }
   initTabSync();
   setTimeout(checkDeadlineNotifications, 3000);

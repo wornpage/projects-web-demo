@@ -465,10 +465,13 @@ function injectAppApiBase(html) {
 }
 
 function runtimeConfigScript() {
-  const isProxyDeploy = HOST === "0.0.0.0";
+  // Pages served by this backend are always same-origin with the API, so the
+  // base stays relative. An absolute //HOST:PORT base breaks the browser's
+  // localhost <-> 127.0.0.1 alias: the fetch turns cross-origin, CORS denies
+  // it, and boot dies. backendMode carries the "backend active" signal.
   const config = {
-    apiBase: isProxyDeploy ? "" : `//${HOST}:${PORT}`,
-    backendMode: STATE_STORAGE === "postgres",
+    apiBase: "",
+    backendMode: true,
     assetVersion: ASSET_VERSION,
     apiClientHeader: constants.API_CLIENT_HEADER,
     stateStorage: STATE_STORAGE
