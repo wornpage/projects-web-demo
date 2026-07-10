@@ -3662,11 +3662,18 @@ function homeReceiptsPanel() {
   </div>`;
 }
 
+function toggleFocusMode() {
+  state.focusMode = !state.focusMode;
+  document.documentElement.classList.toggle("focus-mode", state.focusMode);
+  if (state.focusMode) showToast("Focus mode on — press F to toggle off.", "info");
+}
+
 function toggleBatchMode() {
   state.batchMode = !state.batchMode;
   if (!state.batchMode) state.batchSelected.clear();
   document.documentElement.classList.toggle("batch-mode", state.batchMode);
   document.documentElement.classList.toggle("focus-mode", state.focusMode);
+  if (state.batchMode) showToast("Batch select on — tap cards to select.", "info");
   render();
 }
 
@@ -4780,6 +4787,7 @@ function workToolbar(label) {
       <div class="demo-chip-row" aria-label="Energy filters">
         ${[["all", "All", "Show every energy level"], ["low", "🔋", "Show low-energy work"], ["medium", "⚡", "Show medium-energy work"], ["high", "🚀", "Show high-energy work"]].map(([value, label, help]) => `<button class="demo-chip" type="button" data-action="energy-filter" data-energy-filter="${value}" aria-pressed="${String(state.energyFilter === value || (value === "all" && !state.energyFilter))}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">${label}</button>`).join("")}
       </div>
+      <button id="toggle-batch-mode" class="btn btn-sm fs-mobile-icon" type="button" title="Toggle batch select mode" data-action="batch-mode">☑</button><button id="toggle-focus-mode" class="btn btn-sm fs-mobile-icon" type="button" title="Focus on selected work (F)" data-action="focus-mode">🔍</button>
       <button id="density-toggle" class="demo-view-toggle" type="button" title="Switch between card and compact list view" aria-label="Toggle list density" aria-pressed="false">☰ List</button>
     </section>
   `;
@@ -5609,6 +5617,8 @@ function bindListActions() {
           state.status = noSelectedWorkStatus("choose work before setting Next action");
         }
       } else {
+        if (action === "focus-mode") { toggleFocusMode(); return; }
+        if (action === "batch-mode") { toggleBatchMode(); return; }
         if (action === "react") {
           reactToPack(button.dataset.pack, button.dataset.reactionEmoji);
           return;
