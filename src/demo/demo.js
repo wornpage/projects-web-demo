@@ -4721,6 +4721,12 @@ function workToolbar(label) {
       <div id="status-chips" class="demo-chip-row" aria-label="Status filters">
         ${renderFilterChips()}
       </div>
+      <div class="demo-chip-row" aria-label="Energy filters">
+        <span class="demo-chip${state.energyFilter === "all" ? "" : ""}" onclick="state.energyFilter='all';render()">All</span>
+        <span class="demo-chip${state.energyFilter === "low" ? " active" : ""}" onclick="state.energyFilter='low';render()">🔋</span>
+        <span class="demo-chip${state.energyFilter === "medium" ? " active" : ""}" onclick="state.energyFilter='medium';render()">⚡</span>
+        <span class="demo-chip${state.energyFilter === "high" ? " active" : ""}" onclick="state.energyFilter='high';render()">🚀</span>
+      </div>
       <button id="density-toggle" class="demo-view-toggle" type="button" title="Switch between card and compact list view" aria-label="Toggle list density" aria-pressed="false">☰ List</button>
     </section>
   `;
@@ -5522,6 +5528,11 @@ function bindListActions() {
         if (action === "energy") {
           var ePack = findPack(button.dataset.pack);
           if (ePack) { ePack.energy = button.dataset.energyValue; saveState(); render(); }
+          return;
+        }
+        if (action === "energy-filter") {
+          state.energyFilter = button.dataset.energyFilter || "all";
+          render();
           return;
         }
         if (runRouteAction(action, button.dataset.pack || "")) {
@@ -6523,6 +6534,9 @@ async function handlePackAction(id, action) {
   } else if (action === "snooze") {
     var days = parseInt(btn.dataset.snoozeDays, 10) || 1;
     snoozePack(packId, days);
+  } else if (action === "energy-filter") {
+    state.energyFilter = button ? button.dataset.energyFilter || "all" : "all";
+    render();
   } else if (action === "open") {
     queueFocus("pack-detail", pack.id);
     const changed = addPackActivity(pack, "Opened.");
