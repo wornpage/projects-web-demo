@@ -92,6 +92,7 @@ function sanitizePack(source) {
     location: normalizeText(source.location, 200),
     progress: normalizePackProgress(source.progress),
     reactions: normalizePackReactions(source.reactions),
+    subtasks: normalizePackSubtasks(source.subtasks),
     sources: normalizeStringArray(source.sources, 50, 200),
     memory: normalizeStringArray(source.memory, 100, 2000),
     activity: normalizeStringArray(source.activity, 100, 400),
@@ -105,6 +106,19 @@ function normalizePackProgress(value) {
     return 0;
   }
   return Math.min(100, Math.max(0, Math.round(progress)));
+}
+
+function normalizePackSubtasks(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .slice(0, 50)
+    .map((entry) => ({
+      text: normalizeText(entry && typeof entry === "object" ? entry.text : "", 200),
+      done: Boolean(entry && typeof entry === "object" && entry.done)
+    }))
+    .filter((entry) => entry.text);
 }
 
 function normalizePackReactions(value) {
