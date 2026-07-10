@@ -5018,7 +5018,7 @@ function workCard(pack) {
       ${primaryCommandReasonNote(pack, command)}
     </div>
     <div class="demo-card-meta">
-      ${pack.energy ? '<span class="demo-energy-icon">' + {low:"🔋",medium:"⚡",high:"🚀"}[pack.energy] + '</span>' : ""}${pack.location ? "<span title='"+escapeHtml(pack.location)+"'>\ud83d\udccd</span>" : ""}${dueDateMeta(pack)}
+      ${pack.energy ? '<span class="demo-energy-icon">' + {low:"🔋",medium:"⚡",high:"🚀"}[pack.energy] + '</span>' : ""}${pack.location ? "<span title='"+escapeHtml(pack.location)+"'>\ud83d\udccd</span>" : ""}${pack.milestone ? "<span title='Milestone: "+escapeHtml(pack.milestone)+"'>\ud83c\udfc1</span>" : ""}${dueDateMeta(pack)}
       <span class="demo-owner-text">${highlightMatch(pack.owner, state.query)}</span>
     </div>
     ${relevantMemoryCardStrip(pack)}
