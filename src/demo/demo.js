@@ -4787,7 +4787,7 @@ function workToolbar(label) {
       <div class="demo-chip-row" aria-label="Energy filters">
         ${[["all", "All", "Show every energy level"], ["low", "🔋", "Show low-energy work"], ["medium", "⚡", "Show medium-energy work"], ["high", "🚀", "Show high-energy work"]].map(([value, label, help]) => `<button class="demo-chip" type="button" data-action="energy-filter" data-energy-filter="${value}" aria-pressed="${String(state.energyFilter === value || (value === "all" && !state.energyFilter))}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">${label}</button>`).join("")}
       </div>
-      <button id="toggle-batch-mode" class="btn btn-sm fs-mobile-icon" type="button" title="Toggle batch select mode" data-action="batch-mode">☑</button><button id="toggle-focus-mode" class="btn btn-sm fs-mobile-icon" type="button" title="Focus on selected work (F)" data-action="focus-mode">🔍</button>
+      <button id="toggle-batch-mode" class="btn btn-sm fs-mobile-icon" type="button" title="Toggle batch select mode" data-action="batch-mode" aria-pressed="${String(state.batchMode)}">☑</button><button id="toggle-focus-mode" class="btn btn-sm fs-mobile-icon" type="button" title="Focus on selected work (F)" data-action="focus-mode" aria-pressed="${String(state.focusMode)}">🔍</button>
       <button id="density-toggle" class="demo-view-toggle" type="button" title="Switch between card and compact list view" aria-label="Toggle list density" aria-pressed="false">☰ List</button>
     </section>
   `;
@@ -4974,6 +4974,14 @@ function bindToolbar() {
       });
       updateWorkListAfterFilter();
     });
+  });
+
+  // toggleBatchMode re-renders the toolbar, so pressed state lives in the
+  // markup (renderWorkToolbar) rather than being patched onto stale nodes.
+  el("toggle-batch-mode")?.addEventListener("click", toggleBatchMode);
+  el("toggle-focus-mode")?.addEventListener("click", () => {
+    toggleFocusMode();
+    el("toggle-focus-mode")?.setAttribute("aria-pressed", String(state.focusMode));
   });
 
   const densityToggle = el("density-toggle");
@@ -10109,7 +10117,7 @@ function renderTerms() {
         <h3>No warranty</h3>
         <p>This demo is provided "as is" without warranty of any kind. The project owner is not responsible for any data loss or damages from using this demo.</p>
         <h3>Source code</h3>
-        <p>This project is <a id="terms-github-link" href="#/terms" target="_blank" rel="noopener">open source on GitHub</a> under the MIT license.</p>
+        <p>This project is <a id="terms-github-link" href="#/terms" target="_blank" rel="noopener">open source on GitHub</a> under the GNU General Public License v3.0 — see the LICENSE file in the repository.</p>
       </div>
     </section>
   `;
