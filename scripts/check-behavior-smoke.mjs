@@ -27,6 +27,12 @@ try {
 
 const checks = [];
 const consoleErrors = [];
+// Environment noise, not app defects: CI runners have no audio output device,
+// so Chromium logs this whenever WebAudio rendering starts. The app already
+// gates beeps behind a user gesture; the device error is outside its control.
+const ignoredConsoleNoise = [
+  "The AudioContext encountered an error from the audio device or the WebAudio renderer."
+];
 const port = await freePort();
 const baseUrl = `http://127.0.0.1:${port}`;
 const server = spawn(process.execPath, ["server/static.js"], {
@@ -41,7 +47,7 @@ try {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   page.on("console", (message) => {
-    if (message.type() === "error") {
+    if (message.type() === "error" && !ignoredConsoleNoise.some((noise) => message.text().includes(noise))) {
       consoleErrors.push(`${page.url().split("#")[1] || "/"}: ${message.text()}`);
     }
   });

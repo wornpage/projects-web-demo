@@ -24,13 +24,15 @@ customer-data collection, or a live Projects service.
 | `assets/demo.css` | Public demo layout and interaction styling. |
 | `assets/favicon.png` | Demo favicon. |
 | `assets/favicon.svg` | Vector SVG favicon used by PWA manifest. |
-| `assets/sw.js` | Service worker for offline PWA support. |
+| `sw.js` | Service worker for offline PWA support. Network-first with cached offline fallback; never intercepts `/api/` requests. |
 | `manifest.json` | PWA web app manifest for installable demo. |
 | `landing.html` | Public landing page for the portfolio demo. |
 | `docs/improbable-spikes.md` | Tracker of 55+ exploratory features implemented. |
 | `data/demo-packs.json` | Fake sample work data. Public by design: committed to the repo, published by GitHub Pages, and served read-only by app mode alongside the keyed `GET /api/demo-packs` route. |
 | `server/` | Optional Node app (`server.js` plus `server/src/` modules for constants, security, seed, state storage, validation, and workflow) and static preview helpers for backend persistence experiments. |
 | `scripts/check-*.mjs` (15+) | Ship-gate proof scripts for asset budgets, protected frontend, route contract, sync surface, state recovery, public/Docker/deploy boundaries, compliance, git state, and live Outplane verification. Run via `npm --prefix server run ship:check`. |
+| `scripts/check-deploy-config.mjs` | Local proof that the Outplane docs, Docker defaults, ignored state paths, and live verifier target stay aligned. |
+| `scripts/check-compliance-audit.mjs` | Local proof that the Compliance audit stays mapped to checked evidence and remains in the ship gate. |
 | `scripts/protect-frontend.mjs` | Production frontend protection (Terser minify + string table encode) used by Docker builds. |
 | `scripts/build-demo-asset.mjs` | Copies `src/demo/demo.js` to the shipped `assets/demo.js`. |
 | `scripts/check-behavior-smoke.mjs` | Behavioral proof — loads static preview in Chromium, asserts no console errors, no dead buttons, no hidden leaks. |

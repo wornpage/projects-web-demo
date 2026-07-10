@@ -8,7 +8,7 @@ const DEMO_WELCOMED_KEY = "projects-demo-welcomed-v1";
 const DEMO_TOUR_KEY = "projects-demo-tour-done-v1";
 const THEME_STORAGE_KEY = "projects-demo-theme-v3";
 const THEMES = ["system", "light", "dark", "forest", "ocean", "sepia", "halloween", "winter", "holiday"];
-const THEME_LABELS = { light: "Light", dark: "Dark", forest: "Forest", ocean: "Ocean", sepia: "Sepia", halloween: "Halloween", winter: "Winter", holiday: "Holiday" };
+const THEME_LABELS = { light: "Light", dark: "Dark", forest: "Forest", ocean: "Ocean", sepia: "Sepia", system: "System", halloween: "Halloween", winter: "Winter", holiday: "Holiday" };
 const API_STATE_SAVE_DEBOUNCE_MS = 300;
 const API_CLIENT_STORAGE_KEY = "projects-static-demo-api-client-v1";
 const SYNC_CODE_STORAGE_KEY = "projects-static-demo-sync-code-v1";
@@ -331,9 +331,27 @@ window.addEventListener("unhandledrejection", (event) => {
   event.preventDefault();
 });
 
+// One shared AudioContext, created only after a user gesture so beeps never
+// violate autoplay policy or open the audio device on a silent page load.
+let beepContext = null;
+let beepDisabled = false;
+let beepGestureSeen = false;
+window.addEventListener("pointerdown", () => { beepGestureSeen = true; }, { once: true, passive: true });
+window.addEventListener("keydown", () => { beepGestureSeen = true; }, { once: true });
+
 function playBeep(freq, dur) {
+  if (beepDisabled || !beepGestureSeen) return;
   try {
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!beepContext) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) { beepDisabled = true; return; }
+      beepContext = new Ctx();
+    }
+    if (beepContext.state !== "running") {
+      beepContext.resume().catch(() => {});
+      return;
+    }
+    var ctx = beepContext;
     var osc = ctx.createOscillator();
     var gain = ctx.createGain();
     osc.type = "sine";
@@ -344,7 +362,7 @@ function playBeep(freq, dur) {
     gain.connect(ctx.destination);
     osc.start();
     osc.stop(ctx.currentTime + dur);
-  } catch(e) { /* audio unavailable */ }
+  } catch(e) { beepDisabled = true; }
 }
 
 function showToast(message, type = "info", durationMs = 5000) {
@@ -486,29 +504,7 @@ _themeRadios.forEach(function (r) {
   });
 });
 
-// Sync state across tabs via BroadcastChannel (instant, works in sending tab too)
-  var _bcSync = null;
-  try { _bcSync = new BroadcastChannel("projects-demo-sync"); } catch {}
-  if (_bcSync) {
-    _bcSync.onmessage = function (event) {
-      var msg = event.data;
-      if (!msg || !msg.packs) return;
-      // Smart merge: if only one pack changed, update in-place
-      var old = state.packs.length;
-      loadState(msg);
-      if (old > 0 && state.packs.length === old) {
-        // In-place update — re-render without full reset
-        routeFromHash();
-        render();
-        return;
-      }
-      routeFromHash();
-      render();
-      showToast("Synced from another tab.", "info");
-    };
-  }
-
-  bindShellControls();
+bindShellControls();
   setupCommandPalette();
   bindDemoSyncControls();
   bindBottomDockVisibility();
@@ -563,8 +559,30 @@ _themeRadios.forEach(function (r) {
     });
     el("screen-content").innerHTML = `<div class="demo-empty">${escapeHtml(error.message)}</div>`;
   }
+  initTabSync();
   setTimeout(checkDeadlineNotifications, 3000);
 });
+
+// Sync state across tabs via BroadcastChannel; registered after boot so a
+// message from another tab can never render before this tab's state is ready
+function initTabSync() {
+  var channel = null;
+  try { channel = new BroadcastChannel("projects-demo-sync"); } catch {}
+  if (!channel) {
+    return;
+  }
+  channel.onmessage = function (event) {
+    var msg = event.data;
+    if (!msg || !msg.packs || !state.ready) return;
+    var old = state.packs.length;
+    loadState(msg);
+    routeFromHash();
+    render();
+    if (old === 0 || state.packs.length !== old) {
+      showToast("Synced from another tab.", "info");
+    }
+  };
+}
 
 function liftBootVeil() {
   document.querySelector(".demo-app-shell")?.classList.remove("is-booting");
@@ -3695,6 +3713,9 @@ function handleCardClick(event) {
   render();
 }
 
+// Delegated because the app CSP blocks inline onclick attributes
+document.addEventListener("click", handleCardClick);
+
 
 var _inlineEditEl = null;
 var _inlineEditPackId = null;
@@ -4069,10 +4090,10 @@ function recoveryPanel() {
 function importPanel() {
   return `<div class="demo-batch-bar${state.batchSelected.size ? " is-active" : ""}">
     <span class="demo-batch-count">${state.batchSelected.size} selected</span>
-    <button class="btn btn-sm" onclick="batchAction('done')"${state.batchSelected.size ? "" : " disabled"}>Done</button>
-    <button class="btn btn-sm" onclick="batchAction('block')"${state.batchSelected.size ? "" : " disabled"}>Block</button>
-    <button class="btn btn-sm" onclick="batchAction('delete')"${state.batchSelected.size ? "" : " disabled"}>Delete</button>
-    <button class="btn btn-sm" onclick="clearBatchSelection()">Clear</button>
+    <button class="btn btn-sm" type="button" data-action="batch-done"${state.batchSelected.size ? "" : " disabled"}>Done</button>
+    <button class="btn btn-sm" type="button" data-action="batch-block"${state.batchSelected.size ? "" : " disabled"}>Block</button>
+    <button class="btn btn-sm" type="button" data-action="batch-delete"${state.batchSelected.size ? "" : " disabled"}>Delete</button>
+    <button class="btn btn-sm" type="button" data-action="batch-clear">Clear</button>
   </div><details class="demo-recovery-panel demo-import-panel">
     <summary>
       <span>Import your work</span>
@@ -4090,6 +4111,8 @@ function importPanel() {
 
 function bindRecoveryControls() {
   el("copy-recovery-state")?.addEventListener("click", copyRecoverySnapshot);
+  el("download-recovery-state")?.addEventListener("click", downloadRecoverySnapshot);
+  el("export-markdown")?.addEventListener("click", exportMarkdown);
   el("restore-recovery-state")?.addEventListener("click", restoreRecoverySnapshot);
   el("erase-backend-state")?.addEventListener("click", () => { if (confirm("Erase your backend data? This cannot be undone.")) eraseBackendState(); });
   el("import-work-list")?.addEventListener("click", importWorkList);
@@ -4749,11 +4772,8 @@ function workToolbar(label) {
       <div id="status-chips" class="demo-chip-row" aria-label="Status filters">
         ${renderFilterChips()}
       </div>
-      <div class="demo-chip-row" aria-label="Energy filters" role="radiogroup">
-        <span class="demo-chip${state.energyFilter === "all" ? "" : ""}" onclick="state.energyFilter='all';render()">All</span>
-        <span class="demo-chip${state.energyFilter === "low" ? " active" : ""}" onclick="state.energyFilter='low';render()">🔋</span>
-        <span class="demo-chip${state.energyFilter === "medium" ? " active" : ""}" onclick="state.energyFilter='medium';render()">⚡</span>
-        <span class="demo-chip${state.energyFilter === "high" ? " active" : ""}" onclick="state.energyFilter='high';render()">🚀</span>
+      <div class="demo-chip-row" aria-label="Energy filters">
+        ${[["all", "All", "Show every energy level"], ["low", "🔋", "Show low-energy work"], ["medium", "⚡", "Show medium-energy work"], ["high", "🚀", "Show high-energy work"]].map(([value, label, help]) => `<button class="demo-chip" type="button" data-action="energy-filter" data-energy-filter="${value}" aria-pressed="${String(state.energyFilter === value || (value === "all" && !state.energyFilter))}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">${label}</button>`).join("")}
       </div>
       <button id="density-toggle" class="demo-view-toggle" type="button" title="Switch between card and compact list view" aria-label="Toggle list density" aria-pressed="false">☰ List</button>
     </section>
@@ -4907,7 +4927,14 @@ function bindToolbar() {
     });
   }
 
-  document.querySelectorAll(".demo-chip").forEach((button) => {
+  document.querySelectorAll(".demo-chip[data-energy-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.energyFilter = button.dataset.energyFilter || "all";
+      render();
+    });
+  });
+
+  document.querySelectorAll(".demo-chip[data-filter]").forEach((button) => {
     button.addEventListener("click", async () => {
       const filter = button.dataset.filter;
       if (DEMO_API_BASE_URL) {
@@ -4929,7 +4956,7 @@ function bindToolbar() {
       state.filter = filter;
       state.status = filterStatusMessage(state.filter);
       // Targeted update: chips + list, no full re-render
-      document.querySelectorAll(".demo-chip").forEach((chip) => {
+      document.querySelectorAll(".demo-chip[data-filter]").forEach((chip) => {
         chip.setAttribute("aria-pressed", String(chip.dataset.filter === state.filter));
       });
       updateWorkListAfterFilter();
@@ -4982,10 +5009,18 @@ function updateWorkListAfterFilter() {
   renderCommand(currentPack());
 }
 
+function reactToPack(id, emoji) {
+  const pack = findPack(id);
+  if (!pack || !emoji) return;
+  if (!pack.reactions) pack.reactions = {};
+  pack.reactions[emoji] = (pack.reactions[emoji] || 0) + 1;
+  saveState();
+  render();
+}
+
 function renderCardReactions(pack) {
   if (!pack.reactions) pack.reactions = {};
   var emojis = ["👍","🎉","🚀","😅","🔥"];
-  var hasReactions = emojis.some(function(e) { return (pack.reactions[e] || 0) > 0; });
   return '<div class="demo-card-reactions">' +
     emojis.map(function(emoji) {
       var count = pack.reactions[emoji] || 0;
@@ -5043,7 +5078,7 @@ function workCard(pack) {
   const blockerAction = hasBlocker(pack)
     ? supportActionButton("unblock", "Clear blocker", pack, "btn btn-sm")
     : supportActionButton("block", "Mark blocked", pack, "btn btn-sm");
-  return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true" onclick="handleCardClick(event)"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
+  return `<article class="${escapeAttribute(cardClass)}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
     <div class="demo-card-head">
       <button type="button" class="demo-card-title" data-action="select"${cardTitleButtonAttributes(pack)}>${highlightMatch(workTitle(pack), state.query)}</button>
       ${pack.type && pack.type !== "general" ? `<span class="demo-type-badge" data-type="${escapeAttribute(pack.type)}">${escapeHtml(pack.type)}</span><span class="demo-age">${escapeHtml(packAge(pack))}${isStalePack(pack) ? " 🕸️" : ""}</span><span class="demo-age-detail">${escapeHtml(packAgeDetail(pack))}</span>` : ""}
@@ -5068,6 +5103,7 @@ function workCard(pack) {
     </div>
     ${relevantMemoryCardStrip(pack)}
     ${actionReceiptCard(pack)}
+    ${renderCardReactions(pack)}
     <details class="demo-card-support" data-support-actions="work-card">
       <summary>
         <span>Other actions</span>
@@ -5102,7 +5138,7 @@ function landingCard(pack) {
   const command = resolvePrimaryCommandForPack(pack);
   const statusClass = pack.status === STATUS.BLOCKED ? "is-attention" : pack.status === STATUS.DONE ? "is-done" : "";
   const pillClass = pack.status === STATUS.BLOCKED ? "lp-pill-warn" : pack.status === STATUS.DONE ? "lp-pill-muted" : "lp-pill-accent";
-  return `<article class="demo-landing-card ${statusClass}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true" onclick="handleCardClick(event)"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
+  return `<article class="demo-landing-card ${statusClass}" data-pack-id="${escapeAttribute(pack.id)}" draggable="true"><div class="demo-batch-check${state.batchSelected.has(pack.id) ? " is-checked" : ""}"></div>
     <div class="lp-card-head">
       <button class="lp-card-title" type="button" data-action="select" data-pack="${escapeAttribute(pack.id)}">${escapeHtml(workTitle(pack))}</button>
       <span class="lp-pill ${pillClass}">${escapeHtml(pack.status)}</span>
@@ -5408,6 +5444,10 @@ function bindWorkCards() {
     button.addEventListener("click", () => {
       const card = button.closest(".demo-work-card");
       workListKeepOrder = true;
+      if (button.dataset.action === "react") {
+        reactToPack(card.dataset.packId, button.dataset.reactionEmoji);
+        return;
+      }
       handlePackAction(card.dataset.packId, button.dataset.action);
     });
   });
@@ -5565,25 +5605,7 @@ function bindListActions() {
         }
       } else {
         if (action === "react") {
-          var reactionPack = findPack(button.dataset.pack);
-          if (reactionPack) {
-            if (!reactionPack.reactions) reactionPack.reactions = {};
-            var emoji = button.dataset.reactionEmoji;
-            reactionPack.reactions[emoji] = (reactionPack.reactions[emoji] || 0) + 1;
-            saveState();
-            render();
-          }
-          return;
-        }
-        if (action === "react") {
-          var reactionPack = findPack(button.dataset.pack);
-          if (reactionPack) {
-            if (!reactionPack.reactions) reactionPack.reactions = {};
-            var emoji = button.dataset.reactionEmoji;
-            reactionPack.reactions[emoji] = (reactionPack.reactions[emoji] || 0) + 1;
-            saveState();
-            render();
-          }
+          reactToPack(button.dataset.pack, button.dataset.reactionEmoji);
           return;
         }
         if (action === "energy") {
@@ -5591,9 +5613,12 @@ function bindListActions() {
           if (ePack) { ePack.energy = button.dataset.energyValue; saveState(); render(); }
           return;
         }
-        if (action === "energy-filter") {
-          state.energyFilter = button.dataset.energyFilter || "all";
-          render();
+        if (action === "batch-done" || action === "batch-block" || action === "batch-delete") {
+          batchAction(action.slice("batch-".length));
+          return;
+        }
+        if (action === "batch-clear") {
+          clearBatchSelection();
           return;
         }
         if (runRouteAction(action, button.dataset.pack || "")) {
@@ -6157,33 +6182,21 @@ function restoreUndoSnapshot() {
   return true;
 }
 
-async function triggerConfetti(x, y) {
-  var emojis = ["✨","🎉","💫","⭐","🌟"];
-  var html = "";
-  for (var i = 0; i < 8; i++) {
-    var xx = (x + (Math.random() * 40 - 20)).toFixed(0);
-    var yy = (y + (Math.random() * 10 - 5)).toFixed(0);
-    var delay = (Math.random() * 0.2).toFixed(2);
-    var dur = (0.6 + Math.random() * 0.4).toFixed(2);
-    var size = (12 + Math.random() * 10).toFixed(0);
-    var emo = emojis[i % emojis.length];
-    html += '<span class="demo-confetti" style="left:' + xx + 'px;top:' + yy + 'px;animation-delay:' + delay + 's;animation-duration:' + dur + 's;font-size:' + size + 'px">' + emo + '</span>';
-  }
-  var wrapper = document.createElement("div");
-  wrapper.innerHTML = html;
-  var particles = wrapper.querySelectorAll("span");
-  particles.forEach(function (p) { document.body.appendChild(p); setTimeout(function () { p.remove(); }, 1200); });
+function randomUnit() {
+  const bytes = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(bytes);
+  return bytes[0] / 4294967296;
 }
 
 function triggerConfetti(x, y) {
   var emojis = ["✨","🎉","💫","⭐","🌟"];
   var html = "";
   for (var i = 0; i < 8; i++) {
-    var xx = (x + (Math.random() * 40 - 20)).toFixed(0);
-    var yy = (y + (Math.random() * 10 - 5)).toFixed(0);
-    var delay = (Math.random() * 0.2).toFixed(2);
-    var dur = (0.6 + Math.random() * 0.4).toFixed(2);
-    var size = (12 + Math.random() * 10).toFixed(0);
+    var xx = (x + (randomUnit() * 40 - 20)).toFixed(0);
+    var yy = (y + (randomUnit() * 10 - 5)).toFixed(0);
+    var delay = (randomUnit() * 0.2).toFixed(2);
+    var dur = (0.6 + randomUnit() * 0.4).toFixed(2);
+    var size = (12 + randomUnit() * 10).toFixed(0);
     var emo = emojis[i % emojis.length];
     html += '<span class="demo-confetti" style="left:' + xx + 'px;top:' + yy + 'px;animation-delay:' + delay + 's;animation-duration:' + dur + 's;font-size:' + size + 'px">' + emo + '</span>';
   }
@@ -8215,8 +8228,9 @@ function filteredPacks() {
       state.filter === "all" ||
       (state.filter === "review" && isReview(pack)) ||
       pack.status === state.filter;
+    const energyMatch = !state.energyFilter || state.energyFilter === "all" || pack.energy === state.energyFilter;
     const haystack = `${pack.title} ${pack.next} ${pack.owner} ${pack.due} ${pack.blocker} ${(pack.sources||[]).join(" ")} ${pack.purpose||""} ${(pack.memory||[]).join(" ")}`.toLowerCase();
-    return filterMatch && (!query || haystack.includes(query));
+    return filterMatch && energyMatch && (!query || haystack.includes(query));
   });
 }
 
@@ -9692,7 +9706,7 @@ function repeatPack(id) {
   var pack = state.packs.find(function(p) { return p.id === id; });
   if (!pack) return;
   pushUndoSnapshot();
-  var newId = "pack-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  var newId = "pack-" + Date.now().toString(36) + randomUnit().toString(36).slice(2, 6);
   state.packs.push({
     id: newId,
     title: pack.title,
@@ -9961,7 +9975,7 @@ function renderInsights() {
 function insightCardWithDonut(label, rate, done, total, noun) {
   var pct = Math.round((done / total) * 100) || 0;
   var color = pct >= 80 ? "var(--cockpit-accent)" : pct >= 40 ? "var(--cockpit-warning-text)" : "var(--cockpit-danger-text)";
-  var uid = "dn" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  var uid = "dn" + Date.now().toString(36) + randomUnit().toString(36).slice(2, 5);
   var sheet = new CSSStyleSheet();
   sheet.insertRule("." + uid + "::before { display: none; }");
   sheet.insertRule("." + uid + " { background: conic-gradient(" + color + " " + pct + "%, var(--cockpit-border) " + pct + "%); }");
