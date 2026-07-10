@@ -33,6 +33,11 @@ Keep this repo focused on the public portfolio demo.
 | `assets/demo.js` | Generated public browser file served by GitHub Pages and app mode. |
 | `assets/demo.css` | Public demo layout and interaction styling. |
 | `assets/favicon.png` | Demo favicon. |
+| `assets/favicon.svg` | Vector SVG favicon used by PWA manifest. |
+| `assets/sw.js` | Service worker for offline PWA support. |
+| `manifest.json` | PWA web app manifest for installable demo. |
+| `landing.html` | Public landing page for the portfolio demo. |
+| `docs/improbable-spikes.md` | Tracker of 55+ exploratory features implemented. |
 | `data/demo-packs.json` | Fake sample work data. Public by design: committed to the repo, published by GitHub Pages, and served read-only by app mode alongside the keyed `GET /api/demo-packs` route. |
 | `server/` | Optional Node app (`server.js` plus `server/src/` modules for constants, security, seed, state storage, validation, and workflow) and static preview helpers for backend persistence experiments. |
 | `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
@@ -73,8 +78,9 @@ The important public paths are:
 | `#/memory/{packId}` | Add memory notes, search all notes across all work. |
 | `#/create` | Add work items. Pre-fills from ?title= and ?url= query params (bookmarklet). |
 | `#/compare/{packId}/{packId}` | Compare two work items side by side. |
-| `#/calendar` | Month + year view of due dates. |
-| `#/insights` | Aggregate stats — completion rate, owner activity, type breakdown. |
+| `#/calendar` | Month + year view of due dates with activity density heatmap. |
+| `#/gantt` | Timeline / Gantt chart — items with due dates on a horizontal timeline. |
+| `#/insights` | Aggregate stats — completion rate, owner activity, type breakdown, milestone progress, and analytics dashboard (streak, busiest owner, most active day). |
 | `#/activity` | Chronological timeline of all actions across all work items. |
 | `#/settings` | Demo preferences: copy profile, scenario, theme, reset, import, and recovery. |
 | `#/terms` | Terms of use and privacy — personal portfolio demo, no data collection. |
@@ -136,6 +142,8 @@ API row. The static `data/demo-packs.json` file is also served read-only by the
 app server; it is committed public sample data, so this discloses nothing that
 GitHub Pages does not already publish.
 
+### Security Headers
+
 The Node app also rewrites the CSS/JS asset query string at startup using
 `PROJECTS_ASSET_VERSION`, a known commit environment variable, or a
 content-derived asset fallback based on the shipped public runtime files. That
@@ -159,6 +167,8 @@ so public dev deployments are not invited into search indexes or archives.
 The hosted app serves the backend API-base setting through
 `assets/runtime-config.js` instead of an inline script.
 
+### State Storage
+
 The local state path defaults to a user data directory outside the repository,
 but backend API state routes still require the browser's anonymous client key.
 The app does not use cookie-backed sessions; app, API, and static-preview
@@ -170,12 +180,16 @@ deploys should still use `PROJECTS_STATE_STORAGE=postgres` with managed
 Postgres environment variables instead of writable container files.
 Invalid `PROJECTS_STATE_STORAGE` values fail startup instead of silently falling
 back to file-backed state.
+### API Security
+
 Hosted Postgres stores a server-side digest of the browser client key rather
 than the raw request header value, and hosted reads use only that digest key.
 State-changing API routes validate that client key before reading JSON payloads.
 The API accepts only generated `demo-...` browser keys or hashed `sync-...`
 share keys; weak manual header values and readable sync-code-shaped headers are
 rejected.
+### Rate Limits
+
 The backend also keeps in-memory per-source and per-state write rate limits.
 By default, each process allows 1200 API requests per socket source, 600 write
 requests per socket source, and 120 write requests per state key in a 60-second
@@ -191,6 +205,8 @@ silently stored.
 JSON body writes are capped at 1 MiB and return `413` before storage if the
 request is too large. Declared oversized bodies are rejected before the request
 stream is read.
+### Workflow Endpoints
+
 Full recovery and sync writes must be JSON object snapshots with a `packs`
 array; scalar, array, empty, or missing-work payloads are rejected before they
 can sanitize into an empty row. Use the backend erase endpoint to clear the
@@ -265,6 +281,8 @@ When those endpoints return backend-owned state, the next render is marked
 save-suppressed so the browser does not immediately re-upload that response
 through the generic state endpoint.
 
+### Sync / Sharing
+
 In hosted app mode, the top sync-code strip can connect two browsers or devices
 to the same demo row. Use **New** to create a Web Crypto generated 20-character
 code, then copy that code, enter it on the other device, copy the sync link, or
@@ -275,6 +293,8 @@ codes; the app will not send readable sync codes as backend row keys. Sync
 copy uses the named backend sync endpoint, and sync links use `?sync=` only as a
 launch parameter and remove it from the address bar after the shared state
 loads.
+
+### Recovery
 
 The Settings screen also has a collapsed Recovery section. **Copy backup** copies a
 bounded JSON snapshot for the current browser or active sync row, and
