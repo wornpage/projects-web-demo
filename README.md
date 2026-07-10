@@ -28,24 +28,10 @@ customer-data collection, or a live Projects service.
 | `docs/improbable-spikes.md` | Tracker of 55+ exploratory features implemented. |
 | `data/demo-packs.json` | Fake sample work data. Public by design: committed to the repo, published by GitHub Pages, and served read-only by app mode alongside the keyed `GET /api/demo-packs` route. |
 | `server/` | Optional Node app (`server.js` plus `server/src/` modules for constants, security, seed, state storage, validation, and workflow) and static preview helpers for backend persistence experiments. |
-| `scripts/protect-frontend.mjs` | Production frontend protection step used by Docker builds. |
-| `scripts/build-demo-asset.mjs` | Copies `src/demo/demo.js` to the single shipped `assets/demo.js`, or checks that they match. |
-| `scripts/check-protected-frontend.mjs` | Local proof that the protected frontend hides configured readable tokens. |
-| `scripts/check-public-assets.mjs` | Local proof that public assets stay allowlisted and public text assets stay budgeted without source maps or private path strings. |
-| `scripts/build-static-publish.mjs` | Builds a filtered static publish artifact under `dist/static-publish`. |
-| `scripts/check-static-publish.mjs` | Local proof that the static publish artifact contains only the allowlist and protected frontend output. |
-| `scripts/check-static-preview.mjs` | Local proof that the static preview serves only the static allowlist and sends defensive headers. |
-| `scripts/check-public-routes.mjs` | Local proof that the visible route set stays small and retired route code stays absent. |
-| `scripts/check-sync-surface.mjs` | Local proof that sync links, QR sharing, and sync client keys stay wired. |
-| `scripts/check-behavior-smoke.mjs` | Behavioral proof that loads the static preview in headless Chromium and asserts rendered outcomes — no console errors, no blank command buttons, no hidden-attribute leaks, and every mobile nav destination reachable — catching bugs the source-string gates cannot. |
-| `scripts/check-state-recovery.mjs` | Local proof that one client's exported state can be restored without mixing rows. |
-| `scripts/check-public-boundary.mjs` | Local proof that the app server only serves public files and keyed demo states do not mix. |
-| `scripts/check-docker-boundary.mjs` | Local proof that the Docker image copies only the deploy allowlist and runs protected output. |
-| `scripts/check-deploy-config.mjs` | Local proof that the Outplane docs, Docker defaults, ignored state paths, and live verifier target stay aligned. |
-| `scripts/check-compliance-audit.mjs` | Local proof that the Compliance audit stays mapped to checked evidence and remains in the ship gate. |
-| `scripts/check-git-ship-state.mjs` | Local proof that the ship gate is running from a clean branch synced with its upstream. |
-| `scripts/check-live-deploy.mjs` | Checks that the hosted Outplane app shell, protected JS, CSS, API seed data, and blocked repo paths match this checkout. |
-| `scripts/check-ship.mjs` | Runs the local gates plus live Outplane verification before a ship. |
+| `scripts/check-*.mjs` (15+) | Ship-gate proof scripts for asset budgets, protected frontend, route contract, sync surface, state recovery, public/Docker/deploy boundaries, compliance, git state, and live Outplane verification. Run via `npm --prefix server run ship:check`. |
+| `scripts/protect-frontend.mjs` | Production frontend protection (Terser minify + string table encode) used by Docker builds. |
+| `scripts/build-demo-asset.mjs` | Copies `src/demo/demo.js` to the shipped `assets/demo.js`. |
+| `scripts/check-behavior-smoke.mjs` | Behavioral proof — loads static preview in Chromium, asserts no console errors, no dead buttons, no hidden leaks. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
 | `docs/deploy-outplane.md` | Outplane development deploy checklist. |
 | `docs/public-exposure-audit.md` | Public file exposure audit and frontend privacy boundary. |
@@ -446,6 +432,25 @@ owner, and next action, and an "Up next" line — copied through the same
 local-only clipboard path as the sync and recovery copy controls. It never
 schedules a backend write.
 
+
+## Feature Highlights
+
+- **Batch multi-select** — checkbox mode on work cards with floating action bar
+- **Subtasks / checklist** — collapsible per-pack checklists with progress bar
+- **Drag-and-drop reorder** — reorder cards, landing cards, and table rows
+- **Achievement badges** — 6 unlockable badges (first done, 10 tasks, 7-day streak, all fields, 20 items, blocker cleared)
+- **Progress slider** — 0–100% slider per work item
+- **Energy level** — 🔋⚡🚀 tags, filter by energy
+- **Location field** — set office/home/field, shown as 📍 on cards
+- **Milestone grouping** — group by milestone name, tracked on Insights
+- **Snooze / defer** — 1d/3d/7d snooze buttons push due dates forward
+- **Deadline countdown** — red/amber urgency badges on cards
+- **Desktop notifications** — system notification for items due today
+- **Custom accent color** — color picker overrides app accent
+- **@mentions** — `@name` in memory notes creates clickable chip
+- **Seasonal themes** — 🎃 Halloween, ❄️ Winter, 🎉 Holiday accents
+- **Keyboard shortcuts** — `?` cheat sheet, arrow keys, `d` marks done, `b` toggles blocker
+- **Focus mode** — `F` key collapses sidebar, centers selected work
 ## Product Rule
 
 The public demo should explain one idea clearly:
