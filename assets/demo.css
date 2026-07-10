@@ -4522,6 +4522,9 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
 }
 
 @media (max-width: 980px) {
+  .demo-optional-fields[open] {
+    grid-template-columns: 1fr;
+  }
   .demo-app-shell {
     grid-template-columns: 1fr;
     max-width: 100%;
