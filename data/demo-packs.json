@@ -66,6 +66,27 @@
     "activity": [
       "Draft created.",
       "Needs next action."
+    ],
+    "energy": "high",
+    "milestone": "Sprint 1",
+    "location": "office",
+    "subtasks": [
+      {
+        "text": "Check positioning",
+        "done": true
+      },
+      {
+        "text": "Test dimmer packs",
+        "done": true
+      },
+      {
+        "text": "Verify colour temp",
+        "done": false
+      },
+      {
+        "text": "Update inventory list",
+        "done": false
+      }
     ]
   },
   {
@@ -90,7 +111,10 @@
     "activity": [
       "Owner assigned.",
       "Blocked waiting on source-folder-audit."
-    ]
+    ],
+    "energy": "medium",
+    "milestone": "Sprint 1",
+    "progress": 30
   },
   {
     "id": "recording-export",
@@ -112,7 +136,11 @@
     "activity": [
       "Marked done.",
       "Kept as browser history."
-    ]
+    ],
+    "energy": "low",
+    "milestone": "Sprint 1",
+    "location": "office",
+    "progress": 100
   },
   {
     "id": "warmup-set-notes",
@@ -158,6 +186,23 @@
     "activity": [
       "Dataset reference added.",
       "Owner confirmed."
+    ],
+    "energy": "medium",
+    "milestone": "Sprint 2",
+    "location": "field",
+    "subtasks": [
+      {
+        "text": "Review last audit",
+        "done": true
+      },
+      {
+        "text": "Walk site perimeter",
+        "done": false
+      },
+      {
+        "text": "Photo document findings",
+        "done": false
+      }
     ]
   },
   {
@@ -182,7 +227,10 @@
     "activity": [
       "CI note imported.",
       "Review requested."
-    ]
+    ],
+    "milestone": "Sprint 2",
+    "location": "remote",
+    "progress": 10
   },
   {
     "id": "owner-cleanup-pass",
@@ -227,7 +275,8 @@
     "activity": [
       "Screenshot added.",
       "Contrast issue reproduced."
-    ]
+    ],
+    "milestone": "Sprint 2"
   },
   {
     "id": "github-pages-demo-copy",
@@ -321,7 +370,8 @@
     "type": "prompt",
     "owner": "Claude",
     "purpose": "System prompt for a RAG pipeline that retrieves from a document store and synthesizes answers with citations.",
-    "id": "prompt-rag-builder"
+    "id": "prompt-rag-builder",
+    "milestone": "Prompt Library"
   },
   {
     "memory": [
@@ -344,7 +394,8 @@
     "type": "prompt",
     "owner": "Claude",
     "purpose": "Few-shot prompt that catches security bugs, logic errors, and performance issues in pull requests.",
-    "id": "prompt-code-review"
+    "id": "prompt-code-review",
+    "milestone": "Prompt Library"
   },
   {
     "sources": [
@@ -368,7 +419,8 @@
     "doneWhen": "10 production queries improved: >=2x speedup on 7/10.",
     "blocker": "needs schema context",
     "purpose": "Takes a SQL query and schema, suggests indexes and rewrites. Works on Postgres, MySQL, and SQLite.",
-    "id": "prompt-sql-optimizer"
+    "id": "prompt-sql-optimizer",
+    "milestone": "Prompt Library"
   },
   {
     "sources": [
