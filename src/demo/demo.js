@@ -7910,7 +7910,10 @@ function packForwardPathFormValues(pack) {
     due: fieldValue("edit-due", pack.due),
     next: requestedNext,
     doneWhen: fieldValue("edit-done-when", pack.doneWhen) || pack.doneWhen || "",
-    purpose: fieldValue("edit-purpose", pack.purpose) || pack.purpose || ""
+    purpose: fieldValue("edit-purpose", pack.purpose) || pack.purpose || "",
+    energy: pack.energy,
+    milestone: pack.milestone,
+    location: pack.location
   };
 }
 
