@@ -65,6 +65,10 @@
 | 53 | VIZ |**Analytics mini-dashboard (CJ)** | Streak, active day, avg tasks/day, busiest owner on Insights. |
 | 54 | UX |**Work item age detail (AS)** | Cards show "Opened 3d ago · Last 2h ago" from activity log. |
 | 55 | UX |**Duplicate detection on create (CN)** | Warns when typing a title that matches an existing pack. |
+| 56 | AUTOM |**Recurring/template items (Y)** | Repeat button spawns a fresh copy with same title/owner/next-action, reset to active. |
+| 57 | UX |**Progress slider (AB)** | 0-100% range slider in work path, debounced save, card-style wrapper. |
+| 58 | UX |**Subtasks/checklist (AK)** | Collapsible checkboxes per pack with progress bar, CSP-safe CSSStyleSheet. |
+| 59 | UX |**Batch multi-select (V)** | Checkbox mode, floating action bar, batch done/block/delete. |
 
 ---
 
