@@ -12,18 +12,6 @@ app mode keeps the container stateless and stores anonymous per-browser demo
 state in managed Postgres. The Node app does not add accounts, payments,
 customer-data collection, or a live Projects service.
 
-## Active Boundary
-
-Keep this repo focused on the public portfolio demo.
-
-| Area | Kept here | Not part of this repo |
-|---|---|---|
-| Runtime | Static GitHub Pages app; optional single-process Node app in `server/` | Razor Server, Blazor WASM, desktop app runtime |
-| Data | `data/demo-packs.json` sample work | Real packs, private notes, customer data |
-| State | Browser `localStorage` under `projects-static-demo-state-v6`; optional Node app storage backed by local file or anonymous per-browser managed Postgres rows | Account state |
-| Styling | Static CSS in `assets/` | Source-side app shell generation |
-| Behavior | Source JS in `src/demo/demo.js`, generated to the public `assets/demo.js`; API calls only in Node app mode or when an API base URL is configured | Production backend workflows or GitHub API calls |
-
 ## Files
 
 | Path | Purpose |
