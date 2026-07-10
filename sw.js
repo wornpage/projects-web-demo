@@ -1,5 +1,7 @@
-// Service worker — caches the app shell for offline use
-const CACHE = "projects-demo-v1";
+// Service worker — offline fallback for the app shell.
+// Network-first so deploys always win; cached copies serve only when offline.
+// API requests are never intercepted or cached.
+const CACHE = "projects-demo-v2";
 const SHELL = [
   "/",
   "/index.html",
@@ -25,13 +27,15 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith("/api/")) return;
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+    fetch(event.request).then((response) => {
       if (response.ok && response.type === "basic") {
         const clone = response.clone();
         caches.open(CACHE).then((cache) => cache.put(event.request, clone));
       }
       return response;
-    }).catch(() => caches.match("/index.html")))
+    }).catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html")))
   );
 });
