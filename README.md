@@ -2,6 +2,8 @@
 
 [![Ship check](https://github.com/jared-bidlow/projects-web-demo/actions/workflows/ship-check.yml/badge.svg)](https://github.com/jared-bidlow/projects-web-demo/actions/workflows/ship-check.yml)
 
+**Live demo:** [projectswebdemo7ojp-5179-sgscv2kjey.outplane.app](https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app/#/home)
+
 This repository is the active lightweight web-tech home for the public
 Projects demo. It is a static GitHub Pages app by default: HTML, CSS,
 JavaScript, JSON demo data, and image assets.
@@ -109,6 +111,8 @@ The same Node process serves the frontend and `/api`. In app mode,
 sets `window.__projectsDemoConfig` with the same-origin API base, backend mode
 flag, and asset version, so no `?api=` query parameter is needed.
 
+### Seed Data
+
 In app mode, seed demo work loads through `GET /api/demo-packs` with the same
 anonymous browser client key as the rest of the API. Seed data requests
 without the browser client key are rejected instead of falling back to a public
@@ -154,6 +158,7 @@ deploys should still use `PROJECTS_STATE_STORAGE=postgres` with managed
 Postgres environment variables instead of writable container files.
 Invalid `PROJECTS_STATE_STORAGE` values fail startup instead of silently falling
 back to file-backed state.
+
 ### API Security
 
 Hosted Postgres stores a server-side digest of the browser client key rather
@@ -162,6 +167,7 @@ State-changing API routes validate that client key before reading JSON payloads.
 The API accepts only generated `demo-...` browser keys or hashed `sync-...`
 share keys; weak manual header values and readable sync-code-shaped headers are
 rejected.
+
 ### Rate Limits
 
 The backend also keeps in-memory per-source and per-state write rate limits.
@@ -179,6 +185,7 @@ silently stored.
 JSON body writes are capped at 1 MiB and return `413` before storage if the
 request is too large. Declared oversized bodies are rejected before the request
 stream is read.
+
 ### Workflow Endpoints
 
 Hosted app mode uses named endpoints instead of a single generic state write path.
@@ -422,6 +429,7 @@ schedules a backend write.
 - **Seasonal themes** — 🎃 Halloween, ❄️ Winter, 🎉 Holiday accents
 - **Keyboard shortcuts** — `?` cheat sheet, arrow keys, `d` marks done, `b` toggles blocker
 - **Focus mode** — `F` key collapses sidebar, centers selected work
+
 ## Product Rule
 
 The public demo should explain one idea clearly:
