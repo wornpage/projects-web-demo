@@ -91,6 +91,7 @@ function sanitizePack(source) {
     milestone: normalizeText(source.milestone, 200),
     location: normalizeText(source.location, 200),
     progress: normalizePackProgress(source.progress),
+    pinned: source.pinned === true,
     reactions: normalizePackReactions(source.reactions),
     subtasks: normalizePackSubtasks(source.subtasks),
     sources: normalizeStringArray(source.sources, 50, 200),
