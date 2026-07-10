@@ -150,6 +150,10 @@ try {
     if (route === "terms") continue;
     await gotoRoute(page, route);
     const families = await page.evaluate(() => {
+      // Buttons inside collapsed <details> (e.g. the work card's "Other
+      // actions") have offsetParent === null and would escape the sweep —
+      // the snooze/open ReferenceError regression hid there once.
+      document.querySelectorAll("#screen-content details:not([open])").forEach((d) => { d.open = true; });
       const seen = new Set();
       return [...document.querySelectorAll("#screen-content button:not([disabled]), #screen-content a.btn, .demo-command-brief button:not([disabled]), .demo-bottom-brief button:not([disabled]), .demo-bottom-brief a")]
         .filter((el) => el.offsetParent !== null && el.getAttribute("aria-pressed") !== "true" && el.getAttribute("aria-disabled") !== "true")
@@ -161,6 +165,7 @@ try {
       sweptFamilies.add(family);
       await gotoRoute(page, route);
       const result = await page.evaluate((key) => {
+        document.querySelectorAll("#screen-content details:not([open])").forEach((d) => { d.open = true; });
         const seen = new Set();
         const target = [...document.querySelectorAll("#screen-content button:not([disabled]), #screen-content a.btn")]
           .filter((el) => el.offsetParent !== null && el.getAttribute("aria-pressed") !== "true" && el.getAttribute("aria-disabled") !== "true")

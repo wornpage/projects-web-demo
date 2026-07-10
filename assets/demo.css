@@ -12,7 +12,8 @@
   --cockpit-border-strong: #d0cac1;
   --cockpit-text: #21322b;
   --cockpit-text-secondary: #5b6a60;
-  --cockpit-text-muted: #708277;
+  /* 4.5:1 on both --cockpit-bg and --cockpit-surface; #708277 measured 3.98:1 */
+  --cockpit-text-muted: #63746a;
   --cockpit-muted: var(--cockpit-text-muted);
   --cockpit-hover-bg: #eaf4f0;
   --cockpit-success-bg: #ecfdf5;
@@ -69,8 +70,8 @@
   }
 }
 
-html:has(#theme-light:checked){--cockpit-bg:#f5f3ef;--cockpit-surface:#fdfdfb;--cockpit-nav-bg:#efede7;--cockpit-accent:#0d9488;--cockpit-accent-hover:#0f766e;--cockpit-accent-text:#fff;--cockpit-accent-50:#e6f7f5;--cockpit-selected-bg:#d7efe7;--cockpit-selected-fg:#082f2b;--cockpit-border:#e2ddd5;--cockpit-border-strong:#d0cac1;--cockpit-text:#21322b;--cockpit-text-secondary:#5b6a60;--cockpit-text-muted:#708277;--cockpit-hover-bg:#eaf4f0;--cockpit-success-bg:#ecfdf5;--cockpit-success-border:#14b8a6;--cockpit-success-text:#134e4a;--cockpit-warning-bg:#fff7ed;--cockpit-warning-border:#fdba74;--cockpit-warning-text:#9a3412;--cockpit-danger-bg:#fef2f2;--cockpit-danger-border:#fca5a5;--cockpit-danger-text:#991b1b;--cockpit-shadow-sm:0 1px 2px rgba(0,0,0,0.04),0 1px 4px rgba(0,0,0,0.06)}
-html:has(#theme-dark:checked),
+html:has(#theme-light:checked){--cockpit-bg:#f5f3ef;--cockpit-surface:#fdfdfb;--cockpit-nav-bg:#efede7;--cockpit-accent:#0d9488;--cockpit-accent-hover:#0f766e;--cockpit-accent-text:#fff;--cockpit-accent-50:#e6f7f5;--cockpit-selected-bg:#d7efe7;--cockpit-selected-fg:#082f2b;--cockpit-border:#e2ddd5;--cockpit-border-strong:#d0cac1;--cockpit-text:#21322b;--cockpit-text-secondary:#5b6a60;--cockpit-text-muted:#63746a;--cockpit-hover-bg:#eaf4f0;--cockpit-success-bg:#ecfdf5;--cockpit-success-border:#14b8a6;--cockpit-success-text:#134e4a;--cockpit-warning-bg:#fff7ed;--cockpit-warning-border:#fdba74;--cockpit-warning-text:#9a3412;--cockpit-danger-bg:#fef2f2;--cockpit-danger-border:#fca5a5;--cockpit-danger-text:#991b1b;--cockpit-shadow-sm:0 1px 2px rgba(0,0,0,0.04),0 1px 4px rgba(0,0,0,0.06)}
+html:has(#theme-dark:checked) {
   --cockpit-bg: #0f1714;
   --cockpit-surface: #18241f;
   --cockpit-nav-bg: #121c18;
@@ -2611,6 +2612,7 @@ html:has(#theme-dark:checked) .demo-header-metadata {
   max-width: 200px;
 }
 
+.demo-search-input,
 .demo-field input,
 .demo-field textarea,
 .demo-field select {
@@ -5264,8 +5266,34 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
     grid-template-columns: 1fr;
   }
 
+  /* Compact chips on phones: natural-width wrap instead of stretched tiles,
+     so the toolbar stops eating the first screenful. Profile/scenario cards
+     keep their 2-up grid. */
   .demo-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .demo-chip-row .demo-chip {
+    width: auto;
+  }
+
+  .demo-chip-row.demo-profile-grid {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 16px keeps iOS Safari from auto-zooming focused fields. */
+  .demo-search-input,
+  .demo-search-filters select,
+  .demo-field input,
+  .demo-field textarea,
+  .demo-field select {
+    font-size: 16px;
+  }
+
+  .demo-search-input {
+    min-height: 38px;
   }
 
   .demo-meta-row {
@@ -7864,3 +7892,6 @@ html:has(#theme-holiday:checked){--cockpit-accent:#e91e63;--cockpit-accent-hover
 .demo-search-hit{background:var(--cockpit-surface);border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);color:var(--cockpit-text);cursor:pointer;display:grid;gap:4px;padding:10px 12px;text-align:left}.demo-search-hit:hover{background:var(--cockpit-hover-bg);border-color:var(--cockpit-border-strong)}
 .demo-search-hit-meta{color:var(--cockpit-text-muted);font-size:12px}
 .demo-search-hit-snippet{color:var(--cockpit-text-secondary);font-size:12px;line-height:1.4;overflow-wrap:anywhere}.demo-search-hit-snippet em{color:var(--cockpit-text-muted);font-size:10px;font-style:normal;font-weight:620;letter-spacing:.02em;text-transform:uppercase}.demo-search-hit-snippet mark{background:var(--cockpit-selected-bg);border-radius:3px;color:var(--cockpit-selected-fg);padding:0 2px}
+.demo-toolbar-modes{display:flex;flex-wrap:wrap;gap:8px}.demo-toolbar-modes .btn,.demo-toolbar-modes .demo-view-toggle{flex:1 1 auto;min-height:36px}
+.demo-api-busy #screen-content{cursor:progress}.demo-api-busy .demo-work-card button,.demo-api-busy .demo-card-actions .btn{opacity:.65;pointer-events:none}
+.demo-empty .demo-empty-action{justify-self:center;margin-top:4px;min-width:160px}

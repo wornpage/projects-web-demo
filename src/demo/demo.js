@@ -4155,8 +4155,18 @@ function workListDisplayPacks(visible) {
 
 function workListEmptyState() {
   return state.packs.length === 0
-    ? emptyState(`No ${profile().work} is available.`, `${profile().newWork} or reset demo data.`, emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`))
-    : emptyState(`No ${profile().work} matches this filter.`, "Clear search or choose another status filter.", emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"));
+    ? emptyState(
+      `No ${profile().work} is available.`,
+      `${profile().newWork} or reset demo data.`,
+      emptyStateContextFor(`${workLabelTitle()} filters`, `no ${workNoun(2)} exist in this browser`, `create or reset ${profile().work}`),
+      `<button class="btn btn-sm demo-empty-action" type="button" data-go="create">${escapeHtml(profile().newWork)}</button>`
+    )
+    : emptyState(
+      `No ${profile().work} matches this filter.`,
+      "Clear search or choose another status filter.",
+      emptyStateContextFor(`${workLabelTitle()} filters`, `current search or status filter hides every ${workNoun(1)}`, "clear search or choose another status filter"),
+      `<button class="btn btn-sm demo-empty-action" type="button" data-empty-action="clear-work-filters">Show everything</button>`
+    );
 }
 
 function renderWork() {
@@ -4169,7 +4179,7 @@ function renderWork() {
       <div class="demo-panel-head">
         <div>
           <span class="section-label">${escapeHtml(workNounTitle(2))}</span>
-          <h2>${visible.length} visible</h2>
+          <h2 id="work-visible-count">${visible.length} visible</h2>
         </div>
         ${navButton("create", profile().newWork, "btn btn-primary")}
       </div>
@@ -4790,8 +4800,9 @@ function workToolbar(label) {
       <div class="demo-chip-row" aria-label="Energy filters">
         ${[["all", "All", "Show every energy level"], ["low", "🔋", "Show low-energy work"], ["medium", "⚡", "Show medium-energy work"], ["high", "🚀", "Show high-energy work"]].map(([value, label, help]) => `<button class="demo-chip" type="button" data-action="energy-filter" data-energy-filter="${value}" aria-pressed="${String(state.energyFilter === value || (value === "all" && !state.energyFilter))}" title="${escapeAttribute(help)}" aria-label="${escapeAttribute(help)}">${label}</button>`).join("")}
       </div>
-      <button id="toggle-batch-mode" class="btn btn-sm fs-mobile-icon" type="button" title="Toggle batch select mode" data-action="batch-mode" aria-pressed="${String(state.batchMode)}">☑</button><button id="toggle-focus-mode" class="btn btn-sm fs-mobile-icon" type="button" title="Focus on selected work (F)" data-action="focus-mode" aria-pressed="${String(state.focusMode)}">🔍</button>
-      <button id="density-toggle" class="demo-view-toggle" type="button" title="Switch between card and compact list view" aria-label="Toggle list density" aria-pressed="false">☰ List</button>
+      <div class="demo-toolbar-modes">
+        <button id="toggle-batch-mode" class="btn btn-sm" type="button" title="Toggle batch select mode" data-action="batch-mode" aria-pressed="${String(state.batchMode)}">☑ Batch</button><button id="toggle-focus-mode" class="btn btn-sm" type="button" title="Focus on selected work (F)" data-action="focus-mode" aria-pressed="${String(state.focusMode)}">🔍 Focus</button><button id="density-toggle" class="demo-view-toggle" type="button" title="Switch between card and compact list view" aria-label="Toggle list density" aria-pressed="false">☰ List</button>
+      </div>
     </section>
   `;
 }
@@ -4938,6 +4949,10 @@ function bindToolbar() {
           const visibleCount = filteredPacks().length;
           scopeEl.textContent = `${visibleCount} of ${state.packs.length} ${workNoun(state.packs.length)} visible.`;
         }
+        const countEl = el("work-visible-count");
+        if (countEl) {
+          countEl.textContent = `${filteredPacks().length} visible`;
+        }
         updateActionReceipt();
       }, 150);
     });
@@ -5028,6 +5043,10 @@ function updateWorkListAfterFilter() {
   if (scopeEl) {
     const visibleCount = filteredPacks().length;
     scopeEl.textContent = `${visibleCount} of ${state.packs.length} ${workNoun(state.packs.length)} visible.`;
+  }
+  const countEl = el("work-visible-count");
+  if (countEl) {
+    countEl.textContent = `${filteredPacks().length} visible`;
   }
   updateActionReceipt();
   renderCommand(currentPack());
@@ -5464,6 +5483,17 @@ function handleImagePaste(event) {
 
 function bindWorkCards() {
   rovingTabindex();
+  document.querySelectorAll('[data-empty-action="clear-work-filters"]').forEach((button) => {
+    button.addEventListener("click", () => {
+      state.query = "";
+      state.filter = "all";
+      state.energyFilter = "all";
+      state.suppressNextSave = true;
+      const search = el("demo-search");
+      if (search) search.value = "";
+      render();
+    });
+  });
   document.querySelectorAll(".demo-work-card button").forEach((button) => {
     button.addEventListener("click", () => {
       const card = button.closest(".demo-work-card");
@@ -6572,6 +6602,7 @@ async function handlePackAction(id, action) {
 
   const undoSnapshot = actionUndoSnapshot(pack, action);
   if (SERVER_PACK_ACTIONS.has(action)) {
+    if (DEMO_API_BASE_URL) document.documentElement.classList.add("demo-api-busy");
     try {
       if (await runBackendPackAction(pack, action)) {
         setBackendActionReceipt(action, undoSnapshot);
@@ -6583,6 +6614,8 @@ async function handlePackAction(id, action) {
       state.status = `Where: Backend action. Blocker: ${error.message || "API failed"}. Next action: retry or refresh.`;
       render();
       return;
+    } finally {
+      document.documentElement.classList.remove("demo-api-busy");
     }
   }
 
@@ -9259,7 +9292,7 @@ function clipboardBlockedStatus() {
   return "Where: Clipboard. Blocker: browser blocked clipboard access. Next action: copy from the visible text area.";
 }
 
-function emptyState(text, help = "Use the nearby controls or reset demo data.", context = emptyStateContext()) {
+function emptyState(text, help = "Use the nearby controls or reset demo data.", context = emptyStateContext(), actionHtml = "") {
   const label = `Empty state: ${text}. Where: ${context.where}. Blocker: ${context.blocker}. Next action: ${context.next}.`;
   return `<div class="demo-empty" role="note" aria-label="${escapeAttribute(label)}">
     <strong>${escapeHtml(text)}</strong>
@@ -9267,6 +9300,7 @@ function emptyState(text, help = "Use the nearby controls or reset demo data.", 
     <small><b>Where:</b> ${escapeHtml(context.where)}</small>
     <small><b>Blocker:</b> ${escapeHtml(context.blocker)}</small>
     <small><b>Next action:</b> ${escapeHtml(context.next)}</small>
+    ${actionHtml}
   </div>`;
 }
 
@@ -10163,7 +10197,11 @@ function searchResultsHtml() {
   }
   const results = searchPageResults();
   if (!results.length) {
-    return `<div class="demo-empty" role="note">No matches for "${escapeHtml(query)}". Try fewer words or reset the filters.</div>`;
+    const filtered = searchPage.status !== "all" || searchPage.energy !== "all" || searchPage.owner !== "all";
+    const resetButton = filtered
+      ? `<button class="btn btn-sm demo-empty-action" type="button" data-empty-action="reset-search-filters">Reset filters</button>`
+      : "";
+    return `<div class="demo-empty" role="note"><strong>No matches for "${escapeHtml(query)}".</strong><span>${filtered ? "The filters below the search box may be hiding results." : "Try fewer or shorter words."}</span>${resetButton}</div>`;
   }
   const items = results.map(({ pack, hits }) => {
     const meta = [pack.status, pack.owner, pack.energy ? `${pack.energy} energy` : ""].filter(Boolean).join(" · ");
@@ -10237,6 +10275,18 @@ function bindSearchPageResults() {
       const id = button.dataset.searchOpen;
       state.selectedId = id;
       go("pack", id);
+    });
+  });
+  document.querySelectorAll('[data-empty-action="reset-search-filters"]').forEach((button) => {
+    button.addEventListener("click", () => {
+      searchPage.status = "all";
+      searchPage.energy = "all";
+      searchPage.owner = "all";
+      [["search-status-filter", "all"], ["search-energy-filter", "all"], ["search-owner-filter", "all"]].forEach(([id, value]) => {
+        const select = el(id);
+        if (select) select.value = value;
+      });
+      updateSearchPageResults();
     });
   });
 }
