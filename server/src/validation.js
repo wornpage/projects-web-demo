@@ -86,11 +86,40 @@ function sanitizePack(source) {
     doneWhen: normalizeText(source.doneWhen, 1000),
     owner: normalizeText(source.owner, 120),
     due: normalizeText(source.due, 40),
+    type: normalizeText(source.type, 40),
+    energy: ["low", "medium", "high"].includes(source.energy) ? source.energy : "",
+    milestone: normalizeText(source.milestone, 200),
+    location: normalizeText(source.location, 200),
+    progress: normalizePackProgress(source.progress),
+    reactions: normalizePackReactions(source.reactions),
     sources: normalizeStringArray(source.sources, 50, 200),
     memory: normalizeStringArray(source.memory, 100, 2000),
     activity: normalizeStringArray(source.activity, 100, 400),
     signature: normalizeText(source.signature, 80)
   };
+}
+
+function normalizePackProgress(value) {
+  const progress = Number(value);
+  if (!Number.isFinite(progress)) {
+    return 0;
+  }
+  return Math.min(100, Math.max(0, Math.round(progress)));
+}
+
+function normalizePackReactions(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  const reactions = {};
+  for (const [key, count] of Object.entries(value).slice(0, 8)) {
+    const emoji = normalizeText(key, 8);
+    const total = Number(count);
+    if (emoji && Number.isFinite(total) && total > 0) {
+      reactions[emoji] = Math.min(9999, Math.round(total));
+    }
+  }
+  return reactions;
 }
 
 function sanitizePlainObject(value, depth = 0) {
