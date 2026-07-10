@@ -4721,7 +4721,7 @@ function workToolbar(label) {
       <div id="status-chips" class="demo-chip-row" aria-label="Status filters">
         ${renderFilterChips()}
       </div>
-      <div class="demo-chip-row" aria-label="Energy filters">
+      <div class="demo-chip-row" aria-label="Energy filters" role="radiogroup">
         <span class="demo-chip${state.energyFilter === "all" ? "" : ""}" onclick="state.energyFilter='all';render()">All</span>
         <span class="demo-chip${state.energyFilter === "low" ? " active" : ""}" onclick="state.energyFilter='low';render()">🔋</span>
         <span class="demo-chip${state.energyFilter === "medium" ? " active" : ""}" onclick="state.energyFilter='medium';render()">⚡</span>
@@ -8590,7 +8590,7 @@ function renderExtraFields(pack) {
   // Extra fields in a 2-column grid
   html += '<div class="demo-extra-grid">';
   // Energy
-  html += '<label class="demo-field demo-state-field"><span>Energy</span><div class="demo-energy"><button class="demo-energy-btn' + (pack.energy === "low" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="low">🔋 Low</button><button class="demo-energy-btn' + (pack.energy === "medium" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="medium">⚡ Medium</button><button class="demo-energy-btn' + (pack.energy === "high" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="high">🚀 High</button></div></label>';
+  html += '<label class="demo-field demo-state-field"><span>Energy <span class="sr-only">Low Medium High</span></span><div class="demo-energy"><button class="demo-energy-btn' + (pack.energy === "low" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="low">🔋 Low</button><button class="demo-energy-btn' + (pack.energy === "medium" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="medium">⚡ Medium</button><button class="demo-energy-btn' + (pack.energy === "high" ? " is-active" : "") + '" data-action="energy" data-pack="' + pack.id + '" data-energy-value="high">🚀 High</button></div></label>';
   // Milestone
   html += '<label class="demo-field demo-state-field"><span>Milestone</span><input class="demo-search-input" type="text" value="' + escapeHtml(pack.milestone || "") + '" data-milestone-pack="' + pack.id + '" placeholder="e.g. Sprint 1, Phase 2"></label>';
   // Location
