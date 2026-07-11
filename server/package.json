@@ -15,6 +15,7 @@
     "risk:check": "node ../scripts/check-risk-decisions.mjs",
     "static:check": "npm run demo:check && node ../scripts/check-static-preview.mjs",
     "publish:check": "npm run demo:check && node ../scripts/check-static-publish.mjs",
+    "publish:static": "node ../scripts/build-static-publish.mjs",
     "routes:check": "npm run demo:check && node ../scripts/check-public-routes.mjs",
     "test": "node --test server.test.js workflow-rules.test.js",
     "sync:check": "npm run demo:check && node ../scripts/check-sync-surface.mjs",
