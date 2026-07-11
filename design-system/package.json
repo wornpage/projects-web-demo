@@ -2,6 +2,7 @@
   "name": "projects-cockpit",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "Hand-authored React approximations of the Projects demo's cockpit design language (tokens + patterns), created for the claude.ai/design sync. The vanilla-JS app in ../src/demo is the visual source of truth.",
   "type": "module",
   "main": "dist/index.js",

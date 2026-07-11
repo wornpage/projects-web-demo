@@ -10318,7 +10318,7 @@ function renderTerms() {
         <h3>No warranty</h3>
         <p>This demo is provided "as is" without warranty of any kind. The project owner is not responsible for any data loss or damages from using this demo.</p>
         <h3>Source code</h3>
-        <p>This project is <a id="terms-github-link" href="#/terms" target="_blank" rel="noopener">open source on GitHub</a> under the GNU General Public License v3.0 — see the LICENSE file in the repository.</p>
+        <p>This project is <a id="terms-github-link" href="#/terms" target="_blank" rel="noopener">open source on GitHub</a> under the GNU Affero General Public License v3.0 — see the LICENSE file in the repository. Commercial licensing is available on request.</p>
       </div>
     </section>
   `;

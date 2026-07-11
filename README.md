@@ -442,3 +442,14 @@ Pick work -> see the blocker -> run the obvious next button.
 
 If a feature does not support that public portfolio story, it should stay out
 of this repo.
+
+## License
+
+The code is licensed under the GNU Affero General Public License v3.0 —
+see [LICENSE](LICENSE). If you run a modified version as a network service,
+the AGPL requires you to offer its source to your users.
+
+Contributions are accepted under the terms of [CLA.md](CLA.md), which lets
+the maintainer offer the project under other terms as well. Commercial or
+dual licensing is available on request — contact the maintainer through the
+GitHub profile.
