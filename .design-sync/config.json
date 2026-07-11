@@ -7,6 +7,5 @@
   "cssEntry": "src/styles.css",
   "tokensPkg": "projects-cockpit",
   "tokensGlob": "src/tokens.css",
-  "runtimeFontPrefixes": ["Sitka", "Iowan Old Style", "Palatino"],
   "readmeHeader": ".design-sync/conventions.md"
 }

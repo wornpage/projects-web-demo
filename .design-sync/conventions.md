@@ -1,7 +1,7 @@
 # Projects Cockpit — build conventions
 
-**Wrap every screen in `CockpitRoot`.** It applies the cockpit background, the Sitka
-serif stack, and the dense 13px/1.4 body rhythm; outside it, text falls back to
+**Wrap every screen in `CockpitRoot`.** It applies the cockpit background, the quiet
+system-ui stack, and the dense 13px/1.4 body rhythm; outside it, text falls back to
 browser defaults and token-driven colors still resolve but the surface reads wrong.
 Dark mode: set `data-theme="dark"` on any ancestor (CockpitRoot included) — the full
 token palette switches.
@@ -13,8 +13,8 @@ and type come from `var(--cockpit-*)` custom properties defined in `tokens/token
 `--cockpit-text`, `--cockpit-text-secondary`, `--cockpit-text-muted`,
 `--cockpit-accent`, `--cockpit-accent-50`, `--cockpit-selected-bg`,
 `--cockpit-warning-border`, `--cockpit-warning-text`, `--cockpit-success-border`,
-`--cockpit-danger-border`, `--cockpit-radius` (8px), `--cockpit-radius-sm` (4px),
-`--cockpit-shadow-sm`, `--font-family`, `--font-family-display`.
+`--cockpit-danger-border`, `--cockpit-radius` (10px), `--cockpit-radius-sm` (6px),
+`--cockpit-shadow-sm`, `--cockpit-shadow-md`, `--font-family`, `--font-family-display`.
 
 Hard rules of this design language:
 - **Full 1px borders only — never a thick colored left-edge stripe.** State is carried

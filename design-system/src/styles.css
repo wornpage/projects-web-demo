@@ -1,6 +1,7 @@
 /* Projects Cockpit component styles — a faithful distillation of the app's
-   assets/demo.css idiom: Sitka serif, dense spacing, full 1px borders (never
-   side-stripes), warning color carries attention state, done work recedes. */
+   assets/demo.css idiom: quiet system-ui, dense spacing, full 1px borders
+   (never side-stripes), pill buttons and chips, warning color carries
+   attention state, done work recedes. */
 
 .cockpit-root {
   background: var(--cockpit-bg);
@@ -18,7 +19,7 @@
   align-items: center;
   background: var(--cockpit-surface);
   border: 1px solid var(--cockpit-border);
-  border-radius: var(--cockpit-radius);
+  border-radius: 999px;
   color: var(--cockpit-text-secondary);
   cursor: pointer;
   display: inline-flex;
@@ -33,11 +34,11 @@
 .cockpit-btn:hover { background: var(--cockpit-accent-50); border-color: var(--cockpit-accent); box-shadow: var(--cockpit-shadow-sm); }
 /* Pressed: the button visibly sinks and darkens so every click reads. */
 .cockpit-btn:active:not(:disabled) { background: var(--cockpit-selected-bg); border-color: var(--cockpit-accent); box-shadow: none; transform: translateY(1px); }
-.cockpit-btn:focus-visible { outline: 2px solid var(--cockpit-focus); outline-offset: 1px; }
+.cockpit-btn:focus-visible { outline: 3px solid var(--cockpit-focus); outline-offset: 2px; }
 .cockpit-btn--primary { background: var(--cockpit-accent); border-color: var(--cockpit-accent); color: var(--cockpit-accent-text); }
 .cockpit-btn--primary:hover { background: var(--cockpit-accent-hover); border-color: var(--cockpit-accent-hover); }
 .cockpit-btn--primary:active:not(:disabled) { background: var(--cockpit-accent-hover); border-color: var(--cockpit-accent-hover); box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.22); transform: translateY(1px); }
-.cockpit-btn--sm { font-size: 12px; padding: 4px 10px; border-radius: var(--cockpit-radius-sm); }
+.cockpit-btn--sm { font-size: 12px; padding: 4px 10px; }
 .cockpit-btn:disabled { background: var(--cockpit-border-strong); border-color: var(--cockpit-border-strong); color: var(--cockpit-surface); cursor: default; }
 
 /* ---- StatePill ---- */
@@ -73,6 +74,7 @@
   font-weight: 560;
   gap: 6px;
   justify-content: space-between;
+  min-height: 42px;
   padding: 8px 12px;
   transition: border-color 0.12s ease, background-color 0.12s ease;
 }

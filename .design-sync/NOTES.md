@@ -21,8 +21,12 @@
 - Playwright for the render check: reuse the repo's pinned version (server/package.json,
   1.61.x) installed into .ds-sync/ — the cached chromium builds under
   %LOCALAPPDATA%/ms-playwright pin it.
-- `--config` and `--entry` resolve relative to dirname(--node-modules) in some paths;
-  run everything from the repo root and prefer explicit relative paths.
+- **`--entry` resolves against CWD, not `--node-modules`** (package-build.mjs `resolve(ENTRY_OVERRIDE)`).
+  From the repo root, pass the FULL repo-relative path: `--entry ./design-system/dist/index.js`
+  (NOT `--entry ./dist/index.js` — that walks up from `<repo>/dist`, finds no package.json since
+  the repo has no root manifest, and dies with `ENOENT ...\dist\package.json` at dts.mjs projectFor).
+  The exact command that works (2026-07-10 re-sync):
+  `node .ds-sync/resync.mjs --config .design-sync/config.json --node-modules design-system/node_modules --entry ./design-system/dist/index.js --out ./ds-bundle --remote .design-sync/.cache/remote-sync.json`
 - Fonts: Sitka / Iowan Old Style / Palatino are OS-provided system fonts — nothing to
   ship; suppressed via `runtimeFontPrefixes`. Georgia is the shippable-free fallback.
 
@@ -34,6 +38,19 @@
   both landed in the app after the first sync, exactly the hand-mirror drift the risk
   section warns about. The app's forest/ocean/sepia themes are deliberately NOT mirrored
   (package ships light + dark only).
+- **2026-07-10 re-sync — big drift fold.** Mirrored three app changes that had accumulated:
+  (1) **Font: Sitka serif → system-ui** — the app deliberately switched on 2026-07-08
+  (commit 12412cd); the package had kept Sitka. User confirmed "mirror the app" on
+  2026-07-10, so tokens.css now ships the system-ui stack and `runtimeFontPrefixes` was
+  REMOVED from config (no brand font to suppress — system fonts need no shipping, no
+  [FONT_MISSING]). Do NOT reintroduce Sitka unless the app restores it first.
+  (2) **Teal palette retune** — accent #1d6f64 → #0d9488 (+hover, +accent-50 #e6f7f5),
+  warm-canvas neutrals (#f5f3ef/#fdfdfb), AA muted #708277 → #63746a, dark borders
+  lightened. (3) **10px/6px radii** (were 8/4), **two-layer shadows** + new
+  `--cockpit-shadow-md`, **pill buttons** (border-radius 999px, was --cockpit-radius),
+  chip min-height 42px, 3px focus ring (was 2px). All 9 components render unchanged
+  (source/DOM identical — it's a pure token/CSS reskin), so grades carried forward at
+  zero cost; upload was styling + docs only.
 
 ## Re-sync risks
 
