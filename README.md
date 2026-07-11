@@ -341,10 +341,13 @@ cookie-clearing, no-referrer, nosniff, HSTS, frame-deny,
 same-origin opener/resource/embedder isolation, Permissions-Policy, and CSP
 headers.
 
-## GitHub Pages
+## Static hosting (Cloudflare Pages, GitHub Pages)
 
-Do not point Pages at the repository root. Build a filtered static artifact and
-publish only that folder:
+The deployed product is the static artifact, not the repository. **Cloudflare
+Pages is the primary target** — see [docs/deploy-cloudflare.md](docs/deploy-cloudflare.md)
+for the runbook; app mode stays an optional local/dormant route. Whatever the
+host, never point it at the repository root. Build a filtered static artifact
+and publish only that folder:
 
 ```powershell
 pwsh -NoLogo -NoProfile -Command 'node "scripts/build-static-publish.mjs"'
