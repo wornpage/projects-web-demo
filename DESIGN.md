@@ -103,12 +103,13 @@ A warm paper neutral field with a single working accent; every color is a `--coc
 
 ### Primary
 - **Steady Teal** (#0d9488, `--cockpit-accent`): primary action buttons, the selected filter chip, focus rings, progress fills, and the "today" marker. It means "this is live or chosen," never "this is pretty." Hover deepens to **Teal Deep** (#0f766e); tinted moments use **Teal Wash** (#e6f7f5) and **Selected Mint** (#d7efe7) with **Selected Ink** (#082f2b) text.
+- **Link** (`--cockpit-link`, Teal Deep in light): the text-role accent for link-ish hovers and status text on plain surfaces. Fill roles (`--cockpit-accent-hover`) and text roles never share a token — dark themes need a deep fill under white labels but a pale tone as standalone text.
 
 ### Neutral
 - **Warm Canvas** (#f5f3ef, `--cockpit-bg`): the page field.
 - **Paper Surface** (#fdfdfb, `--cockpit-surface`): panels, cards, inputs — anything that holds content.
 - **Nav Shade** (#efede7, `--cockpit-nav-bg`): the sidebar/bottom-bar layer, one step darker than canvas.
-- **Ink** (#21322b), **Ink Secondary** (#5b6a60), **Ink Muted** (#63746a): three text levels. Muted is tuned to hold ≥4.5:1 on both canvas and surface — do not lighten it.
+- **Ink** (#21322b), **Ink Secondary** (#5b6a60), **Ink Muted** (#63746a): three text levels. Muted is tuned to hold APCA |Lc| ≥ 60 on canvas, surface, and Nav Shade — do not lighten it.
 - **Hairline** (#e2ddd5) and **Hairline Strong** (#d0cac1): every border in the system.
 
 ### Tertiary
@@ -117,7 +118,7 @@ A warm paper neutral field with a single working accent; every color is a `--coc
 ### Named Rules
 **The One Accent Rule.** Steady Teal is the only saturated voice on any screen and it always signals state (selected, primary, in-progress). If teal appears somewhere a click or a status isn't, it's wrong.
 
-**The Contrast Floor Rule.** Body-size text never drops below 4.5:1 against its actual background. Muted gray "for elegance" is prohibited; #63746a is the floor on light surfaces.
+**The Contrast Floor Rule.** Body-size text never drops below APCA |Lc| 60 against its actual background, and primary ink targets Lc 75+ (`scripts/check-contrast-apca.mjs` enforces the floors for every theme and every real token pairing in CI). Muted gray "for elegance" is prohibited; #63746a (Lc 63.6 on Nav Shade, the worst pairing) is the floor on light surfaces. APCA replaced the old 4.5:1 rule because WCAG 2 ratios overrate light-on-dark pairs — the switch exposed failing muted text in all four dark themes that 4.5:1 had waved through.
 
 ## 3. Typography
 
@@ -191,7 +192,7 @@ A dashed Hairline box, centered: bold one-line fact, a "How to fill" sentence, t
 ### Don't:
 - **Don't** use side-stripe borders (`border-left` > 1px as accent) — CI fails them; use full borders or background tints ("The Full Border Rule").
 - **Don't** reach for generic AI/SaaS slop: gradient text, glassmorphism, hero-metric cards, identical icon-card grids — PRODUCT.md names these as anti-references.
-- **Don't** put muted gray below 4.5:1 on any body-size text; #63746a is the light-theme floor ("The Contrast Floor Rule").
+- **Don't** put muted gray below APCA |Lc| 60 on any body-size text; #63746a is the light-theme floor, and the contrast gate fails CI on any theme that dips ("The Contrast Floor Rule").
 - **Don't** use Steady Teal decoratively; if it isn't marking selection, a primary action, or live progress, use a neutral.
 - **Don't** add inline `onclick`/`style` attributes — the hosted CSP blocks them; use bound listeners and constructed stylesheets.
 - **Don't** render a control without binding it; a button with no observable effect fails the behavior smoke.

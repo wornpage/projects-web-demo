@@ -36,6 +36,9 @@ jobs:
       - name: Public asset disclosure
         run: node scripts/check-public-assets.mjs
 
+      - name: APCA contrast
+        run: node scripts/check-contrast-apca.mjs
+
       - name: Risk decisions
         run: node scripts/check-risk-decisions.mjs
 

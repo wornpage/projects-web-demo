@@ -12,7 +12,9 @@ const publicTextAssets = [
   // Bundle now includes the shared server/src/workflow-rules.js core (prepended
   // at build time) so the client carries the canonical blocker normalizer; +~950B.
   { pathname: "assets/demo.js", maxBytes: 300000 },
-  { pathname: "assets/demo.css", maxBytes: 198000 },
+  // +1000 for the --cockpit-link text-role token added across all seven theme
+  // blocks by the APCA contrast retune (2026-07-12).
+  { pathname: "assets/demo.css", maxBytes: 199000 },
   { pathname: "assets/landing.css", maxBytes: 17000 },
   { pathname: "data/demo-packs.json", maxBytes: 26000 },
   { pathname: "sw.js", maxBytes: 3000 },

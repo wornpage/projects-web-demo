@@ -5,6 +5,7 @@
   --cockpit-accent: #0d9488;
   --cockpit-accent-hover: #0f766e;
   --cockpit-accent-text: #ffffff;
+  --cockpit-link: #0f766e;
   --cockpit-accent-50: #e6f7f5;
   --cockpit-selected-bg: #d7efe7;
   --cockpit-selected-fg: #082f2b;
@@ -12,7 +13,8 @@
   --cockpit-border-strong: #d0cac1;
   --cockpit-text: #21322b;
   --cockpit-text-secondary: #5b6a60;
-  /* 4.5:1 on both --cockpit-bg and --cockpit-surface; #708277 measured 3.98:1 */
+  /* Floor token: must hold APCA |Lc| >= 60 on bg, surface, and nav-bg in
+     every theme — enforced by scripts/check-contrast-apca.mjs. */
   --cockpit-text-muted: #63746a;
   --cockpit-muted: var(--cockpit-text-muted);
   --cockpit-hover-bg: #eaf4f0;
@@ -45,9 +47,10 @@
   --cockpit-bg: #0f1714;
   --cockpit-surface: #18241f;
   --cockpit-nav-bg: #121c18;
-  --cockpit-accent: #4ca48f;
-  --cockpit-accent-hover: #7ddac3;
-  --cockpit-accent-text: #04241d;
+  --cockpit-accent: #469784;
+  --cockpit-accent-hover: #3f8877;
+  --cockpit-accent-text: #ffffff;
+  --cockpit-link: #7ddac3;
   --cockpit-accent-50: #16372f;
   --cockpit-selected-bg: #16453b;
   --cockpit-selected-fg: #f7fffc;
@@ -55,7 +58,7 @@
   --cockpit-border-strong: #4d5c52;
   --cockpit-text: #f7fffc;
   --cockpit-text-secondary: #d9e8e2;
-  --cockpit-text-muted: #9aa99f;
+  --cockpit-text-muted: #b0bcb4;
   --cockpit-hover-bg: #16372f;
   --cockpit-success-bg: #022c22;
   --cockpit-success-border: #14b8a6;
@@ -70,14 +73,15 @@
   }
 }
 
-html:has(#theme-light:checked){--cockpit-bg:#f5f3ef;--cockpit-surface:#fdfdfb;--cockpit-nav-bg:#efede7;--cockpit-accent:#0d9488;--cockpit-accent-hover:#0f766e;--cockpit-accent-text:#fff;--cockpit-accent-50:#e6f7f5;--cockpit-selected-bg:#d7efe7;--cockpit-selected-fg:#082f2b;--cockpit-border:#e2ddd5;--cockpit-border-strong:#d0cac1;--cockpit-text:#21322b;--cockpit-text-secondary:#5b6a60;--cockpit-text-muted:#63746a;--cockpit-hover-bg:#eaf4f0;--cockpit-success-bg:#ecfdf5;--cockpit-success-border:#14b8a6;--cockpit-success-text:#134e4a;--cockpit-warning-bg:#fff7ed;--cockpit-warning-border:#fdba74;--cockpit-warning-text:#9a3412;--cockpit-danger-bg:#fef2f2;--cockpit-danger-border:#fca5a5;--cockpit-danger-text:#991b1b;--cockpit-shadow-sm:0 1px 2px rgba(0,0,0,0.04),0 1px 4px rgba(0,0,0,0.06)}
+html:has(#theme-light:checked){--cockpit-bg:#f5f3ef;--cockpit-surface:#fdfdfb;--cockpit-nav-bg:#efede7;--cockpit-accent:#0d9488;--cockpit-accent-hover:#0f766e;--cockpit-accent-text:#fff;--cockpit-link:#0f766e;--cockpit-accent-50:#e6f7f5;--cockpit-selected-bg:#d7efe7;--cockpit-selected-fg:#082f2b;--cockpit-border:#e2ddd5;--cockpit-border-strong:#d0cac1;--cockpit-text:#21322b;--cockpit-text-secondary:#5b6a60;--cockpit-text-muted:#63746a;--cockpit-hover-bg:#eaf4f0;--cockpit-success-bg:#ecfdf5;--cockpit-success-border:#14b8a6;--cockpit-success-text:#134e4a;--cockpit-warning-bg:#fff7ed;--cockpit-warning-border:#fdba74;--cockpit-warning-text:#9a3412;--cockpit-danger-bg:#fef2f2;--cockpit-danger-border:#fca5a5;--cockpit-danger-text:#991b1b;--cockpit-shadow-sm:0 1px 2px rgba(0,0,0,0.04),0 1px 4px rgba(0,0,0,0.06)}
 html:has(#theme-dark:checked) {
   --cockpit-bg: #0f1714;
   --cockpit-surface: #18241f;
   --cockpit-nav-bg: #121c18;
-  --cockpit-accent: #4ca48f;
-  --cockpit-accent-hover: #7ddac3;
-  --cockpit-accent-text: #04241d;
+  --cockpit-accent: #469784;
+  --cockpit-accent-hover: #3f8877;
+  --cockpit-accent-text: #ffffff;
+  --cockpit-link: #7ddac3;
   --cockpit-accent-50: #16372f;
   --cockpit-selected-bg: #16453b;
   --cockpit-selected-fg: #f7fffc;
@@ -85,7 +89,7 @@ html:has(#theme-dark:checked) {
   --cockpit-border-strong: #4d5c52;
   --cockpit-text: #f7fffc;
   --cockpit-text-secondary: #d9e8e2;
-  --cockpit-text-muted: #9aa99f;
+  --cockpit-text-muted: #b0bcb4;
   --cockpit-hover-bg: #16372f;
   --cockpit-success-bg: #022c22;
   --cockpit-success-border: #14b8a6;
@@ -103,9 +107,10 @@ html:has(#theme-forest:checked) {
   --cockpit-bg: #1c251a;
   --cockpit-surface: #263226;
   --cockpit-nav-bg: #1e281d;
-  --cockpit-accent: #5b9a4b;
-  --cockpit-accent-hover: #7fbf6b;
-  --cockpit-accent-text: #0b1f07;
+  --cockpit-accent: #5a984a;
+  --cockpit-accent-hover: #518943;
+  --cockpit-accent-text: #ffffff;
+  --cockpit-link: #96cb86;
   --cockpit-accent-50: #1e3819;
   --cockpit-selected-bg: #1e3d1a;
   --cockpit-selected-fg: #f2ffee;
@@ -113,7 +118,7 @@ html:has(#theme-forest:checked) {
   --cockpit-border-strong: #495d43;
   --cockpit-text: #e8f2e0;
   --cockpit-text-secondary: #c5d6bf;
-  --cockpit-text-muted: #9aaa9c;
+  --cockpit-text-muted: #b6c2b8;
   --cockpit-hover-bg: #1e3819;
   --cockpit-success-bg: #0a2e0a;
   --cockpit-success-border: #4ade80;
@@ -131,9 +136,10 @@ html:has(#theme-ocean:checked) {
   --cockpit-bg: #0f1d2c;
   --cockpit-surface: #182c42;
   --cockpit-nav-bg: #122132;
-  --cockpit-accent: #3b82c4;
-  --cockpit-accent-hover: #60a5d6;
-  --cockpit-accent-text: #04121f;
+  --cockpit-accent: #3f85c5;
+  --cockpit-accent-hover: #3978b1;
+  --cockpit-accent-text: #ffffff;
+  --cockpit-link: #93c2e3;
   --cockpit-accent-50: #152a42;
   --cockpit-selected-bg: #1a3d5c;
   --cockpit-selected-fg: #f0f8ff;
@@ -141,7 +147,7 @@ html:has(#theme-ocean:checked) {
   --cockpit-border-strong: #3f5d78;
   --cockpit-text: #e6eff7;
   --cockpit-text-secondary: #c5d5e6;
-  --cockpit-text-muted: #97b0c5;
+  --cockpit-text-muted: #acc0d1;
   --cockpit-hover-bg: #152a42;
   --cockpit-success-bg: #0a2e1a;
   --cockpit-success-border: #34d399;
@@ -159,9 +165,10 @@ html:has(#theme-sepia:checked) {
   --cockpit-bg: #2d241a;
   --cockpit-surface: #3c3226;
   --cockpit-nav-bg: #2f261b;
-  --cockpit-accent: #c18642;
-  --cockpit-accent-hover: #d99f5c;
-  --cockpit-accent-text: #1a1008;
+  --cockpit-accent: #b57e3e;
+  --cockpit-accent-hover: #a37138;
+  --cockpit-accent-text: #ffffff;
+  --cockpit-link: #e3b886;
   --cockpit-accent-50: #3a2818;
   --cockpit-selected-bg: #3d2a1a;
   --cockpit-selected-fg: #fff2e0;
@@ -169,7 +176,7 @@ html:has(#theme-sepia:checked) {
   --cockpit-border-strong: #5d4e3e;
   --cockpit-text: #efe0cc;
   --cockpit-text-secondary: #d4c5b0;
-  --cockpit-text-muted: #b09070;
+  --cockpit-text-muted: #d0bca9;
   --cockpit-hover-bg: #3a2818;
   --cockpit-success-bg: #1e2e0a;
   --cockpit-success-border: #65a30d;
@@ -424,7 +431,7 @@ textarea {
 
 .demo-card-title:active,
 .demo-linkish:active {
-  color: var(--cockpit-accent-hover);
+  color: var(--cockpit-link);
 }
 
 .btn-sm {
@@ -2788,7 +2795,7 @@ html:has(#theme-dark:checked) .demo-header-metadata {
 
 html:has(#theme-dark:checked) .demo-status,
 html:has(#theme-dark:checked) .demo-status {
-  color: var(--cockpit-accent-hover);
+  color: var(--cockpit-link);
 }
 
 html:has(#theme-dark:checked) .demo-status-line,
@@ -7272,7 +7279,7 @@ html:has(#theme-dark:checked) .demo-app-shell {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.demo-linkish:hover,.demo-linkish:focus-visible{color:var(--cockpit-accent-hover)}
+.demo-linkish:hover,.demo-linkish:focus-visible{color:var(--cockpit-link)}
 
 .demo-sidebar-footer {
   padding: 8px 12px;
@@ -7871,7 +7878,7 @@ html.focus-mode .demo-sidebar.nav-rail{display:none}html.focus-mode .demo-tab-ba
 .demo-sidebar-resizer{position:absolute;top:0;right:0;bottom:0;width:4px;cursor:col-resize;z-index:10;background:transparent;transition:background .15s}.demo-sidebar-resizer:hover,.demo-sidebar-resizer.is-dragging{background:var(--cockpit-accent)}.demo-sidebar-resizer.is-dragging{opacity:.6}
 .demo-progress-slider{display:grid;gap:6px;background:var(--cockpit-surface);border:1px solid var(--cockpit-border-strong);border-radius:var(--cockpit-radius);padding:10px 12px;margin-top:8px}.demo-progress-slider span{font-size:11px;font-weight:560;color:var(--cockpit-text-muted);text-transform:uppercase;letter-spacing:.02em}.demo-progress-slider .demo-slider-row{display:flex;align-items:center;gap:8px}.demo-progress-slider input[type=range]{flex:1;height:4px;border-radius:2px;background:var(--cockpit-border);accent-color:var(--cockpit-accent);cursor:pointer}.demo-progress-slider span{font-size:12px;font-weight:560;min-width:32px;text-align:right;color:var(--cockpit-text-muted)}
 /* Holiday themes */
-html:has(#theme-holiday:checked){--cockpit-accent:#e91e63;--cockpit-accent-hover:#c2185b}html:has(#theme-winter:checked){--cockpit-accent:#60a5fa;--cockpit-accent-hover:#3b82f6}html:has(#theme-halloween:checked){--cockpit-accent:#f97316;--cockpit-accent-hover:#ea580c}
+html:has(#theme-holiday:checked){--cockpit-accent:#ec3b77;--cockpit-accent-hover:#c2185b;--cockpit-accent-text:#fff}html:has(#theme-winter:checked){--cockpit-accent:#3b82f6;--cockpit-accent-hover:#2563eb;--cockpit-accent-text:#fff}html:has(#theme-halloween:checked){--cockpit-accent:#ea580c;--cockpit-accent-hover:#c2410c;--cockpit-accent-text:#fff}
 .demo-energy{display:flex;gap:6px;flex-wrap:wrap}.demo-extra-grid .demo-energy{flex-direction:column;gap:4px}.demo-energy-btn{font-size:12px;padding:2px 8px;border:1px solid transparent;background:none;cursor:pointer;opacity:.3;transition:opacity .15s;border-radius:999px}.demo-energy-btn.is-active{opacity:1;background:var(--cockpit-accent-50);border:1px solid var(--cockpit-accent)}.demo-energy-btn[data-energy="low"]{color:#f87171}.demo-energy-btn[data-energy="medium"]{color:#fbbf24}.demo-energy-btn[data-energy="high"]{color:#34d399}
 .demo-insight-mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--cockpit-border)}.demo-insight-mini .stat{background:var(--cockpit-surface);border:1px solid var(--cockpit-border);border-radius:var(--cockpit-radius);padding:12px}.demo-insight-mini .stat strong{display:block;font-size:18px;font-weight:650;color:var(--cockpit-text)}.demo-insight-mini .stat small{font-size:11px;color:var(--cockpit-text-muted);text-transform:uppercase;letter-spacing:.02em}
 .demo-age-detail{display:block;font-size:10px;color:var(--cockpit-text-muted);margin-top:1px}

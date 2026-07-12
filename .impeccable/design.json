@@ -89,7 +89,7 @@
     ],
     "rules": [
       { "name": "The One Accent Rule", "body": "Steady Teal is the only saturated voice on any screen and it always signals state. If teal appears somewhere a click or a status isn't, it's wrong.", "section": "colors" },
-      { "name": "The Contrast Floor Rule", "body": "Body-size text never drops below 4.5:1 against its actual background; #63746a is the light-theme floor.", "section": "colors" },
+      { "name": "The Contrast Floor Rule", "body": "Body-size text never drops below APCA |Lc| 60 against its actual background (primary ink targets 75+); scripts/check-contrast-apca.mjs enforces the floors for every theme in CI. #63746a is the light-theme floor.", "section": "colors" },
       { "name": "The Weight-Not-Width Rule", "body": "Emphasis is a weight step, never letterspacing tricks, italics, or a second family.", "section": "typography" },
       { "name": "The Full Border Rule", "body": "Accents are full 1px borders or background tints — never a thick colored side stripe. Enforced by CI.", "section": "elevation" }
     ],
@@ -103,7 +103,7 @@
     "donts": [
       "Don't use side-stripe borders — CI fails them; use full borders or tints.",
       "Don't reach for generic AI/SaaS slop: gradient text, glassmorphism, hero-metric cards, identical icon-card grids.",
-      "Don't put muted gray below 4.5:1 on body-size text.",
+      "Don't put muted gray below APCA |Lc| 60 on body-size text.",
       "Don't use Steady Teal decoratively.",
       "Don't add inline onclick/style attributes — the hosted CSP blocks them.",
       "Don't render a control without binding it — the behavior smoke fails dead buttons."
