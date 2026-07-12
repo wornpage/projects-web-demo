@@ -119,6 +119,57 @@ try {
     `${navigated.before} -> ${navigated.after}`
   );
 
+  // Subtask authoring on the pack page: typing enables Add, adding appends a
+  // row and bumps the count, removing takes it back to the baseline. Land on
+  // the pack route explicitly — the select click above routes to the work
+  // path or the pack view depending on the active list view. Counts are
+  // polled rather than read synchronously: render() defers its DOM swap
+  // behind a view transition.
+  await gotoRoute(page, "pack/lighting-checklist");
+  const subtaskSetup = await page.evaluate(() => {
+    const input = document.querySelector("[data-subtask-input]");
+    const add = document.querySelector("[data-subtask-add]");
+    if (!input || !add) return { present: false };
+    const before = document.querySelectorAll(".demo-subtask").length;
+    const disabledBefore = add.disabled;
+    input.value = "Smoke-added subtask";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    const enabledAfterTyping = !add.disabled;
+    add.click();
+    return { present: true, before, disabledBefore, enabledAfterTyping };
+  });
+  let subtaskAdded = false;
+  let subtaskRemoved = false;
+  if (subtaskSetup.present) {
+    subtaskAdded = await page
+      .waitForFunction(
+        (want) => document.querySelectorAll(".demo-subtask").length === want,
+        subtaskSetup.before + 1,
+        { timeout: 5000 }
+      )
+      .then(() => true)
+      .catch(() => false);
+  }
+  if (subtaskAdded) {
+    await page.evaluate(() => {
+      const removeButtons = document.querySelectorAll("[data-subtask-remove]");
+      removeButtons[removeButtons.length - 1]?.click();
+    });
+    subtaskRemoved = await page
+      .waitForFunction(
+        (want) => document.querySelectorAll(".demo-subtask").length === want,
+        subtaskSetup.before,
+        { timeout: 5000 }
+      )
+      .then(() => true)
+      .catch(() => false);
+  }
+  check(
+    "subtask authoring adds and removes rows",
+    subtaskSetup.present && subtaskSetup.disabledBefore && subtaskSetup.enabledAfterTyping && subtaskAdded && subtaskRemoved,
+    JSON.stringify({ ...subtaskSetup, subtaskAdded, subtaskRemoved })
+  );
+
   // Review screen: the standup export control is present and builds text.
   await gotoRoute(page, "review");
   const standup = await page.evaluate(() => ({
