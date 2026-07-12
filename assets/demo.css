@@ -194,6 +194,14 @@ html:has(#theme-sepia:checked) {
   box-sizing: border-box;
 }
 
+button {
+  /* UA ButtonText follows the OS color-scheme (meta color-scheme
+     "light dark"), not the app's theme radios — under an OS/app mismatch
+     any button without an explicit color renders wrong-polarity text.
+     Inherit the themed ink instead. */
+  color: inherit;
+}
+
 body {
   background: radial-gradient(ellipse at 50% 0%, var(--cockpit-surface) 0%, var(--cockpit-bg) 70%);
   color: var(--cockpit-text);
