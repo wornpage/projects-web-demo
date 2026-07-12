@@ -57,7 +57,7 @@ function jsonLog(level, message, meta = {}) {
 // State storage (with seed module dependency injection)
 // ---------------------------------------------------------------------------
 
-const stateStorage = storage.createStateStorage(seed);
+const defaultStateStorage = storage.createStateStorage(seed);
 
 // ---------------------------------------------------------------------------
 // Server
@@ -101,10 +101,10 @@ const server = http.createServer(async (request, response) => {
 
 // Only start server when run directly (not when required as module for tests)
 if (require.main === module) {
-  stateStorage.ready.then(() => {
+  defaultStateStorage.ready.then(() => {
     server.listen(PORT, HOST, () => {
       jsonLog("info", "Server listening.", { host: HOST, port: PORT });
-      jsonLog("info", "State storage initialized.", { storage: stateStorage.label });
+      jsonLog("info", "State storage initialized.", { storage: defaultStateStorage.label });
     });
   }).catch((error) => {
     jsonLog("error", "Failed to initialize state storage.", {
@@ -123,7 +123,7 @@ function shutdown(signal) {
     jsonLog("info", "Shutdown signal received.", { signal });
     server.close(() => {
       jsonLog("info", "HTTP server closed.", { signal });
-      stateStorage.close().then(() => {
+      defaultStateStorage.close().then(() => {
         jsonLog("info", "State storage closed.", { signal });
         process.exit(0);
       }).catch((err) => {
@@ -142,7 +142,7 @@ function shutdown(signal) {
 // Routing
 // ---------------------------------------------------------------------------
 
-async function routeRequest(request, response, url, activeStateStorage = stateStorage) {
+async function routeRequest(request, response, url, stateStorage = defaultStateStorage) {
   const pathname = url.pathname.replace(/\/+$/u, "") || "/";
   const method = request.method || "GET";
 
@@ -154,14 +154,14 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
     sendJson(request, response, 200, {
       ok: true,
       service: "projects-web-demo-api",
-      storage: activeStateStorage.mode || STATE_STORAGE,
+      storage: stateStorage.mode || STATE_STORAGE,
       time: new Date().toISOString()
     });
     return;
   }
 
   if (method === "GET" && pathname === "/api/state") {
-    sendJson(request, response, 200, await activeStateStorage.read(security.stateKeyForRequest(request)));
+    sendJson(request, response, 200, await stateStorage.read(security.stateKeyForRequest(request)));
     return;
   }
 
@@ -174,24 +174,24 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
   if (method === "PUT" && pathname === "/api/state/browser") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const current = await activeStateStorage.read(stateKey);
-    sendJson(request, response, 200, await activeStateStorage.write(seed.browserStatePayload(payload, current), stateKey));
+    const current = await stateStorage.read(stateKey);
+    sendJson(request, response, 200, await stateStorage.write(seed.browserStatePayload(payload, current), stateKey));
     return;
   }
 
   if (method === "POST" && pathname === "/api/state/restore") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    sendJson(request, response, 200, await activeStateStorage.write(payload, stateKey));
+    sendJson(request, response, 200, await stateStorage.write(payload, stateKey));
     return;
   }
 
   if (method === "POST" && pathname === "/api/state/sync-copy") {
     const sourceStateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const result = seed.copyStateToSyncAction(await activeStateStorage.read(sourceStateKey), payload);
+    const result = seed.copyStateToSyncAction(await stateStorage.read(sourceStateKey), payload);
     security.enforceStateWriteRateLimit(request, result.targetClientId);
-    await activeStateStorage.write(result.state, result.targetClientId);
+    await stateStorage.write(result.state, result.targetClientId);
     sendJson(request, response, 200, result);
     return;
   }
@@ -199,9 +199,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
   if (method === "POST" && pathname === "/api/state/filter") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const state = await activeStateStorage.read(stateKey);
+    const state = await stateStorage.read(stateKey);
     const result = seed.saveStateFilterAction(state, payload);
-    await activeStateStorage.write(state, stateKey);
+    await stateStorage.write(state, stateKey);
     sendJson(request, response, 200, result);
     return;
   }
@@ -209,9 +209,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
   if (method === "POST" && pathname === "/api/state/selected") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const state = await activeStateStorage.read(stateKey);
+    const state = await stateStorage.read(stateKey);
     const result = seed.saveStateSelectedAction(state, payload);
-    await activeStateStorage.write(state, stateKey);
+    await stateStorage.write(state, stateKey);
     sendJson(request, response, 200, result);
     return;
   }
@@ -219,9 +219,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
   if (method === "POST" && pathname === "/api/state/scenario") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const current = await activeStateStorage.read(stateKey);
+    const current = await stateStorage.read(stateKey);
     const result = await seed.saveStateScenarioAction(current, payload);
-    await activeStateStorage.write(result.state, stateKey, { allowEmptyPacks: true });
+    await stateStorage.write(result.state, stateKey, { allowEmptyPacks: true });
     sendJson(request, response, 200, result);
     return;
   }
@@ -229,9 +229,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
   if (method === "POST" && pathname === "/api/state/profile") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const state = await activeStateStorage.read(stateKey);
+    const state = await stateStorage.read(stateKey);
     const result = seed.saveStateProfileAction(state, payload);
-    await activeStateStorage.write(state, stateKey);
+    await stateStorage.write(state, stateKey);
     sendJson(request, response, 200, result);
     return;
   }
@@ -239,18 +239,18 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
   if (method === "POST" && pathname === "/api/state/reset") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const result = await seed.resetStateAction();
-    await activeStateStorage.write(result.state, stateKey);
+    await stateStorage.write(result.state, stateKey);
     sendJson(request, response, 200, result);
     return;
   }
 
   if (method === "POST" && pathname === "/api/state/erase") {
-    sendJson(request, response, 200, await activeStateStorage.erase(security.stateWriteKeyForRequest(request)));
+    sendJson(request, response, 200, await stateStorage.erase(security.stateWriteKeyForRequest(request)));
     return;
   }
 
   if (method === "GET" && pathname === "/api/packs") {
-    const state = await activeStateStorage.read(security.stateKeyForRequest(request));
+    const state = await stateStorage.read(security.stateKeyForRequest(request));
     sendJson(request, response, 200, state.packs);
     return;
   }
@@ -258,9 +258,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
   if (method === "POST" && pathname === "/api/packs") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const state = await activeStateStorage.read(stateKey);
+    const state = await stateStorage.read(stateKey);
     const result = seed.createPackFromPayload(state, payload);
-    await activeStateStorage.write(state, stateKey);
+    await stateStorage.write(state, stateKey);
     sendJson(request, response, 201, result);
     return;
   }
@@ -270,9 +270,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
     const packId = decodeURIComponent(packPathMatch[1]);
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const state = await activeStateStorage.read(stateKey);
+    const state = await stateStorage.read(stateKey);
     const result = workflow.savePackPathAction(state, packId, payload);
-    await activeStateStorage.write(state, stateKey);
+    await stateStorage.write(state, stateKey);
     sendJson(request, response, 200, result);
     return;
   }
@@ -282,9 +282,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
     const packId = decodeURIComponent(packNextMatch[1]);
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const state = await activeStateStorage.read(stateKey);
+    const state = await stateStorage.read(stateKey);
     const result = workflow.setPackNextAction(state, packId, payload.next);
-    await activeStateStorage.write(state, stateKey);
+    await stateStorage.write(state, stateKey);
     sendJson(request, response, 200, result);
     return;
   }
@@ -294,9 +294,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
     const packId = decodeURIComponent(packActionMatch[1]);
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
-    const state = await activeStateStorage.read(stateKey);
+    const state = await stateStorage.read(stateKey);
     const result = workflow.runPackAction(state, packId, payload.action);
-    await activeStateStorage.write(state, stateKey);
+    await stateStorage.write(state, stateKey);
     sendJson(request, response, 200, result);
     return;
   }
@@ -304,7 +304,7 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
   const packCommandMatch = pathname.match(/^\/api\/packs\/([^/]+)\/command$/u);
   if (packCommandMatch && method === "GET") {
     const packId = decodeURIComponent(packCommandMatch[1]);
-    const state = await activeStateStorage.read(security.stateKeyForRequest(request));
+    const state = await stateStorage.read(security.stateKeyForRequest(request));
     const pack = workflow.findPackOrThrow(state, packId);
     sendJson(request, response, 200, workflow.packCommandPreview(pack));
     return;
@@ -317,9 +317,9 @@ async function routeRequest(request, response, url, activeStateStorage = stateSt
     if (method === "POST" && isMemoryRoute) {
       const stateKey = security.stateWriteKeyForRequest(request);
       const payload = await readJsonBody(request);
-      const state = await activeStateStorage.read(stateKey);
+      const state = await stateStorage.read(stateKey);
       const result = workflow.addPackMemoryAction(state, packId, payload.note);
-      await activeStateStorage.write(state, stateKey);
+      await stateStorage.write(state, stateKey);
       sendJson(request, response, 200, result);
       return;
     }
