@@ -27,19 +27,17 @@ const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 5179);
 const ROOT_DIR = path.resolve(__dirname, "..");
 const STATE_STORAGE = process.env.PROJECTS_STATE_STORAGE || (storage.hasPostgresConfig() ? "postgres" : "file");
-const ASSET_VERSION = storage.normalizeAssetVersion(
-  process.env.PROJECTS_ASSET_VERSION
-    || process.env.GIT_COMMIT
-    || process.env.COMMIT_SHA
-    || contentAssetVersionOrFallback()
-);
+const ASSET_VERSION = storage.normalizeAssetVersion(resolveAssetVersion());
 
-// The Workers bundle has no repo files on disk, so hashing them must not be
-// fatal at import time; normalizeAssetVersion turns "" into the "app" version.
-function contentAssetVersionOrFallback() {
+function resolveAssetVersion() {
   try {
-    return storage.contentAssetVersion();
+    return process.env.PROJECTS_ASSET_VERSION
+      || process.env.GIT_COMMIT
+      || process.env.COMMIT_SHA
+      || storage.contentAssetVersion();
   } catch {
+    // The Workers bundle has no repo files on disk, so hashing them must not
+    // be fatal at import time; normalizeAssetVersion turns "" into "app".
     return "";
   }
 }
