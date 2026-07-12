@@ -12,6 +12,7 @@
     "demo:check": "node --check ../src/demo/demo.js && node ../scripts/build-demo-asset.mjs --check",
     "protect:check": "npm run demo:check && node ../scripts/check-protected-frontend.mjs",
     "assets:check": "npm run demo:check && node ../scripts/check-public-assets.mjs",
+    "contrast:check": "node ../scripts/check-contrast-apca.mjs",
     "risk:check": "node ../scripts/check-risk-decisions.mjs",
     "static:check": "npm run demo:check && node ../scripts/check-static-preview.mjs",
     "publish:check": "npm run demo:check && node ../scripts/check-static-publish.mjs",

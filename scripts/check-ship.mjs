@@ -48,6 +48,11 @@ const steps = [
     args: ["scripts/check-public-assets.mjs"]
   },
   {
+    label: "APCA contrast",
+    command: process.execPath,
+    args: ["scripts/check-contrast-apca.mjs"]
+  },
+  {
     label: "public risk decisions",
     command: process.execPath,
     args: ["scripts/check-risk-decisions.mjs"]
