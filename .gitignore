@@ -1,6 +1,7 @@
 server/data/
 server/node_modules/
 dist/
+.wrangler/
 .claude/
 .reasonix/
 reasonix.toml

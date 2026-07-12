@@ -52,6 +52,31 @@ The app uses **hash routing** (`#/home`, `#/work`), so no SPA fallback or
   service worker (`sw.js`) is network-first, so a second reload picks up any
   newly deployed bundle.
 
+## App mode on Cloudflare Workers (free plan)
+
+The backend can also run live on Cloudflare Workers — same account, $0 — with
+per-client state in SQLite-backed Durable Objects instead of a file or
+Postgres. The worker (`worker/index.mjs` + `wrangler.jsonc`) reuses the Node
+server's `routeRequest` through node:http shims, so API behavior is the same
+code, not a port; it serves the protected static artifact through the assets
+binding and injects `runtime-config.js` with `backendMode: true`.
+
+```powershell
+npm --prefix server run worker:dev     # local: builds artifact, runs wrangler dev on :8787
+npm --prefix server run worker:deploy  # deploy: requires `npx wrangler login` once
+```
+
+Notes:
+
+- Free-tier fit: 100k requests/day, 10 ms CPU per request, Durable Objects on
+  the free plan are SQLite-backed (`new_sqlite_classes` in the migration).
+- Durable Object names are SHA-256 digests of the client key — same privacy
+  property as file storage's hashed filenames.
+- Rate-limit buckets are per-isolate memory, so limits are advisory rather
+  than global there; the per-key write limit still binds within an isolate.
+- Optional vars: `PROJECTS_PUBLIC_ORIGIN` (extra allowed CORS origins),
+  `PROJECTS_ASSET_VERSION` (cache-busting version; defaults to `app`).
+
 ## Why this shape
 
 Decided 2026-07-11: the repo stays a **monorepo with static as the

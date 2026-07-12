@@ -16,7 +16,18 @@ const workflow = require("./workflow.js");
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
 const SEED_PACKS_FILE = path.join(ROOT_DIR, "data", "demo-packs.json");
 
+// The Workers bundle has no data/ directory on disk; its entry injects the
+// bundled demo-packs JSON here instead. Cloned per read so callers can mutate.
+let seedPacksOverride = null;
+
+function setSeedPacksSource(packs) {
+  seedPacksOverride = packs;
+}
+
 async function readSeedPacks() {
+  if (seedPacksOverride) {
+    return structuredClone(seedPacksOverride);
+  }
   return JSON.parse(await fs.readFile(SEED_PACKS_FILE, "utf8"));
 }
 
@@ -626,6 +637,7 @@ function workflowBooleanField(source, key) {
 }
 
 module.exports = {
+  setSeedPacksSource,
   readSeedPacks,
   defaultState,
   resetStateAction,
