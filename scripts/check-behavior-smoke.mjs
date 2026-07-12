@@ -84,8 +84,20 @@ try {
     cardLabels.length ? `${cardLabels.length} buttons, blanks: ${cardLabels.filter((l) => !l).length}` : "no run-next buttons found"
   );
 
-  await page.evaluate(() => { document.getElementById("density-toggle")?.click(); document.getElementById("density-toggle")?.click(); });
-  await page.waitForTimeout(150);
+  // Cycle the view toggle until the table view actually materializes instead
+  // of assuming two blind clicks from "card" — a saved view, a late-bound
+  // toggle after the fresh page load, or a slow view transition on CI makes
+  // the fixed double-click land wrong (this step flaked on CI once).
+  await page.waitForFunction(() => document.getElementById("density-toggle"), { timeout: 5000 }).catch(() => {});
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const view = await page.evaluate(() => {
+      if (document.querySelector(".demo-work-table .demo-table-row")) return "table";
+      document.getElementById("density-toggle")?.click();
+      return document.querySelector(".demo-work-table .demo-table-row") ? "table" : "pending";
+    });
+    if (view === "table") break;
+    await page.waitForTimeout(250);
+  }
   const tableLabels = await runNextLabels(page, ".demo-table-row");
   check(
     "table view renders non-empty run-next labels",
