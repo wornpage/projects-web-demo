@@ -1271,7 +1271,6 @@ function normalizeRecoveryPack(source) {
     memory: normalizeRecoveryTextArray(source.memory, 100, 2000),
     milestone: normalizeRecoveryText(source.milestone, 120) || undefined,
     reactions: source.reactions && typeof source.reactions === "object" ? source.reactions : {},
-    reactions: source.reactions && typeof source.reactions === "object" ? source.reactions : {},
     location: normalizeRecoveryText(source.location, 60) || undefined,
     energy: ["low","medium","high"].indexOf(source.energy) >= 0 ? source.energy : undefined,
     progress: typeof source.progress === "number" ? Math.min(100, Math.max(0, Math.round(source.progress))) : undefined,
