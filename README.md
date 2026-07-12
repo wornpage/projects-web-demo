@@ -2,7 +2,10 @@
 
 [![Ship check](https://github.com/jared-bidlow/projects-web-demo/actions/workflows/ship-check.yml/badge.svg)](https://github.com/jared-bidlow/projects-web-demo/actions/workflows/ship-check.yml)
 
-**Live demo:** [projectswebdemo7ojp-5179-sgscv2kjey.outplane.app](https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app/#/home)
+**Deployment:** static-first Cloudflare Pages — see
+[docs/deploy-cloudflare.md](docs/deploy-cloudflare.md). A live URL will be
+listed here once the Pages deploy is up; the previous Outplane dev deployment
+is suspended.
 
 This repository is the active lightweight web-tech home for the public
 Projects demo. It is a static GitHub Pages app by default: HTML, CSS,
@@ -304,7 +307,8 @@ Use Outplane when you want a development deployment of the backend-backed app.
 The repo's Dockerfile already reads `PORT`, binds to `0.0.0.0`, and supports
 managed Postgres through Outplane's `PG*` environment variables.
 
-Current development deployment:
+The previous development deployment is **suspended** (its URL returns 404)
+now that the deployed product is the static Cloudflare Pages artifact:
 
 ```text
 https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app
