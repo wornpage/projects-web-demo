@@ -357,6 +357,9 @@ The artifact is written to `dist/static-publish/`. It contains only the static
 allowlist, uses protected `assets/demo.js`, and excludes server code, docs,
 package manifests, build scripts, and local state files.
 
+The same artifact can also be packaged as a downloadable single-file
+executable — see [docs/demo-exe-bun.md](docs/demo-exe-bun.md).
+
 Before shipping, run the full local plus live gate:
 
 ```powershell
