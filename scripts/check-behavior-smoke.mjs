@@ -236,17 +236,35 @@ try {
         if (!target) return { skipped: true };
         window.__confirmed = false;
         const beforeHash = location.hash;
-        const beforeBody = document.body.innerHTML;
+        // Poll for the effect instead of sampling once at a fixed delay:
+        // render() defers its DOM swap behind a view transition, and a slow
+        // CI runner can land it past any single-shot window (the settings
+        // "Download backup" receipt was flagged dead this way). A mutation
+        // observer armed before the click catches synchronous effects too,
+        // and real effects resolve at the first poll, so the sweep gets
+        // faster for the common case.
+        let mutated = false;
+        const observer = new MutationObserver(() => { mutated = true; });
+        observer.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
         target.click();
-        return new Promise((resolve) => setTimeout(() => {
-          const changed = location.hash !== beforeHash
-            || document.body.innerHTML !== beforeBody
-            || window.__confirmed
-            || Boolean(document.querySelector("dialog[open]"));
-          const dialog = document.querySelector("dialog[open]");
-          if (dialog) dialog.close();
-          resolve({ changed });
-        }, 180));
+        return new Promise((resolve) => {
+          const startedAt = Date.now();
+          const poll = () => {
+            const changed = location.hash !== beforeHash
+              || mutated
+              || window.__confirmed
+              || Boolean(document.querySelector("dialog[open]"));
+            if (changed || Date.now() - startedAt > 1200) {
+              observer.disconnect();
+              const dialog = document.querySelector("dialog[open]");
+              if (dialog) dialog.close();
+              resolve({ changed });
+            } else {
+              setTimeout(poll, 60);
+            }
+          };
+          setTimeout(poll, 60);
+        });
       }, family);
       if (!result.skipped && !result.changed) {
         phantoms.push(`${route}: ${family}`);
