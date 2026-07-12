@@ -5644,6 +5644,29 @@ function bindListActions() {
     });
   });
 
+  el("screen-content").querySelectorAll("[data-subtask-input]").forEach((field) => {
+    const add = field.parentElement.querySelector("[data-subtask-add]");
+    field.addEventListener("input", () => { if (add) add.disabled = !field.value.trim(); });
+    field.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addSubtask(field.dataset.subtaskInput, field.value);
+      }
+    });
+  });
+  el("screen-content").querySelectorAll("[data-subtask-add]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const field = button.parentElement.querySelector("[data-subtask-input]");
+      if (field) addSubtask(button.dataset.subtaskAdd, field.value);
+    });
+  });
+  el("screen-content").querySelectorAll("[data-subtask-remove]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = parseInt(button.dataset.subtaskIdx, 10);
+      if (!isNaN(index)) removeSubtask(button.dataset.subtaskRemove, index);
+    });
+  });
+
   el("screen-content").querySelectorAll("[data-action]").forEach((button) => {
     if (button.closest(".demo-work-card") || button.id === "pack-primary-action" || button.matches(".demo-table-row")) {
       return;
@@ -8760,26 +8783,31 @@ var _subtaskSheets = {};
 
 function renderSubtasks(pack) {
   var subs = pack.subtasks || [];
-  if (subs.length === 0) return "";
   var done = 0;
   for (var si = 0; si < subs.length; si++) { if (subs[si].done) done++; }
   var cls = "sp-" + pack.id.replace(/[^a-z0-9]/gi,"");
   var items = "";
   for (var si = 0; si < subs.length; si++) {
     var boxId = cls + "-sub-" + si;
-    items += '<div class="demo-subtask' + (subs[si].done ? " is-done" : "") + '"><input type="checkbox" id="' + boxId + '"' + (subs[si].done ? " checked" : "") + ' data-subtask-pack="' + escapeAttribute(pack.id) + '" data-subtask-idx="' + si + '"><label for="' + boxId + '">' + escapeHtml(subs[si].text) + '</label></div>';
+    items += '<div class="demo-subtask' + (subs[si].done ? " is-done" : "") + '"><input type="checkbox" id="' + boxId + '"' + (subs[si].done ? " checked" : "") + ' data-subtask-pack="' + escapeAttribute(pack.id) + '" data-subtask-idx="' + si + '"><label for="' + boxId + '">' + escapeHtml(subs[si].text) + '</label><button type="button" class="demo-subtask-remove" data-subtask-remove="' + escapeAttribute(pack.id) + '" data-subtask-idx="' + si + '" aria-label="' + escapeAttribute("Remove subtask: " + subs[si].text) + '">&times;</button></div>';
   }
-  var pct = subs.length ? Math.round(done / subs.length * 100) : 0;
-  // One adopted sheet per pack, updated in place — pushing a fresh sheet per
-  // render grows document.adoptedStyleSheets without bound.
-  try {
-    if (!_subtaskSheets[cls]) {
-      _subtaskSheets[cls] = new CSSStyleSheet();
-      document.adoptedStyleSheets.push(_subtaskSheets[cls]);
-    }
-    _subtaskSheets[cls].replaceSync("." + cls + "{width:" + pct + "%}");
-  } catch(e) {}
-  return '<details class="demo-subtasks" open><summary>Subtasks (' + done + '/' + subs.length + ')</summary><div class="demo-subtask-progress"><div class="demo-subtask-progress-fill ' + cls + '"></div></div><div class="demo-subtasks-inner">' + items + '</div></details>';
+  var bar = "";
+  if (subs.length) {
+    var pct = Math.round(done / subs.length * 100);
+    // One adopted sheet per pack, updated in place — pushing a fresh sheet per
+    // render grows document.adoptedStyleSheets without bound.
+    try {
+      if (!_subtaskSheets[cls]) {
+        _subtaskSheets[cls] = new CSSStyleSheet();
+        document.adoptedStyleSheets.push(_subtaskSheets[cls]);
+      }
+      _subtaskSheets[cls].replaceSync("." + cls + "{width:" + pct + "%}");
+    } catch(e) {}
+    bar = '<div class="demo-subtask-progress"><div class="demo-subtask-progress-fill ' + cls + '"></div></div>';
+  }
+  // The import normalizer caps packs at 50 subtasks; hide authoring at the cap.
+  var addRow = subs.length < 50 ? '<div class="demo-subtask-add"><input class="demo-search-input" type="text" maxlength="200" placeholder="Add a subtask" aria-label="New subtask" data-subtask-input="' + escapeAttribute(pack.id) + '"><button type="button" class="btn btn-sm" data-subtask-add="' + escapeAttribute(pack.id) + '" disabled>Add</button></div>' : "";
+  return '<details class="demo-subtasks"' + (subs.length ? " open" : "") + '><summary>Subtasks (' + done + '/' + subs.length + ')</summary>' + bar + '<div class="demo-subtasks-inner">' + items + addRow + '</div></details>';
 }
 
 function toggleSubtask(packId, index) {
@@ -8788,6 +8816,35 @@ function toggleSubtask(packId, index) {
   if (!subtask) return;
   pushUndoSnapshot();
   subtask.done = !subtask.done;
+  saveState();
+  render();
+}
+
+function addSubtask(packId, text) {
+  var pack = state.packs.find(function(p) { return p.id === packId; });
+  var clean = String(text || "").trim().slice(0, 200);
+  if (!pack || !clean) return;
+  if (!Array.isArray(pack.subtasks)) pack.subtasks = [];
+  if (pack.subtasks.length >= 50) return;
+  pushUndoSnapshot();
+  pack.subtasks.push({ text: clean, done: false });
+  saveState();
+  render();
+  // render() defers its DOM swap behind a view transition; refocus the
+  // rebuilt input once it lands so rapid multi-add keeps flowing.
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      var again = el("screen-content").querySelector("[data-subtask-input]");
+      if (again) again.focus();
+    });
+  });
+}
+
+function removeSubtask(packId, index) {
+  var pack = state.packs.find(function(p) { return p.id === packId; });
+  if (!pack || !Array.isArray(pack.subtasks) || !pack.subtasks[index]) return;
+  pushUndoSnapshot();
+  pack.subtasks.splice(index, 1);
   saveState();
   render();
 }
