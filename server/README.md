@@ -222,3 +222,7 @@ and live Outplane checks, including app shell and protected frontend content
 matching, seed-data matching, unkeyed seed data rejection, hosted repo-file
 blocking, invalid work-path status rejection, and rejection of weak manual API
 client keys.
+The live checks run only when a hosted backend URL is passed
+(`npm --prefix server run ship:check -- <live-url>`); with no URL they are
+skipped, because the deployed product is the static artifact
+(`docs/deploy-cloudflare.md`) and the app-mode backend stays dormant.

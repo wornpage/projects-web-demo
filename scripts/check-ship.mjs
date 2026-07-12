@@ -115,12 +115,24 @@ const steps = [
   {
     label: "live Outplane deploy",
     command: process.execPath,
-    args: ["scripts/check-live-deploy.mjs", ...liveArgs]
+    args: ["scripts/check-live-deploy.mjs", ...liveArgs],
+    skip: liveArgs.length === 0
+      ? "no live URL given; the deployed product is the static artifact and the app-mode backend is dormant (docs/deploy-cloudflare.md). Pass a hosted backend URL to verify one: node scripts/check-ship.mjs <live-url>"
+      : ""
   }
 ];
 
+let ranLiveCheck = false;
+
 for (const step of steps) {
   console.log(`\n== ${step.label} ==`);
+  if (step.skip) {
+    console.log(`SKIP ${step.skip}`);
+    continue;
+  }
+  if (step.label === "live Outplane deploy") {
+    ranLiveCheck = true;
+  }
   const result = spawnSync(step.command, step.args, {
     cwd: repoRoot,
     stdio: "inherit",
@@ -138,5 +150,7 @@ for (const step of steps) {
 }
 
 if (!process.exitCode) {
-  console.log("\nShip check passed: local gates and live Outplane verification are green.");
+  console.log(ranLiveCheck
+    ? "\nShip check passed: local gates and live deploy verification are green."
+    : "\nShip check passed: local gates are green. Live deploy verification was skipped; pass a hosted backend URL to include it.");
 }
