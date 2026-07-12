@@ -27,12 +27,20 @@ const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 5179);
 const ROOT_DIR = path.resolve(__dirname, "..");
 const STATE_STORAGE = process.env.PROJECTS_STATE_STORAGE || (storage.hasPostgresConfig() ? "postgres" : "file");
-const ASSET_VERSION = storage.normalizeAssetVersion(
-  process.env.PROJECTS_ASSET_VERSION
-    || process.env.GIT_COMMIT
-    || process.env.COMMIT_SHA
-    || storage.contentAssetVersion()
-);
+const ASSET_VERSION = storage.normalizeAssetVersion(resolveAssetVersion());
+
+function resolveAssetVersion() {
+  try {
+    return process.env.PROJECTS_ASSET_VERSION
+      || process.env.GIT_COMMIT
+      || process.env.COMMIT_SHA
+      || storage.contentAssetVersion();
+  } catch {
+    // The Workers bundle has no repo files on disk, so hashing them must not
+    // be fatal at import time; normalizeAssetVersion turns "" into "app".
+    return "";
+  }
+}
 
 function jsonLog(level, message, meta = {}) {
   const entry = { ts: new Date().toISOString(), level, message, ...meta };
@@ -47,7 +55,7 @@ function jsonLog(level, message, meta = {}) {
 // State storage (with seed module dependency injection)
 // ---------------------------------------------------------------------------
 
-const stateStorage = storage.createStateStorage(seed);
+const defaultStateStorage = storage.createStateStorage(seed);
 
 // ---------------------------------------------------------------------------
 // Server
@@ -91,10 +99,10 @@ const server = http.createServer(async (request, response) => {
 
 // Only start server when run directly (not when required as module for tests)
 if (require.main === module) {
-  stateStorage.ready.then(() => {
+  defaultStateStorage.ready.then(() => {
     server.listen(PORT, HOST, () => {
       jsonLog("info", "Server listening.", { host: HOST, port: PORT });
-      jsonLog("info", "State storage initialized.", { storage: stateStorage.label });
+      jsonLog("info", "State storage initialized.", { storage: defaultStateStorage.label });
     });
   }).catch((error) => {
     jsonLog("error", "Failed to initialize state storage.", {
@@ -113,7 +121,7 @@ function shutdown(signal) {
     jsonLog("info", "Shutdown signal received.", { signal });
     server.close(() => {
       jsonLog("info", "HTTP server closed.", { signal });
-      stateStorage.close().then(() => {
+      defaultStateStorage.close().then(() => {
         jsonLog("info", "State storage closed.", { signal });
         process.exit(0);
       }).catch((err) => {
@@ -132,7 +140,7 @@ function shutdown(signal) {
 // Routing
 // ---------------------------------------------------------------------------
 
-async function routeRequest(request, response, url) {
+async function routeRequest(request, response, url, stateStorage = defaultStateStorage) {
   const pathname = url.pathname.replace(/\/+$/u, "") || "/";
   const method = request.method || "GET";
 
@@ -144,7 +152,7 @@ async function routeRequest(request, response, url) {
     sendJson(request, response, 200, {
       ok: true,
       service: "projects-web-demo-api",
-      storage: STATE_STORAGE,
+      storage: stateStorage.mode || STATE_STORAGE,
       time: new Date().toISOString()
     });
     return;
@@ -464,7 +472,7 @@ function injectAppApiBase(html) {
     .replace(/(src="assets\/runtime-config\.js\?v=)[^"]*/gu, `$1${ASSET_VERSION}`);
 }
 
-function runtimeConfigScript() {
+function runtimeConfigScript(stateStorageMode = STATE_STORAGE) {
   // Pages served by this backend are always same-origin with the API, so the
   // base stays relative. An absolute //HOST:PORT base breaks the browser's
   // localhost <-> 127.0.0.1 alias: the fetch turns cross-origin, CORS denies
@@ -474,7 +482,7 @@ function runtimeConfigScript() {
     backendMode: true,
     assetVersion: ASSET_VERSION,
     apiClientHeader: constants.API_CLIENT_HEADER,
-    stateStorage: STATE_STORAGE
+    stateStorage: stateStorageMode
   };
   return `window.__projectsDemoConfig=${JSON.stringify(config)};\nwindow.PROJECTS_API_BASE_URL=${JSON.stringify(config.apiBase)};\n`;
 }
@@ -575,6 +583,7 @@ module.exports = {
   isPublicStaticPathname,
   isIndexFile,
   injectAppApiBase,
+  runtimeConfigScript,
   readJsonBody,
   requestUrlFor,
   normalizeText: validation.normalizeText,

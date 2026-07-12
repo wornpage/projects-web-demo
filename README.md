@@ -5,7 +5,8 @@
 **Deployment:** static-first Cloudflare Pages — see
 [docs/deploy-cloudflare.md](docs/deploy-cloudflare.md). A live URL will be
 listed here once the Pages deploy is up; the previous Outplane dev deployment
-is suspended.
+is suspended. App mode can also run on Cloudflare Workers (free plan) with
+Durable Object state — same doc, "App mode on Cloudflare Workers" section.
 
 This repository is the active lightweight web-tech home for the public
 Projects demo. It is a static GitHub Pages app by default: HTML, CSS,

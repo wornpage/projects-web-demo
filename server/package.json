@@ -28,6 +28,8 @@
     "boundary:check": "npm run demo:check && node ../scripts/check-public-assets.mjs && node ../scripts/check-public-boundary.mjs",
     "ship:check": "node ../scripts/check-ship.mjs",
     "test:smoke": "node ../scripts/check-api-smoke.mjs",
+    "worker:dev": "npm run publish:static && wrangler dev --config ../wrangler.jsonc --port 8787",
+    "worker:deploy": "npm run publish:static && wrangler deploy --config ../wrangler.jsonc",
     "behavior:check": "npm run demo:check && node ../scripts/check-behavior-smoke.mjs"
   },
   "engines": {
@@ -39,6 +41,11 @@
   "devDependencies": {
     "acorn": "^8.17.0",
     "playwright": "^1.61.1",
-    "terser": "^5.48.0"
+    "terser": "^5.48.0",
+    "wrangler": "^4.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "workerd@1.20260708.1": true
   }
 }
