@@ -28,8 +28,8 @@
     "boundary:check": "npm run demo:check && node ../scripts/check-public-assets.mjs && node ../scripts/check-public-boundary.mjs",
     "ship:check": "node ../scripts/check-ship.mjs",
     "test:smoke": "node ../scripts/check-api-smoke.mjs",
-    "worker:dev": "npm run publish:static && wrangler dev --config ../wrangler.jsonc --port 8787",
-    "worker:deploy": "npm run publish:static && wrangler deploy --config ../wrangler.jsonc",
+    "worker:dev": "wrangler dev --config ../wrangler.jsonc --port 8787",
+    "worker:deploy": "wrangler deploy --config ../wrangler.jsonc",
     "behavior:check": "npm run demo:check && node ../scripts/check-behavior-smoke.mjs"
   },
   "engines": {

@@ -2,7 +2,10 @@
 // plan: the worker serves the protected static artifact plus the /api routes,
 // with per-client state in SQLite-backed Durable Objects.
 //
-// Build dist/static-publish before dev/deploy (both npm scripts do this):
+// dist/static-publish is generated, never committed; the "build" command below
+// produces it (installing server deps first when missing), so plain
+// `npx wrangler deploy` works both locally and on Cloudflare Workers Builds.
+// Local entry points:
 //   npm --prefix server run worker:dev
 //   npm --prefix server run worker:deploy
 {
@@ -10,6 +13,13 @@
   "main": "worker/index.mjs",
   "compatibility_date": "2025-11-01",
   "compatibility_flags": ["nodejs_compat"],
+  "build": {
+    "command": "node scripts/build-worker-assets.mjs",
+    "cwd": ".",
+    // Rebuild the protected artifact when the demo frontend sources change
+    // during `wrangler dev`.
+    "watch_dir": ["src/demo", "assets", "data"]
+  },
   "assets": {
     "directory": "./dist/static-publish",
     "binding": "ASSETS",
