@@ -66,6 +66,14 @@ npm --prefix server run worker:dev     # local: builds artifact, runs wrangler d
 npm --prefix server run worker:deploy  # deploy: requires `npx wrangler login` once
 ```
 
+Both commands (and plain `npx wrangler deploy`) build `dist/static-publish`
+themselves: `wrangler.jsonc` declares `build.command`, which installs the
+server dependencies when they are missing and runs the artifact build. That is
+what makes the git-connected **Workers Builds** deploy work — Cloudflare
+clones the repo fresh and runs `npx wrangler deploy` with no separate build
+step, so the deploy command in the Workers Builds settings needs no
+customization.
+
 Notes:
 
 - Free-tier fit: 100k requests/day, 10 ms CPU per request, Durable Objects on
