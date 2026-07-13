@@ -2647,7 +2647,7 @@ function render() {
   const previousHash = state.lastRenderedHash;
   const currentHash = location.hash || `#/${state.route}`;
   const isSameRoute = state.route === (state.lastRenderedRoute || "");
-  const shouldResetScroll = Boolean(previousHash !== currentHash && !state.pendingFocus && !isSameRoute);
+  const hashChanged = previousHash !== currentHash;
 
   if (!state.packs.find((pack) => pack.id === state.selectedId)) {
     state.selectedId = state.packs[0]?.id || "";
@@ -2735,6 +2735,10 @@ function render() {
   }
 
   bindClipboardReceiptControls();
+  // Scroll placement runs inside the render pass (and inside the view
+  // transition's update callback) so the new snapshot is captured at the
+  // final position instead of jumping after the cross-fade.
+  applyRouteScroll(hashChanged, isSameRoute);
   };
   var _transition = null;
   // Avoid overlapping transitions — "old view transition aborted" noise
@@ -2749,22 +2753,6 @@ function render() {
     _doRender();
   }
 
-  if (shouldResetScroll) {
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    });
-    // Reset saved scroll for this route when navigating fresh
-    var _resetKey = state.route + ":" + (state.filter || "all");
-    if (state.scrollPositions) delete state.scrollPositions[_resetKey];
-  } else {
-    // Restore saved scroll position
-    var _restoreKey = state.route + ":" + (state.filter || "all");
-    var _savedY = state.scrollPositions && state.scrollPositions[_restoreKey];
-    if (_savedY) {
-      requestAnimationFrame(function () { window.scrollTo({ top: _savedY, left: 0 }); });
-    }
-  }
-
   if (_transition) {
     _transition.finished.then(function () { applyPendingFocus(); });
   } else {
@@ -2775,6 +2763,46 @@ function render() {
   try { var savedView = localStorage.getItem("demo-view-" + state.route); if (savedView && ["card","landing","table"].indexOf(savedView) >= 0) state.workListView = savedView; } catch {}
   saveState();
   requestAnimationFrame(applyVirtualScroll);
+}
+
+// The desktop layout scrolls the .demo-shell container (html/body are
+// overflow:hidden at >=981px); narrow layouts scroll the document. Every
+// scroll read/write must go through this root or it silently no-ops.
+function scrollRoot() {
+  const shell = document.querySelector(".demo-shell");
+  return shell && shell.scrollHeight > shell.clientHeight + 1
+    ? shell
+    : document.scrollingElement || document.documentElement;
+}
+
+function applyRouteScroll(hashChanged, isSameRoute) {
+  if (!hashChanged) {
+    return;
+  }
+
+  const root = scrollRoot();
+  const positionKey = state.route + ":" + (state.filter || "all");
+  if (state.route === "pack") {
+    // Opening a work item always lands at the start of its form — never at
+    // the previous route's scroll offset, and never at a stale saved one.
+    if (state.scrollPositions) {
+      delete state.scrollPositions[positionKey];
+    }
+    const form = el("pack-edit-form");
+    if (form) {
+      form.scrollIntoView();
+      root.scrollBy(0, -10);
+    } else {
+      root.scrollTo(0, 0);
+    }
+    return;
+  }
+
+  if (isSameRoute) {
+    return;
+  }
+
+  root.scrollTo(0, (state.scrollPositions && state.scrollPositions[positionKey]) || 0);
 }
 
 // Virtual scroll — hide work items outside viewport for performance
@@ -2794,28 +2822,35 @@ function applyVirtualScroll() {
   });
 }
 
-// Bind scroll listener for virtualization
-document.addEventListener("scroll", function () {
+// Bind scroll listener for virtualization, saved positions, and the progress
+// bar. Scroll events do not bubble, so the shell container (the desktop
+// scroller) needs its own listener next to the document one (narrow layouts).
+function handleDemoScroll() {
   if (_virtualScrollTimer) clearTimeout(_virtualScrollTimer);
   _virtualScrollTimer = setTimeout(applyVirtualScroll, 100);
+  var root = scrollRoot();
   if (state && state.route) {
     var _key = state.route + ":" + (state.filter || "all");
     if (!state.scrollPositions) state.scrollPositions = {};
-    state.scrollPositions[_key] = window.scrollY;
+    state.scrollPositions[_key] = root.scrollTop;
   }
   // Update scroll progress bar
-  var _scrollH = document.documentElement.scrollHeight - window.innerHeight;
+  var _scrollH = root.scrollHeight - root.clientHeight;
   if (_scrollH > 0 && !window._scrollSheet) {
     window._scrollSheet = new CSSStyleSheet();
     window._scrollSheet.insertRule("#scroll-progress { width: 0; }");
     document.adoptedStyleSheets.push(window._scrollSheet);
   }
-  if (window._scrollSheet) {
-    var _pct = Math.round((window.scrollY / _scrollH) * 100);
+  if (window._scrollSheet && _scrollH > 0) {
+    var _pct = Math.round((root.scrollTop / _scrollH) * 100);
     window._scrollSheet.deleteRule(0);
     window._scrollSheet.insertRule("#scroll-progress { width: " + _pct + "%; }", 0);
   }
-}, { passive: true });
+}
+
+[document, document.querySelector(".demo-shell")].forEach((target) => {
+  target?.addEventListener("scroll", handleDemoScroll, { passive: true });
+});
 
 function screenTitleForRoute() {
   const profile = copyProfiles[state.copyProfile] || copyProfiles.general;
@@ -3441,6 +3476,13 @@ function focusCommandTarget(kind, packId = "") {
     return;
   }
 
+  if (kind === "pack-detail") {
+    // Route scroll already placed the form start at the top; "nearest" keeps
+    // that placement instead of re-centering the title mid-viewport.
+    focusAndPulse(target, { block: "nearest" });
+    return;
+  }
+
   focusAndPulse(target);
 }
 
@@ -3578,7 +3620,7 @@ function ensureFocusTopVisible(target) {
   const rect = target.getBoundingClientRect();
   const topInset = 24;
   if (rect.top < topInset) {
-    window.scrollBy({ top: rect.top - topInset, left: 0, behavior: "auto" });
+    scrollRoot().scrollBy(0, rect.top - topInset);
   }
 }
 
@@ -4571,10 +4613,12 @@ function renderPackDetail() {
       </div>
 
       <div class="demo-form-grid demo-forward-fields">
-        ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
+        <div class="demo-form-col">
+          ${inputField("edit-title", "Title", pack.title, "Renames this work item.")}
+          ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
+          ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
+        </div>
         ${blockerStateField(pack)}
-        ${showOwnerInline ? inputField("edit-owner", "Owner", pack.owner, "Fill owner to clear this owner-related blocker.") : inputField("edit-owner", "Owner", pack.owner, "Changing owner can resolve owner-related blockers.")}
-        ${nextActionSelectField("edit-next", `Next action ${helpTip("What the main button does. When this work is ready, the button runs this action.")}`, editableNextActionValue(pack.next), "Choose the action the main button runs for the selected work.")}
         <details class="demo-optional-fields"${pack.due || pack.url || pack.doneWhen || pack.purpose ? " open" : ""}>
           <summary>More options${(pack.due ? 1 : 0) + (pack.url ? 1 : 0) + (pack.doneWhen ? 1 : 0) + (pack.purpose ? 1 : 0) ? ` (${(pack.due ? 1 : 0) + (pack.url ? 1 : 0) + (pack.doneWhen ? 1 : 0) + (pack.purpose ? 1 : 0)})` : ""}</summary>
           ${dateField("edit-due", "Due", pack.due, "Optional date kept on the work path and searchable in the work list.")}
@@ -4584,13 +4628,13 @@ function renderPackDetail() {
         </details>
       </div>
 
-      ${renderSubtasks(pack)}${renderExtraFields(pack)}
-      ${relevantMemoryStrip(pack)}
       <div class="demo-card-actions demo-forward-actions">
         ${packPrimaryActionButton(routeCommand)}
         <p id="pack-save-help" class="demo-field-help demo-forward-save-note" aria-live="polite"${saveNote ? "" : " hidden"}>${escapeHtml(saveNote)}</p>
       </div>
       ${actionReceiptCard(pack)}
+      ${renderSubtasks(pack)}${renderExtraFields(pack)}
+      ${relevantMemoryStrip(pack)}
     </section>
     ${activityPanel(pack)}
   `;
@@ -8932,7 +8976,7 @@ function textField(id, label, value, help = "") {
   const describedBy = help ? `${id}-help` : "";
   return `<label class="demo-field demo-field-wide" for="${escapeAttribute(id)}">
     <span>${escapeHtml(label)}</span>
-    <textarea id="${escapeAttribute(id)}" rows="4"${fieldHelpAttributes(describedBy, help)}>${escapeHtml(value || "")}</textarea>
+    <textarea id="${escapeAttribute(id)}" rows="3"${fieldHelpAttributes(describedBy, help)}>${escapeHtml(value || "")}</textarea>
     ${fieldHelp(id, help)}
   </label>`;
 }

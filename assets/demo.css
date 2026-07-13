@@ -584,7 +584,6 @@ textarea {
   padding-inline-start: 0;
 }
 
-html:has(#theme-dark:checked) .demo-app-shell,
 html:has(#theme-dark:checked) .demo-app-shell {
   --demo-panel-bg: var(--cockpit-surface);
   --demo-card-bg: var(--cockpit-surface);
@@ -618,7 +617,6 @@ html:has(#theme-dark:checked) .demo-app-shell {
   --demo-card-status-border: var(--cockpit-accent);
 }
 
-html:has(#theme-dark:checked) .demo-app-shell,
 html:has(#theme-dark:checked) .demo-app-shell {
   --demo-panel-shadow: var(--cockpit-shadow-sm);
   --demo-panel-hover-shadow: var(--cockpit-shadow-sm);
@@ -1011,7 +1009,6 @@ body .demo-sidebar.nav-rail .demo-nav-item.nav-rail-btn.active .nav-rail-icon {
   padding: 4px 0 4px 12px;
 }
 
-html:has(#theme-dark:checked) .demo-header-metadata,
 html:has(#theme-dark:checked) .demo-header-metadata {
   background: transparent;
   border-color: var(--cockpit-border);
@@ -1434,6 +1431,8 @@ html:has(#theme-dark:checked) .demo-header-metadata {
 .demo-edit-panel .demo-panel-head {
   align-items: flex-start;
 }
+
+.demo-edit-panel .demo-panel-head p{margin-top:4px}
 
 .demo-pack-subtitle {
   color: var(--cockpit-text-secondary);
@@ -2110,6 +2109,17 @@ html:has(#theme-dark:checked) .demo-header-metadata {
   border-top: 1px solid var(--cockpit-border);
   margin-top: 12px;
   padding-top: 12px;
+}
+
+/* Keep Save reachable while the tall work-path form scrolls (shell mode). */
+@media (min-width: 981px) {
+  .demo-forward-actions {
+    background: var(--cockpit-surface);
+    bottom: 0;
+    padding-bottom: 10px;
+    position: sticky;
+    z-index: 5;
+  }
 }
 
 .demo-forward-actions .demo-pack-primary-action {
@@ -2801,12 +2811,10 @@ html:has(#theme-dark:checked) .demo-header-metadata {
   padding: 10px 12px;
 }
 
-html:has(#theme-dark:checked) .demo-status,
 html:has(#theme-dark:checked) .demo-status {
   color: var(--cockpit-link);
 }
 
-html:has(#theme-dark:checked) .demo-status-line,
 html:has(#theme-dark:checked) .demo-status-line {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
@@ -2833,7 +2841,6 @@ html:has(#theme-dark:checked) .demo-status-line {
   padding: 10px 12px;
 }
 
-html:has(#theme-dark:checked) .demo-meta-row,
 html:has(#theme-dark:checked) .demo-meta-row {
   background: var(--demo-meta-bg);
   border-color: var(--cockpit-border);
@@ -3087,7 +3094,6 @@ html:has(#theme-dark:checked) .demo-meta-row {
   overflow: visible;
 }
 
-html:has(#theme-dark:checked) .demo-card-head,
 html:has(#theme-dark:checked) .demo-card-head {
   background: var(--demo-card-head-bg);
   border-color: var(--cockpit-border);
@@ -3114,7 +3120,6 @@ html:has(#theme-dark:checked) .demo-card-head {
   text-decoration: none;
 }
 
-html:has(#theme-dark:checked) .demo-work-card .demo-card-title,
 html:has(#theme-dark:checked) .demo-work-card .demo-card-title {
   color: var(--cockpit-text);
 }
@@ -3339,7 +3344,6 @@ html:has(#theme-dark:checked) .demo-work-card .demo-card-title {
   padding: 8px 10px;
 }
 
-html:has(#theme-dark:checked) .demo-disabled-reason,
 html:has(#theme-dark:checked) .demo-disabled-reason {
   background: var(--cockpit-nav-bg);
   border-color: var(--cockpit-border);
@@ -3368,7 +3372,6 @@ html:has(#theme-dark:checked) .demo-disabled-reason {
   max-width: min(100%, 180px);
 }
 
-html:has(#theme-dark:checked) .demo-state-pill,
 html:has(#theme-dark:checked) .demo-state-pill {
   background: var(--demo-card-status-bg);
   border-color: var(--demo-card-status-border);
@@ -3570,16 +3573,20 @@ html:has(#theme-dark:checked) .demo-state-pill {
   border: 1px solid var(--cockpit-border);
   border-radius: var(--cockpit-radius);
   box-shadow: none;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  padding: 12px;
 }
 
-.demo-forward-fields > .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
+.demo-forward-fields .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
 .demo-forward-fields > .demo-blocker-field,
 .demo-forward-fields > .demo-state-preview {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border-strong);
 }
+
+/* Short fields stack beside the tall blocker box — no hole under Title. */
+.demo-form-col{align-content:start;display:grid;gap:12px;min-width:0}
+.demo-form-col > .demo-field:not(.demo-state-preview):not(.demo-blocker-field){padding:10px}
 
 .demo-forward-triad {
   gap: 10px;
@@ -3620,9 +3627,9 @@ html:has(#theme-dark:checked) .demo-state-pill {
   border-radius: var(--cockpit-radius);
   box-shadow: var(--demo-form-inner-shadow);
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
-  padding: 12px;
+  padding: 10px;
 }
 
 .demo-blocker-field > legend {
@@ -3765,8 +3772,8 @@ html:has(#theme-dark:checked) .demo-state-pill {
   border: 1px solid var(--cockpit-border);
   border-radius: var(--cockpit-radius);
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
 }
 
 .demo-blocker-reason[hidden] {
@@ -3884,8 +3891,8 @@ html:has(#theme-dark:checked) .demo-state-pill {
   font-size: 12px;
   font-weight: 580;
   line-height: 1.1;
-  min-height: 32px;
-  padding: 7px 9px;
+  min-height: 26px;
+  padding: 4px 8px;
 }
 
 .demo-blocker-preset:hover {
@@ -3905,48 +3912,37 @@ html:has(#theme-dark:checked) .demo-state-pill {
   color: var(--cockpit-text);
 }
 
-html:has(#theme-dark:checked) .demo-segmented-control,
 html:has(#theme-dark:checked) .demo-segmented-control {
   background: var(--demo-form-control-bg);
   border-color: var(--cockpit-border-strong);
 }
 
-html:has(#theme-dark:checked) .demo-forward-panel,
 html:has(#theme-dark:checked) .demo-forward-panel {
   background: var(--cockpit-surface);
   border-color: var(--demo-form-outer-border);
 }
 
-html:has(#theme-dark:checked) .demo-forward-fields,
 html:has(#theme-dark:checked) .demo-forward-fields {
   background: var(--cockpit-bg);
   border-color: var(--demo-form-group-border);
 }
 
 html:has(#theme-dark:checked) .demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
-html:has(#theme-dark:checked) .demo-edit-panel .demo-field:not(.demo-state-preview):not(.demo-blocker-field),
 html:has(#theme-dark:checked) .demo-blocker-field,
-html:has(#theme-dark:checked) .demo-blocker-field,
-html:has(#theme-dark:checked) .demo-state-preview,
 html:has(#theme-dark:checked) .demo-state-preview {
   background: var(--demo-form-field-bg);
   border-color: var(--demo-form-field-border);
 }
 
 html:has(#theme-dark:checked) .demo-edit-panel .demo-search-input,
-html:has(#theme-dark:checked) .demo-edit-panel .demo-search-input,
-html:has(#theme-dark:checked) .demo-edit-panel .demo-field input,
 html:has(#theme-dark:checked) .demo-edit-panel .demo-field input,
 html:has(#theme-dark:checked) .demo-edit-panel .demo-field textarea,
-html:has(#theme-dark:checked) .demo-edit-panel .demo-field textarea,
-html:has(#theme-dark:checked) .demo-edit-panel .demo-field select,
 html:has(#theme-dark:checked) .demo-edit-panel .demo-field select {
   background: var(--demo-form-control-bg);
   border-color: var(--demo-form-control-border);
   box-shadow: none;
 }
 
-html:has(#theme-dark:checked) .demo-segment.active,
 html:has(#theme-dark:checked) .demo-segment.active {
   outline: 1px solid var(--cockpit-border-strong);
   outline-offset: -1px;
@@ -3971,13 +3967,11 @@ html:has(#theme-dark:checked) .demo-segment.active {
   display: none;
 }
 
-html:has(#theme-dark:checked) .demo-work-path,
 html:has(#theme-dark:checked) .demo-work-path {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
 }
 
-html:has(#theme-dark:checked) .demo-command-work-path,
 html:has(#theme-dark:checked) .demo-command-work-path {
   background: var(--cockpit-selected-bg);
 }
@@ -4255,7 +4249,6 @@ html:not(.dark) .demo-theme-toggle {
   color: var(--cockpit-text-secondary);
 }
 
-html:has(#theme-dark:checked) .demo-theme-toggle,
 html:has(#theme-dark:checked) .demo-theme-toggle {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
@@ -4291,7 +4284,6 @@ html:has(#theme-sepia:checked) .demo-theme-toggle:hover {
 }
 
 .demo-app-shell .btn-primary,
-html:has(#theme-dark:checked) .demo-app-shell .btn-primary,
 html:has(#theme-dark:checked) .demo-app-shell .btn-primary {
   background: var(--demo-primary-bg);
   border-color: var(--demo-primary-border);
@@ -4447,7 +4439,6 @@ html:has(#theme-dark:checked) .demo-app-shell .btn-primary {
 }
 /* ---- End table view ---- */
 
-html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]),
 html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"], .demo-profile-card[aria-pressed="true"]) {
   color: var(--demo-primary-on-accent) !important;
   -webkit-text-fill-color: var(--demo-primary-on-accent) !important;
@@ -4545,9 +4536,6 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
 }
 
 @media (max-width: 1024px) {
-  .demo-optional-fields[open] {
-    grid-template-columns: 1fr;
-  }
   .demo-app-shell {
     grid-template-columns: 1fr;
     max-width: 100%;
@@ -4866,10 +4854,6 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
   .demo-start-step .btn {
     grid-column: 2;
   }
-
-  .demo-optional-fields[open] {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-height: 540px) and (max-width: 900px) {
@@ -4894,9 +4878,6 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
   .demo-page-header,
   .demo-page-content {
     padding-inline: 12px;
-  }
-  .demo-optional-fields[open] {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -5893,7 +5874,6 @@ html:has(#theme-dark:checked) .demo-app-shell :is(.demo-chip[aria-pressed="true"
 
 .demo-work-path,
 .demo-command-work-path,
-html:has(#theme-dark:checked) .demo-command-work-path,
 html:has(#theme-dark:checked) .demo-command-work-path {
   background: var(--cockpit-surface);
   border-color: var(--cockpit-border);
@@ -6166,7 +6146,6 @@ html:has(#theme-dark:checked) .demo-command-work-path {
   --demo-work-card-setup-rail: var(--cockpit-warning-border);
 }
 
-html:has(#theme-dark:checked) .demo-app-shell,
 html:has(#theme-dark:checked) .demo-app-shell {
   --demo-work-card-bg: var(--cockpit-surface);
   --demo-work-card-bg-alt: var(--cockpit-nav-bg);
@@ -6682,9 +6661,6 @@ html:has(#theme-dark:checked) .demo-app-shell {
   }
   .demo-bottom-brief {
     bottom: 80px;
-  }
-  .demo-optional-fields[open] {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -7912,3 +7888,8 @@ html:has(#theme-holiday:checked){--cockpit-accent:#ec3b77;--cockpit-accent-hover
 .demo-api-busy #screen-content{cursor:progress}.demo-api-busy .demo-work-card button,.demo-api-busy .demo-card-actions .btn{opacity:.65;pointer-events:none}
 .demo-empty .demo-empty-action{justify-self:center;margin-top:4px;min-width:160px}
 .demo-pin-flag{display:inline-block;font-size:12px;margin-inline-end:4px}
+/* Two-column More options. A <details> can't grid its own fields (display:grid
+   there only lays out the summary + ::details-content box), so the grid lives
+   on ::details-content. Browsers without it fall back to the single column. */
+@media (min-width:1025px){.demo-optional-fields[open]::details-content{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}}
+@media (max-width:480px){.demo-form-col{gap:8px}}
