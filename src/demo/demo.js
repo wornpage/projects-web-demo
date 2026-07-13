@@ -775,7 +775,16 @@ async function applyLaunchConfiguration() {
   }
   if (scenarioParam && DEMO_SCENARIO_BY_ID[scenarioParam]) {
     state.route = DEMO_SCENARIO_BY_ID[scenarioParam].route || state.route;
-    await applyScenario(DEMO_SCENARIO_BY_ID[scenarioParam], { force: true, preserveProfile: hasProfileParam });
+    // Only (re)seed the scenario when the loaded state isn't already on it.
+    // Re-applying replaces packs with fresh seed data, so a plain reload of a
+    // deep link like ?scenario=ops-day silently discarded anything the visitor
+    // created or edited under that scenario. Once state is already on the
+    // requested scenario with work present, leave the saved edits alone.
+    const alreadyOnScenario = state.scenarioId === scenarioParam
+      && Array.isArray(state.packs) && state.packs.length > 0;
+    if (!alreadyOnScenario) {
+      await applyScenario(DEMO_SCENARIO_BY_ID[scenarioParam], { force: true, preserveProfile: hasProfileParam });
+    }
   } else if (!Array.isArray(state.packs) || state.packs.length === 0) {
     await applyScenario(DEMO_SCENARIO_BY_ID.default, { preserveProfile: hasProfileParam });
   } else if (!DEMO_SCENARIO_BY_ID[state.scenarioId]) {
