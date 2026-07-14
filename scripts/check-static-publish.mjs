@@ -21,7 +21,7 @@ const forbiddenRootFiles = [
   "scripts/protect-frontend.mjs",
   "scripts/check-ship.mjs"
 ];
-const protectedReadableTokens = [
+const protectedReadableTokens = Object.freeze([
   "runBackendPackAction",
   "saveBackendPackNextAction",
   "loadBackendSeedPacks",
@@ -38,7 +38,7 @@ const protectedReadableTokens = [
   "/api/state/browser",
   "/api/state/reset",
   "/api/state"
-];
+]);
 
 try {
   await buildStaticPublish(outputDir);
@@ -56,9 +56,14 @@ try {
   check("static publish has no source maps", mapFiles.length === 0, mapFiles.join(", ") || "absent");
 
   const demoScript = await fs.readFile(path.join(outputDir, "assets", "demo.js"), "utf8");
-  const lineCount = demoScript.split(/\r?\n/u).length;
-  const readableTokens = protectedReadableTokens.filter((token) => demoScript.includes(token));
-  check("static publish frontend is protected", lineCount < 200 && readableTokens.length === 0, `${lineCount} line(s), ${readableTokens.join(", ") || "protected tokens absent"}`);
+  const demoLineCount = demoScript.split(/\r?\n/u).length;
+  const demoReadableTokens = protectedReadableTokens.filter((token) => demoScript.includes(token));
+  check("static publish demo.js frontend is protected", demoLineCount < 200 && demoReadableTokens.length === 0, `${demoLineCount} line(s), ${demoReadableTokens.join(", ") || "protected tokens absent"}`);
+
+  const demoAppScript = await fs.readFile(path.join(outputDir, "assets", "demo-app.js"), "utf8");
+  const demoAppLineCount = demoAppScript.split(/\r?\n/u).length;
+  const demoAppReadableTokens = protectedReadableTokens.filter((token) => demoAppScript.includes(token));
+  check("static publish demo-app.js frontend is protected", demoAppLineCount < 200 && demoAppReadableTokens.length === 0, `${demoAppLineCount} line(s), ${demoAppReadableTokens.join(", ") || "protected tokens absent"}`);
 
   const seedData = await fs.readFile(path.join(outputDir, "data", "demo-packs.json"), "utf8");
   check("static publish keeps only sample data", !/customer|secret|DATABASE_URL|PGPASSWORD|server\/server\.js/iu.test(seedData), "sample data scan");

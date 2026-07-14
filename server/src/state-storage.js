@@ -308,6 +308,7 @@ function contentAssetVersion() {
     "index.html",
     "assets/demo.css",
     "assets/demo.js",
+    "assets/demo-app.js",
     "assets/favicon.png",
     "data/demo-packs.json"
   ]) {

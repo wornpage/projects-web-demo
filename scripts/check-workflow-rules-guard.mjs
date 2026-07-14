@@ -4,6 +4,11 @@
 // Fails if either engine (the static client src/demo/demo.js or the backend
 // server/src/*) re-implements a shared rule locally instead of delegating to
 // server/src/workflow-rules.js — the drift that this module exists to prevent.
+//
+// Also guards the app-mode thin client module (src/demo/workflow-rules-client.js)
+// which strips the server-authoritative packActionEffect / unblockPacksBlockedBy.
+// The thin module must export the same function signatures as the full module
+// for every name they share.
 
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -14,8 +19,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const require = createRequire(import.meta.url);
 const checks = [];
 
-// The shared module must export exactly this surface (both engines depend on it).
-const expectedExports = [
+// The full shared module must export exactly this surface.
+const expectedFullExports = [
   "DEMO_BLOCKER_NONE",
   "VALID_PACK_STATUSES",
   "normalizeText",
@@ -30,6 +35,27 @@ const expectedExports = [
   "unblockPacksBlockedBy",
   "unblockedReceiptSentence"
 ];
+
+// The app-mode thin client module exports only the subset needed for client-local
+// form previews, cycle checking, and receipt rendering — packActionEffect and
+// unblockPacksBlockedBy are server-authoritative in app mode.
+const expectedThinExports = [
+  "DEMO_BLOCKER_NONE",
+  "VALID_PACK_STATUSES",
+  "normalizeText",
+  "normalizeLegacyBlockerCopy",
+  "normalizeStoredBlocker",
+  "isUnblockedBlockerValue",
+  "isPlaceholderNext",
+  "forwardPathStatusForBlocker",
+  "createsBlockedByCycle",
+  "blockedByBlockerText",
+  "unblockedReceiptSentence"
+];
+
+// The thin module must NOT export these (server-authoritative, stripped from
+// the app-mode build).
+const forbiddenThinExports = ["packActionEffect", "unblockPacksBlockedBy"];
 
 // Names fully removed from both engines — must never be re-declared as a local
 // `function <name>(` in an engine file (a `const <name> = rules/WR.<name>` alias
@@ -55,20 +81,55 @@ const engineFiles = [
   "server/src/validation.js"
 ];
 
-const rules = require(path.join(repoRoot, "server", "src", "workflow-rules.js"));
-const actualExports = Object.keys(rules).sort();
+// ---- Full shared module checks ----
+
+const fullRules = require(path.join(repoRoot, "server", "src", "workflow-rules.js"));
+const fullActualExports = Object.keys(fullRules).sort();
 check(
   "workflow-rules exports the expected shared surface",
-  expectedExports.slice().sort().join(",") === actualExports.join(","),
-  actualExports.join(", ")
+  expectedFullExports.slice().sort().join(",") === fullActualExports.join(","),
+  fullActualExports.join(", ")
 );
+
+// ---- Thin client module checks ----
+
+const thinRulesPath = path.join(repoRoot, "src", "demo", "workflow-rules-client.js");
+const thinRules = require(thinRulesPath);
+const thinActualExports = Object.keys(thinRules).sort();
+check(
+  "workflow-rules-client exports the app-mode subset",
+  expectedThinExports.slice().sort().join(",") === thinActualExports.join(","),
+  thinActualExports.join(", ")
+);
+
+for (const name of forbiddenThinExports) {
+  check(
+    `workflow-rules-client does not export ${name}`,
+    !thinActualExports.includes(name),
+    thinActualExports.includes(name) ? `exported: ${name}` : "absent"
+  );
+}
+
+// Each function shared between the full and thin modules must have the same
+// parameter count (a basic structural drift check).
+for (const name of expectedThinExports) {
+  if (typeof fullRules[name] === "function" && typeof thinRules[name] === "function") {
+    check(
+      `workflow-rules-client ${name} has same arity as full module`,
+      fullRules[name].length === thinRules[name].length,
+      `full: ${fullRules[name].length}, thin: ${thinRules[name].length}`
+    );
+  }
+}
+
+// ---- Engine file checks ----
 
 const sources = {};
 for (const rel of engineFiles) {
   sources[rel] = await fs.readFile(path.join(repoRoot, rel), "utf8");
 }
 
-// Both engines must reference the shared module.
+// Every engine must reference the shared module.
 check("client references the shared module", sources["src/demo/demo.js"].includes("window.__workflowRules"), "window.__workflowRules");
 check("backend workflow requires the shared module", sources["server/src/workflow.js"].includes('require("./workflow-rules.js")'), "require");
 check("backend validation requires the shared module", sources["server/src/validation.js"].includes('require("./workflow-rules.js")'), "require");

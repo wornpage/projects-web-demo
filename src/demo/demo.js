@@ -6744,6 +6744,16 @@ async function handlePackAction(id, action) {
     }
   }
 
+  // In app mode the thin client rules module omits packActionEffect (the server
+  // already handles every pack action). When the backend dispatch above failed
+  // and the function is missing, surface the error instead of falling through to
+  // undefined calls.
+  if (typeof WR.packActionEffect !== "function") {
+    state.status = "Where: Backend action. Blocker: Backend unavailable and offline fallback is disabled in app mode. Next action: retry or refresh.";
+    render();
+    return;
+  }
+
   if (action === "start") {
     const before = packActionSignature(pack);
     Object.assign(pack, WR.packActionEffect(pack, "start"));
@@ -8092,7 +8102,7 @@ function applyPackForwardPathFormValues(pack) {
   if (pack.status === STATUS.BLOCKED && isUnblockedBlockerValue(pack.blocker)) {
     pack.status = STATUS.ACTIVE;
   }
-  if (statusBefore !== STATUS.DONE && pack.status === STATUS.DONE) {
+  if (statusBefore !== STATUS.DONE && pack.status === STATUS.DONE && typeof WR.unblockPacksBlockedBy === "function") {
     unblockPacksBlockedBy(pack);
   }
   const changed = packForwardPathSignature(pack) !== before;
@@ -8213,6 +8223,7 @@ function clearDanglingBlockedBy(packs) {
 // Shared cascade (server/src/workflow-rules.js) with this engine's state,
 // activity logger, and workTitle injected.
 function unblockPacksBlockedBy(finishedPack) {
+  if (typeof WR.unblockPacksBlockedBy !== "function") return [];
   return WR.unblockPacksBlockedBy(state.packs, finishedPack, { onActivity: addPackActivity, workTitle });
 }
 

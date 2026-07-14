@@ -44,6 +44,7 @@ const publicStaticFiles = new Set([
   "/manifest.json",
   "/assets/demo.css",
   "/assets/demo.js",
+  "/assets/demo-app.js",
   "/assets/landing.css",
   "/assets/favicon.png",
   "/assets/favicon.svg",

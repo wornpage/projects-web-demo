@@ -16,6 +16,7 @@ export const STATIC_PUBLISH_FILES = Object.freeze([
   "manifest.json",
   "assets/demo.css",
   "assets/demo.js",
+  "assets/demo-app.js",
   "assets/landing.css",
   "assets/favicon.png",
   "assets/favicon.svg",
@@ -54,6 +55,19 @@ export async function buildStaticPublish(outputDir, options = {}) {
     throw new Error(`Static publish frontend protection failed.\n${protectResult.stderr || protectResult.stdout}`);
   }
 
+  const protectAppResult = spawnSync(process.execPath, [
+    path.join(repoRoot, "scripts", "protect-frontend.mjs"),
+    path.join(resolvedOutputDir, "assets", "demo-app.js"),
+    path.join(resolvedOutputDir, "assets", "demo-app.js")
+  ], {
+    cwd: repoRoot,
+    encoding: "utf8"
+  });
+
+  if (protectAppResult.status !== 0) {
+    throw new Error(`Static publish app frontend protection failed.\n${protectAppResult.stderr || protectAppResult.stdout}`);
+  }
+
   if (!options.keepLogs && protectResult.stdout?.trim()) {
     return protectResult.stdout.trim();
   }
@@ -71,6 +85,19 @@ function assertDemoAssetCurrent() {
 
   if (result.status !== 0) {
     throw new Error(`Generated demo asset is stale.\n${result.stderr || result.stdout}`);
+  }
+
+  const appResult = spawnSync(process.execPath, [
+    path.join(repoRoot, "scripts", "build-demo-asset.mjs"),
+    "--app",
+    "--check"
+  ], {
+    cwd: repoRoot,
+    encoding: "utf8"
+  });
+
+  if (appResult.status !== 0) {
+    throw new Error(`Generated demo-app asset is stale.\n${appResult.stderr || appResult.stdout}`);
   }
 }
 

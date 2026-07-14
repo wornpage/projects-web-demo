@@ -12,24 +12,29 @@ const terser = require("../server/node_modules/terser");
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(repoRoot, "src", "demo", "demo.js");
 const rulesPath = path.join(repoRoot, "server", "src", "workflow-rules.js");
+const appRulesPath = path.join(repoRoot, "src", "demo", "workflow-rules-client.js");
 const cssSourcePath = path.join(repoRoot, "assets", "demo.css");
-const assetPath = path.join(repoRoot, "assets", "demo.js");
+const isAppMode = process.argv.includes("--app");
+const assetPath = isAppMode
+  ? path.join(repoRoot, "assets", "demo-app.js")
+  : path.join(repoRoot, "assets", "demo.js");
 const checkOnly = process.argv.includes("--check");
 
 assertSourceSyntax();
 
+const assetLabel = isAppMode ? "assets/demo-app.js" : "assets/demo.js";
 if (checkOnly) {
   const [source, asset] = await Promise.all([
     readGeneratedSource(),
     fs.readFile(assetPath, "utf8")
   ]);
   if (source !== asset) {
-    throw new Error("assets/demo.js is stale. Run npm --prefix server run demo:build.");
+    throw new Error(`${assetLabel} is stale. Run npm --prefix server run demo:build${isAppMode ? "-app" : ""}.`);
   }
-  console.log("PASS demo asset matches src/demo/demo.js.");
+  console.log(`PASS ${assetLabel} matches src/demo/demo.js.`);
 } else {
   await fs.writeFile(assetPath, await readGeneratedSource(), "utf8");
-  console.log("Built assets/demo.js from src/demo/demo.js.");
+  console.log(`Built ${assetLabel} from src/demo/demo.js.`);
 }
 
 async function readGeneratedSource() {
@@ -41,11 +46,11 @@ async function readGeneratedSource() {
   } catch {
     // telemetry.js is optional — skip if not present
   }
-  // The shared workflow rules live in server/src (so the backend can require
-  // them and the Docker runtime, which excludes src/, still ships them). Prepend
-  // them here so the browser bundle exposes window.__workflowRules before demo.js
-  // reads it. UMD-wrapped, so this same file require()s cleanly on the server.
-  const rules = (await fs.readFile(rulesPath, "utf8")).replace(/\r\n?/gu, "\n") + "\n";
+  // App mode uses the thin client subset (no packActionEffect / unblockPacksBlockedBy);
+  // static mode uses the full shared module from server/src (so the backend can
+  // require it and the Docker runtime, which excludes src/, still ships it).
+  const rulesFile = isAppMode ? appRulesPath : rulesPath;
+  const rules = (await fs.readFile(rulesFile, "utf8")).replace(/\r\n?/gu, "\n") + "\n";
   const source = await fs.readFile(sourcePath, "utf8");
   const combined = telemetry + rules + source.replace(/\r\n?/gu, "\n");
   const result = await terser.minify(combined, {
@@ -63,7 +68,8 @@ async function readGeneratedSource() {
 }
 
 function assertSourceSyntax() {
-  for (const file of [rulesPath, sourcePath]) {
+  const rulesFile = isAppMode ? appRulesPath : rulesPath;
+  for (const file of [rulesFile, sourcePath]) {
     const result = spawnSync(process.execPath, ["--check", file], {
       cwd: repoRoot,
       encoding: "utf8"

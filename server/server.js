@@ -455,7 +455,10 @@ function injectAppApiBase(html) {
   const assetVersionId = validation.normalizeText(ASSET_VERSION, 120).replace(/[^A-Za-z0-9._-]/gu, "-") || "app";
   const configScript = `<script src="assets/runtime-config.js?v=${assetVersionId}" defer></script>`;
 
-  // Inject runtime-config before the demo.js script (must execute first with defer)
+  // Inject runtime-config before the demo script (must execute first with defer).
+  // In app mode the backend serves the thin-client build (demo-app.js) which
+  // strips the server-authoritative packActionEffect / unblockPacksBlockedBy.
+  // The static index.html references demo.js by default; the server rewrites it.
   let injectedHtml = html;
   if (injectedHtml.includes("assets/runtime-config.js")) {
     injectedHtml = injectedHtml.replace(/<script[^>]*src="assets\/runtime-config\.js[^"]*"[^>]*><\/script>/u, configScript);
@@ -466,9 +469,15 @@ function injectAppApiBase(html) {
     );
   }
 
+  // Rewrite demo.js -> demo-app.js (the thin-client build for app mode).
+  injectedHtml = injectedHtml.replace(
+    /(<script[^>]*src="assets\/)demo\.js([^"]*"[^>]*><\/script>)/gu,
+    "$1demo-app.js$2"
+  );
+
   return injectedHtml
     .replace(/(href="assets\/demo\.css\?v=)[^"]*/gu, `$1${ASSET_VERSION}`)
-    .replace(/(src="assets\/demo\.js\?v=)[^"]*/u, `$1${ASSET_VERSION}`)
+    .replace(/(src="assets\/demo-app\.js\?v=)[^"]*/u, `$1${ASSET_VERSION}`)
     .replace(/(src="assets\/runtime-config\.js\?v=)[^"]*/gu, `$1${ASSET_VERSION}`);
 }
 

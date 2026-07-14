@@ -64,6 +64,7 @@ try {
     "/index.html",
     "/assets/runtime-config.js",
     "/assets/demo.js",
+    "/assets/demo-app.js",
     "/assets/demo.css",
     "/assets/favicon.png"
   ]) {
@@ -80,7 +81,7 @@ try {
   check("app shell disables sensitive browser permissions", permissionsPolicyDisables(appShell.headers["permissions-policy"], ["camera", "geolocation", "microphone", "payment", "usb"]), appShell.headers["permissions-policy"] || "missing");
   check("app shell opts out of search indexing", appShell.headers["x-robots-tag"] === "noindex, nofollow, noarchive", appShell.headers["x-robots-tag"] || "missing");
   check("app shell limits network calls to same origin", csp.includes("connect-src 'self'"), csp || "missing");
-  check("runtime API config loads before the frontend script", runtimeConfigPath && appShell.text.indexOf("assets/runtime-config.js") < appShell.text.indexOf("assets/demo.js"), runtimeConfigPath || "missing");
+  check("runtime API config loads before the frontend script", runtimeConfigPath && appShell.text.indexOf("assets/runtime-config.js") < appShell.text.indexOf("assets/demo-app.js"), runtimeConfigPath || "missing");
   check("runtime asset version is content-derived", appShellUsesAssetVersion(appShell.text, expectedAssetVersion) && runtimeConfigPath === `assets/runtime-config.js?v=${expectedAssetVersion}`, runtimeConfigPath || "missing");
   check("runtime API config is served as same-origin JavaScript", runtimeConfig.text.startsWith("window.__projectsDemoConfig=") && runtimeConfig.text.includes('"apiBase":""') && runtimeConfig.text.includes('"backendMode":true') && runtimeConfig.text.includes("window.PROJECTS_API_BASE_URL=") && !/https?:\/\//u.test(runtimeConfig.text), runtimeConfig.text.trim() || "missing");
   check("app shell contains no inline scripts", !hasInlineScript(appShell.text), "external scripts only");
@@ -1180,6 +1181,7 @@ async function contentAssetVersion() {
     "index.html",
     "assets/demo.css",
     "assets/demo.js",
+    "assets/demo-app.js",
     "assets/favicon.png",
     "data/demo-packs.json"
   ]) {
@@ -1195,7 +1197,7 @@ async function contentAssetVersion() {
 function appShellUsesAssetVersion(html, version) {
   return html.includes(`href="assets/demo.css?v=${version}"`)
     && html.includes(`src="assets/runtime-config.js?v=${version}"`)
-    && html.includes(`src="assets/demo.js?v=${version}"`);
+    && html.includes(`src="assets/demo-app.js?v=${version}"`);
 }
 
 function hasInlineScript(html) {
