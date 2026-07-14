@@ -35,6 +35,7 @@ const protectedReadableTokens = Object.freeze([
   "prepareBackendWorkflowRequest",
   "backend-command-pending",
   "x-projects-demo-client",
+  "/api/state/standup",
   "/api/state/browser",
   "/api/state/reset",
   "/api/state"

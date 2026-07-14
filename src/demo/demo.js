@@ -4309,9 +4309,27 @@ function buildStandupText() {
   return [header, ...lines, `Up next: ${workTitle(review[0])}.`].join("\n");
 }
 
-function copyStandup() {
+async function copyStandup() {
+  let text = buildStandupText();
+  if (DEMO_API_BASE_URL) {
+    try {
+      await prepareBackendWorkflowRequest();
+      const response = await fetch(apiUrl("/api/state/standup"), {
+        headers: await apiHeaders()
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.text) {
+          text = result.text;
+        }
+      }
+    } catch (error) {
+      // Fall back to the locally-computed text (static mode path).
+      console.error("Standup endpoint failed, using local computation.", error);
+    }
+  }
   copyToClipboard(
-    buildStandupText(),
+    text,
     clipboardStatus("Review", "share the copied standup"),
     {
       controlId: "copy-standup",
