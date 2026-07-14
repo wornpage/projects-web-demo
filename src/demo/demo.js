@@ -2721,6 +2721,33 @@ function hydrateRoute() {
     case "compare":
       bindComparePickers(); bindListActions();
       break;
+    case "pack":
+      {
+        const pk = currentPack();
+        if (pk) {
+          el("pack-primary-action")?.addEventListener("click", (event) => {
+            queueFocus(focusKindForAction(event.currentTarget.dataset.action), event.currentTarget.dataset.pack || pk.id);
+            runPrimaryAction(event.currentTarget);
+          });
+          bindPackDetailValidation(pk);
+          document.querySelectorAll("#pack-edit-form textarea").forEach((ta) => { ta.addEventListener("paste", handleImagePaste); });
+          syncEditNextWhat();
+          bindListActions();
+        }
+      }
+      break;
+    case "calendar":
+      bindCalendarNav(); bindListActions();
+      break;
+    case "gantt":
+      bindGoButtons();
+      break;
+    case "insights":
+      bindListActions();
+      break;
+    case "activity":
+      bindListActions();
+      break;
     default:
       // Route not yet supported for hydration — fall back to full client render.
       el("screen-content").innerHTML = "";
