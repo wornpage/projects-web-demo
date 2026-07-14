@@ -6313,10 +6313,11 @@ function actionUndoSnapshot(pack, action) {
 }
 
 function setBackendActionReceipt(action, undo) {
-  // App mode: the backend applied the action and reloaded state, but produced
-  // no receipt. Synthesize the same receipt (and Undo) the static engine shows
-  // so both modes read identically. undo is non-null only for the four
-  // receipt-bearing actions; "open" and friends get no receipt, matching static.
+  // App mode: the backend applied the action and reloaded state (including
+  // state.actionReceipt, which normalizeActionReceipt already handles in both
+  // server and client shapes). Trust the server receipt and just attach the
+  // undo snapshot and any client-only side effects (confetti, activity log,
+  // recently-unblocked highlight).
   if (!undo) {
     return;
   }
@@ -6324,14 +6325,26 @@ function setBackendActionReceipt(action, undo) {
   if (!pack) {
     return;
   }
+  // Attach the undo snapshot to the existing server receipt.
+  attachUndoToReceipt(undo);
+
+  // Client-only side effects the server doesn't handle.
   const changed = JSON.stringify(undo.fields) !== JSON.stringify(packForwardPathSnapshot(pack));
-  const unblockedCount = action === STATUS.DONE
-    ? (undo.dependents || []).filter((dep) => {
+  if (action === STATUS.DONE && changed) {
+    requestAnimationFrame(() => burstConfetti());
+    addPackActivity(pack, proofSavedActivity(pack));
+    const dependents = (undo.dependents || []).filter((dep) => {
       const target = findPack(dep.packId);
       return target && isUnblockedBlockerValue(target.blocker);
-    }).length
-    : 0;
-  setPackActionConfirmation(pack, action, changed, unblockedCount, changed ? undo : null);
+    });
+    markRecentlyUnblocked(dependents);
+  } else if (changed && action === "start") {
+    addPackActivity(pack, "Started.");
+  } else if (changed && action === "unblock") {
+    addPackActivity(pack, "Blocker set to None.");
+  } else if (changed && action === "block") {
+    addPackActivity(pack, "Blocked.");
+  }
 }
 
 // Attach an undo descriptor to whatever receipt is currently showing for the

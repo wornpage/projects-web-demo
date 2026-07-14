@@ -28,7 +28,47 @@ function findPackOrThrow(state, packId) {
 // --- Pack text helpers ---
 
 function workTitle(pack) {
-  return validation.normalizeText(pack?.title, 200) || "Untitled";
+  const raw = validation.normalizeText(pack?.title, 200);
+  if (!raw) {
+    return "Untitled";
+  }
+
+  if (!/[-_]/.test(raw)) {
+    return raw;
+  }
+
+  const text = raw.replace(/[-_]+/g, " ");
+  return text
+    .split(" ")
+    .filter(Boolean)
+    .map((token, index) => workTitleToken(token, index))
+    .join(" ");
+}
+
+function workTitleToken(token, index) {
+  const lower = token.toLowerCase();
+  const acronyms = {
+    api: "API",
+    css: "CSS",
+    gh: "GitHub",
+    github: "GitHub",
+    html: "HTML",
+    iso: "ISO",
+    js: "JS",
+    pdf: "PDF",
+    ui: "UI",
+    ux: "UX"
+  };
+
+  if (acronyms[lower]) {
+    return acronyms[lower];
+  }
+
+  return index === 0 ? capitalize(lower) : lower;
+}
+
+function capitalize(value) {
+  return String(value).charAt(0).toUpperCase() + String(value).slice(1);
 }
 
 function blockerTextForPack(pack) {
@@ -297,10 +337,43 @@ function actionLabelFromKey(action) {
 }
 
 function packActionSummary(pack, action, actionLabel, changed) {
-  if (!changed) {
-    return `${workTitle(pack)}: unchanged (${actionLabel}).`;
+  const title = workTitle(pack);
+
+  if (action === "done") {
+    const proof = proofTargetForPack(pack);
+    const base = changed
+      ? `Done saved for ${title}.`
+      : `Done already saved for ${title}.`;
+    return [base, proof ? `Proof target: ${proof}.` : ""].filter(Boolean).join(" ");
   }
-  return `${workTitle(pack)} ${actionLabel}.`;
+
+  if (action === "start") {
+    return changed
+      ? `Started ${title}.`
+      : `${title} is already active.`;
+  }
+
+  if (action === "unblock") {
+    return changed
+      ? `Blocker cleared for ${title}.`
+      : `Blocker already clear for ${title}.`;
+  }
+
+  if (action === "block") {
+    return changed
+      ? `Blocker added for ${title}.`
+      : `${title} is already blocked.`;
+  }
+
+  if (action === "open") {
+    return changed
+      ? `Work path opened for ${title}.`
+      : `Work path already open for ${title}.`;
+  }
+
+  return changed
+    ? `${actionLabel} saved for ${title}.`
+    : `${actionLabel} is already saved for ${title}.`;
 }
 
 function actionReceiptForPack(pack, summary, next) {
@@ -570,6 +643,40 @@ function addPackMemoryAction(state, packId, rawNote) {
   };
 }
 
+// --- Standup ---
+
+function isReview(pack) {
+  return hasBlocker(pack) || isMissingNextAction(pack) || commandActionForLabel(pack?.next).action === "review";
+}
+
+function ownerSupportNeededForPack(pack) {
+  const blocker = validation.normalizeStoredBlocker(pack?.blocker);
+  return blocker !== constants.DEMO_BLOCKER_NONE && blocker.toLowerCase().includes("owner") && isMissingOwnerValue(pack?.owner);
+}
+
+function workNoun(count = 1) {
+  return count === 1 ? "work item" : "work items";
+}
+
+function buildStandupText(packs) {
+  const review = packs.filter(isReview);
+  const blockedCount = review.filter(hasBlocker).length;
+  const missingNextCount = review.filter(isMissingNextAction).length;
+  const ownerGapCount = review.filter((pack) => ownerSupportNeededForPack(pack)).length;
+
+  if (review.length === 0) {
+    return `Standup — every ${workNoun(1)} has a clear next action. Nothing needs a decision.`;
+  }
+
+  const header = `Standup — ${review.length} ${workNoun(review.length)} ${review.length === 1 ? "needs" : "need"} a decision (${blockedCount} blocked, ${missingNextCount} missing action, ${ownerGapCount} owner ${ownerGapCount === 1 ? "gap" : "gaps"}).`;
+  const lines = review.map((pack) => {
+    const command = resolvePrimaryCommandForPack(pack);
+    const owner = validation.normalizeText(pack?.owner, 200) || "Unassigned";
+    return `- ${workTitle(pack)} — ${blockerTextForPack(pack)} (owner: ${owner}) -> ${command.label}`;
+  });
+  return [header, ...lines, `Up next: ${workTitle(review[0])}.`].join("\n");
+}
+
 module.exports = {
   findPackOrThrow,
   workTitle,
@@ -604,5 +711,6 @@ module.exports = {
   unblockedReceiptSentence,
   savePackPathAction,
   setPackNextAction,
-  addPackMemoryAction
+  addPackMemoryAction,
+  buildStandupText
 };

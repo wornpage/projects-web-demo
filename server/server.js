@@ -169,6 +169,13 @@ async function routeRequest(request, response, url, stateStorage = defaultStateS
     return;
   }
 
+  if (method === "GET" && pathname === "/api/state/standup") {
+    const stateKey = security.stateKeyForRequest(request);
+    const state = await stateStorage.read(stateKey);
+    sendJson(request, response, 200, { text: workflow.buildStandupText(state?.packs || []) });
+    return;
+  }
+
   if (method === "PUT" && pathname === "/api/state/browser") {
     const stateKey = security.stateWriteKeyForRequest(request);
     const payload = await readJsonBody(request);
