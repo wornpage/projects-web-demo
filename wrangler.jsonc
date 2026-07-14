@@ -32,6 +32,14 @@
       { "name": "DEMO_STATE", "class_name": "DemoStateDurableObject" }
     ]
   },
+  // Cloudflare Access JWT validation (worker/access-jwt.mjs). Set these two as
+  // plaintext Worker variables on the production deploy (Dashboard > Worker >
+  // Settings > Variables, or `wrangler secret put`) to reject requests that
+  // bypass Access. They are intentionally NOT committed here: with them set,
+  // every request needs a valid Access JWT, which would break `wrangler dev`
+  // and CI. Leave them unset locally; validation then no-ops.
+  //   ACCESS_AUD          = the Access application's Audience (aud) tag
+  //   ACCESS_TEAM_DOMAIN  = https://<team>.cloudflareaccess.com (the iss)
   "migrations": [
     // new_sqlite_classes (not new_classes) — SQLite-backed DOs are the only
     // kind available on the free plan.
