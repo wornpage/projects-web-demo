@@ -11,7 +11,9 @@ const publicTextAssets = [
   { pathname: "landing.html", maxBytes: 12000 },
   // Bundle now includes the shared server/src/workflow-rules.js core (prepended
   // at build time) so the client carries the canonical blocker normalizer; +~950B.
-  { pathname: "assets/demo.js", maxBytes: 300000 },
+  // +1000 for the work-list batch-select repair (2026-07-14): batchBar/
+  // bindBatchBar helpers, a non-navigating batchAction, and the route guard.
+  { pathname: "assets/demo.js", maxBytes: 301000 },
   // +1000 for the --cockpit-link text-role token added across all seven theme
   // blocks by the APCA contrast retune (2026-07-12).
   { pathname: "assets/demo.css", maxBytes: 199000 },
@@ -30,7 +32,8 @@ const publicFileAllowlist = [
   "assets/favicon.svg",
   "data/demo-packs.json"
 ];
-const totalPublicTextBudgetBytes = 565000;
+// +1000 alongside the assets/demo.js bump for the batch-select repair (2026-07-14).
+const totalPublicTextBudgetBytes = 566000;
 const retiredPublicFiles = [
   "assets/app.css",
   "assets/demo-metadata.json"

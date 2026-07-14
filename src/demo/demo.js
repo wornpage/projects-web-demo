@@ -2687,6 +2687,15 @@ function render() {
     document.documentElement.dataset.demoRoute = "work";
   }
 
+  // Batch select only lives on the work list. If the route moved elsewhere,
+  // drop out of batch mode so no screen is left with orphaned checkboxes and
+  // no action bar to exit through.
+  if (state.route !== "work" && state.batchMode) {
+    state.batchMode = false;
+    state.batchSelected.clear();
+    document.documentElement.classList.remove("batch-mode");
+  }
+
   // View transition — smooth cross-fade between route changes
   var _vt = typeof document.startViewTransition === "function" ? document : null;
   var _doRender = function () {
@@ -3736,21 +3745,28 @@ function batchAction(action) {
   ids.forEach(function(id) {
     var pack = state.packs.find(function(p) { return p.id === id; });
     if (!pack) return;
+    // Apply the status effect in place. Unlike handlePackAction, this must not
+    // navigate to a pack detail — a batch operates on the whole selection and
+    // has to stay on the list.
     if (action === "done") {
-      handlePackAction(id, "done");
+      var wasDone = pack.status === STATUS.DONE;
+      Object.assign(pack, WR.packActionEffect(pack, "done"));
+      addPackActivity(pack, proofSavedActivity(pack));
+      if (!wasDone) markRecentlyUnblocked(unblockPacksBlockedBy(pack));
     } else if (action === "block") {
-      handlePackAction(id, "block");
+      Object.assign(pack, WR.packActionEffect(pack, "block"));
+      addPackActivity(pack, "Blocked.");
     } else if (action === "delete") {
       state.packs = state.packs.filter(function(p) { return p.id !== id; });
       state.batchSelected.delete(id);
     }
   });
   state.batchSelected.clear();
-  saveState();
-  render();
   var label = { done: "done", block: "blocked", delete: "deleted" }[action] || action;
   state.status = routeStatus("Batch", DEMO_BLOCKER_NONE, ids.length + " items " + label);
+  saveState();
   if (DEMO_API_BASE_URL) state.suppressNextSave = true;
+  render();
 }
 
 function handleCardClick(event) {
@@ -3915,7 +3931,7 @@ function renderHome() {
       </div>
       ${recentActivity.length ? `<div class="demo-home-activity">
         <h3>Recent activity</h3>
-        ${recentActivity.map((a) => `<p><button type="button" data-action="select" data-pack="${escapeAttribute(a.pack.id)}">${escapeHtml(workTitle(a.pack))}</button> — ${escapeHtml(a.entry.text)} <time class="demo-activity-time">${escapeHtml(relativeActivityTime(a.entry.at))}</time></p>`).join("")}
+        ${recentActivity.map((a) => `<p><button type="button" class="demo-linkish" data-action="select" data-pack="${escapeAttribute(a.pack.id)}">${escapeHtml(workTitle(a.pack))}</button> — ${escapeHtml(a.entry.text)} <time class="demo-activity-time">${escapeHtml(relativeActivityTime(a.entry.at))}</time></p>`).join("")}
       </div>` : ""}
       <div class="demo-quick-actions demo-secondary-paths" aria-label="Demo actions">
         ${navButton("review", "Review work", "btn btn-primary")}
@@ -4145,14 +4161,22 @@ function recoveryPanel() {
   </details>`;
 }
 
-function importPanel() {
-  return `<div class="demo-batch-bar${state.batchSelected.size ? " is-active" : ""}">
-    <span class="demo-batch-count">${state.batchSelected.size} selected</span>
-    <button class="btn btn-sm" type="button" data-action="batch-done"${state.batchSelected.size ? "" : " disabled"}>Done</button>
-    <button class="btn btn-sm" type="button" data-action="batch-block"${state.batchSelected.size ? "" : " disabled"}>Block</button>
-    <button class="btn btn-sm" type="button" data-action="batch-delete"${state.batchSelected.size ? "" : " disabled"}>Delete</button>
+// Sticky action bar for batch select. Lives on the work list (renderWork),
+// not Settings — it only makes sense where the selectable cards are.
+function batchBar() {
+  if (!state.batchMode) return "";
+  const count = state.batchSelected.size;
+  return `<div class="demo-batch-bar${count ? " is-active" : ""}" role="toolbar" aria-label="Batch actions">
+    <span class="demo-batch-count">${count} selected</span>
+    <button class="btn btn-sm" type="button" data-action="batch-done"${count ? "" : " disabled"}>Done</button>
+    <button class="btn btn-sm" type="button" data-action="batch-block"${count ? "" : " disabled"}>Block</button>
+    <button class="btn btn-sm" type="button" data-action="batch-delete"${count ? "" : " disabled"}>Delete</button>
     <button class="btn btn-sm" type="button" data-action="batch-clear">Clear</button>
-  </div><details class="demo-recovery-panel demo-import-panel">
+  </div>`;
+}
+
+function importPanel() {
+  return `<details class="demo-recovery-panel demo-import-panel">
     <summary>
       <span>Import your work</span>
       <small>Paste a task list to try the demo on your own work.</small>
@@ -4244,11 +4268,28 @@ function renderWork() {
       </div>
       ${routeActionReceiptPanel(visible, `${workLabelTitle()} filters`)}
       <div class="demo-work-list">${orderedVisible.length ? orderedVisible.map(workCard).join("") : emptyWork}</div>
+      ${batchBar()}
     </section>
   `;
   bindToolbar();
   bindWorkCards();
+  bindBatchBar();
   bindGoButtons();
+}
+
+// The batch bar's data-action buttons live outside the delegated
+// bindListActions() path this screen uses, so wire them directly here.
+function bindBatchBar() {
+  document.querySelectorAll(".demo-batch-bar [data-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.dataset.action;
+      if (action === "batch-clear") {
+        clearBatchSelection();
+        return;
+      }
+      batchAction(action.slice("batch-".length));
+    });
+  });
 }
 
 function buildStandupText() {
