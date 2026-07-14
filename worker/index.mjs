@@ -22,6 +22,45 @@ seed.setSeedPacksSource(demoPacks);
 
 const STORAGE_MODE = "durable-object";
 
+// Edge-level AI-crawler block. User-agent matching is the only signal the free
+// Workers plan gives us (bot-management/verified-bots are paid), so we mirror
+// the well-known scraper/LLM-training tokens and reject them before any routing
+// runs. See https://www.openshadow.io/guides/blocking-ai-bots-cloudflare-workers.
+// Substring, case-insensitive: these tokens don't collide with real browser UAs.
+const BLOCKED_AI_BOT_UAS = new RegExp([
+  "GPTBot", "ChatGPT-User", "OAI-SearchBot",
+  "ClaudeBot", "Claude-Web", "anthropic-ai", "Claude-SearchBot", "Claude-User",
+  "Google-Extended", "Applebot-Extended",
+  "Bytespider", "CCBot", "PerplexityBot", "Perplexity-User",
+  "Diffbot", "ImagesiftBot", "omgili", "Amazonbot", "YouBot",
+  "cohere-ai", "Meta-ExternalAgent", "Meta-ExternalFetcher", "FacebookBot",
+  "Timpibot", "DataForSeoBot", "Scrapy", "AI2Bot"
+].join("|"), "iu");
+
+// Served to every client (even the blocked bots, which run the block first for
+// everything else) so cooperative crawlers see an explicit policy.
+const ROBOTS_TXT = [
+  "User-agent: GPTBot",
+  "User-agent: ChatGPT-User",
+  "User-agent: OAI-SearchBot",
+  "User-agent: ClaudeBot",
+  "User-agent: anthropic-ai",
+  "User-agent: Claude-Web",
+  "User-agent: Google-Extended",
+  "User-agent: Applebot-Extended",
+  "User-agent: Bytespider",
+  "User-agent: CCBot",
+  "User-agent: PerplexityBot",
+  "User-agent: Amazonbot",
+  "User-agent: cohere-ai",
+  "User-agent: Meta-ExternalAgent",
+  "Disallow: /",
+  "",
+  "User-agent: *",
+  "Allow: /",
+  ""
+].join("\n");
+
 export class DemoStateDurableObject extends DurableObject {
   async readState() {
     return (await this.ctx.storage.get("state")) ?? null;
@@ -40,6 +79,27 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const pathname = url.pathname.replace(/\/+$/u, "") || "/";
+
+    // Robots policy is always readable, ahead of the bot block, so cooperative
+    // crawlers can fetch the disallow list.
+    if (pathname === "/robots.txt" && (request.method === "GET" || request.method === "HEAD")) {
+      return new Response(request.method === "HEAD" ? null : ROBOTS_TXT, {
+        status: 200,
+        headers: {
+          ...constants.securityHeaders,
+          "content-type": "text/plain; charset=utf-8"
+        }
+      });
+    }
+
+    // Block known AI crawlers/scrapers by user-agent before doing any work.
+    if (BLOCKED_AI_BOT_UAS.test(request.headers.get("user-agent") || "")) {
+      return new Response("Forbidden", {
+        status: 403,
+        headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
+      });
+    }
+
     const nodeRequest = await nodeRequestFrom(request, url);
 
     if (request.method === "OPTIONS") {

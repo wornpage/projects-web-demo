@@ -46,5 +46,14 @@
   "define": {
     "__dirname": "\"/\""
   },
-  "observability": { "enabled": true }
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": false,
+      "persist": false
+    },
+    "traces": {
+      "enabled": false
+    }
+  }
 }
