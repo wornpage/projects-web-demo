@@ -201,6 +201,141 @@
   }
 
   // -----------------------------------------------------------------------
+  // Route stubs for remaining routes — each shows a meaningful header
+  // and a loading indicator. Cards and interactive elements hydrate
+  // client-side after the initial paint.
+  // -----------------------------------------------------------------------
+
+  function renderWorkHtml(model) {
+    const copy = model.copy || {};
+    return `<section class="demo-panel demo-list-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">${escapeHtml(copy.workMany || "Work items")}</span>
+          <h2>${(model.packs || []).length} visible</h2>
+        </div>
+        ${navButton("create", copy.newWork || "New work item", "btn btn-primary")}
+      </div>
+      <div class="demo-work-list"><p>Loading ${escapeHtml(copy.workMany || "work items")}…</p></div>
+    </section>`;
+  }
+
+  function renderNextHtml(model) {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Next setup</span>
+          <h2>Choose what the main button runs</h2>
+        </div>
+      </div>
+      <p>Loading next action chooser…</p>
+    </section>`;
+  }
+
+  function renderCreateHtml(model) {
+    const copy = model.copy || {};
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <div>
+          <span class="section-label">Create</span>
+          <h2>${escapeHtml(copy.newWork || "New work item")}</h2>
+        </div>
+      </div>
+      <p>Loading create form…</p>
+    </section>`;
+  }
+
+  function renderMemoryHtml() {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Memory</span>
+        <h2>Memory notes</h2>
+      </div>
+      <p>Loading memory…</p>
+    </section>`;
+  }
+
+  function renderSettingsHtml() {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Settings</span>
+        <h2>Profile, scenario, and theme</h2>
+      </div>
+      <p>Loading settings…</p>
+    </section>`;
+  }
+
+  function renderSearchHtml() {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Search</span>
+        <h2>Find work items</h2>
+      </div>
+      <p>Loading search…</p>
+    </section>`;
+  }
+
+  function renderCalendarHtml(model) {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Calendar</span>
+        <h2>Due dates for ${(model.packs || []).length} items</h2>
+      </div>
+      <p>Loading calendar…</p>
+    </section>`;
+  }
+
+  function renderGanttHtml(model) {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Timeline</span>
+        <h2>Timeline for ${(model.packs || []).length} items</h2>
+      </div>
+      <p>Loading timeline…</p>
+    </section>`;
+  }
+
+  function renderInsightsHtml(model) {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Insights</span>
+        <h2>Dashboard stats for ${(model.packs || []).length} items</h2>
+      </div>
+      <p>Loading insights…</p>
+    </section>`;
+  }
+
+  function renderActivityHtml(model) {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Activity</span>
+        <h2>Recent activity across ${(model.packs || []).length} items</h2>
+      </div>
+      <p>Loading activity feed…</p>
+    </section>`;
+  }
+
+  function renderPackDetailHtml(model) {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Work path</span>
+        <h2>Loading work path…</h2>
+      </div>
+      <p>Loading form…</p>
+    </section>`;
+  }
+
+  function renderCompareHtml() {
+    return `<section class="demo-panel">
+      <div class="demo-panel-head">
+        <span class="section-label">Compare</span>
+        <h2>Side-by-side comparison</h2>
+      </div>
+      <p>Loading comparison…</p>
+    </section>`;
+  }
+
+  // -----------------------------------------------------------------------
   // Exports — one function per route, plus helpers.
   // -----------------------------------------------------------------------
 
@@ -211,6 +346,18 @@
     navButton,
     renderHomeHtml,
     renderReviewHtml,
-    renderTermsHtml
+    renderTermsHtml,
+    renderWorkHtml,
+    renderNextHtml,
+    renderCreateHtml,
+    renderMemoryHtml,
+    renderSettingsHtml,
+    renderSearchHtml,
+    renderCalendarHtml,
+    renderGanttHtml,
+    renderInsightsHtml,
+    renderActivityHtml,
+    renderPackDetailHtml,
+    renderCompareHtml
   };
 });

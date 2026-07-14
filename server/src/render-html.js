@@ -116,25 +116,22 @@ function renderRouteContent(serverState, route) {
   const model = buildRenderModel(serverState);
 
   switch (route) {
-    case "home":
-      return renderHtml.renderHomeHtml(model);
-    case "review":
-      return renderHtml.renderReviewHtml(model);
-    case "terms":
-      return renderHtml.renderTermsHtml();
-    case "work":
-      // Placeholder with header; cards hydrate client-side.
-      return `<section class="demo-panel demo-list-panel">
-        <div class="demo-panel-head">
-          <div>
-            <span class="section-label">${renderHtml.escapeHtml(model.copy.workMany || "Work items")}</span>
-            <h2>${model.packs.length} visible</h2>
-          </div>
-        </div>
-        <div class="demo-work-list"><p>Loading work items…</p></div>
-      </section>`;
-    default:
-      return `<section class="demo-panel"><p>Loading ${renderHtml.escapeHtml(route)}…</p></section>`;
+    case "home":      return renderHtml.renderHomeHtml(model);
+    case "review":    return renderHtml.renderReviewHtml(model);
+    case "terms":     return renderHtml.renderTermsHtml();
+    case "work":      return renderHtml.renderWorkHtml(model);
+    case "next":      return renderHtml.renderNextHtml(model);
+    case "create":    return renderHtml.renderCreateHtml(model);
+    case "memory":    return renderHtml.renderMemoryHtml();
+    case "settings":  return renderHtml.renderSettingsHtml();
+    case "search":    return renderHtml.renderSearchHtml();
+    case "calendar":  return renderHtml.renderCalendarHtml(model);
+    case "gantt":     return renderHtml.renderGanttHtml(model);
+    case "insights":  return renderHtml.renderInsightsHtml(model);
+    case "activity":  return renderHtml.renderActivityHtml(model);
+    case "pack":      return renderHtml.renderPackDetailHtml(model);
+    case "compare":   return renderHtml.renderCompareHtml();
+    default:          return `<section class="demo-panel"><p>Loading ${renderHtml.escapeHtml(route)}…</p></section>`;
   }
 }
 
