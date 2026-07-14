@@ -43,6 +43,16 @@ const isUnblockedBlockerValue = WR.isUnblockedBlockerValue;
 const normalizeStoredBlocker = WR.normalizeStoredBlocker;
 const createsBlockedByCycle = WR.createsBlockedByCycle;
 const unblockedReceiptSentence = WR.unblockedReceiptSentence;
+
+// The shared render model (src/demo/render-model.js) is prepended into the
+// bundle at build time, exposing window.__renderModel. Alias the snapshot
+// helper here — the SSR server calls the same function with server-side state.
+const snapshotRenderModel = window.__renderModel.snapshotRenderModel;
+
+// The shared HTML templates (src/demo/render-html.js) are prepended into the
+// bundle. Alias the route template functions the render handlers delegate to.
+const renderHomeHtml = window.__renderHtml.renderHomeHtml;
+
 const BLOCKER_REASON_PRESETS = Object.freeze([
   "missing owner",
   "missing source",
@@ -2661,6 +2671,12 @@ function render() {
   if (!state.packs.find((pack) => pack.id === state.selectedId)) {
     state.selectedId = state.packs[0]?.id || "";
   }
+
+  // Snapshot the render model once at the top of every render cycle so cards
+  // and panels can read from the snapshot instead of mutating global state.
+  // This is the foundation for SSR: the server builds the same snapshot and
+  // passes it to the shared HTML template functions.
+  state.renderModel = snapshotRenderModel(state, copyProfiles);
 
   document.querySelectorAll(".demo-nav-item").forEach((item) => {
     const isActive = item.dataset.route === state.route;

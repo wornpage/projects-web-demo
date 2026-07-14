@@ -13,6 +13,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const sourcePath = path.join(repoRoot, "src", "demo", "demo.js");
 const rulesPath = path.join(repoRoot, "server", "src", "workflow-rules.js");
 const appRulesPath = path.join(repoRoot, "src", "demo", "workflow-rules-client.js");
+const renderModelPath = path.join(repoRoot, "src", "demo", "render-model.js");
+const renderHtmlPath = path.join(repoRoot, "src", "demo", "render-html.js");
 const cssSourcePath = path.join(repoRoot, "assets", "demo.css");
 const isAppMode = process.argv.includes("--app");
 const assetPath = isAppMode
@@ -51,8 +53,15 @@ async function readGeneratedSource() {
   // require it and the Docker runtime, which excludes src/, still ships it).
   const rulesFile = isAppMode ? appRulesPath : rulesPath;
   const rules = (await fs.readFile(rulesFile, "utf8")).replace(/\r\n?/gu, "\n") + "\n";
+  // The shared render model lets card builders read from a snapshot instead of
+  // global state — the same snapshot the SSR server builds. Prepend it before
+  // demo.js so window.__renderModel is available at parse time.
+  const renderModel = (await fs.readFile(path.join(repoRoot, "src", "demo", "render-model.js"), "utf8")).replace(/\r\n?/gu, "\n") + "\n";
+  // Shared HTML templates — pure functions that take a RenderModel and return
+  // HTML strings. Called by both the client and the SSR server.
+  const renderHtml = (await fs.readFile(path.join(repoRoot, "src", "demo", "render-html.js"), "utf8")).replace(/\r\n?/gu, "\n") + "\n";
   const source = await fs.readFile(sourcePath, "utf8");
-  const combined = telemetry + rules + source.replace(/\r\n?/gu, "\n");
+  const combined = telemetry + renderModel + renderHtml + rules + source.replace(/\r\n?/gu, "\n");
   const result = await terser.minify(combined, {
     compress: true,
     // Mangle function-scoped locals only. toplevel stays false so global
@@ -69,7 +78,7 @@ async function readGeneratedSource() {
 
 function assertSourceSyntax() {
   const rulesFile = isAppMode ? appRulesPath : rulesPath;
-  for (const file of [rulesFile, sourcePath]) {
+  for (const file of [renderModelPath, renderHtmlPath, rulesFile, sourcePath]) {
     const result = spawnSync(process.execPath, ["--check", file], {
       cwd: repoRoot,
       encoding: "utf8"

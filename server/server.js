@@ -336,7 +336,7 @@ async function routeRequest(request, response, url, stateStorage = defaultStateS
   }
 
   if (method === "GET" || method === "HEAD") {
-    await serveStaticRequest(request, response, url);
+    await serveStaticRequest(request, response, url, stateStorage);
     return;
   }
 
@@ -347,7 +347,7 @@ async function routeRequest(request, response, url, stateStorage = defaultStateS
 // Static file serving
 // ---------------------------------------------------------------------------
 
-async function serveStaticRequest(request, response, url) {
+async function serveStaticRequest(request, response, url, stateStorage) {
   const pathname = normalizePublicStaticPathname(url.pathname);
   if (pathname === constants.RUNTIME_CONFIG_PATHNAME) {
     response.writeHead(200, {
@@ -375,6 +375,25 @@ async function serveStaticRequest(request, response, url) {
   }
 
   if (isIndexFile(file)) {
+    if (url.searchParams.has("ssr")) {
+      // SSR rendering: build a RenderModel from the client's server state
+      // and render the page content server-side. The client script still
+      // loads and hydrates the interactive elements.
+      const stateKey = security.stateKeyForRequest(request);
+      const serverState = await stateStorage.read(stateKey);
+      const ssrRenderer = require("./src/render-html.js");
+      const route = (url.searchParams.get("route") || "home").replace(/^#\/?/u, "");
+      const ssrHtml = ssrRenderer.renderPageHtml(serverState, route);
+      const html = injectAppApiBase(ssrHtml);
+      response.writeHead(200, {
+        ...constants.securityHeaders,
+        "content-security-policy": security.contentSecurityPolicy(),
+        "content-type": contentType
+      });
+      response.end(request.method === "HEAD" ? "" : html);
+      return;
+    }
+
     const html = injectAppApiBase(await fs.readFile(file, "utf8"));
     response.writeHead(200, {
       ...constants.securityHeaders,
