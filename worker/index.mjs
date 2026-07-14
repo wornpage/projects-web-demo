@@ -17,6 +17,7 @@ import security from "../server/src/security.js";
 import seed from "../server/src/seed.js";
 import validation from "../server/src/validation.js";
 import demoPacks from "../data/demo-packs.json";
+import { accessDenied } from "./access-jwt.mjs";
 
 seed.setSeedPacksSource(demoPacks);
 
@@ -79,6 +80,15 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const pathname = url.pathname.replace(/\/+$/u, "") || "/";
+
+    // Backstop for Cloudflare Access: when configured (ACCESS_AUD +
+    // ACCESS_TEAM_DOMAIN set on the Worker), reject any request that reaches us
+    // without a valid Access JWT. No-op otherwise, so local dev and CI are
+    // unaffected. Runs first so nothing — not even robots.txt — leaks past it.
+    const denied = await accessDenied(request, env, constants.securityHeaders);
+    if (denied) {
+      return denied;
+    }
 
     // Robots policy is always readable, ahead of the bot block, so cooperative
     // crawlers can fetch the disallow list.
