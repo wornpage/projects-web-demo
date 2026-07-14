@@ -3750,18 +3750,12 @@ function batchAction(action) {
     // has to stay on the list.
     if (action === "done") {
       var wasDone = pack.status === STATUS.DONE;
-      var beforeDone = packActionSignature(pack);
       Object.assign(pack, WR.packActionEffect(pack, "done"));
-      if (packActionSignature(pack) !== beforeDone) {
-        addPackActivity(pack, proofSavedActivity(pack));
-        if (!wasDone) markRecentlyUnblocked(unblockPacksBlockedBy(pack));
-      }
+      addPackActivity(pack, proofSavedActivity(pack));
+      if (!wasDone) markRecentlyUnblocked(unblockPacksBlockedBy(pack));
     } else if (action === "block") {
-      var beforeBlock = packActionSignature(pack);
       Object.assign(pack, WR.packActionEffect(pack, "block"));
-      if (packActionSignature(pack) !== beforeBlock) {
-        addPackActivity(pack, "Blocked.");
-      }
+      addPackActivity(pack, "Blocked.");
     } else if (action === "delete") {
       state.packs = state.packs.filter(function(p) { return p.id !== id; });
       state.batchSelected.delete(id);
