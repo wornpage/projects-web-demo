@@ -57,11 +57,12 @@ async function readGeneratedSource() {
   // global state — the same snapshot the SSR server builds. Prepend it before
   // demo.js so window.__renderModel is available at parse time.
   const renderModel = (await fs.readFile(path.join(repoRoot, "src", "demo", "render-model.js"), "utf8")).replace(/\r\n?/gu, "\n") + "\n";
-  // Shared HTML templates — pure functions that take a RenderModel and return
-  // HTML strings. Called by both the client and the SSR server.
-  const renderHtml = (await fs.readFile(path.join(repoRoot, "src", "demo", "render-html.js"), "utf8")).replace(/\r\n?/gu, "\n") + "\n";
+  // Note: src/demo/render-html.js is intentionally NOT bundled here. Those shared
+  // templates are used only for server-side rendering (server/src/render-html.js
+  // require()s them); the browser renders every route through demo.js's own
+  // render*() builders, so bundling the templates would ship ~12KB of dead code.
   const source = await fs.readFile(sourcePath, "utf8");
-  const combined = telemetry + renderModel + renderHtml + rules + source.replace(/\r\n?/gu, "\n");
+  const combined = telemetry + renderModel + rules + source.replace(/\r\n?/gu, "\n");
   const result = await terser.minify(combined, {
     compress: true,
     // Mangle function-scoped locals only. toplevel stays false so global

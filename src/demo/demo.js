@@ -49,9 +49,10 @@ const unblockedReceiptSentence = WR.unblockedReceiptSentence;
 // helper here — the SSR server calls the same function with server-side state.
 const snapshotRenderModel = window.__renderModel.snapshotRenderModel;
 
-// The shared HTML templates (src/demo/render-html.js) are prepended into the
-// bundle. Alias the route template functions the render handlers delegate to.
-const renderHomeHtml = window.__renderHtml.renderHomeHtml;
+// Note: the shared HTML templates (src/demo/render-html.js) are NOT bundled into
+// the client. They exist purely for server-side rendering (server/src/render-html.js
+// require()s them) — the browser renders every route through this file's own
+// render*() builders, so shipping the templates would be dead weight.
 
 const BLOCKER_REASON_PRESETS = Object.freeze([
   "missing owner",

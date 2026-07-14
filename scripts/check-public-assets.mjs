@@ -14,8 +14,11 @@ const publicTextAssets = [
   // +1000 for the work-list batch-select repair (2026-07-14): batchBar/
   // bindBatchBar helpers, a non-navigating batchAction, and the route guard.
   // +1000 for the app-mode offline-fallback guards (2026-07-14).
-  { pathname: "assets/demo.js", maxBytes: 302000 },
-  { pathname: "assets/demo-app.js", maxBytes: 302000 },
+  // +5000 for the SSR client half (2026-07-14): render-model.js snapshot +
+  // hydrateRoute boot path. The shared render-html.js templates are NOT bundled
+  // (server-side only), so this is far smaller than the raw SSR footprint.
+  { pathname: "assets/demo.js", maxBytes: 307000 },
+  { pathname: "assets/demo-app.js", maxBytes: 307000 },
   // +1000 for the --cockpit-link text-role token added across all seven theme
   // blocks by the APCA contrast retune (2026-07-12).
   { pathname: "assets/demo.css", maxBytes: 199000 },
@@ -36,7 +39,8 @@ const publicFileAllowlist = [
   "data/demo-packs.json"
 ];
 // +2000 alongside the assets/demo.js bump for the batch-select repair and app-mode guards (2026-07-14).
-const totalPublicTextBudgetBytes = 868000;
+// +10000 for the SSR client half added to both bundles (2026-07-14).
+const totalPublicTextBudgetBytes = 878000;
 const retiredPublicFiles = [
   "assets/app.css",
   "assets/demo-metadata.json"
