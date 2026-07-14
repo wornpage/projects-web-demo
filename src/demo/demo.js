@@ -2677,6 +2677,50 @@ function hydrateRoute() {
     case "home":
       bindHomeControls();
       break;
+    case "work":
+      bindWorkControls();
+      break;
+    case "review":
+      bindReviewControls();
+      break;
+    case "terms":
+      bindTermsControls();
+      break;
+    case "next":
+      {
+        const p = currentPack() || state.packs.find(isReview) || state.packs[0];
+        if (p) {
+          el("next-action-choice")?.addEventListener("change", () => syncNextChoicePreview(p));
+          el("apply-next-action")?.addEventListener("click", () => applyNextChoice(p.id));
+          syncNextChoicePreview(p);
+          bindListActions();
+        }
+      }
+      break;
+    case "create":
+      el("create-sample")?.addEventListener("click", createSamplePack);
+      bindCreateValidation();
+      el("new-title")?.addEventListener("input", function() { checkDuplicateTitle(this.value); });
+      setTimeout(function() { el("new-title")?.focus(); }, 100);
+      bindListActions();
+      break;
+    case "memory":
+      {
+        const m = currentPack();
+        if (m) { bindMemoryValidation(m); el("memory-note")?.addEventListener("paste", handleImagePaste); bindMemorySearch(); bindGoButtons(); bindListActions(); }
+      }
+      break;
+    case "settings":
+      bindProfileChoices(); bindScenarioCards(); bindThemeChoices();
+      el("reset-demo-settings")?.addEventListener("click", resetState);
+      bindInlineEdit(); bindRecoveryControls();
+      break;
+    case "search":
+      bindSearchPage();
+      break;
+    case "compare":
+      bindComparePickers(); bindListActions();
+      break;
     default:
       // Route not yet supported for hydration — fall back to full client render.
       el("screen-content").innerHTML = "";
@@ -4314,6 +4358,10 @@ function renderWork() {
       ${batchBar()}
     </section>
   `;
+  bindWorkControls();
+}
+
+function bindWorkControls() {
   bindToolbar();
   bindWorkCards();
   bindBatchBar();
@@ -4412,6 +4460,10 @@ function renderReview() {
       <div class="demo-review-list">${orderedReview.length ? orderedReview.map(reviewCard).join("") : emptyReview}</div>
     </section>
   `;
+  bindReviewControls();
+}
+
+function bindReviewControls() {
   el("copy-standup")?.addEventListener("click", copyStandup);
   bindListActions();
 }
