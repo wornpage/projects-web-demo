@@ -118,9 +118,22 @@ function renderRouteContent(serverState, route) {
   switch (route) {
     case "home":
       return renderHtml.renderHomeHtml(model);
+    case "review":
+      return renderHtml.renderReviewHtml(model);
+    case "terms":
+      return renderHtml.renderTermsHtml();
+    case "work":
+      // Placeholder with header; cards hydrate client-side.
+      return `<section class="demo-panel demo-list-panel">
+        <div class="demo-panel-head">
+          <div>
+            <span class="section-label">${renderHtml.escapeHtml(model.copy.workMany || "Work items")}</span>
+            <h2>${model.packs.length} visible</h2>
+          </div>
+        </div>
+        <div class="demo-work-list"><p>Loading work items…</p></div>
+      </section>`;
     default:
-      // Other routes not yet implemented in the shared module.
-      // Return a loading placeholder; the client will hydrate and re-render.
       return `<section class="demo-panel"><p>Loading ${renderHtml.escapeHtml(route)}…</p></section>`;
   }
 }
