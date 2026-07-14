@@ -553,7 +553,14 @@ bindShellControls();
     }
     state.ready = true;
     routeFromHash();
-    render();
+    // If the server pre-rendered the initial page (SSR via ?ssr=1), hydrate the
+    // existing DOM instead of re-rendering from scratch. Subsequent navigations
+    // use the normal client-side render path.
+    if (el("screen-content") && el("screen-content").children.length > 0) {
+      hydrateRoute();
+    } else {
+      render();
+    }
     liftBootVeil();
     renderDemoSyncControls(launchedSyncCode ? "Sync link active. This device opens shared demo state." : "");
   } catch (error) {
@@ -2662,6 +2669,24 @@ function decodeRoutePackId(value) {
   }
 }
 
+// Hydrate a server-rendered page: the #screen-content element already has HTML
+// from the SSR server, so skip the innerHTML step and just attach event handlers.
+// For now only the home route is hydrated; other routes fall through to render().
+function hydrateRoute() {
+  switch (state.route) {
+    case "home":
+      bindHomeControls();
+      break;
+    default:
+      // Route not yet supported for hydration — fall back to full client render.
+      el("screen-content").innerHTML = "";
+      render();
+      return;
+  }
+  state.lastRenderedRoute = state.route;
+  state.lastRenderedHash = location.hash || `#/${state.route}`;
+}
+
 function render() {
   const previousHash = state.lastRenderedHash;
   const currentHash = location.hash || `#/${state.route}`;
@@ -3979,6 +4004,10 @@ function renderHome() {
       ${homeReceiptsPanel()}
     </section>
   `;
+  bindHomeControls();
+}
+
+function bindHomeControls() {
   bindGoButtons();
   bindMethodCards();
   bindListActions();
@@ -3987,8 +4016,6 @@ function renderHome() {
   const bml = el("demo-bookmarklet-link");
   if (bml) {
     bml.href = `javascript:(function(){var u='${location.origin}/'+'#/create?title='+encodeURIComponent(document.title)+'&url='+encodeURIComponent(location.href);location.href=u})()`;
-    // Clicking a javascript: link in-page is blocked by the CSP, so a plain
-    // click would silently do nothing. Explain the drag affordance instead.
     bml.addEventListener("click", (event) => {
       event.preventDefault();
       state.status = "Where: Dashboard. Blocker: the bookmarklet only works from your bookmarks bar. Next action: drag the button up to the bar, then click it on any page.";
