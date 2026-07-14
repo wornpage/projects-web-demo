@@ -124,6 +124,27 @@
   // review cards are hydrated client-side for full interactivity.
   // -----------------------------------------------------------------------
 
+  function reviewCardHtml(pack) {
+    const title = escapeHtml(String(pack.title || "Untitled").slice(0, 120));
+    const status = escapeHtml(pack.status || "active");
+    const blocker = (pack.blocker || "").toLowerCase();
+    const blockerDisplay = blocker && blocker !== "none" ? escapeHtml(String(pack.blocker).slice(0, 80)) : "None";
+    const owner = escapeHtml(String(pack.owner || "Unassigned").slice(0, 60));
+    const next = escapeHtml(String(pack.next || "Open").slice(0, 80));
+    const id = escapeAttribute(pack.id || "");
+    return `<div class="demo-work-card" data-pack-id="${id}">
+      <div class="demo-work-card-main">
+        <button type="button" class="demo-card-title" data-action="select" data-pack="${id}">${title}</button>
+        <span class="demo-state-pill">${status}</span>
+      </div>
+      <div class="demo-work-card-meta">
+        <span>Blocker: ${blockerDisplay}</span>
+        <span>Owner: ${owner}</span>
+        <span>Next: ${next}</span>
+      </div>
+    </div>`;
+  }
+
   function renderReviewHtml(model) {
     const packs = model.packs || [];
     const copy = model.copy || {};
@@ -152,6 +173,10 @@
       return b && b !== "none" && b.indexOf("owner") !== -1 && (!o || o === "unassigned" || o === "no owner" || o === "unowned");
     }).length;
 
+    const cardHtml = review.length > 0
+      ? review.map(reviewCardHtml).join("")
+      : `<p>No ${copy.workMany || "work items"} need review.</p>`;
+
     const standupLines = review.length === 0
       ? `Standup — every ${copy.workOne || "work item"} has a clear next action. Nothing needs a decision.`
       : `Standup — ${review.length} ${review.length === 1 ? (copy.workOne || "work item") : (copy.workMany || "work items")} ${review.length === 1 ? "needs" : "need"} a decision (${blockedCount} blocked, ${missingNextCount} missing action, ${ownerGapCount} owner ${ownerGapCount === 1 ? "gap" : "gaps"}).`;
@@ -170,8 +195,8 @@
       <div class="demo-review-standup" aria-live="polite">
         <p>${escapeHtml(standupLines)}</p>
       </div>
-      <div class="demo-review-list" id="review-card-list">
-        <p>Loading review cards…</p>
+      <div class="demo-review-list">
+        ${cardHtml}
       </div>
     </section>`;
   }
@@ -216,8 +241,14 @@
         </div>
         ${navButton("create", copy.newWork || "New work item", "btn btn-primary")}
       </div>
-      <div class="demo-work-list"><p>Loading ${escapeHtml(copy.workMany || "work items")}…</p></div>
-    </section>`;
+      <div class="demo-work-list">${
+        (model.packs || []).slice(0, 20).map(function(p) {
+          var title = escapeHtml(String(p.title || "Untitled").slice(0, 100));
+          var status = escapeHtml(p.status || "active");
+          var id = escapeAttribute(p.id || "");
+          return `<div class="demo-work-card" data-pack-id="${id}"><div class="demo-work-card-main"><button type="button" class="demo-card-title" data-action="select" data-pack="${id}">${title}</button><span class="demo-state-pill">${status}</span></div></div>`;
+        }).join("") || "<p>No work items found.</p>"
+      }</div></section>`;
   }
 
   function renderNextHtml(model) {
@@ -228,7 +259,7 @@
           <h2>Choose what the main button runs</h2>
         </div>
       </div>
-      <p>Loading next action chooser…</p>
+      <p>Select the next action for the current work item. The chooser will appear after hydration.</p>
     </section>`;
   }
 
@@ -241,7 +272,7 @@
           <h2>${escapeHtml(copy.newWork || "New work item")}</h2>
         </div>
       </div>
-      <p>Loading create form…</p>
+      <p>Create a new ${escapeHtml(model.copy.workOne || "work item")}. The form will appear after hydration.</p>
     </section>`;
   }
 
@@ -251,7 +282,7 @@
         <span class="section-label">Memory</span>
         <h2>Memory notes</h2>
       </div>
-      <p>Loading memory…</p>
+      <p>Memory notes for the selected work item will appear after hydration.</p>
     </section>`;
   }
 
@@ -261,7 +292,18 @@
         <span class="section-label">Settings</span>
         <h2>Profile, scenario, and theme</h2>
       </div>
-      <p>Loading settings…</p>
+      <div class="demo-settings-section">
+        <h3>Profile</h3>
+        <p>Current: <strong>${escapeHtml(model.copyProfile || "general")}</strong></p>
+        <p>Work label: ${escapeHtml(model.copy.work || "work")}</p>
+      </div>
+      <div class="demo-settings-section">
+        <h3>Work items</h3>
+        <p>${(model.packs || []).length} items loaded</p>
+      </div>
+      <div class="demo-settings-section">
+        <p>Profile, scenario, and theme controls will appear here after hydration.</p>
+      </div>
     </section>`;
   }
 
@@ -271,7 +313,7 @@
         <span class="section-label">Search</span>
         <h2>Find work items</h2>
       </div>
-      <p>Loading search…</p>
+      <p>Search across ${(model.packs || []).length} work items. The search input will appear after hydration.</p>
     </section>`;
   }
 
@@ -281,7 +323,7 @@
         <span class="section-label">Calendar</span>
         <h2>Due dates for ${(model.packs || []).length} items</h2>
       </div>
-      <p>Loading calendar…</p>
+      <p>Calendar grid will render after hydration. ${(model.packs || []).length} items have due dates.</p>
     </section>`;
   }
 
@@ -291,7 +333,7 @@
         <span class="section-label">Timeline</span>
         <h2>Timeline for ${(model.packs || []).length} items</h2>
       </div>
-      <p>Loading timeline…</p>
+      <p>Gantt chart will render after hydration.</p>
     </section>`;
   }
 
@@ -301,7 +343,7 @@
         <span class="section-label">Insights</span>
         <h2>Dashboard stats for ${(model.packs || []).length} items</h2>
       </div>
-      <p>Loading insights…</p>
+      <p>Dashboard charts will render after hydration.</p>
     </section>`;
   }
 
@@ -311,7 +353,7 @@
         <span class="section-label">Activity</span>
         <h2>Recent activity across ${(model.packs || []).length} items</h2>
       </div>
-      <p>Loading activity feed…</p>
+      <p>Activity feed will render after hydration.</p>
     </section>`;
   }
 
@@ -321,7 +363,7 @@
         <span class="section-label">Work path</span>
         <h2>Loading work path…</h2>
       </div>
-      <p>Loading form…</p>
+      <p>Work path form will render after hydration.</p>
     </section>`;
   }
 
@@ -331,7 +373,7 @@
         <span class="section-label">Compare</span>
         <h2>Side-by-side comparison</h2>
       </div>
-      <p>Loading comparison…</p>
+      <p>Side-by-side comparison will render after hydration.</p>
     </section>`;
   }
 
