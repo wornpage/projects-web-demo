@@ -22,12 +22,14 @@ const allowedBuildCopyLines = [
   "COPY manifest.json ./",
   "COPY assets/demo.css ./assets/demo.css",
   "COPY assets/demo.js ./assets/demo.js",
+  "COPY assets/demo-app.js ./assets/demo-app.js",
   "COPY assets/landing.css ./assets/landing.css",
   "COPY assets/favicon.png ./assets/favicon.png",
   "COPY assets/favicon.svg ./assets/favicon.svg",
   "COPY data/demo-packs.json ./data/demo-packs.json",
   "COPY src/demo/demo.js ./src/demo/demo.js",
   "COPY src/demo/telemetry.js ./src/demo/telemetry.js",
+  "COPY src/demo/workflow-rules-client.js ./src/demo/workflow-rules-client.js",
   "COPY scripts/build-demo-asset.mjs ./scripts/build-demo-asset.mjs",
   "COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs",
   "COPY server/server.js ./server/server.js",
@@ -41,6 +43,7 @@ const allowedRuntimeCopyLines = [
   "COPY --from=build /app/manifest.json ./",
   "COPY --from=build /app/assets/demo.css ./assets/demo.css",
   "COPY --from=build /app/assets/demo.js ./assets/demo.js",
+  "COPY --from=build /app/assets/demo-app.js ./assets/demo-app.js",
   "COPY --from=build /app/assets/landing.css ./assets/landing.css",
   "COPY --from=build /app/assets/favicon.png ./assets/favicon.png",
   "COPY --from=build /app/assets/favicon.svg ./assets/favicon.svg",
@@ -83,6 +86,7 @@ check("Docker runtime omits build-only helpers", !runtimeText.includes("/app/scr
 check("Docker image copies only named frontend and seed files", [
   "COPY --from=build /app/assets/demo.css ./assets/demo.css",
   "COPY --from=build /app/assets/demo.js ./assets/demo.js",
+  "COPY --from=build /app/assets/demo-app.js ./assets/demo-app.js",
   "COPY --from=build /app/assets/favicon.png ./assets/favicon.png",
   "COPY --from=build /app/data/demo-packs.json ./data/demo-packs.json"
 ].every((line) => runtimeCopyLines.includes(line)), runtimeCopyLines.join(" | "));
@@ -90,7 +94,9 @@ check("Docker runtime copies only the app server source", runtimeCopyLines.inclu
 check("Docker runtime copies pruned production dependencies", runtimeCopyLines.includes("COPY --from=build /app/server/node_modules ./server/node_modules"), runtimeCopyLines.join(" | "));
 check("Docker build verifies generated frontend before protection and prune", sourceOrder(buildText, [
   "RUN node scripts/build-demo-asset.mjs --check",
+  "node scripts/build-demo-asset.mjs --app --check",
   "node scripts/protect-frontend.mjs assets/demo.js assets/demo.js",
+  "node scripts/protect-frontend.mjs assets/demo-app.js assets/demo-app.js",
   "npm --prefix server prune --omit=dev"
 ]), "generated check then protect then prune");
 check("Docker runtime defaults to hosted app port", runtimeLines.includes("ENV HOST=0.0.0.0") && runtimeLines.includes("ENV PORT=5179") && runtimeLines.includes("EXPOSE 5179"), "HOST/PORT/EXPOSE");

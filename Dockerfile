@@ -14,19 +14,23 @@ COPY sw.js ./
 COPY manifest.json ./
 COPY assets/demo.css ./assets/demo.css
 COPY assets/demo.js ./assets/demo.js
+COPY assets/demo-app.js ./assets/demo-app.js
 COPY assets/landing.css ./assets/landing.css
 COPY assets/favicon.png ./assets/favicon.png
 COPY assets/favicon.svg ./assets/favicon.svg
 COPY data/demo-packs.json ./data/demo-packs.json
 COPY src/demo/demo.js ./src/demo/demo.js
 COPY src/demo/telemetry.js ./src/demo/telemetry.js
+COPY src/demo/workflow-rules-client.js ./src/demo/workflow-rules-client.js
 COPY scripts/build-demo-asset.mjs ./scripts/build-demo-asset.mjs
 COPY scripts/protect-frontend.mjs ./scripts/protect-frontend.mjs
 COPY server/server.js ./server/server.js
 COPY server/src ./server/src
 
 RUN node scripts/build-demo-asset.mjs --check \
+  && node scripts/build-demo-asset.mjs --app --check \
   && node scripts/protect-frontend.mjs assets/demo.js assets/demo.js \
+  && node scripts/protect-frontend.mjs assets/demo-app.js assets/demo-app.js \
   && npm --prefix server prune --omit=dev
 
 FROM node:24-alpine AS runtime
@@ -45,6 +49,7 @@ COPY --from=build /app/sw.js ./
 COPY --from=build /app/manifest.json ./
 COPY --from=build /app/assets/demo.css ./assets/demo.css
 COPY --from=build /app/assets/demo.js ./assets/demo.js
+COPY --from=build /app/assets/demo-app.js ./assets/demo-app.js
 COPY --from=build /app/assets/landing.css ./assets/landing.css
 COPY --from=build /app/assets/favicon.png ./assets/favicon.png
 COPY --from=build /app/data/demo-packs.json ./data/demo-packs.json
