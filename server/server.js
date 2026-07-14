@@ -375,23 +375,30 @@ async function serveStaticRequest(request, response, url, stateStorage) {
   }
 
   if (isIndexFile(file)) {
-    if (url.searchParams.has("ssr")) {
-      // SSR rendering: build a RenderModel from the client's server state
-      // and render the page content server-side. The client script still
-      // loads and hydrates the interactive elements.
-      const stateKey = security.stateKeyForRequest(request);
-      const serverState = await stateStorage.read(stateKey);
-      const ssrRenderer = require("./src/render-html.js");
-      const route = (url.searchParams.get("route") || "home").replace(/^#\/?/u, "");
-      const ssrHtml = ssrRenderer.renderPageHtml(serverState, route);
-      const html = injectAppApiBase(ssrHtml);
-      response.writeHead(200, {
-        ...constants.securityHeaders,
-        "content-security-policy": security.contentSecurityPolicy(),
-        "content-type": contentType
-      });
-      response.end(request.method === "HEAD" ? "" : html);
-      return;
+    // SSR is the default for app mode: render the page server-side using the
+    // client's state. Add ?nossr=1 to fall back to the static shell (useful
+    // for debugging or when the client hasn't generated a state key yet).
+    if (!url.searchParams.has("nossr")) {
+      try {
+        const stateKey = security.stateKeyForRequest(request);
+        const serverState = await stateStorage.read(stateKey);
+        const ssrRenderer = require("./src/render-html.js");
+        const route = (url.searchParams.get("route") || "home").replace(/^#\/?/u, "");
+        const ssrHtml = ssrRenderer.renderPageHtml(serverState, route);
+        const html = injectAppApiBase(ssrHtml);
+        response.writeHead(200, {
+          ...constants.securityHeaders,
+          "content-security-policy": security.contentSecurityPolicy(),
+          "content-type": contentType
+        });
+        response.end(request.method === "HEAD" ? "" : html);
+        return;
+      } catch (err) {
+        // If SSR fails (e.g. missing state key), fall through to static shell.
+        if (err.statusCode !== 400) {
+          console.error("SSR render failed, falling back to static shell.", err.message);
+        }
+      }
     }
 
     const html = injectAppApiBase(await fs.readFile(file, "utf8"));
