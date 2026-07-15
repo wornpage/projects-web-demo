@@ -264,34 +264,48 @@ function isTurnstileVerified(request) {
 }
 
 // Served in place of demo.js/demo-app.js for unverified browsers: reveals the
-// gate, renders the Turnstile widget (explicit mode), and on a SUCCESSFUL verify
-// reloads so the Worker serves the real bundle. Hardened against the earlier
-// prod loop — it reloads ONLY on verify success and AT MOST ONCE (sessionStorage
-// guard), so a failing/misconfigured verify can never infinite-loop (it fails
-// safe: the widget can be retried, and the verify response is visible in the
-// Network tab for diagnosis).
+// gate, renders the Turnstile widget (explicit mode), and on a SUCCESSFUL server
+// verify reloads so the Worker serves the real bundle. Self-diagnosing: a green
+// widget is only client-side — if the *server* verify fails it shows the reason
+// on the gate (no DevTools needed) rather than silently sticking. Loop-safe: it
+// reloads only on success and at most once per 10s (a stale marker self-heals
+// after 10s, and a non-sticking cookie can't tight-loop).
 const TURNSTILE_BOOTSTRAP_JS = `(function(){
   var g = document.getElementById("turnstile-gate");
   if (g) { g.hidden = false; }
-  var RELOAD_KEY = "projects-demo-gate-reloaded";
+  function msg(text){
+    if (!g) { return; }
+    var card = g.querySelector(".turnstile-card") || g;
+    var p = card.querySelector("[data-gate-msg]");
+    if (!p) { p = document.createElement("p"); p.setAttribute("data-gate-msg", ""); card.appendChild(p); }
+    p.textContent = text;
+  }
   window.turnstileDone = function(token){
     fetch("/api/turnstile/verify", {
       method: "POST",
       credentials: "same-origin",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ token: token })
-    }).then(function(r){ return r.ok ? r.json() : { ok: false }; })
-      .then(function(res){
-        if (!res || !res.ok) { return; }
-        try { sessionStorage.setItem("projects-demo-verified", "1"); } catch (e) {}
-        var already = false;
-        try { already = sessionStorage.getItem(RELOAD_KEY) === "1"; } catch (e) {}
-        if (!already) {
-          try { sessionStorage.setItem(RELOAD_KEY, "1"); } catch (e) {}
-          location.reload();
-        }
-      })
-      .catch(function(){ /* never reload on error */ });
+    }).then(function(r){
+      return r.json().then(function(j){ return { status: r.status, ok: !!(j && j.ok) }; },
+                           function(){ return { status: r.status, ok: false }; });
+    }).then(function(res){
+      if (!res.ok) {
+        msg("Verification failed (HTTP " + res.status + "). The Turnstile site key and secret must be a matching pair.");
+        return;
+      }
+      try { sessionStorage.setItem("projects-demo-verified", "1"); } catch (e) {}
+      var last = 0;
+      try { last = parseInt(sessionStorage.getItem("projects-demo-gate-reloaded") || "0", 10) || 0; } catch (e) {}
+      if (Date.now() - last > 10000) {
+        try { sessionStorage.setItem("projects-demo-gate-reloaded", String(Date.now())); } catch (e) {}
+        location.reload();
+      } else {
+        msg("Verified, but the session cookie isn't sticking. Try a normal (non-private) window.");
+      }
+    }).catch(function(){
+      msg("Could not reach the verification endpoint.");
+    });
   };
   var s = document.createElement("script");
   s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
