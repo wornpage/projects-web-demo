@@ -81,6 +81,8 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
   
+  const pathname = url.pathname.replace(/\/+$/u, "") || "/";
+
   // Gate protected assets behind Turnstile verification. Browsers that
   // haven't completed the challenge get redirected to the gate page.
   // Crawlers and curl without the cookie get a 403.
@@ -98,7 +100,7 @@ export default {
       headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
     });
   }
-  const pathname = url.pathname.replace(/\/+$/u, "") || "/";
+
 
     // Backstop for Cloudflare Access: when configured (ACCESS_AUD +
     // ACCESS_TEAM_DOMAIN set on the Worker), reject any request that reaches us
@@ -299,6 +301,8 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
   }
 
 
+  const pathname = url.pathname.replace(/\/+$/u, "") || "/";
+
   // Gate protected assets behind Turnstile verification. Browsers that
   // haven't completed the challenge get redirected to the gate page.
   // Crawlers and curl without the cookie get a 403.
@@ -316,7 +320,7 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
       headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
     });
   }
-  const pathname = url.pathname.replace(/\/+$/u, "") || "/";
+
   const isIndexPage = pathname === "/" || pathname === "/index.html";
   const isLandingPage = pathname === "/landing.html";
 
