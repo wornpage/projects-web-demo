@@ -216,11 +216,11 @@
         <h3>Data</h3>
         <p>This demo does not collect, store, or process personal data. There are no user accounts, no passwords, and no authentication. Any work items, memory notes, or settings you enter stay in your browser's local storage or in the demo backend row assigned to your anonymous client key. The project owner has no access to that data.</p>
         <h3>Sample data</h3>
-        <p>The pre-loaded work items are fictional examples. Any resemblance to real projects, companies, or people is coincidental.</p>
+        <p>The pre-loaded work items are fictional examples. Any resemblance to real projects, companies, or people is coincidental. You can replace them with your own data via the Settings → Import feature or by creating new work items.</p>
         <h3>No warranty</h3>
-        <p>This demo is provided "as is" without warranty of any kind.</p>
+        <p>This demo is provided "as is" without warranty of any kind. The project owner is not responsible for any data loss or damages from using this demo.</p>
         <h3>Source code</h3>
-        <p>This project is <a id="terms-github-link" href="#/terms" target="_blank" rel="noopener">open source on GitHub</a> under the GNU Affero General Public License v3.0.</p>
+        <p>This project is <a id="terms-github-link" href="#/terms" target="_blank" rel="noopener">open source on GitHub</a> under the GNU Affero General Public License v3.0 — see the LICENSE file in the repository. Commercial licensing is available on request.</p>
       </div>
     </section>`;
   }

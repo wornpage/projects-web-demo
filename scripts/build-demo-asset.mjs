@@ -61,8 +61,13 @@ async function readGeneratedSource() {
   // templates are used only for server-side rendering (server/src/render-html.js
   // require()s them); the browser renders every route through demo.js's own
   // render*() builders, so bundling the templates would ship ~12KB of dead code.
-  const source = await fs.readFile(sourcePath, "utf8");
-  const combined = telemetry + renderModel + rules + source.replace(/\r\n?/gu, "\n");
+  const rawSource = (await fs.readFile(sourcePath, "utf8")).replace(/\r\n?/gu, "\n");
+  // Per-mode build strip: code fenced for one mode is removed from the other
+  // bundle so it never ships there. This is how logic/rendering that has moved
+  // server-side (app mode) leaves demo-app.js while the self-contained static
+  // demo keeps its client copy. Fences are inert block comments until stripped.
+  const source = stripBuildBlocks(rawSource, isAppMode);
+  const combined = telemetry + renderModel + rules + source;
   const result = await terser.minify(combined, {
     compress: true,
     // Mangle function-scoped locals only. toplevel stays false so global
@@ -75,6 +80,18 @@ async function readGeneratedSource() {
     throw new Error(`Terser minification failed: ${result.error}`);
   }
   return result.code || combined;
+}
+
+// Remove code fenced for the mode we are NOT building. Fences are paired block
+// comments on their own, e.g.:
+//   /*@static-only-start*/  ...client code the server owns in app mode...  /*@static-only-end*/
+//   /*@app-only-start*/     ...code only the backend build needs...        /*@app-only-end*/
+// The kept mode's fence markers are left as comments (terser drops them). Terser
+// parses the stripped result, so a fence that breaks syntax fails the build.
+function stripBuildBlocks(source, appMode) {
+  const dropTag = appMode ? "static-only" : "app-only";
+  const fence = new RegExp(`\\/\\*@${dropTag}-start\\*\\/[\\s\\S]*?\\/\\*@${dropTag}-end\\*\\/`, "gu");
+  return source.replace(fence, "");
 }
 
 function assertSourceSyntax() {

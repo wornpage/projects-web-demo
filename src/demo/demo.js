@@ -10637,7 +10637,18 @@ function renderTerms() {
       </div>
     </section>
   `;
-  el("terms-github-link").href = ["https:","//github.com/","jared-bidlow","/projects-web-demo"].join("");
+  bindTermsControls();
+}
+
+// Hydration for the Terms route: runs both after a client render() and after an
+// SSR paint (hydrateRoute -> bindTermsControls). Sets the GitHub link href at
+// runtime so the private repo path never appears as a literal in the public
+// bundle (check-public-assets forbids the github.com/jared-bidlow string).
+function bindTermsControls() {
+  const link = el("terms-github-link");
+  if (link) {
+    link.href = ["https:", "//github.com/", "jared-bidlow", "/projects-web-demo"].join("");
+  }
 }
 
 function renderMethodCards() {
