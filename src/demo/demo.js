@@ -507,6 +507,7 @@ window.turnstileDone = function (token) {
 document.addEventListener("DOMContentLoaded", async () => {
   // Turnstile: show the gate unless already verified this session.
   // Skip on localhost — the site key is domain-locked to the deployed domain.
+  var gate = document.getElementById("turnstile-gate");
   var isLocalhost = location.hostname === "127.0.0.1" || location.hostname === "localhost" || location.hostname.startsWith("192.168.");
   if (isLocalhost && !verified) { verified = true; }
   // Show the Turnstile gate if not already verified and not on localhost
