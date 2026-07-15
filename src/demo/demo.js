@@ -10456,6 +10456,12 @@ function truncateTitle(text, max) {
 }
 
 function renderActivity() {
+  /*@app-only-start*/
+  // App mode: the server owns the Activity feed (GET /api/render/activity).
+  renderServerFragment("activity", bindListActions);
+  return;
+  /*@app-only-end*/
+  /*@static-only-start*/
   const feed = [];
   state.packs.forEach((pack) => {
     packActivityDisplay(pack).forEach((entry) => {
@@ -10488,6 +10494,7 @@ function renderActivity() {
     </section>
   `;
   bindListActions();
+  /*@static-only-end*/
 }
 
 function globalMemoryNotes(selectedPack) {

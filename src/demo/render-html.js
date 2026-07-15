@@ -41,6 +41,32 @@
     return String(value ?? "").replace(/"/g, "&quot;");
   }
 
+  // --- Activity helpers (mirror the client's activityParts/relativeActivityTime
+  //     so the server can own the Activity route render) ---
+  const ACTIVITY_STAMP_RE = /^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] /u;
+  const ACTIVITY_MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
+
+  function activityParts(entry) {
+    const value = typeof entry === "string" ? entry : "";
+    const match = ACTIVITY_STAMP_RE.exec(value);
+    return match ? { text: value.slice(match[0].length), at: match[1] } : { text: value, at: "" };
+  }
+
+  function relativeActivityTime(at) {
+    const then = at ? new Date(`${at.replace(" ", "T")}Z`) : null;
+    if (!then || Number.isNaN(then.getTime())) {
+      return "earlier";
+    }
+    const mins = Math.round((Date.now() - then.getTime()) / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.round(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.round(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return `${ACTIVITY_MONTHS[then.getMonth()]} ${then.getDate()}`;
+  }
+
   // -----------------------------------------------------------------------
   // Simple card/builders that only need string params (no pack/model needed).
   // These are called from route templates with pre-computed values.
@@ -348,12 +374,39 @@
   }
 
   function renderActivityHtml(model) {
+    const packs = model.packs || [];
+    const copy = model.copy || {};
+    const feed = [];
+    packs.forEach(function (pack) {
+      (pack.activity || []).forEach(function (raw, index) {
+        const parts = activityParts(raw);
+        if (parts.text) {
+          feed.push({ pack: pack, text: parts.text, at: parts.at, index: index });
+        }
+      });
+    });
+    const recent = feed
+      .sort(function (a, b) { return (b.at || "").localeCompare(a.at || "") || a.index - b.index; })
+      .slice(0, 50);
+    const workNoun = packs.length === 1 ? (copy.workOne || "work item") : (copy.workMany || "work items");
     return `<section class="demo-panel">
       <div class="demo-panel-head">
-        <span class="section-label">Activity</span>
-        <h2>Recent activity across ${(model.packs || []).length} items</h2>
+        <div>
+          <span class="section-label">Activity</span>
+          <h2>${feed.length} actions across ${packs.length} ${escapeHtml(workNoun)}</h2>
+        </div>
       </div>
-      <p>Activity feed will render after hydration.</p>
+      <div class="demo-activity-feed">
+        ${recent.length ? recent.map(function (item) {
+          return `<div class="demo-activity-entry">
+            <span class="demo-activity-dot"></span>
+            <div class="demo-activity-body">
+              <button class="demo-card-title" type="button" data-action="select" data-pack="${escapeAttribute(item.pack.id || "")}">${escapeHtml(String(item.pack.title || "Untitled").slice(0, 120))}</button>
+              <p>${escapeHtml(item.text)} <time class="demo-activity-time">${escapeHtml(relativeActivityTime(item.at))}</time></p>
+            </div>
+          </div>`;
+        }).join("") : `<p class="demo-field-help">No activity yet. Actions appear here as you work through the demo.</p>`}
+      </div>
     </section>`;
   }
 
