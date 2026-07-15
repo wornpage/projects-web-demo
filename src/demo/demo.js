@@ -4100,16 +4100,16 @@ function bindHomeControls() {
     const url = `${location.origin}${location.pathname}${location.hash}`;
     navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard.", "success")).catch(() => showToast("Copy blocked by browser.", "error"));
   });
-  el("email-standup-home")?.addEventListener("click", () => {
+  el("email-standup-home")?.addEventListener("click", async () => {
     const subject = "Work status update";
-    const body = buildStandupText().split("\n").map((l) => l.trim()).filter(Boolean).join("\n");
+    const body = (await standupText()).split("\n").map((l) => l.trim()).filter(Boolean).join("\n");
     location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     showToast("Opening email client with standup summary.", "success");
   });
   el("export-ics-home")?.addEventListener("click", exportICS);
-  el("speak-home")?.addEventListener("click", () => {
+  el("speak-home")?.addEventListener("click", async () => {
     speechSynthesis.cancel();
-    const text = buildStandupText().split("\n").filter((l) => l.trim()).join(". ");
+    const text = (await standupText()).split("\n").filter((l) => l.trim()).join(". ");
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.9;
     speechSynthesis.speak(utterance);
@@ -4411,6 +4411,34 @@ function bindBatchBar() {
   });
 }
 
+// Standup text source. In app mode the server owns the computation
+// (GET /api/state/standup); the static demo builds it locally. buildStandupText
+// is fenced @static-only below so the app bundle ships only the fetch path and
+// the recomputation logic never leaves the server.
+async function standupText() {
+  /*@app-only-start*/
+  try {
+    await prepareBackendWorkflowRequest();
+    const response = await fetch(apiUrl("/api/state/standup"), {
+      headers: await apiHeaders()
+    });
+    if (response.ok) {
+      const result = await response.json();
+      if (result && result.text) {
+        return result.text;
+      }
+    }
+  } catch (error) {
+    console.error("Standup endpoint failed.", error);
+  }
+  return "Standup is unavailable right now — reconnect and try again.";
+  /*@app-only-end*/
+  /*@static-only-start*/
+  return buildStandupText();
+  /*@static-only-end*/
+}
+
+/*@static-only-start*/
 function buildStandupText() {
   const review = selectedFirstPacks(state.packs.filter(isReview));
   const blockedCount = review.filter(hasBlocker).length;
@@ -4427,26 +4455,10 @@ function buildStandupText() {
   });
   return [header, ...lines, `Up next: ${workTitle(review[0])}.`].join("\n");
 }
+/*@static-only-end*/
 
 async function copyStandup() {
-  let text = buildStandupText();
-  if (DEMO_API_BASE_URL) {
-    try {
-      await prepareBackendWorkflowRequest();
-      const response = await fetch(apiUrl("/api/state/standup"), {
-        headers: await apiHeaders()
-      });
-      if (response.ok) {
-        const result = await response.json();
-        if (result.text) {
-          text = result.text;
-        }
-      }
-    } catch (error) {
-      // Fall back to the locally-computed text (static mode path).
-      console.error("Standup endpoint failed, using local computation.", error);
-    }
-  }
+  const text = await standupText();
   copyToClipboard(
     text,
     clipboardStatus("Review", "share the copied standup"),
