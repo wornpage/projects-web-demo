@@ -279,23 +279,11 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
 
   const pathname = url.pathname.replace(/\/+$/u, "") || "/";
 
-  // Gate protected assets behind Turnstile verification. Browsers that
-  // haven't completed the challenge get redirected to the gate page.
-  // Crawlers and curl without the cookie get a 403.
-  const protectedPaths = ["/assets/demo.js", "/assets/demo-app.js", "/assets/demo.css"];
-  if (protectedPaths.includes(pathname) && !isTurnstileVerified(request)) {
-    const ua = (request.headers.get("User-Agent") || "").toLowerCase();
-    const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
-    if (isBrowser) {
-      // Redirect browser to the gate page — they'll complete Turnstile and come back.
-      return Response.redirect(url.origin + "/", 302);
-    }
-    // Non-browser: reject outright.
-    return new Response("Forbidden", {
-      status: 403,
-      headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
-    });
-  }
+  // NOTE: the Turnstile *asset* gate (redirect/403 on demo.js/demo-app.js/
+  // demo.css without the turnstile_verified cookie) was removed — it blocked
+  // the client bundle from loading for legitimate browsers, leaving only the
+  // SSR/static HTML with no JS. The verification endpoint (/api/turnstile/
+  // verify) is kept for the client-side gate.
 
   const isIndexPage = pathname === "/" || pathname === "/index.html";
   const isLandingPage = pathname === "/landing.html";
