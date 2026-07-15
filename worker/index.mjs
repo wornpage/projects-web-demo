@@ -213,7 +213,11 @@ function stubFor(env, stateKey) {
 // --- Static artifact serving ---
 
 async function staticAssetResponse(request, nodeRequest, url, env) {
-  const assetResponse = await env.ASSETS.fetch(request);
+  // Fetch the asset with a clean absolute URL — the incoming request's full
+  // URL can confuse the ASSETS binding when run_worker_first is true.
+  // Build a clean URL from pathname so ASSETS serves the file directly.
+  const cleanUrl = new URL(url.pathname + url.search, url.origin).href;
+  const assetResponse = await env.ASSETS.fetch(new Request(cleanUrl));
   if (!assetResponse.ok) {
     const { shim, response } = nodeResponseCapture();
     server.sendJson(nodeRequest, shim, 404, { error: "Not found" });
