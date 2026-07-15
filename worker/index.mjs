@@ -262,64 +262,6 @@ function isTurnstileVerified(request) {
   const cookie = request.headers.get("Cookie") || "";
   return cookie.includes("turnstile_verified=1");
 }
-
-// Served in place of demo.js/demo-app.js for unverified browsers: reveals the
-// gate, renders the Turnstile widget (explicit mode), and on a SUCCESSFUL server
-// verify reloads so the Worker serves the real bundle. Self-diagnosing: a green
-// widget is only client-side — if the *server* verify fails it shows the reason
-// on the gate (no DevTools needed) rather than silently sticking. Loop-safe: it
-// reloads only on success and at most once per 10s (a stale marker self-heals
-// after 10s, and a non-sticking cookie can't tight-loop).
-const TURNSTILE_BOOTSTRAP_JS = `(function(){
-  var g = document.getElementById("turnstile-gate");
-  if (g) { g.hidden = false; }
-  function msg(text){
-    if (!g) { return; }
-    var card = g.querySelector(".turnstile-card") || g;
-    var p = card.querySelector("[data-gate-msg]");
-    if (!p) { p = document.createElement("p"); p.setAttribute("data-gate-msg", ""); card.appendChild(p); }
-    p.textContent = text;
-  }
-  window.turnstileDone = function(token){
-    fetch("/api/turnstile/verify", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token: token })
-    }).then(function(r){
-      return r.json().then(function(j){ return { status: r.status, ok: !!(j && j.ok) }; },
-                           function(){ return { status: r.status, ok: false }; });
-    }).then(function(res){
-      if (!res.ok) {
-        msg("Verification failed (HTTP " + res.status + "). The Turnstile site key and secret must be a matching pair.");
-        return;
-      }
-      try { sessionStorage.setItem("projects-demo-verified", "1"); } catch (e) {}
-      var last = 0;
-      try { last = parseInt(sessionStorage.getItem("projects-demo-gate-reloaded") || "0", 10) || 0; } catch (e) {}
-      if (Date.now() - last > 10000) {
-        try { sessionStorage.setItem("projects-demo-gate-reloaded", String(Date.now())); } catch (e) {}
-        location.reload();
-      } else {
-        msg("Verified, but the session cookie isn't sticking. Try a normal (non-private) window.");
-      }
-    }).catch(function(){
-      msg("Could not reach the verification endpoint.");
-    });
-  };
-  var s = document.createElement("script");
-  s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-  s.async = true; s.defer = true;
-  s.onload = function(){
-    if (window.turnstile && g) {
-      window.turnstile.render(g.querySelector(".cf-turnstile"), {
-        sitekey: "0x4AAAAAAD2Dk_9le1jTDfjK",
-        callback: window.turnstileDone
-      });
-    }
-  };
-  document.head.appendChild(s);
-})();`;
 // --- Static artifact serving ---
 
 async function staticAssetResponse(request, nodeRequest, url, env) {
@@ -337,31 +279,11 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
 
   const pathname = url.pathname.replace(/\/+$/u, "") || "/";
 
-  // Anti-scraping gate for the client bundle. Unverified browser → serve the
-  // Turnstile bootstrap IN PLACE OF demo.js/demo-app.js (never a redirect — that
-  // deadlocks, since the Turnstile flow lives in demo.js). Non-browser UA → 403
-  // (the scraping block). demo.css is NOT gated (the gate page needs its styles);
-  // skipped on localhost (site key is domain-locked; wrangler dev unaffected).
-  const gatedBundles = ["/assets/demo.js", "/assets/demo-app.js"];
-  const isLocalhostHost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
-  if (gatedBundles.includes(pathname) && !isLocalhostHost && !isTurnstileVerified(request)) {
-    const ua = (request.headers.get("User-Agent") || "").toLowerCase();
-    const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
-    if (!isBrowser) {
-      return new Response("Forbidden", {
-        status: 403,
-        headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
-      });
-    }
-    return new Response(request.method === "HEAD" ? null : TURNSTILE_BOOTSTRAP_JS, {
-      status: 200,
-      headers: {
-        ...constants.securityHeaders,
-        "content-type": "application/javascript; charset=utf-8",
-        "cache-control": "no-store"
-      }
-    });
-  }
+  // NOTE: the Turnstile *asset* gate (redirect/403 on demo.js/demo-app.js/
+  // demo.css without the turnstile_verified cookie) was removed — it blocked
+  // the client bundle from loading for legitimate browsers, leaving only the
+  // SSR/static HTML with no JS. The verification endpoint (/api/turnstile/
+  // verify) is kept for the client-side gate.
 
   const isIndexPage = pathname === "/" || pathname === "/index.html";
   const isLandingPage = pathname === "/landing.html";
