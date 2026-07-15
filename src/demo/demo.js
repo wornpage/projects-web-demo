@@ -10675,6 +10675,14 @@ function bindSearchPageResults() {
 }
 
 function renderTerms() {
+  /*@app-only-start*/
+  // App mode: the server owns this route's HTML (GET /api/render/terms). Fetch
+  // and inject it instead of shipping the template — the static markup below is
+  // fenced @static-only and never reaches the app bundle.
+  renderServerFragment("terms", bindTermsControls);
+  return;
+  /*@app-only-end*/
+  /*@static-only-start*/
   el("screen-content").innerHTML = `
     <section class="demo-panel">
       <div class="demo-panel-head">
@@ -10694,7 +10702,55 @@ function renderTerms() {
     </section>
   `;
   bindTermsControls();
+  /*@static-only-end*/
 }
+
+/*@app-only-start*/
+let _fragmentInFlight = null;
+
+// Fetch a server-rendered route fragment and inject it into #screen-content,
+// then run the route's hydration. Keeps render() synchronous: a placeholder
+// paints immediately, the real content replaces it when the fetch resolves.
+// Idempotent — render() re-fires many times per route (100ms virtual-scroll
+// tick, state saves), so we skip when this route's fragment is already painted
+// (marker on the injected element) or its fetch is in flight. Navigating to a
+// different route replaces #screen-content, dropping the marker, so returning
+// re-fetches.
+function renderServerFragment(route, bindFn) {
+  const host = el("screen-content");
+  const painted = host && host.firstElementChild
+    && host.firstElementChild.getAttribute("data-fragment-route") === route;
+  if (painted || _fragmentInFlight === route) {
+    return;
+  }
+  _fragmentInFlight = route;
+  if (host) {
+    host.innerHTML = `<section class="demo-panel" aria-busy="true"><p>Loading…</p></section>`;
+  }
+  (async () => {
+    try {
+      const response = await fetch(apiUrl(`/api/render/${encodeURIComponent(route)}`), {
+        headers: await apiHeaders()
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (host && result && typeof result.html === "string") {
+          host.innerHTML = result.html;
+          if (host.firstElementChild) {
+            host.firstElementChild.setAttribute("data-fragment-route", route);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Server fragment render failed.", error);
+    }
+    _fragmentInFlight = null;
+    if (typeof bindFn === "function") {
+      bindFn();
+    }
+  })();
+}
+/*@app-only-end*/
 
 // Hydration for the Terms route: runs both after a client render() and after an
 // SSR paint (hydrateRoute -> bindTermsControls). Sets the GitHub link href at

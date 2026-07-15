@@ -315,6 +315,18 @@ async function routeRequest(request, response, url, stateStorage = defaultStateS
     return;
   }
 
+  // Server-rendered route fragment (#screen-content inner HTML) for app mode.
+  // The client fetches this instead of building the route's HTML locally, so
+  // that route's rendering code can be stripped from the app bundle.
+  const renderMatch = pathname.match(/^\/api\/render\/([a-z-]+)$/u);
+  if (renderMatch && method === "GET") {
+    const route = decodeURIComponent(renderMatch[1]);
+    const state = await stateStorage.read(security.stateKeyForRequest(request));
+    const ssrRenderer = require("./src/render-html.js");
+    sendJson(request, response, 200, { html: ssrRenderer.renderRouteContent(state, route) });
+    return;
+  }
+
   const packMatch = pathname.match(/^\/api\/packs\/([^/]+)(?:\/memory)?$/u);
   if (packMatch) {
     const packId = decodeURIComponent(packMatch[1]);
