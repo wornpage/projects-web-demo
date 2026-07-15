@@ -80,33 +80,26 @@ export class DemoStateDurableObject extends DurableObject {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-  
-  const pathname = url.pathname.replace(/\/+$/u, "") || "/";
+    const pathname = url.pathname.replace(/\/+$/u, "") || "/";
 
-  // Gate protected assets behind Turnstile verification. Browsers that
-  // haven't completed the challenge get redirected to the gate page.
-  // Crawlers and curl without the cookie get a 403.
-  const protectedPaths = ["/assets/demo.js", "/assets/demo-app.js", "/assets/demo.css"];
-  if (protectedPaths.includes(pathname) && !isTurnstileVerified(request)) {
-    const ua = (request.headers.get("User-Agent") || "").toLowerCase();
-    const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
-    if (isBrowser) {
-      // Redirect browser to the gate page — they'll complete Turnstile and come back.
-      return Response.redirect(url.origin + "/", 302);
+    // Gate protected assets against direct downloads (no Referer or cross-origin).
+    // Same-origin subrequests from the browser are allowed without the cookie.
+    const protectedPaths = ["/assets/demo.js", "/assets/demo-app.js", "/assets/demo.css"];
+    const referer = (request.headers.get("Referer") || "");
+    const isSameOrigin = referer.startsWith(url.origin + "/");
+    if (protectedPaths.includes(pathname) && !isTurnstileVerified(request) && !isSameOrigin) {
+      const ua = (request.headers.get("User-Agent") || "").toLowerCase();
+      const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
+      if (isBrowser) {
+        return Response.redirect(url.origin + "/", 302);
+      }
+      return new Response("Forbidden", {
+        status: 403,
+        headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
+      });
     }
-    // Non-browser: reject outright.
-    return new Response("Forbidden", {
-      status: 403,
-      headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
-    });
-  }
 
-
-    // Backstop for Cloudflare Access: when configured (ACCESS_AUD +
-    // ACCESS_TEAM_DOMAIN set on the Worker), reject any request that reaches us
-    // without a valid Access JWT. No-op otherwise, so local dev and CI are
-    // unaffected. Runs first so nothing — not even robots.txt — leaks past it.
-    const denied = await accessDenied(request, env, constants.securityHeaders);
+const denied = await accessDenied(request, env, constants.securityHeaders);
     if (denied) {
       return denied;
     }
