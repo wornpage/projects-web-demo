@@ -82,23 +82,6 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname.replace(/\/+$/u, "") || "/";
 
-    // Gate protected assets against direct downloads (no Referer or cross-origin).
-    // Same-origin subrequests from the browser are allowed without the cookie.
-    const protectedPaths = ["/assets/demo.js", "/assets/demo-app.js", "/assets/demo.css"];
-    const referer = (request.headers.get("Referer") || "");
-    const isSameOrigin = referer.startsWith(url.origin);
-    if (protectedPaths.includes(pathname) && !isTurnstileVerified(request) && !isSameOrigin) {
-      const ua = (request.headers.get("User-Agent") || "").toLowerCase();
-      const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
-      if (isBrowser) {
-        return Response.redirect(url.origin + "/", 302);
-      }
-      return new Response("Forbidden", {
-        status: 403,
-        headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
-      });
-    }
-
 const denied = await accessDenied(request, env, constants.securityHeaders);
     if (denied) {
       return denied;
