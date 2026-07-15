@@ -488,7 +488,50 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+// Turnstile gate: called when the challenge completes. Hide the gate,
+// reveal the app shell, and persist so returning visitors skip it.
+window.turnstileDone = function (token) {
+  var gate = document.getElementById("turnstile-gate");
+  if (gate) gate.hidden = true;
+  try { sessionStorage.setItem("projects-demo-verified", "1"); } catch (e) {}
+  // Send token to Worker for server-side validation (sets verification cookie)
+  if (token) {
+    fetch("/api/turnstile/verify", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: token })
+    }).catch(function () { /* non-blocking */ });
+  }
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
+  // Turnstile: show the gate unless already verified this session.
+  // Skip on localhost — the site key is domain-locked to the deployed domain.
+  var isLocalhost = location.hostname === "127.0.0.1" || location.hostname === "localhost" || location.hostname.startsWith("192.168.");
+  if (isLocalhost && !verified) { verified = true; }
+  // Show the Turnstile gate if not already verified and not on localhost
+  if (gate && !verified) {
+    gate.hidden = false;
+    // Load Turnstile API dynamically (avoid loading on localhost or for verified users)
+    var script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    script.onload = function () {
+      if (window.turnstile) {
+        window.turnstile.render(gate.querySelector(".cf-turnstile"), {
+          sitekey: "0x4AAAAAAD2Dk_9le1jTDfjK",
+          callback: window.turnstileDone
+        });
+      }
+    };
+    document.head.appendChild(script);
+  }
+  var verified = false;
+  try { verified = sessionStorage.getItem("projects-demo-verified") === "1"; } catch (e) {}
+
+
+
   // Register service worker for offline PWA
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").catch(() => {});

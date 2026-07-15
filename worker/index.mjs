@@ -137,6 +137,12 @@ export default {
       });
     }
 
+    // Turnstile verification — client completes the widget and POSTs the token.
+    // The Worker validates it with Cloudflare and sets a cookie.
+    if (pathname === "/api/turnstile/verify" && request.method === "POST") {
+      return verifyTurnstile(request, env);
+    }
+
     if (request.method !== "GET" && request.method !== "HEAD") {
       const { shim, response } = nodeResponseCapture();
       server.sendJson(nodeRequest, shim, 404, { error: "Not found" });
@@ -210,6 +216,56 @@ function stubFor(env, stateKey) {
   return env.DEMO_STATE.get(env.DEMO_STATE.idFromName(digest));
 }
 
+
+// --- Turnstile verification ---
+
+async function verifyTurnstile(request, env) {
+  let body = {};
+  try { body = await request.json(); } catch { /* keep empty */ }
+  const token = String(body.token || "").trim();
+  if (!token) {
+    return new Response(JSON.stringify({ ok: false, error: "Missing token" }), {
+      status: 400,
+      headers: { ...constants.securityHeaders, "content-type": "application/json" }
+    });
+  }
+
+  const secret = env.TURNSTILE_SECRET_KEY;
+  if (!secret) {
+    return new Response(JSON.stringify({ ok: false, error: "Turnstile not configured" }), {
+      status: 500,
+      headers: { ...constants.securityHeaders, "content-type": "application/json" }
+    });
+  }
+
+  const verify = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ secret, response: token })
+  });
+
+  const result = await verify.json();
+  if (!result.success) {
+    return new Response(JSON.stringify({ ok: false, error: "Verification failed" }), {
+      status: 400,
+      headers: { ...constants.securityHeaders, "content-type": "application/json" }
+    });
+  }
+
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: {
+      ...constants.securityHeaders,
+      "content-type": "application/json",
+      "set-cookie": "turnstile_verified=1; Path=/; Max-Age=86400; HttpOnly; Secure; SameSite=Lax"
+    }
+  });
+}
+
+function isTurnstileVerified(request) {
+  const cookie = request.headers.get("Cookie") || "";
+  return cookie.includes("turnstile_verified=1");
+}
 // --- Static artifact serving ---
 
 async function staticAssetResponse(request, nodeRequest, url, env) {

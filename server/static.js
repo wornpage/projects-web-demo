@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const fsp = require("node:fs/promises");
 const http = require("node:http");
 const path = require("node:path");
+const security = require("./src/security.js");
 
 const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PREVIEW_PORT || 5181);
@@ -65,7 +66,7 @@ const server = http.createServer(async (request, response) => {
     const sendsCsp = cspPages.has(path.resolve(file));
     response.writeHead(200, {
       ...securityHeaders,
-      ...(sendsCsp ? { "content-security-policy": contentSecurityPolicy() } : {}),
+      ...(sendsCsp ? { "content-security-policy": security.contentSecurityPolicy() } : {}),
       "content-type": file.endsWith(path.sep + "manifest.json") ? "application/manifest+json" : (contentTypes[path.extname(file).toLowerCase()] || "application/octet-stream")
     });
     if (request.method === "HEAD") {
@@ -159,9 +160,9 @@ function contentSecurityPolicy() {
     "base-uri 'none'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    "frame-src 'none'",
+    "frame-src https://challenges.cloudflare.com",
     "worker-src 'self'",
-    "script-src 'self'",
+    "script-src 'self' https://challenges.cloudflare.com",
     "style-src 'self'",
     "font-src 'self'",
     "img-src 'self' data:",
