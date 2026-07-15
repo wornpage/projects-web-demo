@@ -80,7 +80,25 @@ export class DemoStateDurableObject extends DurableObject {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const pathname = url.pathname.replace(/\/+$/u, "") || "/";
+  
+  // Gate protected assets behind Turnstile verification. Browsers that
+  // haven't completed the challenge get redirected to the gate page.
+  // Crawlers and curl without the cookie get a 403.
+  const protectedPaths = ["/assets/demo.js", "/assets/demo-app.js", "/assets/demo.css"];
+  if (protectedPaths.includes(pathname) && !isTurnstileVerified(request)) {
+    const ua = (request.headers.get("User-Agent") || "").toLowerCase();
+    const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
+    if (isBrowser) {
+      // Redirect browser to the gate page — they'll complete Turnstile and come back.
+      return Response.redirect(url.origin + "/", 302);
+    }
+    // Non-browser: reject outright.
+    return new Response("Forbidden", {
+      status: 403,
+      headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
+    });
+  }
+  const pathname = url.pathname.replace(/\/+$/u, "") || "/";
 
     // Backstop for Cloudflare Access: when configured (ACCESS_AUD +
     // ACCESS_TEAM_DOMAIN set on the Worker), reject any request that reaches us
@@ -280,6 +298,24 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
     return response;
   }
 
+
+  // Gate protected assets behind Turnstile verification. Browsers that
+  // haven't completed the challenge get redirected to the gate page.
+  // Crawlers and curl without the cookie get a 403.
+  const protectedPaths = ["/assets/demo.js", "/assets/demo-app.js", "/assets/demo.css"];
+  if (protectedPaths.includes(pathname) && !isTurnstileVerified(request)) {
+    const ua = (request.headers.get("User-Agent") || "").toLowerCase();
+    const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
+    if (isBrowser) {
+      // Redirect browser to the gate page — they'll complete Turnstile and come back.
+      return Response.redirect(url.origin + "/", 302);
+    }
+    // Non-browser: reject outright.
+    return new Response("Forbidden", {
+      status: 403,
+      headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
+    });
+  }
   const pathname = url.pathname.replace(/\/+$/u, "") || "/";
   const isIndexPage = pathname === "/" || pathname === "/index.html";
   const isLandingPage = pathname === "/landing.html";
