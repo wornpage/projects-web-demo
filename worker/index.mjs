@@ -262,6 +262,37 @@ function isTurnstileVerified(request) {
   const cookie = request.headers.get("Cookie") || "";
   return cookie.includes("turnstile_verified=1");
 }
+
+// Served in place of demo.js/demo-app.js for unverified browsers. It reveals the
+// gate (already in index.html), defines the Turnstile callback, and loads the
+// Cloudflare widget. On success it sets the sessionStorage flag demo.js reads,
+// POSTs the token (which sets the turnstile_verified cookie), and reloads — the
+// reload is now verified, so the Worker serves the real bundle. The widget
+// auto-renders the .cf-turnstile element (data-sitekey/data-callback in the HTML).
+const TURNSTILE_BOOTSTRAP_JS = `(function(){
+  var g = document.getElementById("turnstile-gate");
+  if (g) { g.hidden = false; }
+  window.turnstileDone = function(token){
+    try { sessionStorage.setItem("projects-demo-verified","1"); } catch (e) {}
+    fetch("/api/turnstile/verify", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: token })
+    }).then(function(){ location.reload(); }, function(){ location.reload(); });
+  };
+  var s = document.createElement("script");
+  s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+  s.async = true; s.defer = true;
+  s.onload = function(){
+    if (window.turnstile && g) {
+      window.turnstile.render(g.querySelector(".cf-turnstile"), {
+        sitekey: "0x4AAAAAAD2Dk_9le1jTDfjK",
+        callback: window.turnstileDone
+      });
+    }
+  };
+  document.head.appendChild(s);
+})();`;
 // --- Static artifact serving ---
 
 async function staticAssetResponse(request, nodeRequest, url, env) {
@@ -279,11 +310,33 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
 
   const pathname = url.pathname.replace(/\/+$/u, "") || "/";
 
-  // NOTE: the Turnstile *asset* gate (redirect/403 on demo.js/demo-app.js/
-  // demo.css without the turnstile_verified cookie) was removed — it blocked
-  // the client bundle from loading for legitimate browsers, leaving only the
-  // SSR/static HTML with no JS. The verification endpoint (/api/turnstile/
-  // verify) is kept for the client-side gate.
+  // Anti-scraping gate for the client bundle. An unverified browser gets a tiny
+  // Turnstile bootstrap served IN PLACE OF demo.js/demo-app.js (never a redirect
+  // — that deadlocks, because the whole Turnstile flow lives inside demo.js);
+  // once verified it reloads and the real bundle is served. Non-browsers get
+  // 403 (the actual scraping block). demo.css is intentionally NOT gated so the
+  // gate page keeps its styles. Skipped on localhost (wrangler dev; the site key
+  // is domain-locked anyway).
+  const gatedBundles = ["/assets/demo.js", "/assets/demo-app.js"];
+  const isLocalhostHost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  if (gatedBundles.includes(pathname) && !isLocalhostHost && !isTurnstileVerified(request)) {
+    const ua = (request.headers.get("User-Agent") || "").toLowerCase();
+    const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
+    if (!isBrowser) {
+      return new Response("Forbidden", {
+        status: 403,
+        headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
+      });
+    }
+    return new Response(request.method === "HEAD" ? null : TURNSTILE_BOOTSTRAP_JS, {
+      status: 200,
+      headers: {
+        ...constants.securityHeaders,
+        "content-type": "application/javascript; charset=utf-8",
+        "cache-control": "no-store"
+      }
+    });
+  }
 
   const isIndexPage = pathname === "/" || pathname === "/index.html";
   const isLandingPage = pathname === "/landing.html";
