@@ -17,6 +17,7 @@ import constants from "../server/src/constants.js";
 import security from "../server/src/security.js";
 import seed from "../server/src/seed.js";
 import validation from "../server/src/validation.js";
+import rateLimitCore from "../server/src/rate-limit-core.js";
 import demoPacks from "../data/demo-packs.json";
 import { accessDenied } from "./access-jwt.mjs";
 
@@ -77,6 +78,73 @@ export class DemoStateDurableObject extends DurableObject {
   }
 }
 
+// Durable, shared rate limiter. One instance (idFromName("global")) serializes
+// the counters that the in-memory limiter in security.js can't hold on Workers.
+// Enforces a per-IP window AND a global daily budget in a single storage
+// read-modify-write. Serialization through one DO is fine at demo scale — the
+// daily budget keeps volume low by design.
+export class RateLimiterDurableObject extends DurableObject {
+  async check(ipHash, config) {
+    const prev = (await this.ctx.storage.get("rl")) || null;
+    const result = rateLimitCore.evaluateRateLimit(prev, {
+      now: Date.now(),
+      ipHash,
+      windowMs: config.windowMs,
+      perIpMax: config.perIpMax,
+      dailyMax: config.dailyMax,
+      maxTrackedIps: config.maxTrackedIps
+    });
+    await this.ctx.storage.put("rl", result.state);
+    return {
+      allowed: result.allowed,
+      status: result.status,
+      message: result.message,
+      retryAfter: result.retryAfter
+    };
+  }
+}
+
+// Limits are Worker vars (Dashboard > Settings > Variables) with safe defaults,
+// so no redeploy is needed to tune them. Per-IP default 300/min (well above a
+// real session's burst, blocks floods); global budget 50k/day (bounds cost).
+function rateLimitConfig(env) {
+  const num = (value, fallback) => {
+    const n = parseInt(value, 10);
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+  };
+  return {
+    windowMs: num(env.RATE_LIMIT_WINDOW_MS, 60000),
+    perIpMax: num(env.RATE_LIMIT_PER_IP_MAX, 300),
+    dailyMax: num(env.RATE_LIMIT_DAILY_MAX, 50000),
+    maxTrackedIps: 20000
+  };
+}
+
+// Returns a 429/503 Response when the request should be blocked, else null.
+// FAILS OPEN: any fault in the limiter path allows the request, so a limiter
+// bug can never take the site down.
+async function rateLimitBlock(request, env) {
+  try {
+    const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+    const ipHash = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 32);
+    const stub = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName("global"));
+    const res = await stub.check(ipHash, rateLimitConfig(env));
+    if (res.allowed) {
+      return null;
+    }
+    return new Response(JSON.stringify({ error: res.message }), {
+      status: res.status,
+      headers: {
+        ...constants.securityHeaders,
+        "content-type": "application/json",
+        "retry-after": String(res.retryAfter || 60)
+      }
+    });
+  } catch {
+    return null;
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -120,6 +188,12 @@ const denied = await accessDenied(request, env, constants.securityHeaders);
     }
 
     if (security.isApiPathname(pathname)) {
+      // Durable per-IP + global-daily-budget limit before any DO work. Static
+      // assets are edge-cached and skip this. Fails open (see rateLimitBlock).
+      const limited = await rateLimitBlock(request, env);
+      if (limited) {
+        return limited;
+      }
       return apiResponse(nodeRequest, url, env);
     }
 

@@ -20,7 +20,7 @@
     "publish:check": "npm run demo:check && node ../scripts/check-static-publish.mjs",
     "publish:static": "node ../scripts/build-static-publish.mjs",
     "routes:check": "npm run demo:check && node ../scripts/check-public-routes.mjs",
-    "test": "node --test server.test.js workflow-rules.test.js ../worker/access-jwt.test.mjs",
+    "test": "node --test server.test.js workflow-rules.test.js rate-limit-core.test.js ../worker/access-jwt.test.mjs",
     "sync:check": "npm run demo:check && node ../scripts/check-sync-surface.mjs",
     "recovery:check": "npm run demo:check && node ../scripts/check-state-recovery.mjs",
     "rules:check": "node ../scripts/check-workflow-rules-guard.mjs",
