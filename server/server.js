@@ -384,7 +384,8 @@ async function serveStaticRequest(request, response, url, stateStorage) {
         const serverState = await stateStorage.read(stateKey);
         const ssrRenderer = require("./src/render-html.js");
         const route = (url.searchParams.get("route") || "home").replace(/^#\/?/u, "");
-        const ssrHtml = ssrRenderer.renderPageHtml(serverState, route);
+        const shellHtml = await fs.readFile(file, "utf8");
+        const ssrHtml = ssrRenderer.renderPageHtml(serverState, route, shellHtml);
         const html = injectAppApiBase(ssrHtml);
         response.writeHead(200, {
           ...constants.securityHeaders,

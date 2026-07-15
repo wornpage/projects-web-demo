@@ -12,6 +12,7 @@ import { DurableObject } from "cloudflare:workers";
 import crypto from "node:crypto";
 
 import server from "../server/server.js";
+import ssr from "../server/src/render-html.js";
 import constants from "../server/src/constants.js";
 import security from "../server/src/security.js";
 import seed from "../server/src/seed.js";
@@ -225,7 +226,20 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
 
   if (isIndexPage || isLandingPage) {
     const html = await assetResponse.text();
-    const body = isIndexPage ? server.injectAppApiBase(html) : html;
+    let body = isLandingPage ? html : server.injectAppApiBase(html);
+    // SSR the index page (parity with server/server.js): render the current
+    // route's content into #screen-content using the client's Durable Object
+    // state. ?nossr=1 or any failure falls back to the injected empty shell.
+    if (isIndexPage && !url.searchParams.has("nossr")) {
+      try {
+        const stateKey = security.stateKeyForRequest(nodeRequest);
+        const serverState = await durableObjectStateStorage(env).read(stateKey);
+        const route = (url.searchParams.get("route") || "home").replace(/^#\/?/u, "");
+        body = server.injectAppApiBase(ssr.renderPageHtml(serverState, route, html));
+      } catch {
+        // Keep the injected empty shell — the client renders on hydration.
+      }
+    }
     return new Response(request.method === "HEAD" ? null : body, {
       status: 200,
       headers: {

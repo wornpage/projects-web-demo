@@ -11,26 +11,17 @@
 // client build prepends. Both expose their API via module.exports in Node.
 // ---------------------------------------------------------------------------
 
-const path = require("node:path");
-const fs = require("node:fs");
+// Static requires (no dynamic path) so esbuild can bundle these into the
+// Cloudflare Worker. Both are UMD modules — they expose their API via
+// module.exports in Node and never touch `window` at require-time.
+const renderModel = require("../../src/demo/render-model.js");
+const renderHtml = require("../../src/demo/render-html.js");
 
-const renderModel = require(path.join(__dirname, "..", "..", "src", "demo", "render-model.js"));
-const renderHtml = require(path.join(__dirname, "..", "..", "src", "demo", "render-html.js"));
-
-// The app shell HTML — index.html without the <main> content. We'll inject
-// the SSR-rendered route content into the #screen-content element.
-let _appShellTemplate = null;
-
-function appShellTemplate() {
-  if (_appShellTemplate) {
-    return _appShellTemplate;
-  }
-
-  const repoRoot = path.resolve(__dirname, "..", "..");
-  const html = fs.readFileSync(path.join(repoRoot, "index.html"), "utf8");
-
-  // Split around the screen-content element to inject rendered content.
-  // The element is <section id="screen-content" ...> ... </section>.
+// Split the app shell (index.html) around the #screen-content element so the
+// SSR-rendered route content can be injected. The caller supplies the shell
+// HTML string — the Node server reads it from disk, the Worker fetches it from
+// the ASSETS binding — so this module needs no filesystem access.
+function splitShell(html) {
   const marker = 'id="screen-content"';
 
   const markerIndex = html.indexOf(marker);
@@ -38,22 +29,17 @@ function appShellTemplate() {
     throw new Error("App shell template missing #screen-content element.");
   }
 
-  // Find the start of the opening tag (scan back from the marker).
-  const tagStart = html.lastIndexOf("<", markerIndex);
-  // Find the end of the opening tag.
+  // Find the end of the opening tag, and the closing </section> after it.
   const tagEnd = html.indexOf(">", markerIndex) + 1;
-  // Find the closing </section> tag after the opening tag.
   const closeIndex = html.indexOf("</section>", tagEnd);
   if (closeIndex === -1) {
     throw new Error("App shell template missing </section> for #screen-content.");
   }
 
-  _appShellTemplate = {
+  return {
     before: html.slice(0, tagEnd),
     after: html.slice(closeIndex)
   };
-
-  return _appShellTemplate;
 }
 
 // -----------------------------------------------------------------------
@@ -139,8 +125,8 @@ function renderRouteContent(serverState, route) {
 // Render the full HTML page with SSR content.
 // -----------------------------------------------------------------------
 
-function renderPageHtml(serverState, route) {
-  const shell = appShellTemplate();
+function renderPageHtml(serverState, route, shellHtml) {
+  const shell = splitShell(shellHtml);
   const content = renderRouteContent(serverState, route || "home");
 
   return shell.before + "\n" + content + "\n" + shell.after;
