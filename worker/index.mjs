@@ -262,6 +262,50 @@ function isTurnstileVerified(request) {
   const cookie = request.headers.get("Cookie") || "";
   return cookie.includes("turnstile_verified=1");
 }
+
+// Served in place of demo.js/demo-app.js for unverified browsers: reveals the
+// gate, renders the Turnstile widget (explicit mode), and on a SUCCESSFUL verify
+// reloads so the Worker serves the real bundle. Hardened against the earlier
+// prod loop — it reloads ONLY on verify success and AT MOST ONCE (sessionStorage
+// guard), so a failing/misconfigured verify can never infinite-loop (it fails
+// safe: the widget can be retried, and the verify response is visible in the
+// Network tab for diagnosis).
+const TURNSTILE_BOOTSTRAP_JS = `(function(){
+  var g = document.getElementById("turnstile-gate");
+  if (g) { g.hidden = false; }
+  var RELOAD_KEY = "projects-demo-gate-reloaded";
+  window.turnstileDone = function(token){
+    fetch("/api/turnstile/verify", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: token })
+    }).then(function(r){ return r.ok ? r.json() : { ok: false }; })
+      .then(function(res){
+        if (!res || !res.ok) { return; }
+        try { sessionStorage.setItem("projects-demo-verified", "1"); } catch (e) {}
+        var already = false;
+        try { already = sessionStorage.getItem(RELOAD_KEY) === "1"; } catch (e) {}
+        if (!already) {
+          try { sessionStorage.setItem(RELOAD_KEY, "1"); } catch (e) {}
+          location.reload();
+        }
+      })
+      .catch(function(){ /* never reload on error */ });
+  };
+  var s = document.createElement("script");
+  s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+  s.async = true; s.defer = true;
+  s.onload = function(){
+    if (window.turnstile && g) {
+      window.turnstile.render(g.querySelector(".cf-turnstile"), {
+        sitekey: "0x4AAAAAAD2Dk_9le1jTDfjK",
+        callback: window.turnstileDone
+      });
+    }
+  };
+  document.head.appendChild(s);
+})();`;
 // --- Static artifact serving ---
 
 async function staticAssetResponse(request, nodeRequest, url, env) {
@@ -279,11 +323,31 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
 
   const pathname = url.pathname.replace(/\/+$/u, "") || "/";
 
-  // NOTE: the Turnstile *asset* gate (redirect/403 on demo.js/demo-app.js/
-  // demo.css without the turnstile_verified cookie) was removed — it blocked
-  // the client bundle from loading for legitimate browsers, leaving only the
-  // SSR/static HTML with no JS. The verification endpoint (/api/turnstile/
-  // verify) is kept for the client-side gate.
+  // Anti-scraping gate for the client bundle. Unverified browser → serve the
+  // Turnstile bootstrap IN PLACE OF demo.js/demo-app.js (never a redirect — that
+  // deadlocks, since the Turnstile flow lives in demo.js). Non-browser UA → 403
+  // (the scraping block). demo.css is NOT gated (the gate page needs its styles);
+  // skipped on localhost (site key is domain-locked; wrangler dev unaffected).
+  const gatedBundles = ["/assets/demo.js", "/assets/demo-app.js"];
+  const isLocalhostHost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  if (gatedBundles.includes(pathname) && !isLocalhostHost && !isTurnstileVerified(request)) {
+    const ua = (request.headers.get("User-Agent") || "").toLowerCase();
+    const isBrowser = ua.includes("mozilla") && !ua.includes("curl") && !ua.includes("wget") && !ua.includes("python");
+    if (!isBrowser) {
+      return new Response("Forbidden", {
+        status: 403,
+        headers: { ...constants.securityHeaders, "content-type": "text/plain; charset=utf-8" }
+      });
+    }
+    return new Response(request.method === "HEAD" ? null : TURNSTILE_BOOTSTRAP_JS, {
+      status: 200,
+      headers: {
+        ...constants.securityHeaders,
+        "content-type": "application/javascript; charset=utf-8",
+        "cache-control": "no-store"
+      }
+    });
+  }
 
   const isIndexPage = pathname === "/" || pathname === "/index.html";
   const isLandingPage = pathname === "/landing.html";
