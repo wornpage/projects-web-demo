@@ -1,19 +1,6 @@
 # Projects Web Demo
 
 > **Archived reference implementation** — The public demo stack: static frontend, Cloudflare Workers backend, SSR, waitlist, and Flagship feature flags. Active development with SvelteKit continues in a private repo.
->
-> **Live demo:** [projectsdemo.org](https://projectsdemo.org) · **GitHub Pages:** [jared-bidlow.github.io/projects-web-demo](https://jared-bidlow.github.io/projects-web-demo/) of the Projects demo.
-> Active development continues in a private fork. This repo is kept as a portfolio
-> piece showing the full stack: static demo, Cloudflare Workers backend, SSR,
-> Turnstile, waitlist, and Flagship feature flags.
-
-[![Ship check](https://github.com/jared-bidlow/projects-web-demo/actions/workflows/ship-check.yml/badge.svg)](https://github.com/jared-bidlow/projects-web-demo/actions/workflows/ship-check.yml)
-
-**Deployment:** static-first Cloudflare Pages — see
-[docs/deploy-cloudflare.md](docs/deploy-cloudflare.md). A live URL will be
-listed here once the Pages deploy is up; the previous Outplane dev deployment
-is suspended. App mode can also run on Cloudflare Workers (free plan) with
-Durable Object state — same doc, "App mode on Cloudflare Workers" section.
 
 This repository is the active lightweight web-tech home for the public
 Projects demo. It is a static GitHub Pages app by default: HTML, CSS,
