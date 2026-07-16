@@ -1,5 +1,10 @@
 # Projects Web Demo
 
+> **Archived** — This is the public reference implementation of the Projects demo.
+> Active development continues in a private fork. This repo is kept as a portfolio
+> piece showing the full stack: static demo, Cloudflare Workers backend, SSR,
+> Turnstile, waitlist, and Flagship feature flags.
+
 [![Ship check](https://github.com/jared-bidlow/projects-web-demo/actions/workflows/ship-check.yml/badge.svg)](https://github.com/jared-bidlow/projects-web-demo/actions/workflows/ship-check.yml)
 
 **Deployment:** static-first Cloudflare Pages — see
