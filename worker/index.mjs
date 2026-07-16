@@ -20,6 +20,10 @@ import validation from "../server/src/validation.js";
 import rateLimitCore from "../server/src/rate-limit-core.js";
 import demoPacks from "../data/demo-packs.json";
 import { accessDenied } from "./access-jwt.mjs";
+import { OpenFeature } from "@openfeature/server-sdk";
+import { FlagshipServerProvider } from "@cloudflare/flagship/server";
+
+let flagshipReady = false;
 
 seed.setSeedPacksSource(demoPacks);
 
@@ -309,6 +313,22 @@ function stubFor(env, stateKey) {
 
 // --- Turnstile verification ---
 
+async 
+// Evaluate all feature flags for a targeting key and return a plain object
+// suitable for injection into the client runtime config.
+async function evaluateFlags(targetingKey) {
+  if (!flagshipReady) return {};
+  try {
+    const client = OpenFeature.getClient();
+    return {
+      darkMode: await client.getBooleanValue("dark-mode-default", false, { targetingKey }),
+      showWaitlist: await client.getBooleanValue("show-waitlist", true, { targetingKey }),
+      newDashboard: await client.getBooleanValue("new-dashboard", false, { targetingKey })
+    };
+  } catch {
+    return {};
+  }
+}
 async function verifyTurnstile(request, env) {
   let body = {};
   try { body = await request.json(); } catch { /* keep empty */ }
@@ -435,6 +455,11 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
         const serverState = await durableObjectStateStorage(env).read(stateKey);
         const route = (url.searchParams.get("route") || "home").replace(/^#\/?/u, "");
         body = server.injectAppApiBase(ssr.renderPageHtml(serverState, route, html));
+          // Inject feature flags into the page for client-side use.
+          if (flagshipReady) {
+            const flags = await evaluateFlags(stateKey);
+            body = body.replace("</head>", `<script>window.__projectsDemoFlags=${JSON.stringify(flags)}</script></head>`);
+          }
       } catch {
         // Keep the injected empty shell — the client renders on hydration.
       }

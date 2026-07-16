@@ -28,6 +28,16 @@ const SERVER_PACK_ACTIONS = new Set(["start", "unblock", "block", "done", "open"
 const DEMO_BLOCKER_NONE = "none";
 const DEMO_BLOCKER_NONE_LABEL = "None";
 const DEMO_PROOF_TARGET_MISSING = "Add a proof target before finishing this work";
+
+
+// Feature flags injected by the Worker (Flagship). Falls back to defaults
+// when the Worker hasn't configured Flagship yet or the page is static.
+const FEATURE_FLAGS = Object.assign({
+  darkMode: false,
+  showWaitlist: true,
+  newDashboard: false
+}, window.__projectsDemoFlags || {});
+
 const STATUS = Object.freeze({ ACTIVE: "active", BLOCKED: "blocked", DRAFT: "draft", DONE: "done" });
 const RECOVERY_ID_MAX_LENGTH = 120;
 const PACK_FIELD_MEDIUM_MAX = 200;

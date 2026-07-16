@@ -50,6 +50,7 @@
     { "tag": "v2", "new_sqlite_classes": ["RateLimiterDurableObject"] },
     { "tag": "v3", "new_sqlite_classes": ["WaitlistDurableObject"] }
   ],
+  "flagship": [{ "binding": "FLAGS", "app_id": "replace-with-your-app-id" }],
   "alias": {
     "pg": "./worker/pg-stub.mjs"
   },
