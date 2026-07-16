@@ -56,7 +56,7 @@ function contentSecurityPolicy() {
     "frame-ancestors 'none'",
     "frame-src 'none'",
     "worker-src 'self'",
-    "script-src 'self' https://challenges.cloudflare.com",
+    "script-src 'self'",
     "style-src 'self'",
     "font-src 'self'",
     "img-src 'self' data:",
