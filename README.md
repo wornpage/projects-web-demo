@@ -174,7 +174,7 @@ window. State-write throttling runs after client-key validation but before JSON
 body parsing. On one app process, repeated invalid writes eventually return
 `429` without being stored; the ship gate proves that locally and verifies the
 source ordering. The hosted live gate does not require observing `429` because
-Outplane can route requests across processes. This is an abuse guard for a
+we can route requests across processes. This is an abuse guard for a
 public demo, not authentication or DDoS protection.
 Each keyed backend row is capped at 50 work items. Oversized browser-row,
 recovery, sync, and create writes past that cap are rejected instead of being
