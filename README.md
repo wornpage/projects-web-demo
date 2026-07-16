@@ -35,9 +35,6 @@ customer-data collection, or a live Projects service.
 | `scripts/build-demo-asset.mjs` | Copies `src/demo/demo.js` to the shipped `assets/demo.js`. |
 | `scripts/check-behavior-smoke.mjs` | Behavioral proof — loads static preview in Chromium, asserts no console errors, no dead buttons, no hidden leaks. |
 | `Dockerfile` | Cross-platform container packaging for the Node app. |
-| `docs/deploy-outplane.md` | Outplane development deploy checklist. |
-| `docs/public-exposure-audit.md` | Public file exposure audit and frontend privacy boundary. |
-| `docs/compliance-audit.md` | Requirement-by-requirement map from the compliance goal to current proof and remaining slices. |
 
 ## Routes
 
