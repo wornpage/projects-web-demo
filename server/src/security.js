@@ -54,7 +54,7 @@ function contentSecurityPolicy() {
     "base-uri 'none'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    "frame-src https://challenges.cloudflare.com",
+    "frame-src 'none'",
     "worker-src 'self'",
     "script-src 'self' https://challenges.cloudflare.com",
     "style-src 'self'",

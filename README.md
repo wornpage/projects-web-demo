@@ -1,6 +1,8 @@
 # Projects Web Demo
 
-> **Archived** — This is the public reference implementation of the Projects demo.
+> **Archived reference implementation** — The public demo stack: static frontend, Cloudflare Workers backend, SSR, waitlist, and Flagship feature flags. Active development with SvelteKit continues in a private repo.
+>
+> **Live demo:** [projectsdemo.org](https://projectsdemo.org) · **GitHub Pages:** [jared-bidlow.github.io/projects-web-demo](https://jared-bidlow.github.io/projects-web-demo/) of the Projects demo.
 > Active development continues in a private fork. This repo is kept as a portfolio
 > piece showing the full stack: static demo, Cloudflare Workers backend, SSR,
 > Turnstile, waitlist, and Flagship feature flags.
