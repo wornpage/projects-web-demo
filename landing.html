@@ -44,6 +44,14 @@
           <a class="lp-btn lp-btn-primary" href="index.html">Open the live demo <span class="lp-arrow" aria-hidden="true">→</span></a>
           <a class="lp-btn" href="#how">See how it works</a>
         </div>
+        <form id="waitlist-form" class="lp-waitlist">
+          <label for="waitlist-email">Get notified when this ships:</label>
+          <div class="lp-waitlist-row">
+            <input id="waitlist-email" type="email" placeholder="your@email.com" required autocomplete="email">
+            <button type="submit" class="lp-btn lp-btn-primary lp-btn-sm">Notify me</button>
+          </div>
+          <p id="waitlist-msg" class="lp-waitlist-msg" hidden></p>
+        </form>
         <p class="lp-fine">
           <span>Sample data only</span>
           <span class="lp-dot" aria-hidden="true"></span>
@@ -212,5 +220,27 @@
       <a href="index.html">Open the demo →</a>
     </div>
   </footer>
+  <script>
+    document.getElementById("waitlist-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      var email = document.getElementById("waitlist-email").value.trim();
+      var msg = document.getElementById("waitlist-msg");
+      if (!email) { msg.hidden = false; msg.className = "lp-waitlist-msg error"; msg.textContent = "Please enter an email address."; return; }
+      var btn = this.querySelector("button"); btn.disabled = true; btn.textContent = "Sending...";
+      try {
+        var res = await fetch("/api/waitlist", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: email, source: "landing-page" }) });
+        var data = await res.json();
+        if (data.ok) {
+          msg.hidden = false; msg.className = "lp-waitlist-msg success"; msg.textContent = data.duplicate ? "You are already on the list!" : "You are on the list!";
+          document.getElementById("waitlist-email").value = "";
+        } else {
+          msg.hidden = false; msg.className = "lp-waitlist-msg error"; msg.textContent = data.error || "Something went wrong.";
+        }
+      } catch (err) {
+        msg.hidden = false; msg.className = "lp-waitlist-msg error"; msg.textContent = "Network error. Try again.";
+      }
+      btn.disabled = false; btn.textContent = "Notify me";
+    });
+  </script>
 </body>
 </html>

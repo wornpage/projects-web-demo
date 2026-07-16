@@ -30,7 +30,8 @@
   "durable_objects": {
     "bindings": [
       { "name": "DEMO_STATE", "class_name": "DemoStateDurableObject" },
-      { "name": "RATE_LIMITER", "class_name": "RateLimiterDurableObject" }
+      { "name": "RATE_LIMITER", "class_name": "RateLimiterDurableObject" },
+      { "name": "WAITLIST", "class_name": "WaitlistDurableObject" }
     ]
   },
   // Cloudflare Access JWT validation (worker/access-jwt.mjs). Set these two as
@@ -46,7 +47,8 @@
     // kind available on the free plan.
     { "tag": "v1", "new_sqlite_classes": ["DemoStateDurableObject"] },
     // Additive: introduces the rate limiter DO. Does not touch DemoStateDurableObject.
-    { "tag": "v2", "new_sqlite_classes": ["RateLimiterDurableObject"] }
+    { "tag": "v2", "new_sqlite_classes": ["RateLimiterDurableObject"] },
+    { "tag": "v3", "new_sqlite_classes": ["WaitlistDurableObject"] }
   ],
   "alias": {
     "pg": "./worker/pg-stub.mjs"

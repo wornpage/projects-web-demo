@@ -78,6 +78,26 @@ export class DemoStateDurableObject extends DurableObject {
   }
 }
 
+// Waitlist storage: one Durable Object instance holds the full list of email
+// signups. At demo scale this fits comfortably in a single DO value; migrate to
+// a KV or database if it ever exceeds DO storage limits.
+export class WaitlistDurableObject extends DurableObject {
+  async entries() {
+    return (await this.ctx.storage.get("entries")) ?? [];
+  }
+
+  async addEntry(email, source) {
+    const list = await this.entries();
+    // Deduplicate — same email can't sign up twice.
+    if (list.some((e) => e.email === email)) {
+      return { ok: true, duplicate: true };
+    }
+    list.push({ email, at: new Date().toISOString(), source });
+    await this.ctx.storage.put("entries", list);
+    return { ok: true, duplicate: false };
+  }
+}
+
 // Durable, shared rate limiter. One instance (idFromName("global")) serializes
 // the counters that the in-memory limiter in security.js can't hold on Workers.
 // Enforces a per-IP window AND a global daily budget in a single storage
@@ -332,6 +352,47 @@ async function verifyTurnstile(request, env) {
   });
 }
 
+
+async function addToWaitlist(request, env) {
+  const WAITLIST_SECRET = env.WAITLIST_SECRET || "dev-secret-do-not-use-in-production";
+
+  let body = {};
+  try { body = await request.json(); } catch { /* keep empty */ }
+  const email = String(body.email || "").trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return new Response(JSON.stringify({ ok: false, error: "Valid email required" }), {
+      status: 400,
+      headers: { ...constants.securityHeaders, "content-type": "application/json" }
+    });
+  }
+
+  const source = String(body.source || "landing-page").trim().slice(0, 200);
+  const stub = env.WAITLIST.get(env.WAITLIST.idFromName("singleton"));
+  const result = await stub.addEntry(email, source);
+
+  return new Response(JSON.stringify(result), {
+    status: 200,
+    headers: { ...constants.securityHeaders, "content-type": "application/json" }
+  });
+}
+
+async function listWaitlist(request, env) {
+  const WAITLIST_SECRET = env.WAITLIST_SECRET || "dev-secret-do-not-use-in-production";
+  const provided = new URL(request.url).searchParams.get("secret") || "";
+  if (provided !== WAITLIST_SECRET) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...constants.securityHeaders, "content-type": "application/json" }
+    });
+  }
+
+  const stub = env.WAITLIST.get(env.WAITLIST.idFromName("singleton"));
+  const entries = await stub.entries();
+  return new Response(JSON.stringify({ entries, count: entries.length }), {
+    status: 200,
+    headers: { ...constants.securityHeaders, "content-type": "application/json" }
+  });
+}
 function isTurnstileVerified(request) {
   const cookie = request.headers.get("Cookie") || "";
   return cookie.includes("turnstile_verified=1");
