@@ -293,21 +293,6 @@ The pinned `nstarke/egodeath` commit
 production because browser smoke tests showed repeated runtime errors on this
 app.
 
-## Outplane Dev Deploy
-
-Use Outplane when you want a development deployment of the backend-backed app.
-The repo's Dockerfile already reads `PORT`, binds to `0.0.0.0`, and supports
-managed Postgres through Outplane's `PG*` environment variables.
-
-The previous development deployment is **suspended** (its URL returns 404)
-now that the deployed product is the static Cloudflare Pages artifact:
-
-```text
-https://projectswebdemo7ojp-5179-sgscv2kjey.outplane.app
-```
-
-See [docs/deploy-outplane.md](docs/deploy-outplane.md).
-
 ## Static Preview
 
 Build the single public browser file after editing demo source:
@@ -365,7 +350,7 @@ pwsh -NoLogo -NoProfile -Command 'npm --prefix server run ship:check'
 That command runs generated demo asset sync, frontend syntax, backend syntax,
 protected frontend, public asset-disclosure, static publish artifact, public
 route-contract, sync sharing, state recovery, public-boundary, Docker deploy-boundary, deploy-config,
-Compliance audit, whitespace, clean git state, and live Outplane checks,
+Compliance audit, whitespace, clean git state, and checks
 including app shell and protected frontend content matching, seed-data matching,
 unkeyed seed data rejection, hosted repo-file blocking, invalid work-path status
 rejection, and rejection of weak manual API client keys.
