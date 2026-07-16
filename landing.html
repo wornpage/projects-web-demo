@@ -184,6 +184,14 @@
         </div>
         <div class="lp-ledger">
           <div class="lp-ledger-item">
+            <strong>Turnstile-gated</strong>
+            <p>Cloudflare Turnstile verifies humans before the app loads. Protected assets require same-origin Referer.</p>
+          </div>
+          <div class="lp-ledger-item">
+            <strong>Rate-limited &amp; bot-blocked</strong>
+            <p>Per-IP rate limiting via Durable Objects. Known AI crawlers are rejected at the edge.</p>
+          </div>
+          <div class="lp-ledger-item">
             <strong>Every button click-tested</strong>
             <p>CI drives a real browser that clicks every enabled control on every screen, and fails the build if one does nothing.</p>
           </div>
