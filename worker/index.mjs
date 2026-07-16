@@ -316,14 +316,17 @@ function stubFor(env, stateKey) {
 async 
 // Evaluate all feature flags for a targeting key and return a plain object
 // suitable for injection into the client runtime config.
-async function evaluateFlags(targetingKey) {
+async function evaluateFlags(targetingKey, request) {
+  const cookie = (request.headers.get("Cookie") || "");
+  const waitlistMember = cookie.includes("waitlist_member=1");
   if (!flagshipReady) return {};
   try {
     const client = OpenFeature.getClient();
+        const ctx = { targetingKey, waitlistMember };
     return {
-      darkMode: await client.getBooleanValue("dark-mode-default", false, { targetingKey }),
-      showWaitlist: await client.getBooleanValue("show-waitlist", true, { targetingKey }),
-      newDashboard: await client.getBooleanValue("new-dashboard", false, { targetingKey })
+      darkMode: await client.getBooleanValue("dark-mode-default", false, ctx),
+      showWaitlist: await client.getBooleanValue("show-waitlist", true, ctx),
+      newDashboard: await client.getBooleanValue("new-dashboard", false, ctx)
     };
   } catch {
     return {};
@@ -392,7 +395,11 @@ async function addToWaitlist(request, env) {
 
   return new Response(JSON.stringify(result), {
     status: 200,
-    headers: { ...constants.securityHeaders, "content-type": "application/json" }
+    headers: {
+      ...constants.securityHeaders,
+      "content-type": "application/json",
+      "set-cookie": "waitlist_member=1; Path=/; Max-Age=31536000; Secure; SameSite=Lax"
+    }
   });
 }
 
@@ -457,7 +464,7 @@ async function staticAssetResponse(request, nodeRequest, url, env) {
         body = server.injectAppApiBase(ssr.renderPageHtml(serverState, route, html));
           // Inject feature flags into the page for client-side use.
           if (flagshipReady) {
-            const flags = await evaluateFlags(stateKey);
+            const flags = await evaluateFlags(stateKey, request);
             body = body.replace("</head>", `<script>window.__projectsDemoFlags=${JSON.stringify(flags)}</script></head>`);
           }
       } catch {
