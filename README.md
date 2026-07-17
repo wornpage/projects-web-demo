@@ -1,6 +1,12 @@
 # Projects Web Demo
 
-> **Archived reference implementation** — The public demo stack: static frontend, Cloudflare Workers backend, SSR, waitlist, and Flagship feature flags. Active development with SvelteKit continues in a private repo.
+![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-0d9488)
+![Vanilla JS, no build step](https://img.shields.io/badge/vanilla%20JS-no%20build%20step-0d9488)
+![PWA, offline-ready](https://img.shields.io/badge/PWA-offline--ready-0d9488)
+
+> A self-contained demo of a **blocker-first work tracker**: every work item names its owner, what's blocking it, and how you'll know it's done — and the UI keeps asking one question, *what's the next physical action?* It runs as a static GitHub Pages app (vanilla JS, no build step), with an optional Node backend that reproduces the same behavior server-side.
+
+![The Projects work screen, with a loupe magnifying the Draft → Review → Proof → Done state path while the item sits blocked on a missing owner](screenshots/hero-magnifier.png)
 
 This repository is the active lightweight web-tech home for the public
 Projects demo. It is a static GitHub Pages app by default: HTML, CSS,
