@@ -2929,17 +2929,31 @@ function render() {
   // Avoid overlapping transitions — "old view transition aborted" noise
   if (_vt && !window.__vtPending) {
     window.__vtPending = true;
-    _transition = _vt.startViewTransition(function () {
-      _doRender();
+    try {
+      _transition = _vt.startViewTransition(function () {
+        _doRender();
+        window.__vtPending = false;
+      });
+    } catch (e) {
+      // startViewTransition can throw InvalidStateError when the document is
+      // not fully active (e.g. a backgrounded tab). Fall back to a direct
+      // render so __vtPending never gets stuck true.
       window.__vtPending = false;
-    });
-    _transition.finished.then(function () { window.__vtPending = false; });
+      _transition = null;
+      _doRender();
+    }
   } else {
     _doRender();
   }
 
   if (_transition) {
-    _transition.finished.then(function () { applyPendingFocus(); });
+    // When the document is inactive the transition's `finished` promise
+    // rejects ("Transition was aborted because of invalid state"). Without a
+    // rejection handler that surfaces as an unhandledrejection, whose global
+    // handler calls render() again — an infinite render loop. Handle both the
+    // resolved and rejected cases: reset the guard and place focus either way.
+    var _settle = function () { window.__vtPending = false; applyPendingFocus(); };
+    _transition.finished.then(_settle, _settle);
   } else {
     applyPendingFocus();
   }
