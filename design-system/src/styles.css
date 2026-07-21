@@ -14,6 +14,31 @@
   font-kerning: normal;
 }
 
+/* ---- Interactive target affordances (WCAG 2.1 AAA 2.5.5) ----
+   Every interactive control clears --cockpit-target-min. For dense, small-
+   looking controls the size comes from an expanded HIT area (.cockpit-tap),
+   not from airing the visual out — density and reach coexist. */
+.cockpit-btn,
+.cockpit-chip,
+.cockpit-input,
+.cockpit-select { min-height: var(--cockpit-target-min); }
+
+/* Put on a compact/icon control whose visual must stay small: a centred
+   invisible overlay guarantees a 44px hit area without changing the look. The
+   control needs position (this sets it) and should not clip overflow. */
+.cockpit-tap { position: relative; }
+.cockpit-tap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: var(--cockpit-target-min);
+  min-height: var(--cockpit-target-min);
+  width: 100%;
+  height: 100%;
+}
+
 /* ---- Button ---- */
 .cockpit-btn {
   align-items: center;
@@ -27,6 +52,7 @@
   font-size: 13px;
   font-weight: 560;
   gap: 6px;
+  justify-content: center;
   padding: 6px 14px;
   text-decoration: none;
   transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
@@ -38,7 +64,17 @@
 .cockpit-btn--primary { background: var(--cockpit-accent); border-color: var(--cockpit-accent); color: var(--cockpit-accent-text); }
 .cockpit-btn--primary:hover { background: var(--cockpit-accent-hover); border-color: var(--cockpit-accent-hover); }
 .cockpit-btn--primary:active:not(:disabled) { background: var(--cockpit-accent-hover); border-color: var(--cockpit-accent-hover); box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.22); transform: translateY(1px); }
-.cockpit-btn--sm { font-size: 12px; padding: 4px 10px; }
+/* Small only means tighter horizontal padding; the 44px hit height from the
+   base rule stays, so a "small" button is still comfortably tappable. */
+.cockpit-btn--sm { font-size: 12px; padding: 0 10px; }
+
+/* Tactile press and hover motion are decorative — off for motion-sensitive
+   users, who still get every functional state via color and border. */
+@media (prefers-reduced-motion: reduce) {
+  .cockpit-btn { transition: none; }
+  .cockpit-btn:active:not(:disabled),
+  .cockpit-btn--primary:active:not(:disabled) { transform: none; }
+}
 .cockpit-btn:disabled { background: var(--cockpit-border-strong); border-color: var(--cockpit-border-strong); color: var(--cockpit-surface); cursor: default; }
 
 /* ---- StatePill ---- */
@@ -74,7 +110,7 @@
   font-weight: 560;
   gap: 6px;
   justify-content: space-between;
-  min-height: 42px;
+  min-height: var(--cockpit-target-min);
   padding: 8px 12px;
   transition: border-color 0.12s ease, background-color 0.12s ease;
 }

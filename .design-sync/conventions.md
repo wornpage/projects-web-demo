@@ -24,6 +24,18 @@ Hard rules of this design language:
   action and selection.
 - **Finished work recedes** (WorkCard `state="done"` renders at reduced opacity).
 - Dense spacing: 13–14px UI text, 12–14px paddings, 1.4 line-height. Don't air it out.
+- **Every interactive target clears `var(--cockpit-target-min)` (44px).** This is
+  the one place density yields — but to the HIT area, not the visual. Buttons and
+  chips carry `min-height: var(--cockpit-target-min)`; a control whose visual must
+  stay compact (icon buttons, the bare card-title button) gets `.cockpit-tap`,
+  which expands the click zone to 44px with a centred invisible overlay and leaves
+  the look untouched. Dense and easy-to-hit are not a trade — reach comes from the
+  hit area, density from the visual.
+- **Motion is decorative and optional.** The tactile press and hover transitions
+  are gated on `prefers-reduced-motion: reduce`; every functional state is also
+  carried by color and border, so nothing is lost when motion is off.
+- **Focus is always visible:** `3px solid var(--cockpit-focus)` at `2px` offset on
+  `:focus-visible`, for keyboard and switch access.
 
 **Where the truth lives.** Read `styles.css` → `tokens/tokens.css` and
 `_ds_bundle.css` for the full class/token vocabulary; each

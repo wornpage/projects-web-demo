@@ -5,7 +5,7 @@ export function LightSurface() {
   return (
     <CockpitRoot style={{ padding: 16 }}>
       <Panel label="Surface" heading="Cockpit root" status={<StatePill tone="success">Themed</StatePill>}>
-        <p>Everything inside gets the cockpit background, Sitka serif stack, and dense 13px/1.4 rhythm.</p>
+        <p>Everything inside gets the cockpit background, system-ui type stack, and dense 13px/1.4 rhythm.</p>
       </Panel>
     </CockpitRoot>
   );

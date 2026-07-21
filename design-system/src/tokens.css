@@ -29,6 +29,10 @@
   --cockpit-danger-text: #991b1b;
   --cockpit-radius: 10px;
   --cockpit-radius-sm: 6px;
+  /* Minimum interactive target (WCAG 2.1 AAA 2.5.5). Dense visuals keep their
+     compact look; this is the floor for the HIT area, expanded past the visual
+     where needed rather than airing the control out. */
+  --cockpit-target-min: 44px;
   --cockpit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.06);
   --cockpit-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.08);
   --cockpit-focus: var(--cockpit-accent);

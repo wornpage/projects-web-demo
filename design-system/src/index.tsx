@@ -1,8 +1,8 @@
 import * as React from "react";
 
 /**
- * Root surface wrapper. Applies the cockpit background, Sitka serif stack,
- * and dense 13px/1.4 body rhythm. Wrap screens in this (or put the classes
+ * Root surface wrapper. Applies the cockpit background, the system-ui type
+ * stack, and dense 13px/1.4 body rhythm. Wrap screens in this (or put the classes
  * on body) so text and tokens resolve; set data-theme="dark" on a parent
  * for the dark palette.
  */
@@ -86,7 +86,7 @@ export function Chip({ pressed = false, count, className, children, ...rest }: C
 
 /**
  * Content panel: surface background, full 1px border, 14px padding. The head
- * pairs an uppercase micro section-label with a Sitka display heading and an
+ * pairs an uppercase micro section-label with a display heading and an
  * optional right-aligned muted status.
  */
 export interface PanelProps {
@@ -194,7 +194,7 @@ export function WorkCard({ title, state = "ready", stateLabel, stateTone, nextAc
 }
 
 /**
- * Stat card: big Sitka display value, label, muted detail. Tone tints the
+ * Stat card: big display value, label, muted detail. Tone tints the
  * full border and the value — good/warn/low map to success/warning/danger
  * tokens.
  */
